@@ -8,6 +8,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Toaster } from 'sonner'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
+import { RouteStatus } from '#/components/RouteStatus'
 
 import appCss from '#/styles.css?url'
 
@@ -23,8 +24,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { charSet: 'utf-8' },
       {
         name: 'viewport',
-        content:
-          'width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no',
+        content: 'width=device-width, initial-scale=1, viewport-fit=cover',
       },
       { name: 'theme-color', content: '#0b1326' },
       {
@@ -33,20 +33,54 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
           'Phinio — track investments and manage EMIs in one unified dashboard.',
       },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
-      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+      {
+        name: 'apple-mobile-web-app-status-bar-style',
+        content: 'black-translucent',
+      },
       { name: 'apple-mobile-web-app-title', content: 'Phinio' },
       { title: 'Phinio — Your finances, simplified.' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
-      { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
-      { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '32x32',
+        href: '/favicon-32x32.png',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '16x16',
+        href: '/favicon-16x16.png',
+      },
+      {
+        rel: 'apple-touch-icon',
+        sizes: '180x180',
+        href: '/apple-touch-icon.png',
+      },
       { rel: 'manifest', href: '/site.webmanifest' },
     ],
   }),
   shellComponent: RootDocument,
+  errorComponent: ({ reset }) => (
+    <RouteStatus
+      icon="error"
+      title="Something went wrong"
+      description="An unexpected error occurred. Try again, or head back home."
+      action={{ label: 'Try again', onClick: reset }}
+      secondaryAction={{ label: 'Back to home', to: '/' }}
+    />
+  ),
+  notFoundComponent: () => (
+    <RouteStatus
+      icon="not-found"
+      title="Page not found"
+      description="We couldn't find the page you were looking for."
+      action={{ label: 'Back to home', to: '/' }}
+    />
+  ),
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 /* ----------------------------------------------------------------------------
@@ -8,8 +8,8 @@
  * -------------------------------------------------------------------------- */
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 
   /* Surface hierarchy (layered "frosted glass" sheets) */
   --color-surface: #0b1326;
@@ -90,14 +90,22 @@ body {
 }
 
 .noir-bg::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(60% 60% at 100% 0%, rgba(37, 99, 235, 0.14), transparent 60%),
-    radial-gradient(40% 40% at 0% 100%, rgba(78, 222, 163, 0.06), transparent 70%);
+    radial-gradient(
+      60% 60% at 100% 0%,
+      rgba(37, 99, 235, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(
+      40% 40% at 0% 100%,
+      rgba(78, 222, 163, 0.06),
+      transparent 70%
+    );
 }
 
 .noir-bg > * {
@@ -219,7 +227,10 @@ body {
   border-radius: 0.75rem;
   width: 100%;
   box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.4);
-  transition: transform 120ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -237,19 +248,4 @@ body {
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* Ghost button — tertiary text link style */
-.btn-ghost {
-  color: var(--color-on-surface);
-  background: transparent;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  transition: background-color 160ms ease;
-}
-
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.04);
 }

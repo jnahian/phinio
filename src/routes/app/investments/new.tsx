@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import {
-  Link,
-  createFileRoute,
-  useNavigate,
-} from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Bitcoin,
@@ -15,14 +11,10 @@ import {
 } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
+import { getCurrencySymbol } from '#/lib/currency'
 import { useCreateInvestment } from '#/hooks/useInvestments'
 import { investmentCreateSchema } from '#/lib/validators'
-import type {
-  InvestmentCreateInput,
-  InvestmentType,
-} from '#/lib/validators'
+import type { InvestmentCreateInput, InvestmentType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/new')({
   staticData: { hideTabBar: true },
@@ -53,7 +45,7 @@ function todayIso(): string {
 function AddInvestmentScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
 
   const createInvestment = useCreateInvestment()
@@ -65,12 +57,10 @@ function AddInvestmentScreen() {
   const [dateOfInvestment, setDateOfInvestment] = useState(todayIso())
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [formError, setFormError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFieldErrors({})
-    setFormError(null)
 
     const parsed = investmentCreateSchema.safeParse({
       name,
@@ -91,11 +81,14 @@ function AddInvestmentScreen() {
       return
     }
 
+    // Mutation errors are surfaced via toast at the hook layer. Swallow here
+    // so the submit button state resets; the user sees the toast and stays
+    // on the form with their inputs preserved.
     try {
       await createInvestment.mutateAsync(parsed.data)
       navigate({ to: '/app/investments' })
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to save')
+    } catch {
+      // handled by useCreateInvestment onError → toast.error
     }
   }
 
@@ -194,15 +187,6 @@ function AddInvestmentScreen() {
               maxLength={1000}
             />
           </section>
-
-          {formError && (
-            <div
-              role="alert"
-              className="rounded-2xl bg-error-container/20 px-4 py-3 text-sm text-error"
-            >
-              {formError}
-            </div>
-          )}
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant/15 bg-surface/85 px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl">

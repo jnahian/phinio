@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Link,
-  createFileRoute,
-  useNavigate,
-} from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Bitcoin,
@@ -17,18 +13,14 @@ import {
 import { Card } from '#/components/ui/Card'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
+import { getCurrencySymbol } from '#/lib/currency'
 import {
   useDeleteInvestment,
   useInvestmentQuery,
   useUpdateInvestment,
 } from '#/hooks/useInvestments'
-import {
-  investmentUpdateSchema
-  
-} from '#/lib/validators'
-import type {InvestmentType} from '#/lib/validators';
+import { investmentUpdateSchema } from '#/lib/validators'
+import type { InvestmentType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/$id/edit')({
   staticData: { hideTabBar: true },
@@ -59,7 +51,7 @@ function EditInvestmentScreen() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
 
   const { data: investment, isLoading } = useInvestmentQuery(id)
@@ -76,7 +68,6 @@ function EditInvestmentScreen() {
   const [exitValue, setExitValue] = useState('')
   const [completedAt, setCompletedAt] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [formError, setFormError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   useEffect(() => {
@@ -95,7 +86,6 @@ function EditInvestmentScreen() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFieldErrors({})
-    setFormError(null)
 
     const parsed = investmentUpdateSchema.safeParse({
       id,
@@ -123,8 +113,8 @@ function EditInvestmentScreen() {
     try {
       await updateInvestment.mutateAsync(parsed.data)
       navigate({ to: '/app/investments' })
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to save')
+    } catch {
+      // handled by useUpdateInvestment onError → toast.error
     }
   }
 
@@ -132,8 +122,8 @@ function EditInvestmentScreen() {
     try {
       await deleteInvestment.mutateAsync(id)
       navigate({ to: '/app/investments' })
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to delete')
+    } catch {
+      // handled by useDeleteInvestment onError → toast.error
     }
   }
 
@@ -311,15 +301,6 @@ function EditInvestmentScreen() {
               <Trash2 className="h-4 w-4" strokeWidth={1.75} />
               Remove investment
             </button>
-          )}
-
-          {formError && (
-            <div
-              role="alert"
-              className="rounded-2xl bg-error-container/20 px-4 py-3 text-sm text-error"
-            >
-              {formError}
-            </div>
           )}
         </div>
 

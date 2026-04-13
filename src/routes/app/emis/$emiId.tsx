@@ -1,19 +1,10 @@
 import { Suspense, lazy, useState } from 'react'
-import {
-  Link,
-  createFileRoute,
-  useNavigate,
-} from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Check, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { cn } from '#/lib/cn'
-import { formatCurrency  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
-import {
-  useDeleteEmi,
-  useEmiQuery,
-  useMarkPayment,
-} from '#/hooks/useEmis'
+import { formatCurrency } from '#/lib/currency'
+import { useDeleteEmi, useEmiQuery, useMarkPayment } from '#/hooks/useEmis'
 import type { EmiType } from '#/lib/validators'
 
 const PrincipalInterestDonut = lazy(
@@ -34,7 +25,7 @@ function EmiDetailScreen() {
   const { emiId } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
 
   const { data: emi, isLoading } = useEmiQuery(emiId)
   const markPayment = useMarkPayment(emiId)
@@ -60,9 +51,7 @@ function EmiDetailScreen() {
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + Number(p.principalComponent), 0)
   const nextUnpaid = payments.find((p) => p.status !== 'paid')
-  const remainingBalance = nextUnpaid
-    ? Number(nextUnpaid.remainingBalance)
-    : 0
+  const remainingBalance = nextUnpaid ? Number(nextUnpaid.remainingBalance) : 0
   const totalLifetimePayment = payments.reduce(
     (sum, p) => sum + Number(p.emiAmount),
     0,
@@ -198,7 +187,9 @@ function EmiDetailScreen() {
                             : 'border-outline-variant/50 bg-transparent',
                         )}
                       >
-                        {isPaid && <Check className="h-4 w-4" strokeWidth={3} />}
+                        {isPaid && (
+                          <Check className="h-4 w-4" strokeWidth={3} />
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -225,10 +216,18 @@ function EmiDetailScreen() {
                         </div>
                         <div className="mt-0.5 flex gap-3 text-xs text-on-surface-variant/75">
                           <span>
-                            P {formatCurrency(payment.principalComponent, currency)}
+                            P{' '}
+                            {formatCurrency(
+                              payment.principalComponent,
+                              currency,
+                            )}
                           </span>
                           <span>
-                            I {formatCurrency(payment.interestComponent, currency)}
+                            I{' '}
+                            {formatCurrency(
+                              payment.interestComponent,
+                              currency,
+                            )}
                           </span>
                         </div>
                       </div>
@@ -242,7 +241,8 @@ function EmiDetailScreen() {
                           {formatCurrency(payment.emiAmount, currency)}
                         </p>
                         <p className="text-[11px] text-on-surface-variant/75">
-                          bal {formatCurrency(payment.remainingBalance, currency)}
+                          bal{' '}
+                          {formatCurrency(payment.remainingBalance, currency)}
                         </p>
                       </div>
                     </button>

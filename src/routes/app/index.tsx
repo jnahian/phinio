@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   CalendarClock,
   ChevronRight,
+  Sparkles,
   TrendingUp,
 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
@@ -11,7 +12,6 @@ import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatReturnPercent } from '#/lib/calculations'
 import { formatCurrency } from '#/lib/currency'
-import type { Currency } from '#/lib/currency'
 import { useDashboardQuery } from '#/hooks/useDashboard'
 
 const AllocationDonut = lazy(() => import('#/components/AllocationDonut'))
@@ -40,10 +40,19 @@ export const Route = createFileRoute('/app/')({
 
 function HomeScreen() {
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
   const firstName = profile.fullName.split(' ')[0]
 
   const { data, isLoading } = useDashboardQuery()
+
+  // Fresh accounts with no investments and no EMIs get a single welcome CTA
+  // instead of three stacked empty sections.
+  const isEmpty = data
+    ? Number(data.investmentTotals.invested) === 0 &&
+      Number(data.monthlyEmiOutflow) === 0 &&
+      data.upcomingPayments.length === 0 &&
+      data.allocation.length === 0
+    : false
 
   return (
     <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
@@ -73,143 +82,178 @@ function HomeScreen() {
         </p>
       </section>
 
-      {/* Quick stats row */}
-      <section className="mt-4 grid grid-cols-2 gap-3">
-        <Card variant="low" className="p-4">
-          <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
-            <TrendingUp className="h-4 w-4" strokeWidth={1.75} />
-            <span className="label-sm normal-case tracking-wide">
-              Invested
-            </span>
-          </div>
-          {isLoading || !data ? (
-            <>
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="mt-1 h-3 w-16" />
-            </>
-          ) : (
-            <>
-              <p className="font-display text-xl font-bold text-on-surface">
-                {formatCurrency(data.investmentTotals.current, currency)}
+      {isEmpty && (
+        <section className="mt-6">
+          <Card variant="low" className="space-y-5 p-6 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-container/20 text-primary-fixed-dim">
+              <Sparkles className="h-7 w-7" strokeWidth={1.75} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="headline-sm text-on-surface">
+                Start tracking your finances
+              </h2>
+              <p className="body-md text-on-surface-variant">
+                Add your first investment or EMI to see everything come to life
+                — net worth, returns, and upcoming payments in one place.
               </p>
-              <p
-                className={cn(
-                  'body-sm mt-0.5 font-semibold',
-                  data.investmentTotals.gainLossPercent > 0
-                    ? 'text-secondary'
-                    : data.investmentTotals.gainLossPercent < 0
-                      ? 'text-tertiary'
-                      : 'text-on-surface-variant',
-                )}
+            </div>
+            <div className="flex flex-col gap-2 pt-1">
+              <Link to="/app/investments/new" className="btn-primary">
+                <TrendingUp className="h-4 w-4" strokeWidth={2} />
+                Add an investment
+              </Link>
+              <Link
+                to="/app/emis/new"
+                className="block w-full rounded-xl border border-outline-variant/30 py-4 text-center font-display font-semibold text-on-surface transition hover:bg-white/5"
               >
-                {Number(data.investmentTotals.invested) > 0
-                  ? formatReturnPercent(data.investmentTotals.gainLossPercent)
-                  : 'No holdings'}
-              </p>
-            </>
-          )}
-        </Card>
+                Add an EMI
+              </Link>
+            </div>
+          </Card>
+        </section>
+      )}
 
-        <Card variant="low" className="p-4">
-          <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
-            <CalendarClock className="h-4 w-4" strokeWidth={1.75} />
-            <span className="label-sm normal-case tracking-wide">
-              Monthly EMI
-            </span>
-          </div>
-          {isLoading || !data ? (
-            <>
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="mt-1 h-3 w-16" />
-            </>
-          ) : (
-            <>
-              <p className="font-display text-xl font-bold text-on-surface">
-                {formatCurrency(data.monthlyEmiOutflow, currency)}
-              </p>
-              <p className="body-sm mt-0.5 text-on-surface-variant">
-                {Number(data.monthlyEmiOutflow) > 0
-                  ? 'Total outflow'
-                  : 'No EMIs yet'}
-              </p>
-            </>
-          )}
-        </Card>
-      </section>
+      {/* Quick stats row */}
+      {!isEmpty && (
+        <section className="mt-4 grid grid-cols-2 gap-3">
+          <Card variant="low" className="p-4">
+            <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
+              <TrendingUp className="h-4 w-4" strokeWidth={1.75} />
+              <span className="label-sm normal-case tracking-wide">
+                Invested
+              </span>
+            </div>
+            {isLoading || !data ? (
+              <>
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="mt-1 h-3 w-16" />
+              </>
+            ) : (
+              <>
+                <p className="font-display text-xl font-bold text-on-surface">
+                  {formatCurrency(data.investmentTotals.current, currency)}
+                </p>
+                <p
+                  className={cn(
+                    'body-sm mt-0.5 font-semibold',
+                    data.investmentTotals.gainLossPercent > 0
+                      ? 'text-secondary'
+                      : data.investmentTotals.gainLossPercent < 0
+                        ? 'text-tertiary'
+                        : 'text-on-surface-variant',
+                  )}
+                >
+                  {Number(data.investmentTotals.invested) > 0
+                    ? formatReturnPercent(data.investmentTotals.gainLossPercent)
+                    : 'No holdings'}
+                </p>
+              </>
+            )}
+          </Card>
+
+          <Card variant="low" className="p-4">
+            <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
+              <CalendarClock className="h-4 w-4" strokeWidth={1.75} />
+              <span className="label-sm normal-case tracking-wide">
+                Monthly EMI
+              </span>
+            </div>
+            {isLoading || !data ? (
+              <>
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="mt-1 h-3 w-16" />
+              </>
+            ) : (
+              <>
+                <p className="font-display text-xl font-bold text-on-surface">
+                  {formatCurrency(data.monthlyEmiOutflow, currency)}
+                </p>
+                <p className="body-sm mt-0.5 text-on-surface-variant">
+                  {Number(data.monthlyEmiOutflow) > 0
+                    ? 'Total outflow'
+                    : 'No EMIs yet'}
+                </p>
+              </>
+            )}
+          </Card>
+        </section>
+      )}
 
       {/* Upcoming payments */}
-      <section className="mt-8">
-        <h2 className="label-md mb-3 text-on-surface-variant">
-          Upcoming payments
-        </h2>
-        {isLoading || !data ? (
-          <Card variant="low" className="space-y-3 p-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-2/3" />
-          </Card>
-        ) : data.upcomingPayments.length === 0 ? (
-          <Card variant="low" className="px-5 py-8 text-center">
-            <p className="body-md text-on-surface-variant">
-              Nothing due in the next 30 days.
-            </p>
-          </Card>
-        ) : (
-          <ul className="space-y-2">
-            {data.upcomingPayments.map((p) => (
-              <li key={p.id}>
-                <Link
-                  to="/app/emis/$emiId"
-                  params={{ emiId: p.emiId }}
-                  className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-4 transition-colors hover:bg-surface-container"
-                >
-                  <span
-                    className={cn(
-                      'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
-                      p.isOverdue
-                        ? 'bg-tertiary-container/20 text-tertiary-fixed-dim'
-                        : 'bg-primary-container/20 text-primary-fixed-dim',
-                    )}
+      {!isEmpty && (
+        <section className="mt-8">
+          <h2 className="label-md mb-3 text-on-surface-variant">
+            Upcoming payments
+          </h2>
+          {isLoading || !data ? (
+            <Card variant="low" className="space-y-3 p-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-2/3" />
+            </Card>
+          ) : data.upcomingPayments.length === 0 ? (
+            <Card variant="low" className="px-5 py-8 text-center">
+              <p className="body-md text-on-surface-variant">
+                Nothing due in the next 30 days.
+              </p>
+            </Card>
+          ) : (
+            <ul className="space-y-2">
+              {data.upcomingPayments.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    to="/app/emis/$emiId"
+                    params={{ emiId: p.emiId }}
+                    className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-4 transition-colors hover:bg-surface-container"
                   >
-                    {p.isOverdue ? (
-                      <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
-                    ) : (
-                      <CalendarClock className="h-5 w-5" strokeWidth={1.75} />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="headline-sm truncate text-base text-on-surface">
-                      {p.emiLabel}
-                    </p>
-                    <p
+                    <span
                       className={cn(
-                        'body-sm',
+                        'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
                         p.isOverdue
-                          ? 'text-tertiary'
-                          : 'text-on-surface-variant',
+                          ? 'bg-tertiary-container/20 text-tertiary-fixed-dim'
+                          : 'bg-primary-container/20 text-primary-fixed-dim',
                       )}
                     >
-                      {formatRelativeDue(p.daysUntilDue, p.isOverdue)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-base font-bold text-on-surface">
-                      {formatCurrency(p.emiAmount, currency)}
-                    </p>
-                  </div>
-                  <ChevronRight
-                    className="h-4 w-4 text-on-surface-variant/60"
-                    strokeWidth={1.75}
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                      {p.isOverdue ? (
+                        <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
+                      ) : (
+                        <CalendarClock className="h-5 w-5" strokeWidth={1.75} />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="headline-sm truncate text-base text-on-surface">
+                        {p.emiLabel}
+                      </p>
+                      <p
+                        className={cn(
+                          'body-sm',
+                          p.isOverdue
+                            ? 'text-tertiary'
+                            : 'text-on-surface-variant',
+                        )}
+                      >
+                        {formatRelativeDue(p.daysUntilDue, p.isOverdue)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-display text-base font-bold text-on-surface">
+                        {formatCurrency(p.emiAmount, currency)}
+                      </p>
+                    </div>
+                    <ChevronRight
+                      className="h-4 w-4 text-on-surface-variant/60"
+                      strokeWidth={1.75}
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Investment allocation */}
-      {data && data.allocation.length > 0 && (
+      {!isEmpty && data && data.allocation.length > 0 && (
         <section className="mt-8">
           <h2 className="label-md mb-3 text-on-surface-variant">Allocation</h2>
           <Card variant="low">

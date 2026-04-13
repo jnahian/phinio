@@ -1,22 +1,13 @@
 import { useMemo, useState } from 'react'
-import {
-  Link,
-  createFileRoute,
-  useNavigate,
-} from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Building2, CreditCard } from 'lucide-react'
 import { TextField } from '#/components/ui/TextField'
 import { calculateEmi } from '#/lib/emi-calculator'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
+import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
 import { useCreateEmi } from '#/hooks/useEmis'
-import {
-  emiCreateSchema
-  
-  
-} from '#/lib/validators'
-import type {EmiCreateInput, EmiType} from '#/lib/validators';
+import { emiCreateSchema } from '#/lib/validators'
+import type { EmiCreateInput, EmiType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/emis/new')({
   staticData: { hideTabBar: true },
@@ -34,7 +25,7 @@ function todayIso(): string {
 function AddEmiScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
 
   const createEmi = useCreateEmi()
@@ -46,7 +37,6 @@ function AddEmiScreen() {
   const [tenureMonths, setTenureMonths] = useState<string>('')
   const [startDate, setStartDate] = useState(todayIso())
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [formError, setFormError] = useState<string | null>(null)
 
   // Live preview: compute EMI breakdown whenever principal/rate/tenure are
   // all valid. Silently return null otherwise so the preview card hides.
@@ -67,7 +57,6 @@ function AddEmiScreen() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFieldErrors({})
-    setFormError(null)
 
     const parsed = emiCreateSchema.safeParse({
       label,
@@ -91,8 +80,8 @@ function AddEmiScreen() {
     try {
       await createEmi.mutateAsync(parsed.data)
       navigate({ to: '/app/emis' })
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to save')
+    } catch {
+      // handled by useCreateEmi onError → toast.error
     }
   }
 
@@ -207,7 +196,9 @@ function AddEmiScreen() {
             <p
               className={cn(
                 'font-display mt-2 text-4xl font-bold tracking-tight',
-                preview ? 'text-on-primary-container' : 'text-on-surface-variant/60',
+                preview
+                  ? 'text-on-primary-container'
+                  : 'text-on-surface-variant/60',
               )}
             >
               {preview
@@ -219,9 +210,7 @@ function AddEmiScreen() {
                 active={Boolean(preview)}
                 label="Total payment"
                 value={
-                  preview
-                    ? formatCurrency(preview.totalPayment, currency)
-                    : '—'
+                  preview ? formatCurrency(preview.totalPayment, currency) : '—'
                 }
               />
               <PreviewCell
@@ -235,15 +224,6 @@ function AddEmiScreen() {
               />
             </div>
           </section>
-
-          {formError && (
-            <div
-              role="alert"
-              className="rounded-2xl bg-error-container/20 px-4 py-3 text-sm text-error"
-            >
-              {formError}
-            </div>
-          )}
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant/15 bg-surface/85 px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl">
@@ -303,7 +283,9 @@ function PreviewCell({
       <p
         className={cn(
           'label-sm normal-case tracking-wide',
-          active ? 'text-on-primary-container/70' : 'text-on-surface-variant/70',
+          active
+            ? 'text-on-primary-container/70'
+            : 'text-on-surface-variant/70',
         )}
       >
         {label}

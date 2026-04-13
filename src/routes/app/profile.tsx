@@ -15,9 +15,7 @@ export const Route = createFileRoute('/app/profile')({
 function ProfileScreen() {
   const router = useRouter()
   const { user, profile } = Route.useRouteContext()
-  const [currency, setCurrency] = useState<Currency>(
-    profile.preferredCurrency as Currency,
-  )
+  const [currency, setCurrency] = useState<Currency>(profile.preferredCurrency)
   const [isSaving, setIsSaving] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
@@ -169,9 +167,7 @@ function CurrencyOption({
       <span
         className={cn(
           'body-sm',
-          active
-            ? 'text-on-primary-container/80'
-            : 'text-on-surface-variant',
+          active ? 'text-on-primary-container/80' : 'text-on-surface-variant',
         )}
       >
         {hint}

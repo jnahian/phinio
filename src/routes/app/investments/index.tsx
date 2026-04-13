@@ -8,12 +8,9 @@ import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
-import {
-  calculateReturnPercent,
-  formatReturnPercent,
-} from '#/lib/calculations'
-import { formatCurrency  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
+import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
+import { formatCurrency } from '#/lib/currency'
+import type { Currency } from '#/lib/currency'
 import { useInvestmentsQuery } from '#/hooks/useInvestments'
 import type { InvestmentType } from '#/lib/validators'
 
@@ -54,7 +51,7 @@ export const Route = createFileRoute('/app/investments/')({
 
 function InvestmentsListScreen() {
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
@@ -101,9 +98,7 @@ function InvestmentsListScreen() {
           />
           <SummaryCell
             label="Return"
-            value={
-              totals.invested > 0 ? formatReturnPercent(totalReturn) : '—'
-            }
+            value={totals.invested > 0 ? formatReturnPercent(totalReturn) : '—'}
             valueClass={
               totalReturn > 0
                 ? 'text-secondary'
@@ -271,7 +266,10 @@ function InvestmentCard({ investment, currency }: InvestmentCardProps) {
       params={{ id: investment.id }}
       className="block"
     >
-      <Card variant="default" className="transition-colors hover:bg-surface-container-highest">
+      <Card
+        variant="default"
+        className="transition-colors hover:bg-surface-container-highest"
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className="headline-sm truncate text-on-surface">

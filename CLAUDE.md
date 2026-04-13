@@ -34,6 +34,7 @@ Run a single test file: `npx vitest run path/to/file.test.ts` (or `npx vitest pa
 **Routing root:** `src/router.tsx` constructs the router with a `QueryClient` context and wires `setupRouterSsrQueryIntegration` so TanStack Query state hydrates across SSR → client. `src/routes/__root.tsx` is the shell (html/head/body, theme init script, devtools). Any new root-level chrome goes there.
 
 **Data flow (target pattern from the PRD):**
+
 ```
 Client component
   → TanStack Query (useQuery / useMutation)
@@ -41,17 +42,20 @@ Client component
       → Better Auth session check
         → Prisma query scoped by profileId
 ```
+
 Every server function that touches user data must derive `profileId` from the Better Auth session and include it in the `where` clause — authorization is per-query, not per-route.
 
 **Auth:** Better Auth (`src/lib/auth.ts`) with the `tanstackStartCookies()` plugin. The catch-all route `src/routes/api/auth/$.ts` forwards GET/POST to `auth.handler(request)` — that single file handles every Better Auth endpoint. Client-side hooks live in `src/lib/auth-client.ts`. `BETTER_AUTH_SECRET` must be set in `.env.local`; generate one with `npx -y @better-auth/cli secret`.
 
 **Database:** Prisma 7 with the **pg adapter** (`@prisma/adapter-pg`), not the default engine. The generated client is emitted to `src/generated/prisma/` (see `prisma/schema.prisma` `output` field), so `src/db.ts` imports `PrismaClient` from `./generated/prisma/client.js` — **not** `@prisma/client`. The client is memoized on `globalThis.__prisma` in dev to survive HMR. After editing `schema.prisma`, run `npm run db:generate` before the types will resolve.
 
-The current `schema.prisma` only contains a placeholder `Todo` model. The real schema (`Profile`, `Investment`, `Emi`, `EmiPayment`) is specified in PRD §4.1 and still needs to be added. Better Auth owns its own tables (`user`, `session`, `account`, `verification`) — do not model them in Prisma.
+`schema.prisma` owns both the Better Auth core models (`User`, `Session`, `Account`, `Verification` — generated via `npx @better-auth/cli@latest generate`) and the Phinio domain models (`Profile`, `Investment`, `Emi`, `EmiPayment`) per PRD §4.1. The Better Auth CLI regenerates its own tables in-place if you change `additionalFields` or plugins; domain models stay hand-authored.
 
 **Path aliases:** `#/*` and `@/*` both map to `src/*` (tsconfig + `package.json` `imports`). Existing code uses `#/lib/auth` style; follow that.
 
-**Styling:** Tailwind CSS v4 via `@tailwindcss/vite` (no `tailwind.config.js` — config is in `src/styles.css`). Theme switching is done by a pre-hydration inline script in `__root.tsx` that reads `localStorage.theme` and toggles `light`/`dark` classes + `color-scheme` on `<html>` before React mounts; don't move theme resolution into React state or you'll reintroduce FOUC.
+**Styling:** Tailwind CSS v4 via `@tailwindcss/vite` (no `tailwind.config.js` — all tokens live under `@theme` in `src/styles.css`). The app is **dark-only** per Modern Noir (`screens/phinio_modern_noir/DESIGN.md`); `<html>` sits permanently in `className="dark"` and there is no theme toggle.
+
+**BETTER_AUTH_URL gotcha:** Better Auth embeds this env var verbatim into every email link (verification, password reset). In dev (`npm run dev` on :3000) it Just Works. In `npm run preview` (:4173) the links point at :3000 and will 404 unless you temporarily set `BETTER_AUTH_URL=http://localhost:4173` before starting preview.
 
 ## Working on this project
 

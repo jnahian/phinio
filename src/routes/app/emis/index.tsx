@@ -9,8 +9,8 @@ import type { FilterPill } from '#/components/ui/FilterPills'
 import { ProgressBar } from '#/components/ui/ProgressBar'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
-import { formatCurrency  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
+import { formatCurrency } from '#/lib/currency'
+import type { Currency } from '#/lib/currency'
 import { useEmisQuery } from '#/hooks/useEmis'
 import type { EmiType } from '#/lib/validators'
 
@@ -44,7 +44,7 @@ export const Route = createFileRoute('/app/emis/')({
 
 function EmisListScreen() {
   const { profile } = Route.useRouteContext()
-  const currency = profile.preferredCurrency as Currency
+  const currency = profile.preferredCurrency
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const { data: emis = [], isLoading } = useEmisQuery({ type: typeFilter })
@@ -160,9 +160,8 @@ function EmiCard({ emi, currency }: EmiCardProps) {
   const type = emi.type as EmiType
   const meta = TYPE_META[type]
   const Icon = meta.icon
-  const progress = emi.totalPayments > 0
-    ? (emi.paidCount / emi.totalPayments) * 100
-    : 0
+  const progress =
+    emi.totalPayments > 0 ? (emi.paidCount / emi.totalPayments) * 100 : 0
   const formatDue = (d: Date | string | null): string => {
     if (!d) return '—'
     const date = new Date(d)
@@ -174,11 +173,7 @@ function EmiCard({ emi, currency }: EmiCardProps) {
   }
 
   return (
-    <Link
-      to="/app/emis/$emiId"
-      params={{ emiId: emi.id }}
-      className="block"
-    >
+    <Link to="/app/emis/$emiId" params={{ emiId: emi.id }} className="block">
       <Card
         variant="default"
         className="transition-colors hover:bg-surface-container-highest"
@@ -209,10 +204,7 @@ function EmiCard({ emi, currency }: EmiCardProps) {
         </div>
 
         <div className="mt-4 space-y-2">
-          <ProgressBar
-            value={emi.paidCount}
-            max={emi.totalPayments || 1}
-          />
+          <ProgressBar value={emi.paidCount} max={emi.totalPayments || 1} />
           <div className="flex items-center justify-between text-xs text-on-surface-variant/75">
             <span>
               {emi.paidCount} / {emi.totalPayments} paid
