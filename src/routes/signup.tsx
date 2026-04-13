@@ -58,6 +58,7 @@ function SignupScreen() {
       email: parsed.data.email,
       password: parsed.data.password,
       preferredCurrency: parsed.data.preferredCurrency,
+      callbackURL: '/app',
     })
     setIsSubmitting(false)
 
@@ -66,7 +67,10 @@ function SignupScreen() {
       return
     }
 
-    navigate({ to: '/app' })
+    navigate({
+      to: '/check-email',
+      search: { email: parsed.data.email },
+    })
   }
 
   return (

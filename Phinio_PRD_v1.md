@@ -42,9 +42,9 @@ Phinio is a mobile-first personal finance app that helps users track their inves
 
 - Fields: Full Name, Email, Password, Preferred Currency (BDT/USD)
 - Better Auth email/password registration
-- No email verification required — instant access after signup
-- Auto-creates a profile record via Better Auth hooks/callbacks
-- Redirects to `/app` (Home dashboard) on success
+- **Email verification required** — Better Auth sends a verification link via Resend on signup; login is blocked until the user clicks it. `sendOnSignIn` re-sends the link automatically if the user tries to log in before verifying. Links expire after 1 hour.
+- Auto-creates a profile record via Better Auth hooks/callbacks (profile row exists immediately, but the user can't authenticate until verified)
+- Redirects to `/check-email` after signup, then auto-signs the user in and redirects to `/app` once they click the verification link
 
 ### 3.2 Login
 

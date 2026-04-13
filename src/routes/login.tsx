@@ -49,10 +49,21 @@ function LoginScreen() {
     const { error } = await authClient.signIn.email({
       email: parsed.data.email,
       password: parsed.data.password,
+      callbackURL: '/app',
     })
     setIsSubmitting(false)
 
     if (error) {
+      // Better Auth returns code EMAIL_NOT_VERIFIED when requireEmailVerification
+      // is on. sendOnSignIn re-sends the link automatically — we just need to
+      // route the user to the check-email screen with a helpful message.
+      if (error.code === 'EMAIL_NOT_VERIFIED') {
+        navigate({
+          to: '/check-email',
+          search: { email: parsed.data.email },
+        })
+        return
+      }
       setFormError(error.message ?? 'Login failed. Please try again.')
       return
     }
