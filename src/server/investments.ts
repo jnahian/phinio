@@ -9,6 +9,11 @@ import {
   investmentListQuerySchema,
   investmentUpdateSchema,
 } from '#/lib/validators'
+import type {
+  InvestmentCreateInput,
+  InvestmentListQuery,
+  InvestmentUpdateInput,
+} from '#/lib/validators'
 
 async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())
@@ -45,94 +50,133 @@ function serializeInvestment<
   }
 }
 
+// ----------------------------------------------------------------------------
+// Impl functions — take an explicit profileId. The exported *Fn wrappers
+// below derive profileId from the session and delegate. Tests import these
+// directly so they can bypass the TanStack Start build pipeline.
+// ----------------------------------------------------------------------------
+
+export async function listInvestmentsImpl(
+  profileId: string,
+  data: InvestmentListQuery,
+) {
+  const rows = await prisma.investment.findMany({
+    where: {
+      profileId,
+      status: data.status,
+      ...(data.type !== 'all' ? { type: data.type } : {}),
+    },
+    orderBy: { dateOfInvestment: 'desc' },
+  })
+  return rows.map(serializeInvestment)
+}
+
+export async function getInvestmentImpl(profileId: string, id: string) {
+  const row = await prisma.investment.findFirst({
+    where: { id, profileId },
+  })
+  if (!row) throw new Error('Investment not found')
+  return serializeInvestment(row)
+}
+
+export async function createInvestmentImpl(
+  profileId: string,
+  data: InvestmentCreateInput,
+) {
+  const row = await prisma.investment.create({
+    data: {
+      profileId,
+      name: data.name,
+      type: data.type,
+      investedAmount: data.investedAmount,
+      currentValue: data.currentValue,
+      dateOfInvestment: new Date(data.dateOfInvestment),
+      notes: data.notes,
+    },
+  })
+  return serializeInvestment(row)
+}
+
+export async function updateInvestmentImpl(
+  profileId: string,
+  data: InvestmentUpdateInput,
+) {
+  // Scope the update to rows this profile owns
+  const existing = await prisma.investment.findFirst({
+    where: { id: data.id, profileId },
+    select: { id: true },
+  })
+  if (!existing) throw new Error('Investment not found')
+
+  const row = await prisma.investment.update({
+    where: { id: data.id },
+    data: {
+      name: data.name,
+      type: data.type,
+      investedAmount: data.investedAmount,
+      currentValue: data.currentValue,
+      dateOfInvestment: new Date(data.dateOfInvestment),
+      notes: data.notes,
+      status: data.status,
+      exitValue:
+        data.status === 'completed' && data.exitValue !== undefined
+          ? data.exitValue
+          : null,
+      completedAt:
+        data.status === 'completed' && data.completedAt
+          ? new Date(data.completedAt)
+          : null,
+    },
+  })
+  return serializeInvestment(row)
+}
+
+export async function deleteInvestmentImpl(profileId: string, id: string) {
+  // deleteMany with profileId scope returns count=0 if not owned
+  const result = await prisma.investment.deleteMany({
+    where: { id, profileId },
+  })
+  if (result.count === 0) throw new Error('Investment not found')
+  return { id }
+}
+
+// ----------------------------------------------------------------------------
+// Server-function wrappers
+// ----------------------------------------------------------------------------
+
 export const listInvestmentsFn = createServerFn({ method: 'GET' })
   .inputValidator((input: unknown) => investmentListQuerySchema.parse(input))
   .handler(async ({ data }) => {
     const profileId = await requireProfileId()
-    const rows = await prisma.investment.findMany({
-      where: {
-        profileId,
-        status: data.status,
-        ...(data.type !== 'all' ? { type: data.type } : {}),
-      },
-      orderBy: { dateOfInvestment: 'desc' },
-    })
-    return rows.map(serializeInvestment)
+    return listInvestmentsImpl(profileId, data)
   })
 
 export const getInvestmentFn = createServerFn({ method: 'GET' })
   .inputValidator((input: unknown) => investmentIdSchema.parse(input))
   .handler(async ({ data }) => {
     const profileId = await requireProfileId()
-    const row = await prisma.investment.findFirst({
-      where: { id: data.id, profileId },
-    })
-    if (!row) throw new Error('Investment not found')
-    return serializeInvestment(row)
+    return getInvestmentImpl(profileId, data.id)
   })
 
 export const createInvestmentFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => investmentCreateSchema.parse(input))
   .handler(async ({ data }) => {
     const profileId = await requireProfileId()
-    const row = await prisma.investment.create({
-      data: {
-        profileId,
-        name: data.name,
-        type: data.type,
-        investedAmount: data.investedAmount,
-        currentValue: data.currentValue,
-        dateOfInvestment: new Date(data.dateOfInvestment),
-        notes: data.notes,
-      },
-    })
-    return serializeInvestment(row)
+    return createInvestmentImpl(profileId, data)
   })
 
 export const updateInvestmentFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => investmentUpdateSchema.parse(input))
   .handler(async ({ data }) => {
     const profileId = await requireProfileId()
-    // Scope the update to rows this profile owns
-    const existing = await prisma.investment.findFirst({
-      where: { id: data.id, profileId },
-      select: { id: true },
-    })
-    if (!existing) throw new Error('Investment not found')
-
-    const row = await prisma.investment.update({
-      where: { id: data.id },
-      data: {
-        name: data.name,
-        type: data.type,
-        investedAmount: data.investedAmount,
-        currentValue: data.currentValue,
-        dateOfInvestment: new Date(data.dateOfInvestment),
-        notes: data.notes,
-        status: data.status,
-        exitValue:
-          data.status === 'completed' && data.exitValue !== undefined
-            ? data.exitValue
-            : null,
-        completedAt:
-          data.status === 'completed' && data.completedAt
-            ? new Date(data.completedAt)
-            : null,
-      },
-    })
-    return serializeInvestment(row)
+    return updateInvestmentImpl(profileId, data)
   })
 
 export const deleteInvestmentFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => investmentIdSchema.parse(input))
   .handler(async ({ data }) => {
     const profileId = await requireProfileId()
-    // deleteMany with profileId scope returns count=0 if not owned
-    const result = await prisma.investment.deleteMany({
-      where: { id: data.id, profileId },
-    })
-    if (result.count === 0) throw new Error('Investment not found')
-    return { id: data.id }
+    return deleteInvestmentImpl(profileId, data.id)
   })
 
 // Helper so call sites can derive the list-query key consistently.
