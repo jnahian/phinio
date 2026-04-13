@@ -1,264 +1,408 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          "colors": {
-            "on-error": "#690005",
-            "surface-container-low": "#131b2e",
-            "error": "#ffb4ab",
-            "on-background": "#dae2fd",
-            "secondary": "#4edea3",
-            "surface": "#0b1326",
-            "secondary-fixed": "#6ffbbe",
-            "inverse-primary": "#0053db",
-            "on-tertiary-fixed": "#410004",
-            "on-primary": "#002a78",
-            "surface-container-highest": "#2d3449",
-            "primary-fixed": "#dbe1ff",
-            "on-secondary-fixed-variant": "#005236",
-            "surface-dim": "#0b1326",
-            "on-tertiary": "#68000a",
-            "primary-fixed-dim": "#b4c5ff",
-            "surface-container": "#171f33",
-            "tertiary": "#ffb3ad",
-            "primary-container": "#2563eb",
-            "on-error-container": "#ffdad6",
-            "inverse-on-surface": "#283044",
-            "outline": "#8d90a0",
-            "outline-variant": "#434655",
-            "surface-tint": "#b4c5ff",
-            "tertiary-container": "#cf2c30",
-            "on-secondary-container": "#00311f",
-            "on-primary-fixed": "#00174b",
-            "error-container": "#93000a",
-            "on-primary-container": "#eeefff",
-            "tertiary-fixed-dim": "#ffb3ad",
-            "surface-container-high": "#222a3d",
-            "secondary-container": "#00a572",
-            "secondary-fixed-dim": "#4edea3",
-            "on-secondary": "#003824",
-            "on-primary-fixed-variant": "#003ea8",
-            "on-surface-variant": "#c3c6d7",
-            "surface-variant": "#2d3449",
-            "primary": "#b4c5ff",
-            "on-surface": "#dae2fd",
-            "surface-bright": "#31394d",
-            "surface-container-lowest": "#060e20",
-            "tertiary-fixed": "#ffdad7",
-            "background": "#0b1326",
-            "on-tertiary-fixed-variant": "#930013",
-            "inverse-surface": "#dae2fd",
-            "on-tertiary-container": "#ffecea",
-            "on-secondary-fixed": "#002113"
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'on-error': '#690005',
+              'surface-container-low': '#131b2e',
+              error: '#ffb4ab',
+              'on-background': '#dae2fd',
+              secondary: '#4edea3',
+              surface: '#0b1326',
+              'secondary-fixed': '#6ffbbe',
+              'inverse-primary': '#0053db',
+              'on-tertiary-fixed': '#410004',
+              'on-primary': '#002a78',
+              'surface-container-highest': '#2d3449',
+              'primary-fixed': '#dbe1ff',
+              'on-secondary-fixed-variant': '#005236',
+              'surface-dim': '#0b1326',
+              'on-tertiary': '#68000a',
+              'primary-fixed-dim': '#b4c5ff',
+              'surface-container': '#171f33',
+              tertiary: '#ffb3ad',
+              'primary-container': '#2563eb',
+              'on-error-container': '#ffdad6',
+              'inverse-on-surface': '#283044',
+              outline: '#8d90a0',
+              'outline-variant': '#434655',
+              'surface-tint': '#b4c5ff',
+              'tertiary-container': '#cf2c30',
+              'on-secondary-container': '#00311f',
+              'on-primary-fixed': '#00174b',
+              'error-container': '#93000a',
+              'on-primary-container': '#eeefff',
+              'tertiary-fixed-dim': '#ffb3ad',
+              'surface-container-high': '#222a3d',
+              'secondary-container': '#00a572',
+              'secondary-fixed-dim': '#4edea3',
+              'on-secondary': '#003824',
+              'on-primary-fixed-variant': '#003ea8',
+              'on-surface-variant': '#c3c6d7',
+              'surface-variant': '#2d3449',
+              primary: '#b4c5ff',
+              'on-surface': '#dae2fd',
+              'surface-bright': '#31394d',
+              'surface-container-lowest': '#060e20',
+              'tertiary-fixed': '#ffdad7',
+              background: '#0b1326',
+              'on-tertiary-fixed-variant': '#930013',
+              'inverse-surface': '#dae2fd',
+              'on-tertiary-container': '#ffecea',
+              'on-secondary-fixed': '#002113',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
           },
-          "borderRadius": {
-            "DEFAULT": "0.25rem",
-            "lg": "0.5rem",
-            "xl": "0.75rem",
-            "full": "9999px"
-          },
-          "fontFamily": {
-            "headline": ["Manrope"],
-            "body": ["Inter"],
-            "label": ["Inter"]
-          }
         },
-      },
-    }
-  </script>
-<style>
-    .material-symbols-outlined {
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    }
-    body {
-      background-color: #0b1326;
-      color: #dae2fd;
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
+      }
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      body {
+        background-color: #0b1326;
+        color: #dae2fd;
+        font-family: 'Inter', sans-serif;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
   </head>
-<body class="min-h-screen pb-32">
-<!-- TopAppBar -->
-<header class="w-full top-0 sticky flex justify-between items-center px-6 py-4 backdrop-blur-xl bg-opacity-80 bg-[#0b1326] z-50">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
-<img alt="User" data-alt="close-up portrait of a professional man in a clean studio setting with soft cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM09DU_gZG5S4TDAPWQ7sKOAMy7dzU6H4ZPXDXXrZUzW2AwowtFQqXv4pxNKmJh1dO60rxUsPTN7fFTmTjcJX3qtzqtKaYFo227d2beqyF_r0PPNui5l20IEWKHdJ2cSDggN1vJewElffA-Iyn7zgdS5VuqaXoi7-8W90gvoyihRCoSO4pmGH05g4AcxOqTwC1-fQy3sYiL9Hr-mfkMswqGsBVIy7DCihsIaXsUm9U_etzFoIjRzxFkSQYfAnTvd7fJrvxyNQ76Fsy"/>
-</div>
-<h1 class="text-xl font-bold tracking-tighter text-blue-600 dark:text-blue-500 font-['Manrope']">Phinio</h1>
-</div>
-<div class="flex items-center gap-2">
-<button class="p-2 rounded-full hover:bg-blue-50/10 transition-colors active:scale-95 duration-200">
-<span class="material-symbols-outlined text-slate-400">notifications</span>
-</button>
-</div>
-</header>
-<main class="px-6 mt-6 space-y-8 max-w-5xl mx-auto">
-<!-- Hero: Net Worth -->
-<section class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-primary-container to-surface-container-low shadow-2xl">
-<div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
-<div class="relative z-10">
-<span class="font-label text-sm uppercase tracking-widest text-primary-fixed opacity-80">Total Net Worth</span>
-<div class="flex items-baseline gap-2 mt-1">
-<h2 class="font-headline text-5xl font-extrabold tracking-tight">$428,590.22</h2>
-<span class="text-secondary font-medium text-lg">+4.2%</span>
-</div>
-<div class="mt-8 flex gap-4">
-<button class="bg-white/10 backdrop-blur-md px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition-all active:scale-95">
-            Add Asset
+  <body class="min-h-screen pb-32">
+    <!-- TopAppBar -->
+    <header
+      class="w-full top-0 sticky flex justify-between items-center px-6 py-4 backdrop-blur-xl bg-opacity-80 bg-[#0b1326] z-50"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container"
+        >
+          <img
+            alt="User"
+            data-alt="close-up portrait of a professional man in a clean studio setting with soft cinematic lighting"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM09DU_gZG5S4TDAPWQ7sKOAMy7dzU6H4ZPXDXXrZUzW2AwowtFQqXv4pxNKmJh1dO60rxUsPTN7fFTmTjcJX3qtzqtKaYFo227d2beqyF_r0PPNui5l20IEWKHdJ2cSDggN1vJewElffA-Iyn7zgdS5VuqaXoi7-8W90gvoyihRCoSO4pmGH05g4AcxOqTwC1-fQy3sYiL9Hr-mfkMswqGsBVIy7DCihsIaXsUm9U_etzFoIjRzxFkSQYfAnTvd7fJrvxyNQ76Fsy"
+          />
+        </div>
+        <h1
+          class="text-xl font-bold tracking-tighter text-blue-600 dark:text-blue-500 font-['Manrope']"
+        >
+          Phinio
+        </h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          class="p-2 rounded-full hover:bg-blue-50/10 transition-colors active:scale-95 duration-200"
+        >
+          <span class="material-symbols-outlined text-slate-400"
+            >notifications</span
+          >
+        </button>
+      </div>
+    </header>
+    <main class="px-6 mt-6 space-y-8 max-w-5xl mx-auto">
+      <!-- Hero: Net Worth -->
+      <section
+        class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-primary-container to-surface-container-low shadow-2xl"
+      >
+        <div
+          class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"
+        ></div>
+        <div class="relative z-10">
+          <span
+            class="font-label text-sm uppercase tracking-widest text-primary-fixed opacity-80"
+            >Total Net Worth</span
+          >
+          <div class="flex items-baseline gap-2 mt-1">
+            <h2 class="font-headline text-5xl font-extrabold tracking-tight">
+              $428,590.22
+            </h2>
+            <span class="text-secondary font-medium text-lg">+4.2%</span>
+          </div>
+          <div class="mt-8 flex gap-4">
+            <button
+              class="bg-white/10 backdrop-blur-md px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition-all active:scale-95"
+            >
+              Add Asset
+            </button>
+            <button
+              class="bg-primary px-6 py-2.5 rounded-xl text-sm font-semibold text-on-primary hover:opacity-90 transition-all active:scale-95"
+            >
+              View Analytics
+            </button>
+          </div>
+        </div>
+        <div class="absolute bottom-0 right-0 p-4 opacity-10">
+          <span
+            class="material-symbols-outlined text-[120px]"
+            style="font-variation-settings: 'FILL' 1"
+            >account_balance_wallet</span
+          >
+        </div>
+      </section>
+      <!-- Bento Grid: Returns & EMI -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Investment Returns -->
+        <div
+          class="bg-surface-container-low p-6 rounded-3xl relative overflow-hidden group"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <span
+                class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider"
+                >Investment Returns</span
+              >
+              <div class="font-headline text-3xl font-bold mt-1 text-secondary">
+                +$12,450.80
+              </div>
+            </div>
+            <div class="p-3 bg-secondary/10 rounded-2xl">
+              <span class="material-symbols-outlined text-secondary"
+                >trending_up</span
+              >
+            </div>
+          </div>
+          <div
+            class="w-full bg-surface-variant h-1 rounded-full overflow-hidden"
+          >
+            <div class="bg-secondary h-full w-[72%]"></div>
+          </div>
+          <div class="mt-3 text-xs text-on-surface-variant">
+            72% of annual target reached
+          </div>
+        </div>
+        <!-- EMI Outflow -->
+        <div
+          class="bg-surface-container-low p-6 rounded-3xl relative overflow-hidden group"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <span
+                class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider"
+                >Monthly EMI Outflow</span
+              >
+              <div
+                class="font-headline text-3xl font-bold mt-1 text-tertiary-container"
+              >
+                -$3,240.00
+              </div>
+            </div>
+            <div class="p-3 bg-tertiary-container/10 rounded-2xl">
+              <span class="material-symbols-outlined text-tertiary-container"
+                >payments</span
+              >
+            </div>
+          </div>
+          <div
+            class="w-full bg-surface-variant h-1 rounded-full overflow-hidden"
+          >
+            <div class="bg-tertiary-container h-full w-[45%]"></div>
+          </div>
+          <div class="mt-3 text-xs text-on-surface-variant">
+            45% of monthly income
+          </div>
+        </div>
+      </div>
+      <!-- Upcoming Payments -->
+      <section class="space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-headline text-xl font-bold">Upcoming Payments</h3>
+          <button class="text-primary text-sm font-medium hover:underline">
+            View All
           </button>
-<button class="bg-primary px-6 py-2.5 rounded-xl text-sm font-semibold text-on-primary hover:opacity-90 transition-all active:scale-95">
-            View Analytics
-          </button>
-</div>
-</div>
-<div class="absolute bottom-0 right-0 p-4 opacity-10">
-<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
-</div>
-</section>
-<!-- Bento Grid: Returns & EMI -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<!-- Investment Returns -->
-<div class="bg-surface-container-low p-6 rounded-3xl relative overflow-hidden group">
-<div class="flex justify-between items-start mb-4">
-<div>
-<span class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Investment Returns</span>
-<div class="font-headline text-3xl font-bold mt-1 text-secondary">+$12,450.80</div>
-</div>
-<div class="p-3 bg-secondary/10 rounded-2xl">
-<span class="material-symbols-outlined text-secondary">trending_up</span>
-</div>
-</div>
-<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
-<div class="bg-secondary h-full w-[72%]"></div>
-</div>
-<div class="mt-3 text-xs text-on-surface-variant">72% of annual target reached</div>
-</div>
-<!-- EMI Outflow -->
-<div class="bg-surface-container-low p-6 rounded-3xl relative overflow-hidden group">
-<div class="flex justify-between items-start mb-4">
-<div>
-<span class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Monthly EMI Outflow</span>
-<div class="font-headline text-3xl font-bold mt-1 text-tertiary-container">-$3,240.00</div>
-</div>
-<div class="p-3 bg-tertiary-container/10 rounded-2xl">
-<span class="material-symbols-outlined text-tertiary-container">payments</span>
-</div>
-</div>
-<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
-<div class="bg-tertiary-container h-full w-[45%]"></div>
-</div>
-<div class="mt-3 text-xs text-on-surface-variant">45% of monthly income</div>
-</div>
-</div>
-<!-- Upcoming Payments -->
-<section class="space-y-4">
-<div class="flex justify-between items-center">
-<h3 class="font-headline text-xl font-bold">Upcoming Payments</h3>
-<button class="text-primary text-sm font-medium hover:underline">View All</button>
-</div>
-<div class="bg-surface-container-low rounded-3xl p-2 space-y-1">
-<!-- Payment Item 1 -->
-<div class="flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container transition-colors group">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">home_work</span>
-</div>
-<div>
-<div class="font-medium">Mortgage Repayment</div>
-<div class="text-xs text-on-surface-variant">Due in 3 days • HDFC Bank</div>
-</div>
-</div>
-<div class="text-right">
-<div class="font-headline font-bold text-lg">$1,850.00</div>
-<div class="text-[10px] uppercase tracking-tighter text-tertiary-container font-semibold px-2 py-0.5 bg-tertiary-container/10 rounded-full inline-block">Pending</div>
-</div>
-</div>
-<!-- Payment Item 2 -->
-<div class="flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">directions_car</span>
-</div>
-<div>
-<div class="font-medium">Car Loan</div>
-<div class="text-xs text-on-surface-variant">Due in 8 days • Tesla Finance</div>
-</div>
-</div>
-<div class="text-right">
-<div class="font-headline font-bold text-lg">$640.00</div>
-<div class="text-[10px] uppercase tracking-tighter text-secondary font-semibold px-2 py-0.5 bg-secondary/10 rounded-full inline-block">Autopay</div>
-</div>
-</div>
-<!-- Payment Item 3 -->
-<div class="flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">credit_card</span>
-</div>
-<div>
-<div class="font-medium">Credit Card Bill</div>
-<div class="text-xs text-on-surface-variant">Due in 12 days • Amex Platinum</div>
-</div>
-</div>
-<div class="text-right">
-<div class="font-headline font-bold text-lg">$750.00</div>
-<div class="text-[10px] uppercase tracking-tighter text-on-surface-variant font-semibold px-2 py-0.5 bg-surface-variant rounded-full inline-block">Review</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Visual Divider using Tonal Shift -->
-<div class="h-12"></div>
-<!-- Quick Insights -->
-<div class="bg-surface-container-lowest rounded-3xl p-6 border border-white/5">
-<div class="flex items-start gap-4">
-<div class="p-3 bg-primary-container/20 rounded-full">
-<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
-</div>
-<div>
-<h4 class="font-headline font-bold text-lg">Financial Tip</h4>
-<p class="text-on-surface-variant text-sm mt-1 leading-relaxed">
-            Your savings rate is up by 12% compared to last month. Consider moving your surplus $1,200 to your high-yield investment account.
-          </p>
-</div>
-</div>
-</div>
-</main>
-<!-- BottomNavBar -->
-<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-8 backdrop-blur-2xl border-t border-white/5 bg-[#0b1326]/90 dark:bg-[#0b1326]/90 rounded-t-3xl shadow-[0_-4px_20px_rgba(6,14,32,0.5)]">
-<!-- Home (Active) -->
-<a class="flex flex-col items-center justify-center bg-[#2563EB]/10 text-blue-500 rounded-xl px-3 py-1.5 active:scale-90 duration-200" href="#">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
-<span class="font-['Inter'] text-[10px] font-medium tracking-wide">Home</span>
-</a>
-<!-- Investments -->
-<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200" href="#">
-<span class="material-symbols-outlined">account_balance_wallet</span>
-<span class="font-['Inter'] text-[10px] font-medium tracking-wide">Investments</span>
-</a>
-<!-- EMIs -->
-<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200" href="#">
-<span class="material-symbols-outlined">payments</span>
-<span class="font-['Inter'] text-[10px] font-medium tracking-wide">EMIs</span>
-</a>
-<!-- Profile -->
-<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200" href="#">
-<span class="material-symbols-outlined">person</span>
-<span class="font-['Inter'] text-[10px] font-medium tracking-wide">Profile</span>
-</a>
-</nav>
-</body></html>
+        </div>
+        <div class="bg-surface-container-low rounded-3xl p-2 space-y-1">
+          <!-- Payment Item 1 -->
+          <div
+            class="flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container transition-colors group"
+          >
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >home_work</span
+                >
+              </div>
+              <div>
+                <div class="font-medium">Mortgage Repayment</div>
+                <div class="text-xs text-on-surface-variant">
+                  Due in 3 days • HDFC Bank
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-headline font-bold text-lg">$1,850.00</div>
+              <div
+                class="text-[10px] uppercase tracking-tighter text-tertiary-container font-semibold px-2 py-0.5 bg-tertiary-container/10 rounded-full inline-block"
+              >
+                Pending
+              </div>
+            </div>
+          </div>
+          <!-- Payment Item 2 -->
+          <div
+            class="flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container transition-colors"
+          >
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >directions_car</span
+                >
+              </div>
+              <div>
+                <div class="font-medium">Car Loan</div>
+                <div class="text-xs text-on-surface-variant">
+                  Due in 8 days • Tesla Finance
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-headline font-bold text-lg">$640.00</div>
+              <div
+                class="text-[10px] uppercase tracking-tighter text-secondary font-semibold px-2 py-0.5 bg-secondary/10 rounded-full inline-block"
+              >
+                Autopay
+              </div>
+            </div>
+          </div>
+          <!-- Payment Item 3 -->
+          <div
+            class="flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container transition-colors"
+          >
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 bg-surface-container-highest rounded-2xl flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >credit_card</span
+                >
+              </div>
+              <div>
+                <div class="font-medium">Credit Card Bill</div>
+                <div class="text-xs text-on-surface-variant">
+                  Due in 12 days • Amex Platinum
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-headline font-bold text-lg">$750.00</div>
+              <div
+                class="text-[10px] uppercase tracking-tighter text-on-surface-variant font-semibold px-2 py-0.5 bg-surface-variant rounded-full inline-block"
+              >
+                Review
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Visual Divider using Tonal Shift -->
+      <div class="h-12"></div>
+      <!-- Quick Insights -->
+      <div
+        class="bg-surface-container-lowest rounded-3xl p-6 border border-white/5"
+      >
+        <div class="flex items-start gap-4">
+          <div class="p-3 bg-primary-container/20 rounded-full">
+            <span
+              class="material-symbols-outlined text-primary"
+              style="font-variation-settings: 'FILL' 1"
+              >lightbulb</span
+            >
+          </div>
+          <div>
+            <h4 class="font-headline font-bold text-lg">Financial Tip</h4>
+            <p class="text-on-surface-variant text-sm mt-1 leading-relaxed">
+              Your savings rate is up by 12% compared to last month. Consider
+              moving your surplus $1,200 to your high-yield investment account.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+      class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-8 backdrop-blur-2xl border-t border-white/5 bg-[#0b1326]/90 dark:bg-[#0b1326]/90 rounded-t-3xl shadow-[0_-4px_20px_rgba(6,14,32,0.5)]"
+    >
+      <!-- Home (Active) -->
+      <a
+        class="flex flex-col items-center justify-center bg-[#2563EB]/10 text-blue-500 rounded-xl px-3 py-1.5 active:scale-90 duration-200"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined"
+          style="font-variation-settings: 'FILL' 1"
+          >home</span
+        >
+        <span class="font-['Inter'] text-[10px] font-medium tracking-wide"
+          >Home</span
+        >
+      </a>
+      <!-- Investments -->
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined">account_balance_wallet</span>
+        <span class="font-['Inter'] text-[10px] font-medium tracking-wide"
+          >Investments</span
+        >
+      </a>
+      <!-- EMIs -->
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined">payments</span>
+        <span class="font-['Inter'] text-[10px] font-medium tracking-wide"
+          >EMIs</span
+        >
+      </a>
+      <!-- Profile -->
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined">person</span>
+        <span class="font-['Inter'] text-[10px] font-medium tracking-wide"
+          >Profile</span
+        >
+      </a>
+    </nav>
+  </body>
+</html>

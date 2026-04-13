@@ -15,10 +15,5 @@
   "routerOnly": false,
   "version": 1,
   "framework": "react",
-  "chosenAddOns": [
-    "eslint",
-    "prisma",
-    "better-auth",
-    "tanstack-query"
-  ]
+  "chosenAddOns": ["eslint", "prisma", "better-auth", "tanstack-query"]
 }

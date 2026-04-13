@@ -14,10 +14,7 @@ import {
   upcomingPaymentsFn,
 } from '#/server/emis'
 import type { EmiListFilters } from '#/server/emis'
-import type {
-  EmiCreateInput,
-  MarkPaymentPaidInput,
-} from '#/lib/validators'
+import type { EmiCreateInput, MarkPaymentPaidInput } from '#/lib/validators'
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback

@@ -7,12 +7,12 @@ Version 1.0 | April 2026 | Status: MVP
 
 ## 1. Product Overview
 
-| | |
-|---|---|
-| **App Name** | Phinio |
-| **Platform** | Mobile-first Progressive Web App (optimized for mobile browsers, native app feel) |
-| **Target Users** | General public — anyone wanting to track investments and manage EMI payments |
-| **Currency Support** | BDT (৳) and USD ($) — user selects preferred currency at signup |
+|                      |                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------- |
+| **App Name**         | Phinio                                                                            |
+| **Platform**         | Mobile-first Progressive Web App (optimized for mobile browsers, native app feel) |
+| **Target Users**     | General public — anyone wanting to track investments and manage EMI payments      |
+| **Currency Support** | BDT (৳) and USD ($) — user selects preferred currency at signup                   |
 
 Phinio is a mobile-first personal finance app that helps users track their investment portfolio and manage EMI (Equated Monthly Installment) payments for bank loans and credit cards in one unified dashboard. The app provides a clear picture of net worth, investment returns, and upcoming payment obligations.
 
@@ -20,19 +20,19 @@ Phinio is a mobile-first personal finance app that helps users track their inves
 
 ## 2. Technology Stack
 
-| Layer | Technology | Notes |
-|---|---|---|
-| Frontend Framework | **TanStack Start** | Full-stack React framework with file-based routing, SSR, server functions |
-| Server/API | **TanStack Start Server Functions** | Type-safe server-side logic via `createServerFn()` |
-| Data Fetching | **TanStack Query** | Client-side caching, mutations, optimistic updates, background refetch |
-| ORM | **Prisma** | Type-safe database access, migrations, schema management |
-| Database | **PostgreSQL** (via Neon) | Serverless Postgres for structured financial data |
-| Authentication | **Better Auth** | Framework-agnostic auth library with email/password, session management |
-| Styling | **Tailwind CSS** | Mobile-first utility classes |
-| Charts | **Recharts** | Lightweight, React-native charting |
-| Date Utilities | **date-fns** | EMI schedule date calculations |
-| Validation | **Zod** | Schema validation for forms and server functions |
-| Hosting | **Vercel / Netlify** | Edge deployment with SSR support |
+| Layer              | Technology                          | Notes                                                                     |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------------- |
+| Frontend Framework | **TanStack Start**                  | Full-stack React framework with file-based routing, SSR, server functions |
+| Server/API         | **TanStack Start Server Functions** | Type-safe server-side logic via `createServerFn()`                        |
+| Data Fetching      | **TanStack Query**                  | Client-side caching, mutations, optimistic updates, background refetch    |
+| ORM                | **Prisma**                          | Type-safe database access, migrations, schema management                  |
+| Database           | **PostgreSQL** (via Neon)           | Serverless Postgres for structured financial data                         |
+| Authentication     | **Better Auth**                     | Framework-agnostic auth library with email/password, session management   |
+| Styling            | **Tailwind CSS**                    | Mobile-first utility classes                                              |
+| Charts             | **Recharts**                        | Lightweight, React-native charting                                        |
+| Date Utilities     | **date-fns**                        | EMI schedule date calculations                                            |
+| Validation         | **Zod**                             | Schema validation for forms and server functions                          |
+| Hosting            | **Vercel / Netlify**                | Edge deployment with SSR support                                          |
 
 ---
 
@@ -156,12 +156,12 @@ model EmiPayment {
 
 ### 4.2 Computed Fields (UI-side, not stored)
 
-| Field | Formula |
-|---|---|
-| Investment Return % (active) | `((currentValue - investedAmount) / investedAmount) × 100` |
-| Investment Return % (completed) | `((exitValue - investedAmount) / investedAmount) × 100` |
-| Profit/Loss (completed) | `exitValue - investedAmount` |
-| Net Worth | `Σ active investments currentValue - Σ active EMIs remainingBalance` |
+| Field                           | Formula                                                              |
+| ------------------------------- | -------------------------------------------------------------------- |
+| Investment Return % (active)    | `((currentValue - investedAmount) / investedAmount) × 100`           |
+| Investment Return % (completed) | `((exitValue - investedAmount) / investedAmount) × 100`              |
+| Profit/Loss (completed)         | `exitValue - investedAmount`                                         |
+| Net Worth                       | `Σ active investments currentValue - Σ active EMIs remainingBalance` |
 
 ### 4.3 Authorization
 
@@ -296,12 +296,12 @@ All server functions validate the authenticated user's profile ID before any dat
 
 Persistent bottom navigation bar visible on all `/app/*` main routes. Four tabs:
 
-| Tab | Icon | Label | Route |
-|---|---|---|---|
-| 1 | Home/Dashboard | Home | `/app` |
-| 2 | Trending-up | Investments | `/app/investments` |
-| 3 | Calendar/Receipt | EMIs | `/app/emis` |
-| 4 | User/Settings | Profile | `/app/profile` |
+| Tab | Icon             | Label       | Route              |
+| --- | ---------------- | ----------- | ------------------ |
+| 1   | Home/Dashboard   | Home        | `/app`             |
+| 2   | Trending-up      | Investments | `/app/investments` |
+| 3   | Calendar/Receipt | EMIs        | `/app/emis`        |
+| 4   | User/Settings    | Profile     | `/app/profile`     |
 
 - Active tab: filled icon + accent color + label visible
 - Inactive tabs: outline icon + muted color
@@ -310,20 +310,20 @@ Persistent bottom navigation bar visible on all `/app/*` main routes. Four tabs:
 
 ### 6.2 Route Map
 
-| Route | Screen | Layout | Auth |
-|---|---|---|---|
-| `/` | Splash/Welcome | Public (no tab bar) | Redirect if logged in |
-| `/login` | Login | Public | Redirect if logged in |
-| `/signup` | Signup | Public | Redirect if logged in |
-| `/forgot-password` | Forgot Password | Public | No |
-| `/app` | Home Overview | App (tab bar) | Required |
-| `/app/investments` | Investments List | App (tab bar) | Required |
-| `/app/investments/new` | Add Investment | Sub-screen (back arrow) | Required |
-| `/app/investments/$id/edit` | Edit Investment | Sub-screen (back arrow) | Required |
-| `/app/emis` | EMIs List | App (tab bar) | Required |
-| `/app/emis/new` | Add EMI | Sub-screen (back arrow) | Required |
-| `/app/emis/$emiId` | EMI Detail | Sub-screen (back arrow) | Required |
-| `/app/profile` | Profile/Settings | App (tab bar) | Required |
+| Route                       | Screen           | Layout                  | Auth                  |
+| --------------------------- | ---------------- | ----------------------- | --------------------- |
+| `/`                         | Splash/Welcome   | Public (no tab bar)     | Redirect if logged in |
+| `/login`                    | Login            | Public                  | Redirect if logged in |
+| `/signup`                   | Signup           | Public                  | Redirect if logged in |
+| `/forgot-password`          | Forgot Password  | Public                  | No                    |
+| `/app`                      | Home Overview    | App (tab bar)           | Required              |
+| `/app/investments`          | Investments List | App (tab bar)           | Required              |
+| `/app/investments/new`      | Add Investment   | Sub-screen (back arrow) | Required              |
+| `/app/investments/$id/edit` | Edit Investment  | Sub-screen (back arrow) | Required              |
+| `/app/emis`                 | EMIs List        | App (tab bar)           | Required              |
+| `/app/emis/new`             | Add EMI          | Sub-screen (back arrow) | Required              |
+| `/app/emis/$emiId`          | EMI Detail       | Sub-screen (back arrow) | Required              |
+| `/app/profile`              | Profile/Settings | App (tab bar)           | Required              |
 
 ---
 
@@ -344,15 +344,15 @@ Client Component
 
 ### 7.2 Query Key Structure
 
-| Feature | Query Key | Invalidation Trigger |
-|---|---|---|
-| Investments list | `["investments", { status, type }]` | After add/edit/delete investment |
-| Single investment | `["investments", id]` | After edit |
-| EMIs list | `["emis", { type }]` | After add/delete EMI |
-| Single EMI + payments | `["emis", emiId]` | After mark paid/unpaid |
-| Dashboard stats | `["dashboard-stats"]` | After any investment or EMI mutation |
-| Profile | `["profile"]` | After profile update |
-| Upcoming payments | `["upcoming-payments"]` | After mark paid/unpaid |
+| Feature               | Query Key                           | Invalidation Trigger                 |
+| --------------------- | ----------------------------------- | ------------------------------------ |
+| Investments list      | `["investments", { status, type }]` | After add/edit/delete investment     |
+| Single investment     | `["investments", id]`               | After edit                           |
+| EMIs list             | `["emis", { type }]`                | After add/delete EMI                 |
+| Single EMI + payments | `["emis", emiId]`                   | After mark paid/unpaid               |
+| Dashboard stats       | `["dashboard-stats"]`               | After any investment or EMI mutation |
+| Profile               | `["profile"]`                       | After profile update                 |
+| Upcoming payments     | `["upcoming-payments"]`             | After mark paid/unpaid               |
 
 ### 7.3 Mutation Pattern
 
@@ -487,15 +487,15 @@ When an EMI is created, the system auto-generates all monthly payment rows:
 
 ## 11. Non-Functional Requirements
 
-| Requirement | Target |
-|---|---|
-| Performance | First Contentful Paint < 1.5s on 4G mobile |
-| Responsiveness | Optimized for 320px–428px viewport, functional up to 768px |
-| Accessibility | WCAG 2.1 AA — proper labels, contrast ratios, keyboard nav |
-| Security | Server-side auth checks on all data operations, HTTPS only |
+| Requirement     | Target                                                         |
+| --------------- | -------------------------------------------------------------- |
+| Performance     | First Contentful Paint < 1.5s on 4G mobile                     |
+| Responsiveness  | Optimized for 320px–428px viewport, functional up to 768px     |
+| Accessibility   | WCAG 2.1 AA — proper labels, contrast ratios, keyboard nav     |
+| Security        | Server-side auth checks on all data operations, HTTPS only     |
 | Browser Support | Chrome, Safari, Firefox (latest 2 versions) on iOS and Android |
-| PWA | Add to Home Screen support, app-like full-screen mode (future) |
-| Data Privacy | All queries scoped to authenticated user's profileId |
+| PWA             | Add to Home Screen support, app-like full-screen mode (future) |
+| Data Privacy    | All queries scoped to authenticated user's profileId           |
 
 ---
 

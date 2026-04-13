@@ -70,9 +70,7 @@ function CheckEmailScreen() {
               strokeWidth={1.75}
             />
             <div className="flex-1 space-y-1">
-              <p className="body-sm text-on-surface">
-                Didn't get the email?
-              </p>
+              <p className="body-sm text-on-surface">Didn't get the email?</p>
               <p className="body-sm text-on-surface-variant/80">
                 Check your spam folder or wait a minute before resending. Links
                 expire after 1 hour.

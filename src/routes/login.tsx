@@ -147,11 +147,7 @@ function LoginScreen() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Signing in…' : 'Login to Vault'}
           </button>
         </form>

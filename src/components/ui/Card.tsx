@@ -14,11 +14,7 @@ interface CardProps extends ComponentPropsWithoutRef<'div'> {
   variant?: CardVariant
 }
 
-export function Card({
-  variant = 'default',
-  className,
-  ...props
-}: CardProps) {
+export function Card({ variant = 'default', className, ...props }: CardProps) {
   return (
     <div
       className={cn('rounded-2xl p-5', VARIANT_STYLES[variant], className)}

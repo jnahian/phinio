@@ -181,11 +181,7 @@ function SignupScreen() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Creating…' : 'Create account'}
           </button>
         </form>

@@ -1,12 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import {
-  CalendarClock,
-  Home,
-  TrendingUp,
-  User
-  
-} from 'lucide-react'
-import type {LucideIcon} from 'lucide-react';
+import { CalendarClock, Home, TrendingUp, User } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '#/lib/cn'
 
 type TabPath = '/app' | '/app/investments' | '/app/emis' | '/app/profile'
@@ -39,7 +33,9 @@ export function BottomTabBar() {
                 <div
                   className={cn(
                     'flex flex-col items-center gap-1 rounded-xl px-2 py-2 transition-colors',
-                    isActive ? 'text-primary-fixed-dim' : 'text-on-surface-variant',
+                    isActive
+                      ? 'text-primary-fixed-dim'
+                      : 'text-on-surface-variant',
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >

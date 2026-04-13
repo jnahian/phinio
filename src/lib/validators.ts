@@ -42,10 +42,12 @@ const positiveDecimalString = z
   })
   .refine((s) => Number(s) > 0, { message: 'Amount must be greater than 0' })
 
-const isoDateString = z.string().refine(
-  (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)),
-  { message: 'Enter a valid date' },
-)
+const isoDateString = z
+  .string()
+  .refine(
+    (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)),
+    { message: 'Enter a valid date' },
+  )
 
 export const investmentCreateSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
