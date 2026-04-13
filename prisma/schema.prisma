@@ -7,8 +7,148 @@ datasource db {
   provider = "postgresql"
 }
 
-model Todo {
-  id        Int      @id @default(autoincrement())
-  title     String
+// ----------------------------------------------------------------------------
+// Better Auth core models (generated via `@better-auth/cli generate`)
+// ----------------------------------------------------------------------------
+
+model User {
+  id                String    @id
+  name              String
+  email             String
+  emailVerified     Boolean   @default(false)
+  image             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  preferredCurrency String    @default("BDT")
+  sessions          Session[]
+  accounts          Account[]
+  profile           Profile?
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ----------------------------------------------------------------------------
+// Phinio application models
+// ----------------------------------------------------------------------------
+
+model Profile {
+  id                String       @id @default(uuid())
+  userId            String       @unique
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName          String
+  preferredCurrency String       @default("BDT")
+  createdAt         DateTime     @default(now())
+  investments       Investment[]
+  emis              Emi[]
+  emiPayments       EmiPayment[]
+
+  @@map("profiles")
+}
+
+model Investment {
+  id               String    @id @default(uuid())
+  profileId        String
+  profile          Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name             String
+  type             String
+  investedAmount   Decimal   @db.Decimal(15, 2)
+  currentValue     Decimal   @db.Decimal(15, 2)
+  dateOfInvestment DateTime  @db.Date
+  notes            String?
+  status           String    @default("active")
+  completedAt      DateTime? @db.Date
+  exitValue        Decimal?  @db.Decimal(15, 2)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([profileId, status])
+  @@map("investments")
+}
+
+model Emi {
+  id           String       @id @default(uuid())
+  profileId    String
+  profile      Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  label        String
+  type         String
+  principal    Decimal      @db.Decimal(15, 2)
+  interestRate Decimal      @db.Decimal(5, 2)
+  tenureMonths Int
+  emiAmount    Decimal      @db.Decimal(15, 2)
+  startDate    DateTime     @db.Date
+  status       String       @default("active")
+  createdAt    DateTime     @default(now())
+  payments     EmiPayment[]
+
+  @@index([profileId, status])
+  @@map("emis")
+}
+
+model EmiPayment {
+  id                 String    @id @default(uuid())
+  emiId              String
+  emi                Emi       @relation(fields: [emiId], references: [id], onDelete: Cascade)
+  profileId          String
+  profile            Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  paymentNumber      Int
+  dueDate            DateTime  @db.Date
+  emiAmount          Decimal   @db.Decimal(15, 2)
+  principalComponent Decimal   @db.Decimal(15, 2)
+  interestComponent  Decimal   @db.Decimal(15, 2)
+  remainingBalance   Decimal   @db.Decimal(15, 2)
+  status             String    @default("upcoming")
+  paidAt             DateTime?
+
+  @@index([emiId, paymentNumber])
+  @@index([profileId, status, dueDate])
+  @@map("emi_payments")
 }
