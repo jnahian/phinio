@@ -15,6 +15,9 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppProfileRouteImport } from './routes/app/profile'
+import { Route as AppInvestmentsIndexRouteImport } from './routes/app/investments/index'
+import { Route as AppEmisIndexRouteImport } from './routes/app/emis/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const SignupRoute = SignupRouteImport.update({
@@ -47,6 +50,21 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvestmentsIndexRoute = AppInvestmentsIndexRouteImport.update({
+  id: '/investments/',
+  path: '/investments/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEmisIndexRoute = AppEmisIndexRouteImport.update({
+  id: '/emis/',
+  path: '/emis/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -59,16 +77,22 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/emis/': typeof AppEmisIndexRoute
+  '/app/investments/': typeof AppInvestmentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/app/profile': typeof AppProfileRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/emis': typeof AppEmisIndexRoute
+  '/app/investments': typeof AppInvestmentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,8 +101,11 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/emis/': typeof AppEmisIndexRoute
+  '/app/investments/': typeof AppInvestmentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,10 +115,22 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/signup'
+    | '/app/profile'
     | '/app/'
     | '/api/auth/$'
+    | '/app/emis/'
+    | '/app/investments/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/forgot-password' | '/login' | '/signup' | '/app' | '/api/auth/$'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/signup'
+    | '/app/profile'
+    | '/app'
+    | '/api/auth/$'
+    | '/app/emis'
+    | '/app/investments'
   id:
     | '__root__'
     | '/'
@@ -99,8 +138,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/signup'
+    | '/app/profile'
     | '/app/'
     | '/api/auth/$'
+    | '/app/emis/'
+    | '/app/investments/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -156,6 +198,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/investments/': {
+      id: '/app/investments/'
+      path: '/investments'
+      fullPath: '/app/investments/'
+      preLoaderRoute: typeof AppInvestmentsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/emis/': {
+      id: '/app/emis/'
+      path: '/emis'
+      fullPath: '/app/emis/'
+      preLoaderRoute: typeof AppEmisIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -167,11 +230,17 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteRouteChildren {
+  AppProfileRoute: typeof AppProfileRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppEmisIndexRoute: typeof AppEmisIndexRoute
+  AppInvestmentsIndexRoute: typeof AppInvestmentsIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppProfileRoute: AppProfileRoute,
   AppIndexRoute: AppIndexRoute,
+  AppEmisIndexRoute: AppEmisIndexRoute,
+  AppInvestmentsIndexRoute: AppInvestmentsIndexRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
