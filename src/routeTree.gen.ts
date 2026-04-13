@@ -18,7 +18,9 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppInvestmentsIndexRouteImport } from './routes/app/investments/index'
 import { Route as AppEmisIndexRouteImport } from './routes/app/emis/index'
+import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppInvestmentsIdEditRouteImport } from './routes/app/investments/$id.edit'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -65,10 +67,20 @@ const AppEmisIndexRoute = AppEmisIndexRouteImport.update({
   path: '/emis/',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppInvestmentsNewRoute = AppInvestmentsNewRouteImport.update({
+  id: '/investments/new',
+  path: '/investments/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
+  id: '/investments/$id/edit',
+  path: '/investments/$id/edit',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -80,8 +92,10 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/investments/new': typeof AppInvestmentsNewRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
+  '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,8 +105,10 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/investments/new': typeof AppInvestmentsNewRoute
   '/app/emis': typeof AppEmisIndexRoute
   '/app/investments': typeof AppInvestmentsIndexRoute
+  '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,8 +120,10 @@ export interface FileRoutesById {
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/investments/new': typeof AppInvestmentsNewRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
+  '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,8 +136,10 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/'
     | '/api/auth/$'
+    | '/app/investments/new'
     | '/app/emis/'
     | '/app/investments/'
+    | '/app/investments/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,8 +149,10 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app'
     | '/api/auth/$'
+    | '/app/investments/new'
     | '/app/emis'
     | '/app/investments'
+    | '/app/investments/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -141,8 +163,10 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/'
     | '/api/auth/$'
+    | '/app/investments/new'
     | '/app/emis/'
     | '/app/investments/'
+    | '/app/investments/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -219,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/investments/new': {
+      id: '/app/investments/new'
+      path: '/investments/new'
+      fullPath: '/app/investments/new'
+      preLoaderRoute: typeof AppInvestmentsNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -226,21 +257,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/investments/$id/edit': {
+      id: '/app/investments/$id/edit'
+      path: '/investments/$id/edit'
+      fullPath: '/app/investments/$id/edit'
+      preLoaderRoute: typeof AppInvestmentsIdEditRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
 interface AppRouteRouteChildren {
   AppProfileRoute: typeof AppProfileRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppInvestmentsNewRoute: typeof AppInvestmentsNewRoute
   AppEmisIndexRoute: typeof AppEmisIndexRoute
   AppInvestmentsIndexRoute: typeof AppInvestmentsIndexRoute
+  AppInvestmentsIdEditRoute: typeof AppInvestmentsIdEditRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppProfileRoute: AppProfileRoute,
   AppIndexRoute: AppIndexRoute,
+  AppInvestmentsNewRoute: AppInvestmentsNewRoute,
   AppEmisIndexRoute: AppEmisIndexRoute,
   AppInvestmentsIndexRoute: AppInvestmentsIndexRoute,
+  AppInvestmentsIdEditRoute: AppInvestmentsIdEditRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(

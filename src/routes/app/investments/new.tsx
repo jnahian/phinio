@@ -1,0 +1,220 @@
+import { useState } from 'react'
+import {
+  Link,
+  createFileRoute,
+  useNavigate,
+} from '@tanstack/react-router'
+import {
+  ArrowLeft,
+  Bitcoin,
+  Circle,
+  Coins,
+  LineChart,
+  Package,
+  PieChart,
+} from 'lucide-react'
+import { TextArea, TextField } from '#/components/ui/TextField'
+import { cn } from '#/lib/cn'
+import { getCurrencySymbol  } from '#/lib/currency'
+import type {Currency} from '#/lib/currency';
+import { useCreateInvestment } from '#/hooks/useInvestments'
+import { investmentCreateSchema } from '#/lib/validators'
+import type {
+  InvestmentCreateInput,
+  InvestmentType,
+} from '#/lib/validators'
+
+export const Route = createFileRoute('/app/investments/new')({
+  staticData: { hideTabBar: true },
+  component: AddInvestmentScreen,
+})
+
+const TYPE_OPTIONS: Array<{
+  value: InvestmentType
+  label: string
+  icon: typeof LineChart
+}> = [
+  { value: 'stock', label: 'Stocks', icon: LineChart },
+  { value: 'mutual_fund', label: 'Mutual Fund', icon: PieChart },
+  { value: 'fd', label: 'Fixed Deposit', icon: Circle },
+  { value: 'gold', label: 'Gold', icon: Coins },
+  { value: 'crypto', label: 'Crypto', icon: Bitcoin },
+  { value: 'other', label: 'Other', icon: Package },
+]
+
+function todayIso(): string {
+  const d = new Date()
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function AddInvestmentScreen() {
+  const navigate = useNavigate()
+  const { profile } = Route.useRouteContext()
+  const currency = profile.preferredCurrency as Currency
+  const symbol = getCurrencySymbol(currency)
+
+  const createInvestment = useCreateInvestment()
+
+  const [name, setName] = useState('')
+  const [type, setType] = useState<InvestmentType>('stock')
+  const [investedAmount, setInvestedAmount] = useState('')
+  const [currentValue, setCurrentValue] = useState('')
+  const [dateOfInvestment, setDateOfInvestment] = useState(todayIso())
+  const [notes, setNotes] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setFieldErrors({})
+    setFormError(null)
+
+    const parsed = investmentCreateSchema.safeParse({
+      name,
+      type,
+      investedAmount,
+      currentValue,
+      dateOfInvestment,
+      notes: notes.trim() || undefined,
+    } satisfies InvestmentCreateInput)
+
+    if (!parsed.success) {
+      const errs: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0]
+        if (typeof key === 'string' && !errs[key]) errs[key] = issue.message
+      }
+      setFieldErrors(errs)
+      return
+    }
+
+    try {
+      await createInvestment.mutateAsync(parsed.data)
+      navigate({ to: '/app/investments' })
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to save')
+    }
+  }
+
+  return (
+    <main className="noir-bg min-h-dvh pb-32">
+      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
+        <Link
+          to="/app/investments"
+          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
+        </Link>
+        <h1 className="headline-sm text-on-surface">Add Investment</h1>
+      </header>
+
+      <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
+        <div className="space-y-6">
+          <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
+            <p className="label-sm text-on-surface-variant">Asset details</p>
+            <TextField
+              id="name"
+              label="Asset name"
+              placeholder="e.g. Vanguard S&P 500 ETF"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              error={fieldErrors.name}
+              autoFocus
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                id="investedAmount"
+                label="Invested"
+                placeholder="0.00"
+                inputMode="decimal"
+                prefix={symbol}
+                value={investedAmount}
+                onChange={(e) => setInvestedAmount(e.target.value)}
+                error={fieldErrors.investedAmount}
+              />
+              <TextField
+                id="currentValue"
+                label="Current value"
+                placeholder="0.00"
+                inputMode="decimal"
+                prefix={symbol}
+                value={currentValue}
+                onChange={(e) => setCurrentValue(e.target.value)}
+                error={fieldErrors.currentValue}
+              />
+            </div>
+            <TextField
+              id="dateOfInvestment"
+              label="Date of investment"
+              type="date"
+              value={dateOfInvestment}
+              onChange={(e) => setDateOfInvestment(e.target.value)}
+              error={fieldErrors.dateOfInvestment}
+            />
+          </section>
+
+          <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
+            <p className="label-sm text-on-surface-variant">Category</p>
+            <div className="grid grid-cols-3 gap-3">
+              {TYPE_OPTIONS.map((opt) => {
+                const active = type === opt.value
+                const Icon = opt.icon
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setType(opt.value)}
+                    aria-pressed={active}
+                    className={cn(
+                      'flex flex-col items-center gap-2 rounded-2xl p-4 text-xs font-semibold transition',
+                      active
+                        ? 'bg-primary-container text-on-primary-container shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5)]'
+                        : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container',
+                    )}
+                  >
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
+            <p className="label-sm text-on-surface-variant">Notes (optional)</p>
+            <TextArea
+              id="notes"
+              placeholder="Why this investment, goals, or any context"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              maxLength={1000}
+            />
+          </section>
+
+          {formError && (
+            <div
+              role="alert"
+              className="rounded-2xl bg-error-container/20 px-4 py-3 text-sm text-error"
+            >
+              {formError}
+            </div>
+          )}
+        </div>
+
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant/15 bg-surface/85 px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl">
+          <button
+            type="submit"
+            disabled={createInvestment.isPending}
+            className="btn-primary"
+          >
+            {createInvestment.isPending ? 'Saving…' : 'Save investment'}
+          </button>
+        </div>
+      </form>
+    </main>
+  )
+}
