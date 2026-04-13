@@ -1,6 +1,9 @@
 import { randomBytes } from 'node:crypto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getProfileImpl, updateProfileCurrencyImpl } from '#/server/profile'
+import {
+  getProfileImpl,
+  updateProfileCurrencyImpl,
+} from '#/server/profile.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
 beforeEach(async () => {

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getDashboardStatsImpl } from '#/server/dashboard'
+import { getDashboardStatsImpl } from '#/server/dashboard.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
 beforeEach(async () => {

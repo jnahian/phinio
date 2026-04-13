@@ -6,7 +6,7 @@ import {
   listEmisImpl,
   markPaymentPaidImpl,
   upcomingPaymentsImpl,
-} from '#/server/emis'
+} from '#/server/emis.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
 beforeEach(async () => {

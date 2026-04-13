@@ -5,7 +5,7 @@ import {
   getInvestmentImpl,
   listInvestmentsImpl,
   updateInvestmentImpl,
-} from '#/server/investments'
+} from '#/server/investments.impl'
 import { createTestUser, resetDb } from './helpers/db'
 
 beforeEach(async () => {
