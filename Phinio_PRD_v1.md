@@ -26,7 +26,7 @@ Phinio is a mobile-first personal finance app that helps users track their inves
 | Server/API | **TanStack Start Server Functions** | Type-safe server-side logic via `createServerFn()` |
 | Data Fetching | **TanStack Query** | Client-side caching, mutations, optimistic updates, background refetch |
 | ORM | **Prisma** | Type-safe database access, migrations, schema management |
-| Database | **PostgreSQL** (via Supabase or Neon) | Relational database for structured financial data |
+| Database | **PostgreSQL** (via Neon) | Serverless Postgres for structured financial data |
 | Authentication | **Better Auth** | Framework-agnostic auth library with email/password, session management |
 | Styling | **Tailwind CSS** | Mobile-first utility classes |
 | Charts | **Recharts** | Lightweight, React-native charting |
@@ -439,7 +439,7 @@ When an EMI is created, the system auto-generates all monthly payment rows:
 ### Phase 1: Foundation
 
 - TanStack Start project scaffolding with Tailwind CSS
-- PostgreSQL database setup (Supabase/Neon)
+- PostgreSQL database setup (Neon)
 - Prisma schema, initial migration
 - Better Auth configuration (email/password, session)
 - Auth screens: Login, Signup, Forgot Password
