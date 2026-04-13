@@ -4,82 +4,94 @@ Derived from `Phinio_PRD_v1.md` §10. Tasks are roughly ordered within each phas
 
 ---
 
-## Phase 1 — Foundation
+## Phase 1 — Foundation ✅ COMPLETE
 
 Goal: a logged-in user lands on an empty `/app` page backed by Neon + Prisma + Better Auth.
 
 ### Environment & database
-- [ ] Provision a Neon Postgres project; copy the pooled connection string into `.env.local` as `DATABASE_URL`
-- [ ] Generate `BETTER_AUTH_SECRET` via `npx -y @better-auth/cli secret` and add to `.env.local`
-- [ ] Add `BETTER_AUTH_URL` to `.env.local` (dev: `http://localhost:3000`)
+- [x] Provision a Neon Postgres project; copy the pooled connection string into `.env.local` as `DATABASE_URL`
+- [x] Generate `BETTER_AUTH_SECRET` via `npx -y @better-auth/cli secret` and add to `.env.local`
+- [x] Add `BETTER_AUTH_URL` to `.env.local` (dev: `http://localhost:3000`)
 
 ### Prisma schema
-- [ ] Delete the placeholder `Todo` model in `prisma/schema.prisma`
-- [ ] Add `Profile`, `Investment`, `Emi`, `EmiPayment` models per PRD §4.1 (with `@@map` snake_case table names, `Decimal(15,2)` for money, `@db.Date` for date-only fields)
-- [ ] Add Better Auth's required models (`User`, `Session`, `Account`, `Verification`) — let `@better-auth/cli generate` emit the Prisma model block, then paste into `schema.prisma`
-- [ ] Run `npm run db:generate` then `npm run db:migrate -- --name init`
-- [ ] Delete `prisma/seed.ts` or rewrite it for real models
-- [ ] Remove the `Todo`-era generated files under `src/generated/prisma/` if stale (regenerate fresh)
+- [x] Delete the placeholder `Todo` model in `prisma/schema.prisma`
+- [x] Add `Profile`, `Investment`, `Emi`, `EmiPayment` models per PRD §4.1 (with `@@map` snake_case table names, `Decimal(15,2)` for money, `@db.Date` for date-only fields)
+- [x] Add Better Auth's required models (`User`, `Session`, `Account`, `Verification`) — generated via `@better-auth/cli generate`
+- [x] Run `npm run db:generate` then `npm run db:migrate -- --name init`
+- [x] Delete `prisma/seed.ts` and remove the `db:seed` script from `package.json`
+- [x] `src/generated/` added to `.gitignore`
 
 ### Better Auth wiring
-- [ ] Update `src/lib/auth.ts` to use the Prisma adapter pointing at `src/db.ts` ⚠ (import `PrismaClient` from `./generated/prisma/client.js`, not `@prisma/client`)
-- [ ] Add a Better Auth `databaseHooks.user.create.after` hook that creates a `Profile` row linked by `userId` with `fullName` + `preferredCurrency` from signup metadata
-- [ ] Extend signup fields via `additionalFields` for `fullName` + `preferredCurrency` (`"BDT" | "USD"`)
-- [ ] Confirm `src/routes/api/auth/$.ts` still forwards to `auth.handler` (already in place)
-- [ ] Create `src/lib/auth-client.ts` with `createAuthClient()` + typed session hook export (already stubbed — verify it resolves the Better Auth URL)
+- [x] `src/lib/auth.ts` uses the Prisma adapter pointing at `src/db.ts`
+- [x] `databaseHooks.user.create.after` creates a linked `Profile` row
+- [x] `preferredCurrency` exposed as a required `additionalField` on `User` (fullName uses built-in `user.name`)
+- [x] `src/routes/api/auth/$.ts` forwards to `auth.handler`
+- [x] `src/lib/auth-client.ts` uses `inferAdditionalFields<typeof auth>()` for typed signup
+- [x] Resend mailer wired to `sendResetPassword` (falls back to `console.warn` when `RESEND_API_KEY` is unset)
 
 ### Auth UI
-- [ ] Add `src/lib/validators.ts` with Zod schemas for login, signup, forgot-password
-- [ ] Build `src/routes/login.tsx` per PRD §5.2 (email, password w/ show-hide, submit, error toasts, loading state)
-- [ ] Build `src/routes/signup.tsx` per PRD §5.3 (name, email, password, BDT/USD currency toggle)
-- [ ] Build `src/routes/forgot-password.tsx` per PRD §5.4
-- [ ] Build `src/routes/index.tsx` splash/welcome per PRD §5.1 (auto-redirect to `/app` if session exists)
+- [x] `src/lib/validators.ts` with Zod schemas for login, signup, forgot-password
+- [x] `src/routes/login.tsx` — Modern Noir glass card with email, password (show/hide), error states
+- [x] `src/routes/signup.tsx` — full name, email, password, BDT/USD currency toggle
+- [x] `src/routes/forgot-password.tsx` with success state
+- [x] `src/routes/index.tsx` splash with auto-redirect when session exists
 
 ### Route protection
-- [ ] Create `src/routes/app/route.tsx` with `beforeLoad` that calls `auth.api.getSession()` server-side and redirects to `/login` if missing
-- [ ] Add redirect guards on `/`, `/login`, `/signup` → `/app` when session exists
+- [x] `src/routes/app/route.tsx` with `beforeLoad` session guard via `getSessionFn` server function
+- [x] Redirect guards on `/`, `/login`, `/signup` → `/app` when session exists
+- [x] `src/server/auth.ts` with shared `getSessionFn` helper
+
+### Design system foundation (pulled forward from Phase 2)
+- [x] Inter + Manrope fonts imported in `src/styles.css`
+- [x] Tailwind v4 `@theme` tokens for Modern Noir palette (surface hierarchy, primary/secondary/tertiary, outline-variant)
+- [x] Typography scale utilities (`display-lg`, `headline-lg/md/sm`, `body-md`, `label-sm/md`)
+- [x] Utility classes for `glass`, `input-carved`, `btn-primary`, `btn-ghost`, `noir-bg`
 
 ### Cleanup
-- [ ] Remove `src/routes/about.tsx` and any `demo/` artifacts
-- [ ] Delete placeholder `Header`/`Footer` usage from `__root.tsx` (the real layout will live under `/app`)
+- [x] Removed `src/routes/about.tsx`
+- [x] Removed `Header.tsx`, `Footer.tsx`, `ThemeToggle.tsx`, `src/integrations/better-auth/header-user.tsx`
+- [x] `__root.tsx` reduced to a bare shell (devtools only)
+
+### Verified end-to-end
+- [x] POST `/api/auth/sign-up/email` → User + Profile + Session rows in Neon
+- [x] Session cookie authenticates `/app` and renders the greeting
+- [x] Unauthenticated `/app` → 307 redirect to `/login`
+- [x] `npm run build` and `npm run lint` clean
 
 ---
 
-## Phase 2 — App Shell
+## Phase 2 — App Shell ✅ COMPLETE
 
 Goal: a user can navigate between all four main tabs and see branded empty screens using the Modern Noir design system.
 
-### Design system foundation
-- [ ] Import Manrope + Inter via Google Fonts or self-host in `public/fonts` and register in `src/styles.css`
-- [ ] Define Tailwind v4 `@theme` tokens in `src/styles.css` for the Modern Noir palette (`surface`, `surface-container-low/high/highest/lowest`, `primary`, `primary-container`, `secondary`, `tertiary-container`, `outline-variant`, etc.) per `screens/phinio_modern_noir/DESIGN.md` §2
-- [ ] Add typography scale utilities (`display-lg`, `headline-lg/md/sm`, `body-md`, `label-sm/md`) per DESIGN.md §3
-- [ ] Wire dark-mode tokens to the existing pre-hydration theme script (`__root.tsx`) ⚠ keep theme resolution in the inline script, not React state
-- [ ] Override the shell body in `__root.tsx` to drop Header/Footer for `/app/*` and `/login` etc.
-
 ### Layout & navigation
-- [ ] Build `src/components/BottomTabBar.tsx` — 4 tabs (Home, Investments, EMIs, Profile), 60–64px tall with safe-area padding, active-tab accent color
-- [ ] Use `BottomTabBar` in `src/routes/app/route.tsx`; hide on sub-screens (detail pages, forms) — use a route-level flag or layout-split route file
-- [ ] Build `src/routes/app/index.tsx` home shell: greeting + placeholder hero card
-- [ ] Build `src/routes/app/investments/index.tsx` stub with empty state
-- [ ] Build `src/routes/app/emis/index.tsx` stub with empty state
-- [ ] Build `src/routes/app/profile.tsx` with name, email, currency toggle, theme toggle, logout
+- [x] `src/components/BottomTabBar.tsx` — 4 tabs (Home, Investments, EMIs, Profile) with safe-area padding, lucide icons, active pill accent
+- [x] `BottomTabBar` mounted in `src/routes/app/route.tsx`; sub-screen hiding deferred until first sub-screen is introduced in Phase 3
+- [x] Fleshed out `src/routes/app/index.tsx` home shell: greeting, gradient net-worth hero, Invested + Monthly EMI quick stats, upcoming payments empty card
+- [x] `src/routes/app/investments/index.tsx` stub with summary card + empty state
+- [x] `src/routes/app/emis/index.tsx` stub with summary card + empty state
+- [x] `src/routes/app/profile.tsx` with initials avatar, name, email, currency toggle, logout
 
 ### Reusable primitives
-- [ ] `src/components/ui/EmptyState.tsx` — illustration slot + heading + CTA
-- [ ] `src/components/ui/Card.tsx` — rounded 16px, `surface-container-high` fill, no borders
-- [ ] `src/components/ui/Button.tsx` — primary / secondary (ghost border) / tertiary variants per DESIGN.md §5
-- [ ] `src/components/ui/Input.tsx` — carved `surface-container-lowest` fill, primary-focus border
-- [ ] `src/components/ui/FAB.tsx` — bottom-right fixed, primary-container fill
-- [ ] `src/components/ui/FilterPills.tsx` — horizontal-scroll pill group with active state
-- [ ] `src/components/ui/SummaryHeroCard.tsx` — gradient hero for page tops
-- [ ] `src/components/ui/ProgressBar.tsx` — 4px thin track per DESIGN.md §5
-- [ ] `src/lib/currency.ts` — format `Decimal`/string amounts as BDT (৳) or USD ($) based on profile preference ⚠ never coerce to `number`
-- [ ] `src/lib/cn.ts` — classname merge utility
+- [x] `src/components/ui/EmptyState.tsx`
+- [x] `src/components/ui/Card.tsx`
+- [x] `src/lib/currency.ts` — Decimal-safe formatter for BDT/USD
+- [x] `src/lib/cn.ts` — className merge utility
 
 ### Profile page functionality
-- [ ] Server function: `updateProfileCurrency({ preferredCurrency })`
-- [ ] Server function: `signOut()` using Better Auth
-- [ ] Profile page wires the currency toggle + logout with confirmation dialog
+- [x] `src/server/profile.ts` — `getProfileFn` (loaded in `/app` beforeLoad) and `updateProfileCurrencyFn` (Zod-validated, session-scoped)
+- [x] Profile page wires the currency toggle (optimistic with router.invalidate) + logout with confirmation
+
+### Verified end-to-end
+- [x] Fresh-DB signup with `preferredCurrency: "USD"` → session-scoped profile loads on every tab
+- [x] `$0.00` renders on home/investments/EMIs (currency flows through `formatCurrency`)
+- [x] Initials avatar computed from `fullName`
+- [x] Bottom tab bar present on all 4 routes, empty states visible
+- [x] `npm run build` and `npm run lint` clean
+
+### Known deferrals (not blockers)
+- Sub-screen tab-bar hiding — add when the first sub-screen lands (investment/EMI form in Phase 3/4)
+- Theme toggle — skipped; app is dark-only per Modern Noir design system
 
 ---
 
@@ -103,6 +115,7 @@ Goal: full CRUD for investments with active/completed lifecycle.
 - [ ] `src/routes/app/investments/$id.edit.tsx` — edit form with status toggle revealing exit-value + completed-date fields
 - [ ] Delete confirmation dialog
 - [ ] Return % calculation helper in `src/lib/calculations.ts` ⚠ Decimal-safe
+- [ ] Build remaining primitives as consumed: `Button`, `Input`, `FAB`, `FilterPills`
 
 ---
 
@@ -131,6 +144,7 @@ Goal: create an EMI, auto-generate the amortization schedule, and mark payments 
 - [ ] Overdue detection helper (client-side: `dueDate < today && status !== 'paid'`) per PRD §9.2
 - [ ] Delete EMI confirmation (cascade deletes all payment rows)
 - [ ] Install `recharts` and build the donut chart component
+- [ ] Build remaining primitives: `ProgressBar`, `SummaryHeroCard`
 
 ---
 
@@ -156,4 +170,4 @@ Goal: the home screen pulls everything together, and the app feels finished.
 - [ ] Accessibility pass — WCAG 2.1 AA: labels, contrast, keyboard nav, focus rings
 - [ ] Lighthouse mobile run — target FCP < 1.5s on 4G
 - [ ] Favicon + PWA manifest + app icons in `public/`
-- [ ] Update `<title>` and meta tags in `__root.tsx` from "TanStack Start Starter" to "Phinio"
+- [x] Update `<title>` and meta tags in `__root.tsx` from "TanStack Start Starter" to "Phinio" (done in Phase 1)
