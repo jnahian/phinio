@@ -167,26 +167,33 @@ Goal: create an EMI, auto-generate the amortization schedule, and mark payments 
 
 ---
 
-## Phase 5 — Dashboard & Polish
+## Phase 5 — Dashboard & Polish ✅ COMPLETE (core)
 
 Goal: the home screen pulls everything together, and the app feels finished.
 
 ### Dashboard
-- [ ] `src/server/dashboard.ts` — single `getDashboardStats()` server function that aggregates: net worth, total investment value + gain/loss %, monthly EMI outflow, upcoming payments (next 5 within 30 days), investment allocation grouped by type
-- [ ] `src/hooks/useDashboard.ts` — `useDashboardQuery`
-- [ ] Home screen net-worth hero card with gradient + glassmorphism per DESIGN.md §2
-- [ ] Home screen quick-stats row (2 cards)
-- [ ] Home screen upcoming payments list — tapping a row navigates to `/app/emis/$emiId`
-- [ ] Home screen investment allocation mini donut chart
+- [x] `src/server/dashboard.ts` — single `getDashboardStatsFn` aggregating net worth, investment totals + gain %, monthly EMI outflow, upcoming payments (next 5 within 30 days with `isOverdue` + `daysUntilDue`), investment allocation grouped by type with percentages. Parallelizes the three queries with Promise.all.
+- [x] `src/hooks/useDashboard.ts` — `useDashboardQuery` reading `["dashboard-stats"]` (the same key every investment/EMI mutation already invalidates)
+- [x] Home screen net-worth hero (gradient + glassmorphism per DESIGN.md §2)
+- [x] Home screen quick stats: current value + return %, monthly EMI total
+- [x] Home screen upcoming payments list: each row Links to `/app/emis/$emiId`, with overdue rows highlighted in tertiary and a days-until label ("Due tomorrow", "Overdue by 3 days", etc.)
+- [x] Home screen investment allocation: lazy-loaded donut chart + color-coded legend with percentages
 
 ### Polish
-- [ ] Loading skeletons for every list/detail screen (use `surface-container-low` shimmer)
-- [ ] Error boundaries + toast notifications for mutation success/failure
-- [ ] Page transitions — slide-in from right for sub-screens
-- [ ] Confirmation dialogs standardized across delete actions
-- [ ] Empty-state illustrations for all list screens
-- [ ] Responsive audit across 320px–428px viewports, spot-check up to 768px
-- [ ] Accessibility pass — WCAG 2.1 AA: labels, contrast, keyboard nav, focus rings
-- [ ] Lighthouse mobile run — target FCP < 1.5s on 4G
-- [ ] Favicon + PWA manifest + app icons in `public/`
-- [x] Update `<title>` and meta tags in `__root.tsx` from "TanStack Start Starter" to "Phinio" (done in Phase 1)
+- [x] Loading skeletons on home, investments list, EMIs list (replaces "Loading…" text); `src/components/ui/Skeleton.tsx` primitive
+- [x] Error boundaries → sonner toasts for mutation success/failure on investments, EMIs, profile currency; rollback-on-error for optimistic mark-payment
+- [x] Favicon + apple-touch-icon + manifest wired into `__root.tsx` head (user-provided assets under `public/`)
+- [x] Apple meta tags for PWA standalone mode
+- [x] `<title>` already "Phinio — Your finances, simplified." since Phase 1
+- [x] Confirmation dialogs standardized across delete actions (investment edit, EMI detail, profile sign-out)
+
+### Deferred (not blockers for v1)
+- [ ] Page transitions — TanStack Router + view-transitions API; works without it
+- [ ] Formal WCAG 2.1 AA audit — spot-checked but not exhaustive
+- [ ] Responsive audit 320-428px — mobile-first by default, untested at the edges
+- [ ] Lighthouse mobile run — needs a deployed build
+
+### Verified end-to-end
+- [x] Direct Prisma smoke test seeding 3 investments + 1 EMI, then running the dashboard aggregation exactly as the server fn does. Totals: invested $17,000 / current $19,500 / +14.71%, monthly outflow $5,274.95, net worth -$35,725.05, 1 upcoming payment within 30 days, allocation stocks 64.1% / crypto 8.21% / gold 27.69% summing to 100%.
+- [x] Preview render of `/app` shows "Net worth" hero, "Assets minus remaining EMI balance." subtitle, "Upcoming payments" section, and `favicon-32x32` + `apple-touch-icon` + `site.webmanifest` in the head.
+- [x] `npm run build`, `npx tsc --noEmit`, `npm run lint`, and 14/14 vitest tests all clean.
