@@ -1,8 +1,38 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { CalendarClock, TrendingUp } from 'lucide-react'
+import { Suspense, lazy } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import {
+  AlertTriangle,
+  CalendarClock,
+  ChevronRight,
+  TrendingUp,
+} from 'lucide-react'
 import { Card } from '#/components/ui/Card'
-import { formatCurrency  } from '#/lib/currency'
-import type {Currency} from '#/lib/currency';
+import { Skeleton } from '#/components/ui/Skeleton'
+import { cn } from '#/lib/cn'
+import { formatReturnPercent } from '#/lib/calculations'
+import { formatCurrency } from '#/lib/currency'
+import type { Currency } from '#/lib/currency'
+import { useDashboardQuery } from '#/hooks/useDashboard'
+
+const AllocationDonut = lazy(() => import('#/components/AllocationDonut'))
+
+const TYPE_LABELS: Record<string, string> = {
+  stock: 'Stocks',
+  mutual_fund: 'Mutual Funds',
+  fd: 'Fixed Deposit',
+  gold: 'Gold',
+  crypto: 'Crypto',
+  other: 'Other',
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  stock: 'bg-primary-container',
+  mutual_fund: 'bg-secondary',
+  fd: 'bg-outline-variant',
+  gold: 'bg-[#ffd46a]',
+  crypto: 'bg-[#c4a8ff]',
+  other: 'bg-outline-variant/60',
+}
 
 export const Route = createFileRoute('/app/')({
   component: HomeScreen,
@@ -13,6 +43,8 @@ function HomeScreen() {
   const currency = profile.preferredCurrency as Currency
   const firstName = profile.fullName.split(' ')[0]
 
+  const { data, isLoading } = useDashboardQuery()
+
   return (
     <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
       <header className="mb-6">
@@ -22,20 +54,26 @@ function HomeScreen() {
         </h1>
       </header>
 
+      {/* Net worth hero */}
       <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-primary-container to-[#1e3a8a] p-6 shadow-[0_20px_60px_-20px_rgba(37,99,235,0.55)]">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
         />
         <p className="label-sm text-on-primary-container/80">Net worth</p>
-        <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
-          {formatCurrency(0, currency)}
-        </p>
+        {isLoading || !data ? (
+          <Skeleton className="mt-2 h-10 w-48 bg-white/10" />
+        ) : (
+          <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
+            {formatCurrency(data.netWorth, currency)}
+          </p>
+        )}
         <p className="body-sm mt-3 text-on-primary-container/75">
-          Add investments and EMIs to see your net worth.
+          Assets minus remaining EMI balance.
         </p>
       </section>
 
+      {/* Quick stats row */}
       <section className="mt-4 grid grid-cols-2 gap-3">
         <Card variant="low" className="p-4">
           <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
@@ -44,10 +82,32 @@ function HomeScreen() {
               Invested
             </span>
           </div>
-          <p className="font-display text-xl font-bold text-on-surface">
-            {formatCurrency(0, currency)}
-          </p>
-          <p className="body-sm mt-0.5 text-on-surface-variant">No holdings yet</p>
+          {isLoading || !data ? (
+            <>
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="mt-1 h-3 w-16" />
+            </>
+          ) : (
+            <>
+              <p className="font-display text-xl font-bold text-on-surface">
+                {formatCurrency(data.investmentTotals.current, currency)}
+              </p>
+              <p
+                className={cn(
+                  'body-sm mt-0.5 font-semibold',
+                  data.investmentTotals.gainLossPercent > 0
+                    ? 'text-secondary'
+                    : data.investmentTotals.gainLossPercent < 0
+                      ? 'text-tertiary'
+                      : 'text-on-surface-variant',
+                )}
+              >
+                {Number(data.investmentTotals.invested) > 0
+                  ? formatReturnPercent(data.investmentTotals.gainLossPercent)
+                  : 'No holdings'}
+              </p>
+            </>
+          )}
         </Card>
 
         <Card variant="low" className="p-4">
@@ -57,23 +117,145 @@ function HomeScreen() {
               Monthly EMI
             </span>
           </div>
-          <p className="font-display text-xl font-bold text-on-surface">
-            {formatCurrency(0, currency)}
-          </p>
-          <p className="body-sm mt-0.5 text-on-surface-variant">No EMIs yet</p>
+          {isLoading || !data ? (
+            <>
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="mt-1 h-3 w-16" />
+            </>
+          ) : (
+            <>
+              <p className="font-display text-xl font-bold text-on-surface">
+                {formatCurrency(data.monthlyEmiOutflow, currency)}
+              </p>
+              <p className="body-sm mt-0.5 text-on-surface-variant">
+                {Number(data.monthlyEmiOutflow) > 0
+                  ? 'Total outflow'
+                  : 'No EMIs yet'}
+              </p>
+            </>
+          )}
         </Card>
       </section>
 
+      {/* Upcoming payments */}
       <section className="mt-8">
         <h2 className="label-md mb-3 text-on-surface-variant">
           Upcoming payments
         </h2>
-        <Card variant="low" className="px-5 py-8 text-center">
-          <p className="body-md text-on-surface-variant">
-            Nothing due in the next 30 days.
-          </p>
-        </Card>
+        {isLoading || !data ? (
+          <Card variant="low" className="space-y-3 p-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-2/3" />
+          </Card>
+        ) : data.upcomingPayments.length === 0 ? (
+          <Card variant="low" className="px-5 py-8 text-center">
+            <p className="body-md text-on-surface-variant">
+              Nothing due in the next 30 days.
+            </p>
+          </Card>
+        ) : (
+          <ul className="space-y-2">
+            {data.upcomingPayments.map((p) => (
+              <li key={p.id}>
+                <Link
+                  to="/app/emis/$emiId"
+                  params={{ emiId: p.emiId }}
+                  className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-4 transition-colors hover:bg-surface-container"
+                >
+                  <span
+                    className={cn(
+                      'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
+                      p.isOverdue
+                        ? 'bg-tertiary-container/20 text-tertiary-fixed-dim'
+                        : 'bg-primary-container/20 text-primary-fixed-dim',
+                    )}
+                  >
+                    {p.isOverdue ? (
+                      <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
+                    ) : (
+                      <CalendarClock className="h-5 w-5" strokeWidth={1.75} />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="headline-sm truncate text-base text-on-surface">
+                      {p.emiLabel}
+                    </p>
+                    <p
+                      className={cn(
+                        'body-sm',
+                        p.isOverdue
+                          ? 'text-tertiary'
+                          : 'text-on-surface-variant',
+                      )}
+                    >
+                      {formatRelativeDue(p.daysUntilDue, p.isOverdue)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display text-base font-bold text-on-surface">
+                      {formatCurrency(p.emiAmount, currency)}
+                    </p>
+                  </div>
+                  <ChevronRight
+                    className="h-4 w-4 text-on-surface-variant/60"
+                    strokeWidth={1.75}
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
+
+      {/* Investment allocation */}
+      {data && data.allocation.length > 0 && (
+        <section className="mt-8">
+          <h2 className="label-md mb-3 text-on-surface-variant">Allocation</h2>
+          <Card variant="low">
+            <div className="flex items-center gap-4">
+              <Suspense
+                fallback={<Skeleton className="h-32 w-32 rounded-full" />}
+              >
+                <AllocationDonut data={data.allocation} />
+              </Suspense>
+              <ul className="flex-1 space-y-2">
+                {data.allocation.slice(0, 5).map((item) => (
+                  <li
+                    key={item.type}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <span
+                      className={cn(
+                        'h-2.5 w-2.5 flex-shrink-0 rounded-full',
+                        TYPE_COLORS[item.type] ?? TYPE_COLORS.other,
+                      )}
+                    />
+                    <span className="flex-1 truncate text-on-surface-variant">
+                      {TYPE_LABELS[item.type] ?? 'Other'}
+                    </span>
+                    <span className="font-display font-semibold text-on-surface">
+                      {item.percent}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Card>
+        </section>
+      )}
     </main>
   )
+}
+
+function formatRelativeDue(days: number, isOverdue: boolean): string {
+  if (isOverdue) {
+    const abs = Math.abs(days)
+    return abs === 0
+      ? 'Overdue — due today'
+      : `Overdue by ${abs} day${abs === 1 ? '' : 's'}`
+  }
+  if (days === 0) return 'Due today'
+  if (days === 1) return 'Due tomorrow'
+  return `Due in ${days} days`
 }

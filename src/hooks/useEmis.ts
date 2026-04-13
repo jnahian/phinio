@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   createEmiFn,
   deleteEmiFn,
@@ -17,6 +18,10 @@ import type {
   EmiCreateInput,
   MarkPaymentPaidInput,
 } from '#/lib/validators'
+
+function errorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback
+}
 
 export const emiKeys = {
   all: ['emis'] as const,
@@ -56,10 +61,12 @@ export function useCreateEmi() {
   return useMutation({
     mutationFn: (input: EmiCreateInput) => createEmiFn({ data: input }),
     onSuccess: () => {
+      toast.success('EMI schedule created')
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
+    onError: (err) => toast.error(errorMessage(err, 'Failed to create EMI')),
   })
 }
 
@@ -68,10 +75,12 @@ export function useDeleteEmi() {
   return useMutation({
     mutationFn: (emiId: string) => deleteEmiFn({ data: { emiId } }),
     onSuccess: () => {
+      toast.success('EMI deleted')
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
+    onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
 }
 
@@ -110,10 +119,11 @@ export function useMarkPayment(emiId: string) {
 
       return { previous }
     },
-    onError: (_err, _input, context) => {
+    onError: (err, _input, context) => {
       if (context?.previous) {
         qc.setQueryData(emiKeys.detail(emiId), context.previous)
       }
+      toast.error(errorMessage(err, 'Failed to update payment'))
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: emiKeys.detail(emiId) })

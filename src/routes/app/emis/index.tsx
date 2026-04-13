@@ -4,9 +4,10 @@ import { Building2, CalendarClock, CreditCard } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FAB } from '#/components/ui/FAB'
-import { FilterPills  } from '#/components/ui/FilterPills'
-import type {FilterPill} from '#/components/ui/FilterPills';
+import { FilterPills } from '#/components/ui/FilterPills'
+import type { FilterPill } from '#/components/ui/FilterPills'
 import { ProgressBar } from '#/components/ui/ProgressBar'
+import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatCurrency  } from '#/lib/currency'
 import type {Currency} from '#/lib/currency';
@@ -86,9 +87,26 @@ function EmisListScreen() {
       />
 
       {isLoading ? (
-        <Card variant="low" className="text-center text-on-surface-variant">
-          Loading…
-        </Card>
+        <ul className="space-y-3">
+          {[0, 1].map((i) => (
+            <li key={i}>
+              <Card variant="default">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-5 w-2/3" />
+                  </div>
+                  <Skeleton className="h-5 w-24" />
+                </div>
+                <Skeleton className="mt-4 h-1 w-full" />
+                <div className="mt-3 flex justify-between">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </Card>
+            </li>
+          ))}
+        </ul>
       ) : emis.length === 0 ? (
         <EmptyState
           icon={<CalendarClock className="h-7 w-7" strokeWidth={1.75} />}

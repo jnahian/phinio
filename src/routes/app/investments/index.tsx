@@ -4,8 +4,9 @@ import { TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FAB } from '#/components/ui/FAB'
-import { FilterPills  } from '#/components/ui/FilterPills'
-import type {FilterPill} from '#/components/ui/FilterPills';
+import { FilterPills } from '#/components/ui/FilterPills'
+import type { FilterPill } from '#/components/ui/FilterPills'
+import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import {
   calculateReturnPercent,
@@ -137,9 +138,24 @@ function InvestmentsListScreen() {
       />
 
       {isLoading ? (
-        <Card variant="low" className="text-center text-on-surface-variant">
-          Loading…
-        </Card>
+        <ul className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <li key={i}>
+              <Card variant="default">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <div className="space-y-2 text-right">
+                    <Skeleton className="ml-auto h-5 w-24" />
+                    <Skeleton className="ml-auto h-3 w-16" />
+                  </div>
+                </div>
+              </Card>
+            </li>
+          ))}
+        </ul>
       ) : investments.length === 0 ? (
         <EmptyState
           icon={<TrendingUp className="h-7 w-7" strokeWidth={1.75} />}

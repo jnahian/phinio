@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { LogOut, Mail } from 'lucide-react'
+import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
@@ -29,8 +30,12 @@ function ProfileScreen() {
     try {
       await updateProfileCurrencyFn({ data: { preferredCurrency: next } })
       await router.invalidate()
-    } catch {
+      toast.success(`Currency set to ${next}`)
+    } catch (err) {
       setCurrency(previous)
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to update currency',
+      )
     } finally {
       setIsSaving(false)
     }
