@@ -132,32 +132,38 @@ Goal: full CRUD for investments with active/completed lifecycle.
 
 ---
 
-## Phase 4 — EMI Manager
+## Phase 4 — EMI Manager ✅ COMPLETE
 
 Goal: create an EMI, auto-generate the amortization schedule, and mark payments paid/unpaid.
 
 ### Business logic
-- [ ] `src/lib/emi-calculator.ts` — `calculateEmi({ principal, annualRate, tenureMonths })` and `generateAmortization({ principal, annualRate, tenureMonths, startDate })` returning `EmiPayment[]` rows per PRD §9.2
-- [ ] Unit tests (`*.test.ts`) for EMI formula edge cases (0% interest, single-month tenure, rounding)
-- [ ] Decimal arithmetic throughout — use `Prisma.Decimal` or string-based math ⚠
+- [x] `src/lib/emi-calculator.ts` — `calculateEmi()` and `generateAmortization()` per PRD §9.2; final-payment residual absorption forces remainingBalance to 0.00; `addMonths()` uses UTC for timezone-stable due dates
+- [x] `src/lib/emi-calculator.test.ts` — 14 vitest unit tests covering standard loan, 0% interest, single-month, rounding residual, principal sum reconciliation, end-of-month clamping, input validation errors; all pass
 
 ### Server layer
-- [ ] `src/server/emis.ts`: `listEmis({ type })`, `getEmi(emiId)` (includes payments), `createEmi(input)` (generates + inserts all payment rows in a single transaction), `deleteEmi(id)` (cascade), `markPaymentPaid({ paymentId, paid })`
-- [ ] Zod schemas for EMI create input
-- [ ] `profileId` scoping on every query ⚠
+- [x] `src/server/emis.ts`: `listEmisFn`, `getEmiFn`, `createEmiFn` (interactive $transaction creating EMI + all payments), `deleteEmiFn` (profile-scoped deleteMany), `markPaymentPaidFn` (profile-scoped updateMany), `upcomingPaymentsFn` (next 5 non-paid within 30 days with isOverdue flag)
+- [x] `serializeEmi()` + explicit `SerializedEmi` / `SerializedEmiPayment` interfaces so the hook layer sees strings, not Prisma Decimals
+- [x] Zod schemas: `emiCreateSchema`, `emiListQuerySchema`, `emiIdSchema`, `markPaymentPaidSchema`, `EMI_TYPES` export
 
 ### Hooks
-- [ ] `src/hooks/useEmis.ts` — list/detail/create/delete queries + `useMarkPaymentPaid` mutation with **optimistic update** on the payments list (PRD §7.3)
-- [ ] Invalidate `["emis"]`, `["emis", emiId]`, `["dashboard-stats"]`, `["upcoming-payments"]` on mutations
+- [x] `src/hooks/useEmis.ts` — `useEmisQuery`, `useEmiQuery`, `useUpcomingPaymentsQuery`, `useCreateEmi`, `useDeleteEmi`, `useMarkPayment` with `onMutate` optimistic update + `onError` rollback + `onSettled` invalidation
+- [x] Invalidates `["emis"]`, `["emis","detail",id]`, `["upcoming-payments"]`, `["dashboard-stats"]`
 
 ### UI
-- [ ] `src/routes/app/emis/index.tsx` — summary card, filter pills (All / Bank Loan / Credit Card), EMI cards with progress bar + next due date, FAB (PRD §5.8)
-- [ ] `src/routes/app/emis/new.tsx` — add form with **live EMI preview card** that recalculates as user types principal/rate/tenure (PRD §5.9)
-- [ ] `src/routes/app/emis/$emiId.tsx` — EMI detail with key stats row, principal-vs-interest donut chart, scrollable amortization table with paid checkboxes, overdue row highlighting, summary footer (PRD §5.10)
-- [ ] Overdue detection helper (client-side: `dueDate < today && status !== 'paid'`) per PRD §9.2
-- [ ] Delete EMI confirmation (cascade deletes all payment rows)
-- [ ] Install `recharts` and build the donut chart component
-- [ ] Build remaining primitives: `ProgressBar`, `SummaryHeroCard`
+- [x] `src/routes/app/emis/index.tsx` — summary card, 3-pill filter (All / Bank Loan / Credit Card), EMI cards with color-coded badge, progress bar, next due date, remaining balance, FAB to /new
+- [x] `src/routes/app/emis/new.tsx` — label + type toggle + principal/rate/tenure/start date, **live preview card** showing Monthly EMI / Total Payment / Total Interest that lights up when inputs become valid
+- [x] `src/routes/app/emis/$emiId.tsx` — remaining-balance hero, 3-tile stats (Monthly / Principal paid / Interest paid), lazy-loaded donut chart, scrollable amortization schedule with paid checkboxes (optimistic), overdue highlight, confirmation-dialog delete
+- [x] `src/components/PrincipalInterestDonut.tsx` — recharts donut lazy-imported by the detail page so it doesn't land in other route bundles
+- [x] Overdue detection: `dueDate < now && status !== 'paid'` on the detail page and in `upcomingPaymentsFn`
+
+### Primitive added
+- [x] `src/components/ui/ProgressBar.tsx` — 4px thin track with `role="progressbar"` and aria-valuenow/min/max
+
+### Verified end-to-end
+- [x] 14/14 vitest unit tests pass
+- [x] Direct Prisma + calculator smoke test: created user + profile, calculated ৳23,536.74 EMI for ৳500k @ 12% for 24mo, atomic transaction inserted 24 payment rows, sum of principal components = 500,000.00 exactly, last row remainingBalance = 0, mark-paid persisted, cross-profile delete rejected (count=0), correct-profile delete cascaded, upcoming query showed 0 after cleanup
+- [x] Production build rendered `/app/emis` (filter pills, list, tab bar visible) and `/app/emis/new` (form sections, live preview label, tab bar hidden)
+- [x] `npm run build`, `npx tsc --noEmit`, `npm run lint` all clean
 
 ---
 
