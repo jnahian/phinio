@@ -85,3 +85,47 @@ export const investmentListQuerySchema = z.object({
 export type InvestmentListQuery = z.infer<typeof investmentListQuerySchema>
 
 export const investmentIdSchema = z.object({ id: z.string().min(1) })
+
+// ----------------------------------------------------------------------------
+// EMIs (PRD §4.1, §9.2)
+// ----------------------------------------------------------------------------
+
+export const EMI_TYPES = ['bank_loan', 'credit_card'] as const
+export type EmiType = (typeof EMI_TYPES)[number]
+
+const nonNegativeRateString = z
+  .string()
+  .trim()
+  .refine((s) => /^\d+(\.\d{1,2})?$/.test(s), {
+    message: 'Enter a valid interest rate (up to 2 decimals)',
+  })
+  .refine((s) => Number(s) >= 0 && Number(s) < 100, {
+    message: 'Rate must be between 0 and 100',
+  })
+
+export const emiCreateSchema = z.object({
+  label: z.string().trim().min(1, 'Label is required').max(120),
+  type: z.enum(EMI_TYPES),
+  principal: positiveDecimalString,
+  interestRate: nonNegativeRateString,
+  tenureMonths: z
+    .number()
+    .int('Tenure must be whole months')
+    .min(1, 'Tenure must be at least 1 month')
+    .max(600, 'Tenure must be 600 months or less'),
+  startDate: isoDateString,
+})
+export type EmiCreateInput = z.infer<typeof emiCreateSchema>
+
+export const emiListQuerySchema = z.object({
+  type: z.enum([...EMI_TYPES, 'all']).default('all'),
+})
+export type EmiListQuery = z.infer<typeof emiListQuerySchema>
+
+export const emiIdSchema = z.object({ emiId: z.string().min(1) })
+
+export const markPaymentPaidSchema = z.object({
+  paymentId: z.string().min(1),
+  paid: z.boolean(),
+})
+export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
