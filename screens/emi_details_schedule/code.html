@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EMI Breakdown - Phinio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#690005",
+                    "surface-container-low": "#131b2e",
+                    "error": "#ffb4ab",
+                    "on-background": "#dae2fd",
+                    "secondary": "#4edea3",
+                    "surface": "#0b1326",
+                    "secondary-fixed": "#6ffbbe",
+                    "inverse-primary": "#0053db",
+                    "on-tertiary-fixed": "#410004",
+                    "on-primary": "#002a78",
+                    "surface-container-highest": "#2d3449",
+                    "primary-fixed": "#dbe1ff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-dim": "#0b1326",
+                    "on-tertiary": "#68000a",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-container": "#171f33",
+                    "tertiary": "#ffb3ad",
+                    "primary-container": "#2563eb",
+                    "on-error-container": "#ffdad6",
+                    "inverse-on-surface": "#283044",
+                    "outline": "#8d90a0",
+                    "outline-variant": "#434655",
+                    "surface-tint": "#b4c5ff",
+                    "tertiary-container": "#cf2c30",
+                    "on-secondary-container": "#00311f",
+                    "on-primary-fixed": "#00174b",
+                    "error-container": "#93000a",
+                    "on-primary-container": "#eeefff",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "surface-container-high": "#222a3d",
+                    "secondary-container": "#00a572",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary": "#003824",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "on-surface-variant": "#c3c6d7",
+                    "surface-variant": "#2d3449",
+                    "primary": "#b4c5ff",
+                    "on-surface": "#dae2fd",
+                    "surface-bright": "#31394d",
+                    "surface-container-lowest": "#060e20",
+                    "tertiary-fixed": "#ffdad7",
+                    "background": "#0b1326",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "inverse-surface": "#dae2fd",
+                    "on-tertiary-container": "#ffecea",
+                    "on-secondary-fixed": "#002113"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+            font-family: 'Inter', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col pb-24">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 flex justify-between items-center px-6 py-4 backdrop-blur-xl bg-opacity-80 bg-[#0b1326] dark:bg-[#0b1326]">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant active:scale-95 duration-200">arrow_back</button>
+<h1 class="font-['Manrope'] text-lg font-semibold tracking-tight text-on-surface">Loan Details</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-500">notifications</span>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="User profile photo" data-alt="close-up portrait of a professional businessman in a sleek dark suit against a blurred minimalist architectural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuQcdCO5qWgeOFXYyh7Xl3kh8ycp_U1VjmiJWwee7867GiHge9YlIj8b3UuQ047mmlhE-efYVki7MfpnsNrRU8vogABGqapHBVPkNX4tMRe4Yn0lcr51ZKCvL0MMkxykrY4AMk7xXNMM4s02NKjTuZWFMqT5thF2GngdpjZrLNNaFgyKjsZjko9D1fPD9-uJvs2VvbYw33WvJJ4a2Ad0N4WPErvXSS1Ad3WkwV8dnMe_gkfr82dN-wqiqQpMolqyGbPmt4qmfuJVyk"/>
+</div>
+</div>
+</header>
+<main class="flex-1 px-6 pt-4 max-w-5xl mx-auto w-full">
+<!-- Hero Section: Remaining Balance -->
+<section class="relative overflow-hidden rounded-3xl bg-primary-container p-8 mb-8">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container to-[#003ea8]/50 opacity-90"></div>
+<!-- Background Decorative Texture -->
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="font-label text-on-primary-container/80 text-sm font-medium tracking-wide">Home Loan - HDFC8820</p>
+<h2 class="font-headline text-4xl font-extrabold tracking-tighter text-on-primary-container mt-1">$142,500.00</h2>
+<p class="font-label text-on-primary-container/60 text-xs mt-1">Remaining Principal Balance</p>
+</div>
+<div class="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full">
+<span class="font-label text-xs font-semibold text-on-primary-container">6.8% APR</span>
+</div>
+</div>
+<!-- Progress Bar -->
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-label text-xs font-medium text-on-primary-container/80">14 of 36 installments paid</span>
+<span class="font-label text-xs font-bold text-on-primary-container">38% Complete</span>
+</div>
+<div class="h-2 w-full bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-fixed w-[38%] rounded-full shadow-[0_0_12px_rgba(111,251,190,0.4)]"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-white/10">
+<div>
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container/60 font-bold">Next Payment</p>
+<p class="text-on-primary-container font-semibold mt-1">Oct 12, 2023</p>
+</div>
+<div class="text-right">
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container/60 font-bold">Monthly EMI</p>
+<p class="text-on-primary-container font-semibold mt-1">$2,450.00</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Breakdown Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<div class="bg-surface-container-low p-6 rounded-2xl">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">payments</span>
+</div>
+<h3 class="font-headline font-bold text-sm">Principal Paid</h3>
+</div>
+<p class="text-2xl font-extrabold font-headline">$57,500</p>
+<p class="text-xs text-on-surface-variant mt-1">28.7% of total loan</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-2xl">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">show_chart</span>
+</div>
+<h3 class="font-headline font-bold text-sm">Interest Paid</h3>
+</div>
+<p class="text-2xl font-extrabold font-headline">$12,840</p>
+<p class="text-xs text-on-surface-variant mt-1">Accrued over 14 months</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-2xl">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">event_repeat</span>
+</div>
+<h3 class="font-headline font-bold text-sm">Tenure Left</h3>
+</div>
+<p class="text-2xl font-extrabold font-headline">22 Months</p>
+<p class="text-xs text-on-surface-variant mt-1">Ending Aug 2025</p>
+</div>
+</div>
+<!-- Amortization Schedule -->
+<section class="bg-surface-container-low rounded-3xl overflow-hidden mb-12">
+<div class="p-6 flex justify-between items-center bg-surface-container">
+<h3 class="font-headline text-lg font-bold">Amortization Schedule</h3>
+<button class="text-primary font-medium text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-lg">download</span>
+                    Statement
+                </button>
+</div>
+<div class="overflow-x-auto hide-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/30">
+<th class="px-6 py-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Inst. #</th>
+<th class="px-6 py-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Date</th>
+<th class="px-6 py-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Principal</th>
+<th class="px-6 py-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Interest</th>
+<th class="px-6 py-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Total</th>
+<th class="px-6 py-4 font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold text-right">Balance</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="bg-secondary/5">
+<td class="px-6 py-4 font-body text-sm font-semibold text-secondary">14</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface">Sep 12, 23</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$1,680.00</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$770.00</td>
+<td class="px-6 py-4 font-body text-sm font-semibold text-on-surface">$2,450.00</td>
+<td class="px-6 py-4 font-body text-sm font-bold text-on-surface text-right">$142,500.00</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">15</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface">Oct 12, 23</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$1,689.50</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$760.50</td>
+<td class="px-6 py-4 font-body text-sm font-semibold text-on-surface">$2,450.00</td>
+<td class="px-6 py-4 font-body text-sm font-bold text-on-surface text-right">$140,810.50</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">16</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface">Nov 12, 23</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$1,699.10</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$750.90</td>
+<td class="px-6 py-4 font-body text-sm font-semibold text-on-surface">$2,450.00</td>
+<td class="px-6 py-4 font-body text-sm font-bold text-on-surface text-right">$139,111.40</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">17</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface">Dec 12, 23</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$1,708.70</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$741.30</td>
+<td class="px-6 py-4 font-body text-sm font-semibold text-on-surface">$2,450.00</td>
+<td class="px-6 py-4 font-body text-sm font-bold text-on-surface text-right">$137,402.70</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">18</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface">Jan 12, 24</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$1,718.40</td>
+<td class="px-6 py-4 font-body text-sm text-on-surface-variant">$731.60</td>
+<td class="px-6 py-4 font-body text-sm font-semibold text-on-surface">$2,450.00</td>
+<td class="px-6 py-4 font-body text-sm font-bold text-on-surface text-right">$135,684.30</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6 text-center border-t border-white/5">
+<button class="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Show All 36 Installments</button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-8 backdrop-blur-2xl border-t border-white/5 bg-[#0b1326]/90 dark:bg-[#0b1326]/90 rounded-t-3xl shadow-[0_-4px_20px_rgba(6,14,32,0.5)]">
+<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide">Investments</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#2563EB]/10 text-blue-500 rounded-xl px-3 py-1.5 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide">EMIs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:text-blue-400 transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide">Profile</span>
+</a>
+</nav>
+</body></html>
