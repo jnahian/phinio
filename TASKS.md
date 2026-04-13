@@ -95,27 +95,40 @@ Goal: a user can navigate between all four main tabs and see branded empty scree
 
 ---
 
-## Phase 3 — Investments
+## Phase 3 — Investments ✅ COMPLETE
 
 Goal: full CRUD for investments with active/completed lifecycle.
 
 ### Server layer
-- [ ] `src/server/investments.ts` with `createServerFn()` handlers: `listInvestments({ status, type })`, `getInvestment(id)`, `createInvestment(input)`, `updateInvestment(id, input)`, `deleteInvestment(id)`
-- [ ] Every handler must resolve `profileId` from Better Auth session and scope the `where` clause ⚠
-- [ ] Zod input schemas in `src/lib/validators.ts` for investment create/update (amount > 0, required fields, completed state requires `exitValue` + `completedAt`)
+- [x] `src/server/investments.ts` — `listInvestmentsFn({ status, type })`, `getInvestmentFn`, `createInvestmentFn`, `updateInvestmentFn`, `deleteInvestmentFn`
+- [x] Every handler resolves `profileId` via `requireProfileId()` helper and scopes the `where` clause
+- [x] `serializeInvestment()` converts Prisma Decimal fields to strings before crossing the server-function boundary
+- [x] Zod schemas in `src/lib/validators.ts`: `investmentCreateSchema`, `investmentUpdateSchema` (conditional exitValue/completedAt requirement), `investmentListQuerySchema`, `investmentIdSchema`, `INVESTMENT_TYPES` export
 
 ### Hooks
-- [ ] `src/hooks/useInvestments.ts` — `useInvestmentsQuery`, `useInvestmentQuery`, `useCreateInvestment`, `useUpdateInvestment`, `useDeleteInvestment`
-- [ ] Invalidate `["investments", ...]` and `["dashboard-stats"]` on every mutation (PRD §7.2)
+- [x] `src/hooks/useInvestments.ts` — `useInvestmentsQuery`, `useInvestmentQuery`, `useCreateInvestment`, `useUpdateInvestment`, `useDeleteInvestment`, shared `investmentKeys` factory
+- [x] Mutations invalidate `["investments"]` and `["dashboard-stats"]`; updates also invalidate the detail key
 
 ### UI
-- [ ] `src/routes/app/investments/index.tsx` — summary card (Total Invested / Current Value / Total Returns), filter pills, active/completed tabs, cards list, FAB (PRD §5.6)
-- [ ] `InvestmentCard` component — name, color-coded type badge, amounts, return % green/red
-- [ ] `src/routes/app/investments/new.tsx` — full-page form with back arrow (PRD §5.7)
-- [ ] `src/routes/app/investments/$id.edit.tsx` — edit form with status toggle revealing exit-value + completed-date fields
-- [ ] Delete confirmation dialog
-- [ ] Return % calculation helper in `src/lib/calculations.ts` ⚠ Decimal-safe
-- [ ] Build remaining primitives as consumed: `Button`, `Input`, `FAB`, `FilterPills`
+- [x] `src/routes/app/investments/index.tsx` — summary card (Invested / Current or Exited / Return %), Active/Completed tab toggle, filter pills for type, card list with loading and empty states, FAB to /new
+- [x] `InvestmentCard` inline component — color-coded type badge, current value, return % (green/red/neutral)
+- [x] `src/routes/app/investments/new.tsx` — back-arrow header, asset details card, 3×2 category grid with icons, notes textarea, fixed bottom save button
+- [x] `src/routes/app/investments/$id.edit.tsx` — prefills from `useInvestmentQuery`, status toggle reveals exit value + completed-on date, confirmation-dialog delete, fixed bottom save button
+- [x] `src/lib/calculations.ts` — `calculateReturnPercent`, `calculateProfitLoss`, `formatReturnPercent`
+
+### Primitives added
+- [x] `src/components/ui/FAB.tsx` — fixed bottom-right, safe-area aware
+- [x] `src/components/ui/FilterPills.tsx` — horizontal-scroll pill group with active state
+- [x] `src/components/ui/TextField.tsx` — carved inputs with leading icon / prefix / error; also exports `TextArea`
+
+### Sub-screen navigation
+- [x] `/app/route.tsx` reads `staticData.hideTabBar` via `useMatches()` and hides the `BottomTabBar` on sub-screens; `/app/investments/new` and `/app/investments/$id/edit` both opt in
+
+### Verified end-to-end
+- [x] Direct Prisma smoke test against Neon: create 3 investments across types/statuses, list active (2), list completed (1), filter by type (1), update, verify profile-scoped update prevents cross-profile writes, deleteMany scoped by profileId, cleanup
+- [x] Production build renders /app/investments (filter pills, tabs, loading state) and /app/investments/new (form sections)
+- [x] Bottom tab bar visible on list, hidden on sub-screens
+- [x] `npm run build`, `npx tsc --noEmit`, and `npm run lint` all clean
 
 ---
 
