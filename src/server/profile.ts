@@ -19,8 +19,7 @@ export const getProfileFn = createServerFn({ method: 'GET' }).handler(
 export const updateProfileCurrencyFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => updateCurrencySchema.parse(input))
   .handler(async ({ data }): Promise<SerializedProfile> => {
-    const { requireUserId, updateProfileCurrencyImpl } = await import(
-      './profile.impl'
-    )
+    const { requireUserId, updateProfileCurrencyImpl } =
+      await import('./profile.impl')
     return updateProfileCurrencyImpl(await requireUserId(), data)
   })

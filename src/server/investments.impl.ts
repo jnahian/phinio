@@ -1,6 +1,9 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
+import { formatCurrency } from '#/lib/currency'
+import type { Currency } from '#/lib/currency'
+import { createNotification } from './notifications.impl'
 import type {
   InvestmentCreateInput,
   InvestmentListQuery,
@@ -74,6 +77,19 @@ export async function createInvestmentImpl(
       dateOfInvestment: new Date(data.dateOfInvestment),
       notes: data.notes,
     },
+  })
+  const profile = await prisma.profile.findUnique({
+    where: { id: profileId },
+    select: { preferredCurrency: true },
+  })
+  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
+  await createNotification({
+    profileId,
+    type: 'investment.created',
+    title: 'Investment added',
+    body: `${row.name} — ${formatCurrency(row.investedAmount, currency)}`,
+    link: `/app/investments/${row.id}`,
+    dedupeKey: `investment-created:${row.id}`,
   })
   return serializeInvestment(row)
 }

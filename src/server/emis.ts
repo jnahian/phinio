@@ -41,17 +41,15 @@ export const deleteEmiFn = createServerFn({ method: 'POST' })
 export const markPaymentPaidFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => markPaymentPaidSchema.parse(input))
   .handler(async ({ data }) => {
-    const { requireProfileId, markPaymentPaidImpl } = await import(
-      './emis.impl'
-    )
+    const { requireProfileId, markPaymentPaidImpl } =
+      await import('./emis.impl')
     return markPaymentPaidImpl(await requireProfileId(), data)
   })
 
 export const upcomingPaymentsFn = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const { requireProfileId, upcomingPaymentsImpl } = await import(
-      './emis.impl'
-    )
+    const { requireProfileId, upcomingPaymentsImpl } =
+      await import('./emis.impl')
     return upcomingPaymentsImpl(await requireProfileId())
   },
 )

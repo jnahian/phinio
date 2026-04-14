@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { PGlite } from '@electric-sql/pglite'
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
@@ -10,14 +10,22 @@ export async function setup() {
   db = new PGlite()
   await db.waitReady
 
-  const migrationSql = await readFile(
-    resolve(
-      process.cwd(),
-      'prisma/migrations/20260413175701_init/migration.sql',
-    ),
-    'utf8',
-  )
-  await db.exec(migrationSql)
+  // Apply every Prisma migration in alphabetical (= chronological) order so
+  // the test schema stays in sync with the real DB without anyone having to
+  // edit this file each time a model is added.
+  const migrationsRoot = resolve(process.cwd(), 'prisma/migrations')
+  const entries = await readdir(migrationsRoot, { withFileTypes: true })
+  const migrationDirs = entries
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    .sort()
+  for (const dir of migrationDirs) {
+    const sql = await readFile(
+      resolve(migrationsRoot, dir, 'migration.sql'),
+      'utf8',
+    )
+    await db.exec(sql)
+  }
 
   server = new PGLiteSocketServer({
     db,

@@ -81,15 +81,16 @@ model Verification {
 // ----------------------------------------------------------------------------
 
 model Profile {
-  id                String       @id @default(uuid())
-  userId            String       @unique
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String         @id @default(uuid())
+  userId            String         @unique
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName          String
-  preferredCurrency String       @default("BDT")
-  createdAt         DateTime     @default(now())
+  preferredCurrency String         @default("BDT")
+  createdAt         DateTime       @default(now())
   investments       Investment[]
   emis              Emi[]
   emiPayments       EmiPayment[]
+  notifications     Notification[]
 
   @@map("profiles")
 }
@@ -151,4 +152,21 @@ model EmiPayment {
   @@index([emiId, paymentNumber])
   @@index([profileId, status, dueDate])
   @@map("emi_payments")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  profileId String
+  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  link      String?
+  dedupeKey String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@unique([profileId, dedupeKey])
+  @@index([profileId, readAt, createdAt])
+  @@map("notifications")
 }

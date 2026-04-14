@@ -6,9 +6,8 @@ export type { DashboardStats }
 
 export const getDashboardStatsFn = createServerFn({ method: 'GET' }).handler(
   async (): Promise<DashboardStats> => {
-    const { requireProfileId, getDashboardStatsImpl } = await import(
-      './dashboard.impl'
-    )
+    const { requireProfileId, getDashboardStatsImpl } =
+      await import('./dashboard.impl')
     return getDashboardStatsImpl(await requireProfileId())
   },
 )
