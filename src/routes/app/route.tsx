@@ -33,7 +33,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-surface text-on-surface">
-      <div className="mx-auto w-full max-w-md">
+      <div className="mx-auto w-full max-w-xl">
         {shellUser && (
           <TopBar userName={profile.fullName} avatarUrl={shellUser.avatarUrl} />
         )}
