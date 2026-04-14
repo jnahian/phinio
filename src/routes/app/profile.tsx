@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { Camera, Check, LogOut, Mail, Pencil, X } from 'lucide-react'
+import { Camera, Check, ChevronDown, KeyRound, LogOut, Mail, Pencil, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
 import { TextField } from '#/components/ui/TextField'
@@ -31,6 +31,15 @@ function ProfileScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string>(
     shellUser?.avatarUrl ?? '',
   )
+
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [pwForm, setPwForm] = useState({
+    current: '',
+    next: '',
+    confirm: '',
+  })
+  const [pwError, setPwError] = useState('')
+  const [isSavingPassword, setIsSavingPassword] = useState(false)
 
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
@@ -115,6 +124,53 @@ function ProfileScreen() {
       toast.error('Failed to update photo')
     } finally {
       setIsUploadingPhoto(false)
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Change password
+  // -------------------------------------------------------------------------
+
+  function openChangePassword() {
+    setPwForm({ current: '', next: '', confirm: '' })
+    setPwError('')
+    setIsChangingPassword(true)
+  }
+
+  function closeChangePassword() {
+    setIsChangingPassword(false)
+    setPwForm({ current: '', next: '', confirm: '' })
+    setPwError('')
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault()
+    setPwError('')
+    if (pwForm.next.length < 8) {
+      setPwError('New password must be at least 8 characters')
+      return
+    }
+    if (pwForm.next !== pwForm.confirm) {
+      setPwError('Passwords do not match')
+      return
+    }
+    setIsSavingPassword(true)
+    try {
+      const result = await authClient.changePassword({
+        currentPassword: pwForm.current,
+        newPassword: pwForm.next,
+        revokeOtherSessions: false,
+      })
+      if (result.error) {
+        setPwError(result.error.message ?? 'Failed to change password')
+        return
+      }
+      closeChangePassword()
+      toast.success('Password changed')
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : 'Failed to change password')
+    } finally {
+      setIsSavingPassword(false)
     }
   }
 
@@ -271,6 +327,83 @@ function ProfileScreen() {
             />
           </div>
         </Card>
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Change password                                                      */}
+      {/* ------------------------------------------------------------------ */}
+      <section className="mb-6">
+        {!isChangingPassword ? (
+          <button
+            type="button"
+            onClick={openChangePassword}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <KeyRound className="h-5 w-5 text-on-surface-variant" strokeWidth={1.75} />
+              <span className="font-display font-semibold">Change password</span>
+            </div>
+            <ChevronDown className="h-4 w-4 text-on-surface-variant/50" strokeWidth={2} />
+          </button>
+        ) : (
+          <Card variant="low">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="label-md text-on-surface-variant">Change password</h2>
+              <button
+                type="button"
+                onClick={closeChangePassword}
+                className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
+                aria-label="Cancel"
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <TextField
+                id="pw-current"
+                type="password"
+                placeholder="Current password"
+                value={pwForm.current}
+                onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+                disabled={isSavingPassword}
+                autoComplete="current-password"
+              />
+              <TextField
+                id="pw-new"
+                type="password"
+                placeholder="New password"
+                value={pwForm.next}
+                onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
+                disabled={isSavingPassword}
+                autoComplete="new-password"
+              />
+              <TextField
+                id="pw-confirm"
+                type="password"
+                placeholder="Confirm new password"
+                value={pwForm.confirm}
+                onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+                disabled={isSavingPassword}
+                autoComplete="new-password"
+              />
+              {pwError && (
+                <p className="body-sm px-1 text-error" role="alert">{pwError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={isSavingPassword || !pwForm.current || !pwForm.next || !pwForm.confirm}
+                className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
+              >
+                {isSavingPassword ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
+                ) : (
+                  <Check className="h-4 w-4" strokeWidth={2.5} />
+                )}
+                {isSavingPassword ? 'Saving…' : 'Update password'}
+              </button>
+            </form>
+          </Card>
+        )}
       </section>
 
       {/* ------------------------------------------------------------------ */}
