@@ -5,7 +5,8 @@ import {
   useMatches,
 } from '@tanstack/react-router'
 import { BottomTabBar } from '#/components/BottomTabBar'
-import { getSessionFn } from '#/server/auth'
+import { TopBar } from '#/components/TopBar'
+import { getSessionFn, getShellUserFn } from '#/server/auth'
 import { getProfileFn } from '#/server/profile'
 
 export const Route = createFileRoute('/app')({
@@ -14,13 +15,17 @@ export const Route = createFileRoute('/app')({
     if (!session) {
       throw redirect({ to: '/login' })
     }
-    const profile = await getProfileFn()
-    return { user: session.user, profile }
+    const [profile, shellUser] = await Promise.all([
+      getProfileFn(),
+      getShellUserFn(),
+    ])
+    return { user: session.user, profile, shellUser }
   },
   component: AppLayout,
 })
 
 function AppLayout() {
+  const { shellUser, profile } = Route.useRouteContext()
   const matches = useMatches()
   const hideTabBar = matches.some(
     (m) => (m.staticData as { hideTabBar?: boolean } | undefined)?.hideTabBar,
@@ -28,7 +33,12 @@ function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-surface text-on-surface">
-      <Outlet />
+      <div className="mx-auto w-full max-w-md">
+        {shellUser && (
+          <TopBar userName={profile.fullName} avatarUrl={shellUser.avatarUrl} />
+        )}
+        <Outlet />
+      </div>
       {!hideTabBar && <BottomTabBar />}
     </div>
   )
