@@ -31,7 +31,6 @@ export default defineConfig({
           environment: 'node',
           pool: 'forks',
           poolOptions: { forks: { singleFork: true } },
-          fileParallelism: false,
           globalSetup: ['./tests/integration/helpers/globalSetup.ts'],
           testTimeout: 30_000,
           hookTimeout: 30_000,
