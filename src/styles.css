@@ -185,13 +185,6 @@ body {
   text-transform: uppercase;
 }
 
-/* Focus ring — primary-container outline */
-:focus-visible {
-  outline: 2px solid var(--color-primary-container);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
 /* Input "carved" recess style — used by auth forms */
 .input-carved {
   background-color: var(--color-surface-container-lowest);
