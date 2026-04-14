@@ -1,11 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { LogOut, Mail } from 'lucide-react'
+import { Camera, Check, LogOut, Mail, Pencil, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
+import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
-import { updateProfileCurrencyFn } from '#/server/profile'
+import {
+  updateProfileCurrencyFn,
+  updateProfileNameFn,
+} from '#/server/profile'
 import type { Currency } from '#/lib/currency'
 
 export const Route = createFileRoute('/app/profile')({
@@ -14,17 +18,34 @@ export const Route = createFileRoute('/app/profile')({
 
 function ProfileScreen() {
   const router = useRouter()
-  const { user, profile } = Route.useRouteContext()
+  const { user, profile, shellUser } = Route.useRouteContext()
+
   const [currency, setCurrency] = useState<Currency>(profile.preferredCurrency)
-  const [isSaving, setIsSaving] = useState(false)
+  const [isSavingCurrency, setIsSavingCurrency] = useState(false)
+
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(profile.fullName)
+  const [isSavingName, setIsSavingName] = useState(false)
+
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string>(
+    shellUser?.avatarUrl ?? '',
+  )
+
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // -------------------------------------------------------------------------
+  // Currency
+  // -------------------------------------------------------------------------
+
   async function handleCurrencyChange(next: Currency) {
-    if (next === currency || isSaving) return
+    if (next === currency || isSavingCurrency) return
     const previous = currency
     setCurrency(next)
-    setIsSaving(true)
+    setIsSavingCurrency(true)
     try {
       await updateProfileCurrencyFn({ data: { preferredCurrency: next } })
       await router.invalidate()
@@ -35,9 +56,71 @@ function ProfileScreen() {
         err instanceof Error ? err.message : 'Failed to update currency',
       )
     } finally {
-      setIsSaving(false)
+      setIsSavingCurrency(false)
     }
   }
+
+  // -------------------------------------------------------------------------
+  // Name
+  // -------------------------------------------------------------------------
+
+  function startEditingName() {
+    setNameInput(profile.fullName)
+    setIsEditingName(true)
+  }
+
+  function cancelEditingName() {
+    setIsEditingName(false)
+    setNameInput(profile.fullName)
+  }
+
+  async function saveName() {
+    const trimmed = nameInput.trim()
+    if (!trimmed || trimmed.length < 2 || isSavingName) return
+    if (trimmed === profile.fullName) {
+      setIsEditingName(false)
+      return
+    }
+    setIsSavingName(true)
+    try {
+      await updateProfileNameFn({ data: { fullName: trimmed } })
+      await router.invalidate()
+      setIsEditingName(false)
+      toast.success('Name updated')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update name')
+    } finally {
+      setIsSavingName(false)
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Photo
+  // -------------------------------------------------------------------------
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!fileInputRef.current) return
+    fileInputRef.current.value = ''
+    if (!file) return
+
+    setIsUploadingPhoto(true)
+    try {
+      const dataUrl = await resizeImage(file, 300)
+      await authClient.updateUser({ image: dataUrl })
+      setAvatarUrl(dataUrl)
+      await router.invalidate()
+      toast.success('Photo updated')
+    } catch {
+      toast.error('Failed to update photo')
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Sign out
+  // -------------------------------------------------------------------------
 
   async function handleSignOut() {
     setIsSigningOut(true)
@@ -49,19 +132,121 @@ function ProfileScreen() {
 
   return (
     <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
+      {/* ------------------------------------------------------------------ */}
+      {/* Header — avatar + name                                               */}
+      {/* ------------------------------------------------------------------ */}
       <header className="mb-8 flex flex-col items-center text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-container to-[#1e3a8a] shadow-[0_20px_60px_-20px_rgba(37,99,235,0.5)]">
-          <span className="font-display text-2xl font-bold text-on-primary-container">
-            {initials}
-          </span>
+        {/* Avatar */}
+        <div className="relative mb-4">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingPhoto}
+            className="group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-primary-container to-[#1e3a8a] shadow-[0_20px_60px_-20px_rgba(37,99,235,0.5)] disabled:opacity-70"
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={profile.fullName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="font-display text-3xl font-bold text-on-primary-container">
+                {initials}
+              </span>
+            )}
+            {/* Hover overlay */}
+            <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 group-disabled:opacity-0">
+              {isUploadingPhoto ? (
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <Camera className="h-6 w-6 text-white" strokeWidth={1.75} />
+              )}
+            </span>
+          </button>
+
+          {/* Camera badge */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingPhoto}
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant shadow-md transition hover:bg-surface-container disabled:opacity-50"
+            aria-label="Change profile photo"
+          >
+            <Camera className="h-3.5 w-3.5" strokeWidth={2} />
+          </button>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
         </div>
-        <h1 className="headline-md mt-4 text-on-surface">{profile.fullName}</h1>
+
+        {/* Name — static or inline edit */}
+        {isEditingName ? (
+          <div className="mt-1 flex w-full max-w-xs flex-col gap-2">
+            <TextField
+              id="edit-name"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveName()
+                if (e.key === 'Escape') cancelEditingName()
+              }}
+              autoFocus
+              disabled={isSavingName}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={cancelEditingName}
+                disabled={isSavingName}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-outline-variant/30 py-2.5 text-sm text-on-surface-variant transition hover:bg-white/5 disabled:opacity-50"
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveName}
+                disabled={isSavingName || nameInput.trim().length < 2}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary-container py-2.5 text-sm font-semibold text-on-primary-container transition disabled:opacity-50"
+              >
+                {isSavingName ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
+                ) : (
+                  <Check className="h-4 w-4" strokeWidth={2.5} />
+                )}
+                Save
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-1 flex items-center gap-2">
+            <h1 className="headline-md text-on-surface">{profile.fullName}</h1>
+            <button
+              type="button"
+              onClick={startEditingName}
+              className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
+              aria-label="Edit name"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={1.75} />
+            </button>
+          </div>
+        )}
+
         <p className="body-sm mt-1 flex items-center gap-1.5 text-on-surface-variant">
           <Mail className="h-3.5 w-3.5" strokeWidth={1.75} />
           {user.email}
         </p>
       </header>
 
+      {/* ------------------------------------------------------------------ */}
+      {/* Currency                                                             */}
+      {/* ------------------------------------------------------------------ */}
       <section className="mb-6">
         <h2 className="label-md mb-3 px-1 text-on-surface-variant">
           Preferred currency
@@ -74,7 +259,7 @@ function ProfileScreen() {
               symbol="৳"
               label="BDT"
               hint="Bangladeshi Taka"
-              disabled={isSaving}
+              disabled={isSavingCurrency}
             />
             <CurrencyOption
               active={currency === 'USD'}
@@ -82,12 +267,15 @@ function ProfileScreen() {
               symbol="$"
               label="USD"
               hint="US Dollar"
-              disabled={isSaving}
+              disabled={isSavingCurrency}
             />
           </div>
         </Card>
       </section>
 
+      {/* ------------------------------------------------------------------ */}
+      {/* Sign out                                                             */}
+      {/* ------------------------------------------------------------------ */}
       <section className="mb-10">
         {!confirmLogout ? (
           <button
@@ -131,6 +319,10 @@ function ProfileScreen() {
     </main>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
 function CurrencyOption({
   active,
@@ -176,9 +368,36 @@ function CurrencyOption({
   )
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+function resizeImage(file: File, maxSize: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return reject(new Error('Canvas not available'))
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Failed to load image'))
+    }
+    img.src = objectUrl
+  })
 }

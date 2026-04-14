@@ -88,3 +88,24 @@ export async function updateProfileCurrencyImpl(
   })
   return serializeProfile(profile)
 }
+
+export async function updateProfileNameImpl(
+  userId: string,
+  fullName: string,
+): Promise<SerializedProfile> {
+  const profile = await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { name: fullName } })
+    return tx.profile.update({
+      where: { userId },
+      data: { fullName },
+      select: {
+        id: true,
+        userId: true,
+        fullName: true,
+        preferredCurrency: true,
+        createdAt: true,
+      },
+    })
+  })
+  return serializeProfile(profile)
+}
