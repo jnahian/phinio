@@ -52,6 +52,12 @@ function ForgotPasswordScreen() {
           Back to login
         </Link>
 
+        <img
+          src="/phinio.png"
+          alt="Phinio"
+          className="mx-auto mb-6 h-12 w-auto"
+        />
+
         <header className="mb-8">
           <h1 className="headline-lg text-on-surface">Reset password</h1>
           <p className="body-md mt-2 text-on-surface-variant">

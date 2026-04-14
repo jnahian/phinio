@@ -74,6 +74,11 @@ function LoginScreen() {
   return (
     <main className="noir-bg flex min-h-dvh items-center justify-center px-4 py-8">
       <div className="glass w-full max-w-md rounded-3xl border border-white/5 p-8 shadow-2xl sm:p-10">
+        <img
+          src="/phinio.png"
+          alt="Phinio"
+          className="mx-auto mb-8 h-12 w-auto"
+        />
         <header className="mb-8">
           <h1 className="headline-lg text-on-surface">Welcome back</h1>
           <p className="body-md mt-2 text-on-surface-variant">
