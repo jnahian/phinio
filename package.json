@@ -21,6 +21,7 @@
     "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@tailwindcss/vite": "^4.1.18",
