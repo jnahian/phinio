@@ -26,6 +26,7 @@ export function notificationsListQueryOptions() {
   return queryOptions({
     queryKey: notificationKeys.list(),
     queryFn: () => listNotificationsFn(),
+    refetchInterval: 5 * 60_000,
   })
 }
 
@@ -37,7 +38,7 @@ export function useUnreadNotificationCountQuery() {
   return useQuery({
     queryKey: notificationKeys.unreadCount(),
     queryFn: () => unreadNotificationCountFn(),
-    refetchInterval: 60_000,
+    refetchInterval: 5 * 60_000,
   })
 }
 
