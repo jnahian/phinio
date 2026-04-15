@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  addDepositSchema,
+  dpsCreateSchema,
+  dpsUpdateSchema,
   emiCreateSchema,
   emiIdSchema,
   emiListQuerySchema,
@@ -9,7 +12,11 @@ import {
   investmentListQuerySchema,
   investmentUpdateSchema,
   loginSchema,
+  markDepositPaidSchema,
   markPaymentPaidSchema,
+  removeDepositSchema,
+  savingsCreateSchema,
+  savingsUpdateSchema,
   signupSchema,
 } from '#/lib/validators'
 
@@ -277,6 +284,16 @@ describe('investmentListQuerySchema', () => {
     expect(result.type).toBe('gold')
   })
 
+  it('accepts dps as a type filter', () => {
+    expect(investmentListQuerySchema.parse({ type: 'dps' }).type).toBe('dps')
+  })
+
+  it('accepts savings as a type filter', () => {
+    expect(investmentListQuerySchema.parse({ type: 'savings' }).type).toBe(
+      'savings',
+    )
+  })
+
   it('rejects a type outside the enum', () => {
     expect(investmentListQuerySchema.safeParse({ type: 'bond' }).success).toBe(
       false,
@@ -415,5 +432,285 @@ describe('markPaymentPaidSchema', () => {
     expect(
       markPaymentPaidSchema.safeParse({ paymentId: '', paid: true }).success,
     ).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// DPS schemas
+// ---------------------------------------------------------------------------
+
+describe('dpsCreateSchema', () => {
+  const valid = {
+    name: 'DBBL DPS',
+    monthlyDeposit: '5000.00',
+    tenureMonths: 24,
+    interestRate: '8.00',
+    interestType: 'simple' as const,
+    startDate: '2026-01-01',
+  }
+
+  it('parses a valid DPS payload', () => {
+    expect(dpsCreateSchema.parse(valid)).toEqual(valid)
+  })
+
+  it('notes is optional', () => {
+    const result = dpsCreateSchema.parse(valid)
+    expect(result.notes).toBeUndefined()
+  })
+
+  it('accepts compound interest type', () => {
+    expect(
+      dpsCreateSchema.parse({ ...valid, interestType: 'compound' }).interestType,
+    ).toBe('compound')
+  })
+
+  it('accepts zero interest rate', () => {
+    expect(
+      dpsCreateSchema.parse({ ...valid, interestRate: '0' }).interestRate,
+    ).toBe('0')
+  })
+
+  it('rejects an empty name', () => {
+    expect(dpsCreateSchema.safeParse({ ...valid, name: '' }).success).toBe(false)
+  })
+
+  it('rejects a non-positive monthly deposit', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, monthlyDeposit: '0' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a negative monthly deposit', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, monthlyDeposit: '-100' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects tenure of 0', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, tenureMonths: 0 }).success,
+    ).toBe(false)
+  })
+
+  it('rejects tenure greater than 600', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, tenureMonths: 601 }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a non-integer tenure', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, tenureMonths: 6.5 }).success,
+    ).toBe(false)
+  })
+
+  it('rejects an unknown interest type', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, interestType: 'flat' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects an invalid start date', () => {
+    expect(
+      dpsCreateSchema.safeParse({ ...valid, startDate: 'not-a-date' }).success,
+    ).toBe(false)
+  })
+})
+
+describe('dpsUpdateSchema', () => {
+  it('parses a valid update payload', () => {
+    const result = dpsUpdateSchema.parse({ id: 'dps_1', name: 'New Name' })
+    expect(result.id).toBe('dps_1')
+    expect(result.name).toBe('New Name')
+    expect(result.notes).toBeUndefined()
+  })
+
+  it('accepts optional notes', () => {
+    const result = dpsUpdateSchema.parse({
+      id: 'dps_1',
+      name: 'Name',
+      notes: 'Some note',
+    })
+    expect(result.notes).toBe('Some note')
+  })
+
+  it('rejects an empty id', () => {
+    expect(dpsUpdateSchema.safeParse({ id: '', name: 'Name' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rejects an empty name', () => {
+    expect(dpsUpdateSchema.safeParse({ id: 'dps_1', name: '  ' }).success).toBe(
+      false,
+    )
+  })
+})
+
+describe('markDepositPaidSchema', () => {
+  it('parses a valid mark-paid payload', () => {
+    expect(
+      markDepositPaidSchema.parse({ depositId: 'dep_1', paid: true }),
+    ).toEqual({ depositId: 'dep_1', paid: true })
+  })
+
+  it('parses paid: false (toggle back)', () => {
+    expect(
+      markDepositPaidSchema.parse({ depositId: 'dep_1', paid: false }).paid,
+    ).toBe(false)
+  })
+
+  it('rejects an empty depositId', () => {
+    expect(
+      markDepositPaidSchema.safeParse({ depositId: '', paid: true }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a non-boolean paid', () => {
+    expect(
+      markDepositPaidSchema.safeParse({ depositId: 'dep_1', paid: 1 }).success,
+    ).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Savings schemas
+// ---------------------------------------------------------------------------
+
+describe('savingsCreateSchema', () => {
+  const valid = {
+    name: 'Emergency Fund',
+    startDate: '2026-01-01',
+    currentValue: '50000.00',
+  }
+
+  it('parses a valid savings payload', () => {
+    expect(savingsCreateSchema.parse(valid)).toEqual(valid)
+  })
+
+  it('accepts zero currentValue', () => {
+    expect(
+      savingsCreateSchema.parse({ ...valid, currentValue: '0' }).currentValue,
+    ).toBe('0')
+  })
+
+  it('notes is optional', () => {
+    const result = savingsCreateSchema.parse(valid)
+    expect(result.notes).toBeUndefined()
+  })
+
+  it('rejects an empty name', () => {
+    expect(savingsCreateSchema.safeParse({ ...valid, name: '' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rejects a negative currentValue', () => {
+    expect(
+      savingsCreateSchema.safeParse({ ...valid, currentValue: '-1' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects 3+ decimal places on currentValue', () => {
+    expect(
+      savingsCreateSchema.safeParse({ ...valid, currentValue: '100.123' })
+        .success,
+    ).toBe(false)
+  })
+
+  it('rejects an invalid start date', () => {
+    expect(
+      savingsCreateSchema.safeParse({ ...valid, startDate: '2026-13-01' })
+        .success,
+    ).toBe(false)
+  })
+})
+
+describe('savingsUpdateSchema', () => {
+  const valid = {
+    id: 'sav_1',
+    name: 'Updated Fund',
+    currentValue: '75000.00',
+  }
+
+  it('parses a valid update payload', () => {
+    expect(savingsUpdateSchema.parse(valid)).toEqual(valid)
+  })
+
+  it('accepts zero currentValue', () => {
+    expect(
+      savingsUpdateSchema.parse({ ...valid, currentValue: '0' }).currentValue,
+    ).toBe('0')
+  })
+
+  it('rejects an empty id', () => {
+    expect(savingsUpdateSchema.safeParse({ ...valid, id: '' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rejects a negative currentValue', () => {
+    expect(
+      savingsUpdateSchema.safeParse({ ...valid, currentValue: '-500' }).success,
+    ).toBe(false)
+  })
+})
+
+describe('addDepositSchema', () => {
+  const valid = {
+    investmentId: 'inv_1',
+    amount: '10000.00',
+    depositDate: '2026-02-15',
+  }
+
+  it('parses a valid add-deposit payload', () => {
+    expect(addDepositSchema.parse(valid)).toEqual(valid)
+  })
+
+  it('notes is optional', () => {
+    const result = addDepositSchema.parse(valid)
+    expect(result.notes).toBeUndefined()
+  })
+
+  it('rejects an empty investmentId', () => {
+    expect(
+      addDepositSchema.safeParse({ ...valid, investmentId: '' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a non-positive amount', () => {
+    expect(addDepositSchema.safeParse({ ...valid, amount: '0' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rejects a negative amount', () => {
+    expect(
+      addDepositSchema.safeParse({ ...valid, amount: '-100' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects 3+ decimal places on amount', () => {
+    expect(
+      addDepositSchema.safeParse({ ...valid, amount: '10.123' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects an invalid deposit date', () => {
+    expect(
+      addDepositSchema.safeParse({ ...valid, depositDate: 'not-a-date' }).success,
+    ).toBe(false)
+  })
+})
+
+describe('removeDepositSchema', () => {
+  it('parses a valid remove-deposit payload', () => {
+    expect(removeDepositSchema.parse({ depositId: 'dep_1' })).toEqual({
+      depositId: 'dep_1',
+    })
+  })
+
+  it('rejects an empty depositId', () => {
+    expect(removeDepositSchema.safeParse({ depositId: '' }).success).toBe(false)
   })
 })

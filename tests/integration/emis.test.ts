@@ -329,11 +329,13 @@ describe('emis server impls', () => {
   it('upcomingPaymentsImpl returns at most 5 unpaid payments sorted by dueDate asc', async () => {
     const user = await createTestUser({ email: 'upcoming@phinio.test' })
 
-    // Start date = today so at least one payment is guaranteed within 30 days.
-    const today = new Date()
-    const yyyy = today.getFullYear()
-    const mm = String(today.getMonth() + 1).padStart(2, '0')
-    const dd = String(today.getDate()).padStart(2, '0')
+    // Start date = tomorrow so the first payment is always in the future,
+    // regardless of what time of day the test runs (avoids the midnight-UTC
+    // boundary where "today" at 00:00 UTC is already in the past).
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    const yyyy = tomorrow.getFullYear()
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0')
+    const dd = String(tomorrow.getDate()).padStart(2, '0')
     const startDate = `${yyyy}-${mm}-${dd}`
 
     await createEmiImpl(user.profileId, {

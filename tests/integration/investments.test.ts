@@ -5,14 +5,25 @@ import {
   getInvestmentImpl,
   listInvestmentsImpl,
   updateInvestmentImpl,
+  createDpsInvestmentImpl,
+  updateDpsInvestmentImpl,
+  markDepositPaidImpl,
+  createSavingsInvestmentImpl,
+  updateSavingsInvestmentImpl,
+  addDepositImpl,
+  removeDepositImpl,
 } from '#/server/investments.impl'
-import { createTestUser, resetDb } from './helpers/db'
+import { createTestUser, prisma, resetDb } from './helpers/db'
 
 beforeEach(async () => {
   await resetDb()
 })
 
-describe('investments server impls', () => {
+// ---------------------------------------------------------------------------
+// Lump-sum (mode: lump_sum)
+// ---------------------------------------------------------------------------
+
+describe('lump-sum investments', () => {
   it('creates an investment scoped to the current profile', async () => {
     const user = await createTestUser()
 
@@ -24,13 +35,15 @@ describe('investments server impls', () => {
       dateOfInvestment: '2026-01-15',
     })
 
-    expect(created.name).toBe('Apple')
-    expect(created.investedAmount).toBe('1000')
-    expect(created.currentValue).toBe('1200')
-    expect(created.status).toBe('active')
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.name).toBe('Apple')
+    expect(inv.investedAmount).toBe('1000')
+    expect(inv.currentValue).toBe('1200')
+    expect(inv.mode).toBe('lump_sum')
+    expect(inv.status).toBe('active')
   })
 
-  it('lists only the current profile’s investments (profileId scoping)', async () => {
+  it("lists only the current profile's investments (profileId scoping)", async () => {
     const alice = await createTestUser({ email: 'alice@phinio.test' })
     const bob = await createTestUser({ email: 'bob@phinio.test' })
 
@@ -64,7 +77,7 @@ describe('investments server impls', () => {
     expect(bobRows[0].name).toBe('Bob gold')
   })
 
-  it('refuses updates and deletes to another profile’s investment', async () => {
+  it("refuses updates and deletes to another profile's investment", async () => {
     const alice = await createTestUser({ email: 'alice2@phinio.test' })
     const bob = await createTestUser({ email: 'bob2@phinio.test' })
 
@@ -109,7 +122,7 @@ describe('investments server impls', () => {
       dateOfInvestment: '2025-12-01',
     })
 
-    const updated = await updateInvestmentImpl(user.profileId, {
+    await updateInvestmentImpl(user.profileId, {
       id: inv.id,
       name: 'Gold',
       type: 'gold',
@@ -121,6 +134,7 @@ describe('investments server impls', () => {
       completedAt: '2026-03-15',
     })
 
+    const updated = await getInvestmentImpl(user.profileId, inv.id)
     expect(updated.status).toBe('completed')
     expect(updated.exitValue).toBe('6500')
 
@@ -169,5 +183,446 @@ describe('investments server impls', () => {
     await expect(
       getInvestmentImpl(user.profileId, 'does-not-exist'),
     ).rejects.toThrow(/not found/i)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// DPS (mode: scheduled)
+// ---------------------------------------------------------------------------
+
+describe('DPS (scheduled) investments', () => {
+  it('createDpsInvestmentImpl generates the full deposit schedule up front', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'My DPS',
+      monthlyDeposit: '5000.00',
+      tenureMonths: 12,
+      interestRate: '8.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const count = await prisma.investmentDeposit.count({
+      where: { investmentId: created.id },
+    })
+    expect(count).toBe(12)
+  })
+
+  it('deposits start as upcoming with correct amount and installment numbers', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Ordered DPS',
+      monthlyDeposit: '3000.00',
+      tenureMonths: 3,
+      interestRate: '7.50',
+      interestType: 'compound',
+      startDate: '2026-01-01',
+    })
+
+    const deposits = await prisma.investmentDeposit.findMany({
+      where: { investmentId: created.id },
+      orderBy: { installmentNumber: 'asc' },
+    })
+
+    expect(deposits).toHaveLength(3)
+    deposits.forEach((d, i) => {
+      expect(d.installmentNumber).toBe(i + 1)
+      expect(d.status).toBe('upcoming')
+      expect(String(d.amount)).toBe('3000')
+    })
+  })
+
+  it('investedAmount starts at 0 and is synced when deposits are paid', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'DPS Sync',
+      monthlyDeposit: '2000.00',
+      tenureMonths: 6,
+      interestRate: '8.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    // investedAmount should start at 0
+    const before = await getInvestmentImpl(user.profileId, created.id)
+    expect(before.investedAmount).toBe('0')
+
+    // Mark the first deposit paid
+    const deposits = await prisma.investmentDeposit.findMany({
+      where: { investmentId: created.id },
+      orderBy: { installmentNumber: 'asc' },
+    })
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[0].id,
+      paid: true,
+    })
+
+    // investedAmount should now equal one monthly deposit
+    const after = await getInvestmentImpl(user.profileId, created.id)
+    expect(after.investedAmount).toBe('2000')
+    expect(after.currentValue).toBe('2000')
+
+    // Mark second deposit paid too
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[1].id,
+      paid: true,
+    })
+    const after2 = await getInvestmentImpl(user.profileId, created.id)
+    expect(after2.investedAmount).toBe('4000')
+  })
+
+  it('markDepositPaidImpl toggles a deposit back to upcoming and re-syncs amount', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Toggle DPS',
+      monthlyDeposit: '1000.00',
+      tenureMonths: 3,
+      interestRate: '0',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const deposits = await prisma.investmentDeposit.findMany({
+      where: { investmentId: created.id },
+      orderBy: { installmentNumber: 'asc' },
+    })
+
+    // Pay two deposits
+    await markDepositPaidImpl(user.profileId, { depositId: deposits[0].id, paid: true })
+    await markDepositPaidImpl(user.profileId, { depositId: deposits[1].id, paid: true })
+
+    const twoIn = await getInvestmentImpl(user.profileId, created.id)
+    expect(twoIn.investedAmount).toBe('2000')
+
+    // Unpay the second
+    await markDepositPaidImpl(user.profileId, { depositId: deposits[1].id, paid: false })
+
+    const oneIn = await getInvestmentImpl(user.profileId, created.id)
+    expect(oneIn.investedAmount).toBe('1000')
+
+    const toggled = await prisma.investmentDeposit.findUniqueOrThrow({
+      where: { id: deposits[1].id },
+    })
+    expect(toggled.status).toBe('upcoming')
+    expect(toggled.paidAt).toBeNull()
+  })
+
+  it('auto-matures the investment when all deposits are paid', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Short DPS',
+      monthlyDeposit: '500.00',
+      tenureMonths: 2,
+      interestRate: '5.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const deposits = await prisma.investmentDeposit.findMany({
+      where: { investmentId: created.id },
+    })
+
+    for (const d of deposits) {
+      await markDepositPaidImpl(user.profileId, { depositId: d.id, paid: true })
+    }
+
+    const matured = await getInvestmentImpl(user.profileId, created.id)
+    expect(matured.status).toBe('matured')
+  })
+
+  it('markDepositPaidImpl refuses cross-profile updates', async () => {
+    const alice = await createTestUser({ email: 'alice-dps@phinio.test' })
+    const bob = await createTestUser({ email: 'bob-dps@phinio.test' })
+
+    const created = await createDpsInvestmentImpl(alice.profileId, {
+      name: 'Alice DPS',
+      monthlyDeposit: '1000.00',
+      tenureMonths: 3,
+      interestRate: '8.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const deposit = await prisma.investmentDeposit.findFirstOrThrow({
+      where: { investmentId: created.id, installmentNumber: 1 },
+    })
+
+    await expect(
+      markDepositPaidImpl(bob.profileId, { depositId: deposit.id, paid: true }),
+    ).rejects.toThrow(/not found/i)
+
+    const unchanged = await prisma.investmentDeposit.findUniqueOrThrow({
+      where: { id: deposit.id },
+    })
+    expect(unchanged.status).toBe('upcoming')
+  })
+
+  it('updateDpsInvestmentImpl updates name and notes only', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Original Name',
+      monthlyDeposit: '2000.00',
+      tenureMonths: 6,
+      interestRate: '8.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    await updateDpsInvestmentImpl(user.profileId, {
+      id: created.id,
+      name: 'Renamed DPS',
+      notes: 'Updated note',
+    })
+
+    const updated = await getInvestmentImpl(user.profileId, created.id)
+    expect(updated.name).toBe('Renamed DPS')
+    expect(updated.notes).toBe('Updated note')
+    // Core financial fields unchanged
+    expect(updated.monthlyDeposit).toBe('2000')
+    expect(updated.tenureMonths).toBe(6)
+  })
+
+  it('filters the list by DPS type', async () => {
+    const user = await createTestUser()
+
+    await createInvestmentImpl(user.profileId, {
+      name: 'My Stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+    await createDpsInvestmentImpl(user.profileId, {
+      name: 'My DPS',
+      monthlyDeposit: '3000.00',
+      tenureMonths: 12,
+      interestRate: '8.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const dpsOnly = await listInvestmentsImpl(user.profileId, {
+      status: 'active',
+      type: 'dps',
+    })
+    expect(dpsOnly).toHaveLength(1)
+    expect(dpsOnly[0].name).toBe('My DPS')
+    expect(dpsOnly[0].mode).toBe('scheduled')
+  })
+
+  it('list exposes paidCount and nextDueDate for DPS cards', async () => {
+    const user = await createTestUser()
+
+    const created = await createDpsInvestmentImpl(user.profileId, {
+      name: 'DPS List Info',
+      monthlyDeposit: '1000.00',
+      tenureMonths: 3,
+      interestRate: '6.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const deposits = await prisma.investmentDeposit.findMany({
+      where: { investmentId: created.id },
+      orderBy: { installmentNumber: 'asc' },
+    })
+
+    await markDepositPaidImpl(user.profileId, { depositId: deposits[0].id, paid: true })
+
+    const rows = await listInvestmentsImpl(user.profileId, { status: 'active', type: 'dps' })
+    expect(rows).toHaveLength(1)
+    expect(rows[0].paidCount).toBe(1)
+    expect(rows[0].nextDueDate).toEqual(deposits[1].dueDate)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Savings (mode: flexible)
+// ---------------------------------------------------------------------------
+
+describe('savings pot (flexible) investments', () => {
+  it('createSavingsInvestmentImpl creates a pot with investedAmount=0', async () => {
+    const user = await createTestUser()
+
+    const created = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Emergency Fund',
+      startDate: '2026-01-01',
+      currentValue: '50000.00',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.name).toBe('Emergency Fund')
+    expect(inv.mode).toBe('flexible')
+    expect(inv.type).toBe('savings')
+    expect(inv.investedAmount).toBe('0')
+    // currentValue is set by the user
+    expect(inv.currentValue).toBe('50000')
+  })
+
+  it('addDepositImpl creates a deposit row and syncs investedAmount', async () => {
+    const user = await createTestUser()
+
+    const created = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Vacation Fund',
+      startDate: '2026-01-01',
+      currentValue: '0',
+    })
+
+    await addDepositImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '10000.00',
+      depositDate: '2026-02-01',
+      notes: 'First deposit',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.investedAmount).toBe('10000')
+    expect(inv.deposits).toHaveLength(1)
+    expect(inv.deposits[0].status).toBe('paid')
+    expect(inv.deposits[0].notes).toBe('First deposit')
+  })
+
+  it('addDepositImpl accumulates investedAmount across multiple deposits', async () => {
+    const user = await createTestUser()
+
+    const created = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Multi deposit pot',
+      startDate: '2026-01-01',
+      currentValue: '0',
+    })
+
+    await addDepositImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '5000.00',
+      depositDate: '2026-01-15',
+    })
+    await addDepositImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '3000.00',
+      depositDate: '2026-02-15',
+    })
+    await addDepositImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '2000.00',
+      depositDate: '2026-03-15',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.investedAmount).toBe('10000')
+    expect(inv.deposits).toHaveLength(3)
+  })
+
+  it('removeDepositImpl deletes the deposit and re-syncs investedAmount', async () => {
+    const user = await createTestUser()
+
+    const created = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Remove test pot',
+      startDate: '2026-01-01',
+      currentValue: '0',
+    })
+
+    await addDepositImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '8000.00',
+      depositDate: '2026-01-01',
+    })
+    await addDepositImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '2000.00',
+      depositDate: '2026-02-01',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.investedAmount).toBe('10000')
+
+    const secondDeposit = inv.deposits.find((d) =>
+      String(d.amount) === '2000',
+    )!
+
+    await removeDepositImpl(user.profileId, { depositId: secondDeposit.id })
+
+    const afterRemove = await getInvestmentImpl(user.profileId, created.id)
+    expect(afterRemove.investedAmount).toBe('8000')
+    expect(afterRemove.deposits).toHaveLength(1)
+  })
+
+  it('removeDepositImpl refuses cross-profile removal', async () => {
+    const alice = await createTestUser({ email: 'alice-sav@phinio.test' })
+    const bob = await createTestUser({ email: 'bob-sav@phinio.test' })
+
+    const created = await createSavingsInvestmentImpl(alice.profileId, {
+      name: 'Alice pot',
+      startDate: '2026-01-01',
+      currentValue: '0',
+    })
+
+    await addDepositImpl(alice.profileId, {
+      investmentId: created.id,
+      amount: '5000.00',
+      depositDate: '2026-01-01',
+    })
+
+    const deposit = await prisma.investmentDeposit.findFirstOrThrow({
+      where: { investmentId: created.id },
+    })
+
+    await expect(
+      removeDepositImpl(bob.profileId, { depositId: deposit.id }),
+    ).rejects.toThrow(/not found/i)
+
+    // Deposit still intact
+    const stillThere = await getInvestmentImpl(alice.profileId, created.id)
+    expect(stillThere.investedAmount).toBe('5000')
+  })
+
+  it('updateSavingsInvestmentImpl updates name and currentValue', async () => {
+    const user = await createTestUser()
+
+    const created = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Old Name',
+      startDate: '2026-01-01',
+      currentValue: '20000.00',
+    })
+
+    await updateSavingsInvestmentImpl(user.profileId, {
+      id: created.id,
+      name: 'New Name',
+      currentValue: '22000.00',
+    })
+
+    const updated = await getInvestmentImpl(user.profileId, created.id)
+    expect(updated.name).toBe('New Name')
+    expect(updated.currentValue).toBe('22000')
+  })
+
+  it('filters the list by savings type', async () => {
+    const user = await createTestUser()
+
+    await createInvestmentImpl(user.profileId, {
+      name: 'My Stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+    await createSavingsInvestmentImpl(user.profileId, {
+      name: 'My Savings',
+      startDate: '2026-01-01',
+      currentValue: '0',
+    })
+
+    const savingsOnly = await listInvestmentsImpl(user.profileId, {
+      status: 'active',
+      type: 'savings',
+    })
+    expect(savingsOnly).toHaveLength(1)
+    expect(savingsOnly[0].name).toBe('My Savings')
+    expect(savingsOnly[0].mode).toBe('flexible')
   })
 })
