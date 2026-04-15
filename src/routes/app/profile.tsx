@@ -1,15 +1,21 @@
 import { useRef, useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { Camera, Check, ChevronDown, KeyRound, LogOut, Mail, Pencil, X } from 'lucide-react'
+import {
+  Camera,
+  Check,
+  ChevronDown,
+  KeyRound,
+  LogOut,
+  Mail,
+  Pencil,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
 import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
-import {
-  updateProfileCurrencyFn,
-  updateProfileNameFn,
-} from '#/server/profile'
+import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import type { Currency } from '#/lib/currency'
 
 export const Route = createFileRoute('/app/profile')({
@@ -28,9 +34,7 @@ function ProfileScreen() {
   const [isSavingName, setIsSavingName] = useState(false)
 
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string>(
-    shellUser?.avatarUrl ?? '',
-  )
+  const [avatarUrl, setAvatarUrl] = useState<string>(shellUser?.avatarUrl ?? '')
 
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [pwForm, setPwForm] = useState({
@@ -168,7 +172,9 @@ function ProfileScreen() {
       closeChangePassword()
       toast.success('Password changed')
     } catch (err) {
-      setPwError(err instanceof Error ? err.message : 'Failed to change password')
+      setPwError(
+        err instanceof Error ? err.message : 'Failed to change password',
+      )
     } finally {
       setIsSavingPassword(false)
     }
@@ -340,15 +346,25 @@ function ProfileScreen() {
             className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
           >
             <div className="flex items-center gap-3">
-              <KeyRound className="h-5 w-5 text-on-surface-variant" strokeWidth={1.75} />
-              <span className="font-display font-semibold">Change password</span>
+              <KeyRound
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">
+                Change password
+              </span>
             </div>
-            <ChevronDown className="h-4 w-4 text-on-surface-variant/50" strokeWidth={2} />
+            <ChevronDown
+              className="h-4 w-4 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
           </button>
         ) : (
           <Card variant="low">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="label-md text-on-surface-variant">Change password</h2>
+              <h2 className="label-md text-on-surface-variant">
+                Change password
+              </h2>
               <button
                 type="button"
                 onClick={closeChangePassword}
@@ -364,7 +380,9 @@ function ProfileScreen() {
                 type="password"
                 placeholder="Current password"
                 value={pwForm.current}
-                onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+                onChange={(e) =>
+                  setPwForm((f) => ({ ...f, current: e.target.value }))
+                }
                 disabled={isSavingPassword}
                 autoComplete="current-password"
               />
@@ -373,7 +391,9 @@ function ProfileScreen() {
                 type="password"
                 placeholder="New password"
                 value={pwForm.next}
-                onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
+                onChange={(e) =>
+                  setPwForm((f) => ({ ...f, next: e.target.value }))
+                }
                 disabled={isSavingPassword}
                 autoComplete="new-password"
               />
@@ -382,16 +402,25 @@ function ProfileScreen() {
                 type="password"
                 placeholder="Confirm new password"
                 value={pwForm.confirm}
-                onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+                onChange={(e) =>
+                  setPwForm((f) => ({ ...f, confirm: e.target.value }))
+                }
                 disabled={isSavingPassword}
                 autoComplete="new-password"
               />
               {pwError && (
-                <p className="body-sm px-1 text-error" role="alert">{pwError}</p>
+                <p className="body-sm px-1 text-error" role="alert">
+                  {pwError}
+                </p>
               )}
               <button
                 type="submit"
-                disabled={isSavingPassword || !pwForm.current || !pwForm.next || !pwForm.confirm}
+                disabled={
+                  isSavingPassword ||
+                  !pwForm.current ||
+                  !pwForm.next ||
+                  !pwForm.confirm
+                }
                 className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
               >
                 {isSavingPassword ? (

@@ -61,9 +61,7 @@ function Nav() {
         scrolled ? 'glass' : 'bg-transparent'
       }`}
       style={
-        scrolled
-          ? { borderBottom: '1px solid rgba(67,70,85,0.18)' }
-          : undefined
+        scrolled ? { borderBottom: '1px solid rgba(67,70,85,0.18)' } : undefined
       }
     >
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 h-16">
@@ -94,7 +92,6 @@ function Nav() {
 function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-20 overflow-hidden">
-
       {/* Drifting ambient orbs */}
       <div className="pointer-events-none select-none" aria-hidden>
         <div className="absolute -top-24 -left-32 w-[560px] h-[560px] rounded-full bg-primary-container/8 blur-[120px] animate-lp-orb-drift" />
@@ -102,7 +99,8 @@ function Hero() {
         <div
           className="absolute top-2/3 left-1/3 w-[320px] h-[320px] rounded-full blur-[80px] animate-lp-orb-drift"
           style={{
-            background: 'radial-gradient(circle, rgba(37,99,235,0.07), transparent)',
+            background:
+              'radial-gradient(circle, rgba(37,99,235,0.07), transparent)',
             animationDelay: '-9s',
           }}
         />
@@ -121,7 +119,6 @@ function Hero() {
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto gap-8">
-
         {/* Floating logo cluster */}
         <div className="relative animate-lp-float">
           {/* Outer diffuse glow */}
@@ -173,7 +170,10 @@ function Hero() {
           style={{ border: '1px solid rgba(67,70,85,0.25)' }}
         >
           <SparkleSvg className="w-3.5 h-3.5 text-primary" />
-          <span className="label-sm text-primary" style={{ letterSpacing: '0.16em' }}>
+          <span
+            className="label-sm text-primary"
+            style={{ letterSpacing: '0.16em' }}
+          >
             DIGITAL PRIVATE VAULT
           </span>
         </div>
@@ -199,8 +199,8 @@ function Hero() {
 
         {/* Subheadline */}
         <p className="body-md text-on-surface-variant max-w-lg leading-relaxed">
-          Investment portfolio tracking and EMI amortization management — unified
-          in one private, encrypted vault. Precision without compromise.
+          Investment portfolio tracking and EMI amortization management —
+          unified in one private, encrypted vault. Precision without compromise.
         </p>
 
         {/* CTA row */}
@@ -260,7 +260,10 @@ function TrustBar() {
   const { ref, inView } = useInView()
   return (
     <section className="py-16 px-6 bg-surface-container-low">
-      <div ref={ref} className="mx-auto max-w-4xl grid grid-cols-1 sm:grid-cols-3 gap-12">
+      <div
+        ref={ref}
+        className="mx-auto max-w-4xl grid grid-cols-1 sm:grid-cols-3 gap-12"
+      >
         {trustItems.map(({ Icon, value, label, sub }, i) => (
           <div
             key={label}
@@ -519,7 +522,8 @@ function FinalCta() {
             Your vault is waiting.
           </h2>
           <p className="body-md text-on-surface-variant max-w-sm mx-auto">
-            Take control of your investments and loans — all in one private, encrypted space.
+            Take control of your investments and loans — all in one private,
+            encrypted space.
           </p>
         </div>
 
@@ -730,7 +734,9 @@ function CalendarSvg({ className, animated }: SvgProps) {
         y2="9"
         strokeLinecap="round"
         strokeOpacity={animated ? 1 : 0}
-        style={{ transition: animated ? 'stroke-opacity 0.3s ease 0.8s' : 'none' }}
+        style={{
+          transition: animated ? 'stroke-opacity 0.3s ease 0.8s' : 'none',
+        }}
       />
       {/* Date pins */}
       <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
@@ -752,9 +758,9 @@ function CalendarSvg({ className, animated }: SvgProps) {
 
 function BarChartSvg({ className, animated }: SvgProps) {
   const bars = [
-    { x: 3,  h: 10, y: 11, delay: 0.2  },
-    { x: 9,  h: 15, y: 6,  delay: 0.35 },
-    { x: 15, h: 7,  y: 14, delay: 0.5  },
+    { x: 3, h: 10, y: 11, delay: 0.2 },
+    { x: 9, h: 15, y: 6, delay: 0.35 },
+    { x: 15, h: 7, y: 14, delay: 0.5 },
   ]
   return (
     <svg

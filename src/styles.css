@@ -247,43 +247,86 @@ body {
  * ──────────────────────────────────────────────────────────────────────────── */
 
 @keyframes lp-float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes lp-glow-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.12); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
 }
 
 @keyframes lp-orb-drift {
-  0%   { transform: translate(0,    0);    }
-  25%  { transform: translate(22px, -16px); }
-  50%  { transform: translate(-12px, 20px); }
-  75%  { transform: translate(16px,  8px);  }
-  100% { transform: translate(0,    0);    }
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(22px, -16px);
+  }
+  50% {
+    transform: translate(-12px, 20px);
+  }
+  75% {
+    transform: translate(16px, 8px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 @keyframes lp-orb-drift-2 {
-  0%   { transform: translate(0,    0);    }
-  25%  { transform: translate(-22px, 12px); }
-  50%  { transform: translate(14px, -18px); }
-  75%  { transform: translate(-10px, -6px); }
-  100% { transform: translate(0,    0);    }
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-22px, 12px);
+  }
+  50% {
+    transform: translate(14px, -18px);
+  }
+  75% {
+    transform: translate(-10px, -6px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 @keyframes lp-spin-slow {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes lp-bounce-y {
-  0%, 100% { transform: translateY(0);   }
-  50%       { transform: translateY(6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
 }
 
 @keyframes lp-bar-grow {
-  from { transform: scaleY(0); }
-  to   { transform: scaleY(1); }
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
 }
 
 .animate-lp-float {

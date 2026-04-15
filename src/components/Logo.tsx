@@ -4,9 +4,9 @@ interface LogoProps {
 }
 
 const specs = {
-  xs: { icon: 'h-6 w-6 rounded-lg',  text: 'text-sm'  },
-  sm: { icon: 'h-7 w-7 rounded-xl',  text: 'text-sm'  },
-  md: { icon: 'h-8 w-8 rounded-xl',  text: 'text-base' },
+  xs: { icon: 'h-6 w-6 rounded-lg', text: 'text-sm' },
+  sm: { icon: 'h-7 w-7 rounded-xl', text: 'text-sm' },
+  md: { icon: 'h-8 w-8 rounded-xl', text: 'text-base' },
   lg: { icon: 'h-10 w-10 rounded-2xl', text: 'text-xl' },
 }
 
@@ -24,7 +24,9 @@ export function Logo({ size = 'md', className = '' }: LogoProps) {
           className="h-full w-full object-cover"
         />
       </div>
-      <span className={`font-display font-bold tracking-tight text-on-surface ${text}`}>
+      <span
+        className={`font-display font-bold tracking-tight text-on-surface ${text}`}
+      >
         Phinio
       </span>
     </div>

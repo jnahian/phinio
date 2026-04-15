@@ -7,29 +7,34 @@
 ## Features
 
 ### Investment Portfolio
+
 - Track stocks, mutual funds, fixed deposits, gold, crypto, and custom asset types
 - Log invested amount and current value; returns (%) are computed automatically
 - Mark investments as completed with an exit value to record realised P&L
 - Per-investment notes and status tracking (active / completed)
 
 ### EMI Management
+
 - Add bank loans or credit-card EMIs with principal, annual interest rate, and tenure
 - Full amortization schedule generated upfront at creation — every payment row (principal split, interest split, remaining balance, due date) is stored, not computed on the fly
 - Track payment status: upcoming, paid, overdue
 - Mark individual installments as paid
 
 ### Unified Dashboard
+
 - Net worth snapshot: `Σ active investment values − Σ active EMI remaining balances`
 - Portfolio overview with total invested, current value, and overall return %
 - Upcoming and overdue EMI payments at a glance
 
 ### Auth & Security
+
 - Email / password sign-up with mandatory email verification (powered by Resend)
 - Forgot-password flow with time-limited reset links
 - Cookie-based sessions managed by Better Auth (httpOnly, secure)
 - Every database query is scoped to the authenticated user's `profileId` — no cross-user data leakage possible
 
 ### PWA
+
 - Installable on Android and iOS (standalone display mode)
 - Dark-only "Digital Private Bank" design system — nocturnal palette, glassmorphism, Manrope numerics + Inter body
 - Optimised for mobile viewports; works in any modern browser
@@ -38,20 +43,20 @@
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | TanStack Start (React 19 + Vite + SSR) |
-| Routing | TanStack Router (file-based, code-generated route tree) |
-| Data fetching | TanStack Query (caching, mutations, optimistic updates) |
-| Auth | Better Auth with `tanstackStartCookies` plugin |
-| ORM | Prisma 7 with `@prisma/adapter-pg` (pg adapter, not default engine) |
-| Database | PostgreSQL via Neon (serverless, pooled + direct URLs) |
-| Email | Resend (verification links, password reset) |
-| Styling | Tailwind CSS v4 via `@tailwindcss/vite` — all tokens in `src/styles.css` |
-| Validation | Zod |
-| Date math | date-fns |
-| Charts | Recharts |
-| Deployment | Vercel (with Vercel Analytics) |
+| Layer         | Technology                                                               |
+| ------------- | ------------------------------------------------------------------------ |
+| Framework     | TanStack Start (React 19 + Vite + SSR)                                   |
+| Routing       | TanStack Router (file-based, code-generated route tree)                  |
+| Data fetching | TanStack Query (caching, mutations, optimistic updates)                  |
+| Auth          | Better Auth with `tanstackStartCookies` plugin                           |
+| ORM           | Prisma 7 with `@prisma/adapter-pg` (pg adapter, not default engine)      |
+| Database      | PostgreSQL via Neon (serverless, pooled + direct URLs)                   |
+| Email         | Resend (verification links, password reset)                              |
+| Styling       | Tailwind CSS v4 via `@tailwindcss/vite` — all tokens in `src/styles.css` |
+| Validation    | Zod                                                                      |
+| Date math     | date-fns                                                                 |
+| Charts        | Recharts                                                                 |
+| Deployment    | Vercel (with Vercel Analytics)                                           |
 
 ---
 
@@ -78,14 +83,14 @@ Copy `.env.example` to `.env.local` and fill in all values:
 cp .env.example .env.local
 ```
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | Pooled Neon connection string (used by the app at runtime via PgBouncer) |
-| `DIRECT_URL` | Direct (non-pooled) Neon connection string (used by `prisma migrate deploy`) |
-| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret` |
-| `BETTER_AUTH_URL` | Full URL of the app (e.g. `http://localhost:3000` in dev, your Vercel URL in prod) |
-| `RESEND_API_KEY` | API key from your Resend dashboard |
-| `RESEND_FROM` | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>` |
+| Variable             | Description                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `DATABASE_URL`       | Pooled Neon connection string (used by the app at runtime via PgBouncer)           |
+| `DIRECT_URL`         | Direct (non-pooled) Neon connection string (used by `prisma migrate deploy`)       |
+| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret`                     |
+| `BETTER_AUTH_URL`    | Full URL of the app (e.g. `http://localhost:3000` in dev, your Vercel URL in prod) |
+| `RESEND_API_KEY`     | API key from your Resend dashboard                                                 |
+| `RESEND_FROM`        | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`                    |
 
 > **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim in every email link (verification, password reset). In dev it must be `http://localhost:3000`; in preview (`npm run preview`, port 4173) you must temporarily set it to `http://localhost:4173` or links will 404.
 
