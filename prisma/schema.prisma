@@ -81,16 +81,18 @@ model Verification {
 // ----------------------------------------------------------------------------
 
 model Profile {
-  id                String         @id @default(uuid())
-  userId            String         @unique
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String           @id @default(uuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName          String
-  preferredCurrency String         @default("BDT")
-  createdAt         DateTime       @default(now())
+  preferredCurrency String           @default("BDT")
+  createdAt         DateTime         @default(now())
   investments       Investment[]
   emis              Emi[]
   emiPayments       EmiPayment[]
   notifications     Notification[]
+  dps               Dps[]
+  dpsInstallments   DpsInstallment[]
 
   @@map("profiles")
 }
@@ -152,6 +154,44 @@ model EmiPayment {
   @@index([emiId, paymentNumber])
   @@index([profileId, status, dueDate])
   @@map("emi_payments")
+}
+
+model Dps {
+  id             String           @id @default(uuid())
+  profileId      String
+  profile        Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name           String
+  monthlyDeposit Decimal          @db.Decimal(15, 2)
+  tenureMonths   Int
+  interestRate   Decimal          @db.Decimal(5, 2) // Annual %
+  interestType   String           // "simple" | "compound"
+  startDate      DateTime         @db.Date
+  status         String           @default("active") // "active" | "matured" | "closed"
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  installments   DpsInstallment[]
+
+  @@index([profileId, status])
+  @@map("dps")
+}
+
+model DpsInstallment {
+  id                String    @id @default(uuid())
+  dpsId             String
+  dps               Dps       @relation(fields: [dpsId], references: [id], onDelete: Cascade)
+  profileId         String
+  profile           Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  installmentNumber Int
+  dueDate           DateTime  @db.Date
+  depositAmount     Decimal   @db.Decimal(15, 2)
+  accruedValue      Decimal   @db.Decimal(15, 2) // running balance after this installment (with interest)
+  status            String    @default("upcoming") // "upcoming" | "paid" | "overdue"
+  paidAt            DateTime?
+
+  @@index([dpsId, installmentNumber])
+  @@index([profileId, status, dueDate])
+  @@map("dps_installments")
 }
 
 model Notification {

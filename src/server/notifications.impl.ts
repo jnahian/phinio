@@ -136,6 +136,47 @@ export async function syncDerivedNotifications(profileId: string) {
       dedupeKey: `payment-overdue:${p.id}`,
     })
   }
+
+  // DPS installments
+  const dpsDueSoon = await prisma.dpsInstallment.findMany({
+    where: {
+      profileId,
+      status: { not: 'paid' },
+      dueDate: { gte: now, lte: in3Days },
+    },
+    include: { dps: { select: { name: true } } },
+  })
+
+  const dpsOverdue = await prisma.dpsInstallment.findMany({
+    where: {
+      profileId,
+      status: { not: 'paid' },
+      dueDate: { lt: now },
+    },
+    include: { dps: { select: { name: true } } },
+  })
+
+  for (const i of dpsDueSoon) {
+    await createNotification({
+      profileId,
+      type: 'dps.installment.due',
+      title: 'DPS deposit due soon',
+      body: `${i.dps.name} — ${formatCurrency(i.depositAmount, currency)} due ${i.dueDate.toLocaleDateString()}`,
+      link: `/app/investments/dps/${i.dpsId}`,
+      dedupeKey: `dps-due:${i.id}`,
+    })
+  }
+
+  for (const i of dpsOverdue) {
+    await createNotification({
+      profileId,
+      type: 'dps.installment.overdue',
+      title: 'DPS deposit overdue',
+      body: `${i.dps.name} — ${formatCurrency(i.depositAmount, currency)} was due ${i.dueDate.toLocaleDateString()}`,
+      link: `/app/investments/dps/${i.dpsId}`,
+      dedupeKey: `dps-overdue:${i.id}`,
+    })
+  }
 }
 
 export async function listNotificationsImpl(profileId: string) {

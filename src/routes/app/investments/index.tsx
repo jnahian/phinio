@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { TrendingUp } from 'lucide-react'
+import { PiggyBank, TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
-import { FAB } from '#/components/ui/FAB'
+import { FABMenu } from '#/components/ui/FABMenu'
 import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
@@ -12,9 +12,10 @@ import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
 import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
 import { useInvestmentsQuery } from '#/hooks/useInvestments'
+import { useDpsListQuery } from '#/hooks/useDps'
 import type { InvestmentType } from '#/lib/validators'
 
-type TypeFilter = InvestmentType | 'all'
+type TypeFilter = InvestmentType | 'dps' | 'all'
 type StatusFilter = 'active' | 'completed'
 
 const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
@@ -24,6 +25,7 @@ const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
   { value: 'fd', label: 'FD' },
   { value: 'gold', label: 'Gold' },
   { value: 'crypto', label: 'Crypto' },
+  { value: 'dps', label: 'DPS' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -45,6 +47,8 @@ const TYPE_COLORS: Record<InvestmentType, string> = {
   other: 'bg-surface-container-highest text-on-surface-variant',
 }
 
+const DPS_COLOR = 'bg-[#1a4731]/40 text-[#4ade80]'
+
 export const Route = createFileRoute('/app/investments/')({
   component: InvestmentsListScreen,
 })
@@ -56,12 +60,32 @@ function InvestmentsListScreen() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
 
-  const { data: investments = [], isLoading } = useInvestmentsQuery({
-    status,
-    type: typeFilter,
-  })
+  const showInvestments = typeFilter !== 'dps'
+  const showDps = typeFilter === 'all' || typeFilter === 'dps'
 
-  const totals = investments.reduce(
+  const investmentTypeFilter =
+    showInvestments && typeFilter !== 'all' && typeFilter !== 'dps'
+      ? typeFilter
+      : 'all'
+
+  const { data: investments = [], isLoading: investmentsLoading } =
+    useInvestmentsQuery({
+      status,
+      type: investmentTypeFilter,
+    })
+
+  const { data: dpsList = [], isLoading: dpsLoading } = useDpsListQuery(status)
+
+  const isLoading = investmentsLoading || dpsLoading
+
+  // Filter investments when typeFilter is set to a specific non-DPS type
+  const filteredInvestments = showInvestments ? investments : []
+  const filteredDps = showDps ? dpsList : []
+
+  const totalItems = filteredInvestments.length + filteredDps.length
+
+  // Summary totals
+  const investmentTotals = filteredInvestments.reduce(
     (acc, inv) => {
       acc.invested += Number(inv.investedAmount)
       acc.current += Number(
@@ -71,6 +95,18 @@ function InvestmentsListScreen() {
     },
     { invested: 0, current: 0 },
   )
+  const dpsTotals = filteredDps.reduce(
+    (acc, dps) => {
+      acc.invested += Number(dps.totalDeposited)
+      acc.current += Number(dps.totalDeposited)
+      return acc
+    },
+    { invested: 0, current: 0 },
+  )
+  const totals = {
+    invested: investmentTotals.invested + dpsTotals.invested,
+    current: investmentTotals.current + dpsTotals.current,
+  }
   const totalReturn =
     totals.invested > 0
       ? calculateReturnPercent(
@@ -151,7 +187,7 @@ function InvestmentsListScreen() {
             </li>
           ))}
         </ul>
-      ) : investments.length === 0 ? (
+      ) : totalItems === 0 ? (
         <EmptyState
           icon={<TrendingUp className="h-7 w-7" strokeWidth={1.75} />}
           title={
@@ -159,21 +195,40 @@ function InvestmentsListScreen() {
           }
           description={
             status === 'active'
-              ? 'Track stocks, mutual funds, FDs, gold and crypto in one place.'
+              ? 'Track stocks, mutual funds, FDs, DPS schemes and more.'
               : 'Investments you mark as completed will appear here.'
           }
         />
       ) : (
         <ul className="space-y-3">
-          {investments.map((inv) => (
-            <li key={inv.id}>
+          {filteredInvestments.map((inv) => (
+            <li key={`inv-${inv.id}`}>
               <InvestmentCard investment={inv} currency={currency} />
+            </li>
+          ))}
+          {filteredDps.map((dps) => (
+            <li key={`dps-${dps.id}`}>
+              <DpsCard dps={dps} currency={currency} />
             </li>
           ))}
         </ul>
       )}
 
-      <FAB to="/app/investments/new" label="Add investment" />
+      <FABMenu
+        label="Add"
+        items={[
+          {
+            to: '/app/investments/new',
+            label: 'Investment',
+            icon: <TrendingUp className="h-5 w-5" strokeWidth={1.75} />,
+          },
+          {
+            to: '/app/investments/dps/new',
+            label: 'DPS Scheme',
+            icon: <PiggyBank className="h-5 w-5" strokeWidth={1.75} />,
+          },
+        ]}
+      />
     </main>
   )
 }
@@ -312,6 +367,95 @@ function InvestmentCard({ investment, currency }: InvestmentCardProps) {
           <span className="font-medium text-on-surface-variant">
             {formatCurrency(investment.investedAmount, currency)}
           </span>
+        </div>
+      </Card>
+    </Link>
+  )
+}
+
+interface DpsCardProps {
+  dps: {
+    id: string
+    name: string
+    monthlyDeposit: string
+    tenureMonths: number
+    interestRate: string
+    interestType: string
+    status: string
+    paidCount: number
+    totalDeposited: string
+    maturityValue: string
+    nextDueDate: Date | string | null
+  }
+  currency: Currency
+}
+
+function DpsCard({ dps, currency }: DpsCardProps) {
+  const progressPercent =
+    dps.tenureMonths > 0 ? (dps.paidCount / dps.tenureMonths) * 100 : 0
+
+  return (
+    <Link
+      to="/app/investments/dps/$dpsId"
+      params={{ dpsId: dps.id }}
+      className="block"
+    >
+      <Card
+        variant="default"
+        className="transition-colors hover:bg-surface-container-highest"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="headline-sm truncate text-on-surface">{dps.name}</h3>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span
+                className={cn(
+                  'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
+                  DPS_COLOR,
+                )}
+              >
+                DPS
+              </span>
+              <span className="body-sm text-on-surface-variant/70">
+                {dps.paidCount}/{dps.tenureMonths} months
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="font-display text-lg font-bold text-on-surface">
+              {formatCurrency(dps.totalDeposited, currency)}
+            </p>
+            <p className="body-sm font-semibold text-secondary">
+              → {formatCurrency(dps.maturityValue, currency)}
+            </p>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-3 h-1 rounded-full bg-surface-container-highest">
+          <div
+            className="h-1 rounded-full bg-secondary transition-all"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+
+        <div className="mt-2 flex items-center gap-2 text-xs text-on-surface-variant/70">
+          <span>
+            {formatCurrency(dps.monthlyDeposit, currency)}/mo ·{' '}
+            {dps.interestRate}% {dps.interestType}
+          </span>
+          {dps.nextDueDate && (
+            <>
+              <span>·</span>
+              <span>
+                Next:{' '}
+                {new Date(dps.nextDueDate).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </span>
+            </>
+          )}
         </div>
       </Card>
     </Link>

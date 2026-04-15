@@ -131,3 +131,47 @@ export const markPaymentPaidSchema = z.object({
   paid: z.boolean(),
 })
 export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
+
+// ----------------------------------------------------------------------------
+// DPS (Deposit Pension Scheme)
+// ----------------------------------------------------------------------------
+
+export const DPS_INTEREST_TYPES = ['simple', 'compound'] as const
+export type DpsInterestType = (typeof DPS_INTEREST_TYPES)[number]
+
+export const dpsCreateSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  monthlyDeposit: positiveDecimalString,
+  tenureMonths: z
+    .number()
+    .int('Tenure must be whole months')
+    .min(1, 'Tenure must be at least 1 month')
+    .max(600, 'Tenure must be 600 months or less'),
+  interestRate: nonNegativeRateString,
+  interestType: z.enum(DPS_INTEREST_TYPES),
+  startDate: isoDateString,
+  notes: z.string().trim().max(1000).optional(),
+})
+export type DpsCreateInput = z.infer<typeof dpsCreateSchema>
+
+export const dpsUpdateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  notes: z.string().trim().max(1000).optional(),
+})
+export type DpsUpdateInput = z.infer<typeof dpsUpdateSchema>
+
+export const dpsListQuerySchema = z.object({
+  status: z.enum(['active', 'completed']).default('active'),
+})
+export type DpsListQuery = z.infer<typeof dpsListQuerySchema>
+
+export const dpsIdSchema = z.object({ dpsId: z.string().min(1) })
+
+export const markDpsInstallmentPaidSchema = z.object({
+  installmentId: z.string().min(1),
+  paid: z.boolean(),
+})
+export type MarkDpsInstallmentPaidInput = z.infer<
+  typeof markDpsInstallmentPaidSchema
+>
