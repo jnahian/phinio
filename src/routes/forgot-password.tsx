@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowLeft, Mail } from 'lucide-react'
+import { Logo } from '#/components/Logo'
 import { authClient } from '#/lib/auth-client'
 import { forgotPasswordSchema } from '#/lib/validators'
 
@@ -52,11 +53,7 @@ function ForgotPasswordScreen() {
           Back to login
         </Link>
 
-        <img
-          src="/phinio.png"
-          alt="Phinio"
-          className="mx-auto mb-6 h-12 w-auto"
-        />
+        <Logo size="lg" className="justify-center mx-auto mb-6" />
 
         <header className="mb-8">
           <h1 className="headline-lg text-on-surface">Reset password</h1>

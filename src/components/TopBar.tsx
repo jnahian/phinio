@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { Logo } from './Logo'
 import { NotificationBell } from './NotificationBell'
 
 interface TopBarProps {
@@ -18,7 +19,7 @@ export function TopBar({ userName, avatarUrl }: TopBarProps) {
             referrerPolicy="no-referrer"
           />
         </span>
-        <img src="/phinio.png" alt="Phinio" className="h-7 w-auto" />
+        <Logo size="sm" />
       </Link>
       <NotificationBell />
     </header>

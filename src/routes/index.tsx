@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
+import { Logo } from '#/components/Logo'
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
@@ -67,9 +68,7 @@ function Nav() {
     >
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 h-16">
         {/* Logo */}
-        <div className="flex items-center">
-          <img src="/phinio.png" alt="Phinio" className="h-8 w-auto object-contain" />
-        </div>
+        <Logo size="md" />
         {/* Actions */}
         <div className="flex items-center gap-4">
           <Link
@@ -554,7 +553,7 @@ function Footer() {
     >
       <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
-          <img src="/phinio.png" alt="Phinio" className="h-6 w-auto object-contain" />
+          <Logo size="xs" />
           <span className="text-on-surface-variant/25 text-xs mx-0.5">—</span>
           <span className="text-xs text-on-surface-variant">
             Your private financial vault.

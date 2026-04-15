@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowLeft, Mail, MailCheck } from 'lucide-react'
+import { Logo } from '#/components/Logo'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { authClient } from '#/lib/auth-client'
@@ -44,11 +45,7 @@ function CheckEmailScreen() {
           Back to login
         </Link>
 
-        <img
-          src="/phinio.png"
-          alt="Phinio"
-          className="mx-auto mb-6 h-12 w-auto"
-        />
+        <Logo size="lg" className="justify-center mx-auto mb-6" />
 
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-container shadow-[0_20px_60px_-10px_rgba(37,99,235,0.5)]">
