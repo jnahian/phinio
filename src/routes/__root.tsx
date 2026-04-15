@@ -7,6 +7,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Toaster } from 'sonner'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 import { RouteStatus } from '#/components/RouteStatus'
@@ -117,6 +118,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           />
         )}
         <Analytics />
+        <SpeedInsights />
         <Scripts />
       </body>
     </html>
