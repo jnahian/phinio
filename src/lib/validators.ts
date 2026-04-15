@@ -20,7 +20,44 @@ export const forgotPasswordSchema = z.object({
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 
 // ----------------------------------------------------------------------------
-// Investments (PRD §4.1, §9.1)
+// Shared primitives
+// ----------------------------------------------------------------------------
+
+const positiveDecimalString = z
+  .string()
+  .trim()
+  .refine((s) => /^\d+(\.\d{1,2})?$/.test(s), {
+    message: 'Enter a valid amount (up to 2 decimals)',
+  })
+  .refine((s) => Number(s) > 0, { message: 'Amount must be greater than 0' })
+
+const nonNegativeDecimalString = z
+  .string()
+  .trim()
+  .refine((s) => /^\d+(\.\d{1,2})?$/.test(s), {
+    message: 'Enter a valid amount (up to 2 decimals)',
+  })
+  .refine((s) => Number(s) >= 0, { message: 'Amount must be 0 or greater' })
+
+const nonNegativeRateString = z
+  .string()
+  .trim()
+  .refine((s) => /^\d+(\.\d{1,2})?$/.test(s), {
+    message: 'Enter a valid interest rate (up to 2 decimals)',
+  })
+  .refine((s) => Number(s) >= 0 && Number(s) < 100, {
+    message: 'Rate must be between 0 and 100',
+  })
+
+const isoDateString = z
+  .string()
+  .refine(
+    (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)),
+    { message: 'Enter a valid date' },
+  )
+
+// ----------------------------------------------------------------------------
+// Investments — lump_sum mode (stocks, mutual fund, FD, gold, crypto, other)
 // ----------------------------------------------------------------------------
 
 export const INVESTMENT_TYPES = [
@@ -32,22 +69,6 @@ export const INVESTMENT_TYPES = [
   'other',
 ] as const
 export type InvestmentType = (typeof INVESTMENT_TYPES)[number]
-
-// Positive decimal as string — lets us avoid JS number coercion for money.
-const positiveDecimalString = z
-  .string()
-  .trim()
-  .refine((s) => /^\d+(\.\d{1,2})?$/.test(s), {
-    message: 'Enter a valid amount (up to 2 decimals)',
-  })
-  .refine((s) => Number(s) > 0, { message: 'Amount must be greater than 0' })
-
-const isoDateString = z
-  .string()
-  .refine(
-    (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)),
-    { message: 'Enter a valid date' },
-  )
 
 export const investmentCreateSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
@@ -82,58 +103,14 @@ export type InvestmentUpdateInput = z.infer<typeof investmentUpdateSchema>
 
 export const investmentListQuerySchema = z.object({
   status: z.enum(['active', 'completed']).default('active'),
-  type: z.enum([...INVESTMENT_TYPES, 'all']).default('all'),
+  type: z.enum([...INVESTMENT_TYPES, 'dps', 'savings', 'all']).default('all'),
 })
 export type InvestmentListQuery = z.infer<typeof investmentListQuerySchema>
 
 export const investmentIdSchema = z.object({ id: z.string().min(1) })
 
 // ----------------------------------------------------------------------------
-// EMIs (PRD §4.1, §9.2)
-// ----------------------------------------------------------------------------
-
-export const EMI_TYPES = ['bank_loan', 'credit_card'] as const
-export type EmiType = (typeof EMI_TYPES)[number]
-
-const nonNegativeRateString = z
-  .string()
-  .trim()
-  .refine((s) => /^\d+(\.\d{1,2})?$/.test(s), {
-    message: 'Enter a valid interest rate (up to 2 decimals)',
-  })
-  .refine((s) => Number(s) >= 0 && Number(s) < 100, {
-    message: 'Rate must be between 0 and 100',
-  })
-
-export const emiCreateSchema = z.object({
-  label: z.string().trim().min(1, 'Label is required').max(120),
-  type: z.enum(EMI_TYPES),
-  principal: positiveDecimalString,
-  interestRate: nonNegativeRateString,
-  tenureMonths: z
-    .number()
-    .int('Tenure must be whole months')
-    .min(1, 'Tenure must be at least 1 month')
-    .max(600, 'Tenure must be 600 months or less'),
-  startDate: isoDateString,
-})
-export type EmiCreateInput = z.infer<typeof emiCreateSchema>
-
-export const emiListQuerySchema = z.object({
-  type: z.enum([...EMI_TYPES, 'all']).default('all'),
-})
-export type EmiListQuery = z.infer<typeof emiListQuerySchema>
-
-export const emiIdSchema = z.object({ emiId: z.string().min(1) })
-
-export const markPaymentPaidSchema = z.object({
-  paymentId: z.string().min(1),
-  paid: z.boolean(),
-})
-export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
-
-// ----------------------------------------------------------------------------
-// DPS (Deposit Pension Scheme)
+// Investments — scheduled mode (DPS: fixed monthly deposit, tenure, interest)
 // ----------------------------------------------------------------------------
 
 export const DPS_INTEREST_TYPES = ['simple', 'compound'] as const
@@ -161,17 +138,75 @@ export const dpsUpdateSchema = z.object({
 })
 export type DpsUpdateInput = z.infer<typeof dpsUpdateSchema>
 
-export const dpsListQuerySchema = z.object({
-  status: z.enum(['active', 'completed']).default('active'),
-})
-export type DpsListQuery = z.infer<typeof dpsListQuerySchema>
-
-export const dpsIdSchema = z.object({ dpsId: z.string().min(1) })
-
-export const markDpsInstallmentPaidSchema = z.object({
-  installmentId: z.string().min(1),
+export const markDepositPaidSchema = z.object({
+  depositId: z.string().min(1),
   paid: z.boolean(),
 })
-export type MarkDpsInstallmentPaidInput = z.infer<
-  typeof markDpsInstallmentPaidSchema
->
+export type MarkDepositPaidInput = z.infer<typeof markDepositPaidSchema>
+
+// ----------------------------------------------------------------------------
+// Investments — flexible mode (savings: variable deposits, no tenure/interest)
+// ----------------------------------------------------------------------------
+
+export const savingsCreateSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  startDate: isoDateString,
+  currentValue: nonNegativeDecimalString,
+  notes: z.string().trim().max(1000).optional(),
+})
+export type SavingsCreateInput = z.infer<typeof savingsCreateSchema>
+
+export const savingsUpdateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  currentValue: nonNegativeDecimalString,
+  notes: z.string().trim().max(1000).optional(),
+})
+export type SavingsUpdateInput = z.infer<typeof savingsUpdateSchema>
+
+export const addDepositSchema = z.object({
+  investmentId: z.string().min(1),
+  amount: positiveDecimalString,
+  depositDate: isoDateString,
+  notes: z.string().trim().max(500).optional(),
+})
+export type AddDepositInput = z.infer<typeof addDepositSchema>
+
+export const removeDepositSchema = z.object({
+  depositId: z.string().min(1),
+})
+export type RemoveDepositInput = z.infer<typeof removeDepositSchema>
+
+// ----------------------------------------------------------------------------
+// EMIs (PRD §4.1, §9.2)
+// ----------------------------------------------------------------------------
+
+export const EMI_TYPES = ['bank_loan', 'credit_card'] as const
+export type EmiType = (typeof EMI_TYPES)[number]
+
+export const emiCreateSchema = z.object({
+  label: z.string().trim().min(1, 'Label is required').max(120),
+  type: z.enum(EMI_TYPES),
+  principal: positiveDecimalString,
+  interestRate: nonNegativeRateString,
+  tenureMonths: z
+    .number()
+    .int('Tenure must be whole months')
+    .min(1, 'Tenure must be at least 1 month')
+    .max(600, 'Tenure must be 600 months or less'),
+  startDate: isoDateString,
+})
+export type EmiCreateInput = z.infer<typeof emiCreateSchema>
+
+export const emiListQuerySchema = z.object({
+  type: z.enum([...EMI_TYPES, 'all']).default('all'),
+})
+export type EmiListQuery = z.infer<typeof emiListQuerySchema>
+
+export const emiIdSchema = z.object({ emiId: z.string().min(1) })
+
+export const markPaymentPaidSchema = z.object({
+  paymentId: z.string().min(1),
+  paid: z.boolean(),
+})
+export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>

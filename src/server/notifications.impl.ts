@@ -137,23 +137,25 @@ export async function syncDerivedNotifications(profileId: string) {
     })
   }
 
-  // DPS installments
-  const dpsDueSoon = await prisma.dpsInstallment.findMany({
+  // DPS installments (scheduled mode deposits)
+  const dpsDueSoon = await prisma.investmentDeposit.findMany({
     where: {
       profileId,
       status: { not: 'paid' },
       dueDate: { gte: now, lte: in3Days },
+      investment: { mode: 'scheduled' },
     },
-    include: { dps: { select: { name: true } } },
+    include: { investment: { select: { id: true, name: true } } },
   })
 
-  const dpsOverdue = await prisma.dpsInstallment.findMany({
+  const dpsOverdue = await prisma.investmentDeposit.findMany({
     where: {
       profileId,
       status: { not: 'paid' },
       dueDate: { lt: now },
+      investment: { mode: 'scheduled' },
     },
-    include: { dps: { select: { name: true } } },
+    include: { investment: { select: { id: true, name: true } } },
   })
 
   for (const i of dpsDueSoon) {
@@ -161,8 +163,8 @@ export async function syncDerivedNotifications(profileId: string) {
       profileId,
       type: 'dps.installment.due',
       title: 'DPS deposit due soon',
-      body: `${i.dps.name} — ${formatCurrency(i.depositAmount, currency)} due ${i.dueDate.toLocaleDateString()}`,
-      link: `/app/investments/dps/${i.dpsId}`,
+      body: `${i.investment.name} — ${formatCurrency(i.amount, currency)} due ${i.dueDate!.toLocaleDateString()}`,
+      link: `/app/investments/dps/${i.investmentId}`,
       dedupeKey: `dps-due:${i.id}`,
     })
   }
@@ -172,8 +174,8 @@ export async function syncDerivedNotifications(profileId: string) {
       profileId,
       type: 'dps.installment.overdue',
       title: 'DPS deposit overdue',
-      body: `${i.dps.name} — ${formatCurrency(i.depositAmount, currency)} was due ${i.dueDate.toLocaleDateString()}`,
-      link: `/app/investments/dps/${i.dpsId}`,
+      body: `${i.investment.name} — ${formatCurrency(i.amount, currency)} was due ${i.dueDate!.toLocaleDateString()}`,
+      link: `/app/investments/dps/${i.investmentId}`,
       dedupeKey: `dps-overdue:${i.id}`,
     })
   }

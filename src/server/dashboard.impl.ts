@@ -46,48 +46,39 @@ export async function getDashboardStatsImpl(
   const now = new Date()
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-  const [activeInvestments, activeDps, activeEmis, upcomingRows] =
-    await Promise.all([
-      prisma.investment.findMany({
-        where: { profileId, status: 'active' },
-        select: { type: true, investedAmount: true, currentValue: true },
-      }),
-      prisma.dps.findMany({
-        where: { profileId, status: 'active' },
-        select: {
-          id: true,
-          installments: {
-            where: { status: 'paid' },
-            select: { depositAmount: true },
-          },
+  const [activeInvestments, activeEmis, upcomingRows] = await Promise.all([
+    // All active investments — investedAmount + currentValue already synced for
+    // scheduled/flexible modes, so no deposit join needed here.
+    prisma.investment.findMany({
+      where: { profileId, status: 'active' },
+      select: { type: true, investedAmount: true, currentValue: true },
+    }),
+    prisma.emi.findMany({
+      where: { profileId, status: 'active' },
+      select: {
+        id: true,
+        emiAmount: true,
+        payments: {
+          where: { status: { not: 'paid' } },
+          select: { remainingBalance: true },
+          orderBy: { paymentNumber: 'asc' },
+          take: 1,
         },
-      }),
-      prisma.emi.findMany({
-        where: { profileId, status: 'active' },
-        select: {
-          id: true,
-          emiAmount: true,
-          payments: {
-            where: { status: { not: 'paid' } },
-            select: { remainingBalance: true },
-            orderBy: { paymentNumber: 'asc' },
-            take: 1,
-          },
-        },
-      }),
-      prisma.emiPayment.findMany({
-        where: {
-          profileId,
-          status: { not: 'paid' },
-          dueDate: { lte: in30Days },
-        },
-        include: {
-          emi: { select: { id: true, label: true, type: true } },
-        },
-        orderBy: { dueDate: 'asc' },
-        take: 5,
-      }),
-    ])
+      },
+    }),
+    prisma.emiPayment.findMany({
+      where: {
+        profileId,
+        status: { not: 'paid' },
+        dueDate: { lte: in30Days },
+      },
+      include: {
+        emi: { select: { id: true, label: true, type: true } },
+      },
+      orderBy: { dueDate: 'asc' },
+      take: 5,
+    }),
+  ])
 
   let invested = 0
   let current = 0
@@ -99,16 +90,7 @@ export async function getDashboardStatsImpl(
     current += cur
     byType.set(row.type, (byType.get(row.type) ?? 0) + cur)
   }
-  // DPS: currentValue = total deposited so far (sum of paid installments)
-  for (const dps of activeDps) {
-    const totalDeposited = dps.installments.reduce(
-      (sum, i) => sum + Number(i.depositAmount),
-      0,
-    )
-    invested += totalDeposited
-    current += totalDeposited
-    byType.set('dps', (byType.get('dps') ?? 0) + totalDeposited)
-  }
+
   const gainLossPercent =
     invested > 0
       ? Math.round(((current - invested) / invested) * 10000) / 100

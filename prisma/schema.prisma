@@ -81,40 +81,86 @@ model Verification {
 // ----------------------------------------------------------------------------
 
 model Profile {
-  id                String           @id @default(uuid())
-  userId            String           @unique
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName          String
-  preferredCurrency String           @default("BDT")
-  createdAt         DateTime         @default(now())
-  investments       Investment[]
-  emis              Emi[]
-  emiPayments       EmiPayment[]
-  notifications     Notification[]
-  dps               Dps[]
-  dpsInstallments   DpsInstallment[]
+  id                 String              @id @default(uuid())
+  userId             String              @unique
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  preferredCurrency  String              @default("BDT")
+  createdAt          DateTime            @default(now())
+  investments        Investment[]
+  investmentDeposits InvestmentDeposit[]
+  emis               Emi[]
+  emiPayments        EmiPayment[]
+  notifications      Notification[]
 
   @@map("profiles")
 }
 
+// Investment.mode values:
+//   lump_sum  — one-time entry (stocks, mutual fund, FD, gold, crypto, other)
+//   scheduled — fixed monthly deposit with tenure + interest (DPS)
+//   flexible  — variable ad-hoc deposits, no tenure/interest (savings)
+//
+// investedAmount for lump_sum: set by user
+// investedAmount for scheduled/flexible: synced = SUM(paid deposits) — updated in every deposit mutation
+// currentValue  for lump_sum + flexible: set manually by user
+// currentValue  for scheduled: synced = investedAmount (total deposited, no gain/loss until maturity)
+
 model Investment {
-  id               String    @id @default(uuid())
+  id               String              @id @default(uuid())
   profileId        String
-  profile          Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile          Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
   name             String
-  type             String
-  investedAmount   Decimal   @db.Decimal(15, 2)
-  currentValue     Decimal   @db.Decimal(15, 2)
-  dateOfInvestment DateTime  @db.Date
+  type             String              // stock | mutual_fund | fd | gold | crypto | dps | savings | other
+  mode             String              @default("lump_sum") // lump_sum | scheduled | flexible
+
+  // lump_sum mode
+  investedAmount   Decimal             @db.Decimal(15, 2) @default(0)
+  currentValue     Decimal             @db.Decimal(15, 2) @default(0)
+  exitValue        Decimal?            @db.Decimal(15, 2)
+  dateOfInvestment DateTime?           @db.Date
+  completedAt      DateTime?           @db.Date
+
+  // scheduled (DPS) — fixed monthly, pre-generated schedule
+  monthlyDeposit   Decimal?            @db.Decimal(15, 2)
+  tenureMonths     Int?
+  interestRate     Decimal?            @db.Decimal(5, 2)
+  interestType     String?             // simple | compound
+
+  // scheduled + flexible shared
+  startDate        DateTime?           @db.Date
+
+  status           String              @default("active") // active | completed | matured | closed
   notes            String?
-  status           String    @default("active")
-  completedAt      DateTime? @db.Date
-  exitValue        Decimal?  @db.Decimal(15, 2)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  deposits         InvestmentDeposit[]
 
   @@index([profileId, status])
+  @@index([profileId, mode])
   @@map("investments")
+}
+
+model InvestmentDeposit {
+  id                String     @id @default(uuid())
+  investmentId      String
+  investment        Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  profileId         String
+  profile           Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  amount            Decimal    @db.Decimal(15, 2)
+  dueDate           DateTime?  @db.Date           // scheduled: pre-generated due date
+  paidAt            DateTime?                     // when actually paid / deposited
+  accruedValue      Decimal?   @db.Decimal(15, 2) // scheduled: running balance with interest after this deposit
+  installmentNumber Int?                           // scheduled: sequence 1, 2, 3…
+  status            String     @default("upcoming") // upcoming | paid
+  notes             String?
+  createdAt         DateTime   @default(now())
+
+  @@index([investmentId, installmentNumber])
+  @@index([profileId, status, dueDate])
+  @@map("investment_deposits")
 }
 
 model Emi {
@@ -154,44 +200,6 @@ model EmiPayment {
   @@index([emiId, paymentNumber])
   @@index([profileId, status, dueDate])
   @@map("emi_payments")
-}
-
-model Dps {
-  id             String           @id @default(uuid())
-  profileId      String
-  profile        Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  name           String
-  monthlyDeposit Decimal          @db.Decimal(15, 2)
-  tenureMonths   Int
-  interestRate   Decimal          @db.Decimal(5, 2) // Annual %
-  interestType   String           // "simple" | "compound"
-  startDate      DateTime         @db.Date
-  status         String           @default("active") // "active" | "matured" | "closed"
-  notes          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  installments   DpsInstallment[]
-
-  @@index([profileId, status])
-  @@map("dps")
-}
-
-model DpsInstallment {
-  id                String    @id @default(uuid())
-  dpsId             String
-  dps               Dps       @relation(fields: [dpsId], references: [id], onDelete: Cascade)
-  profileId         String
-  profile           Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  installmentNumber Int
-  dueDate           DateTime  @db.Date
-  depositAmount     Decimal   @db.Decimal(15, 2)
-  accruedValue      Decimal   @db.Decimal(15, 2) // running balance after this installment (with interest)
-  status            String    @default("upcoming") // "upcoming" | "paid" | "overdue"
-  paidAt            DateTime?
-
-  @@index([dpsId, installmentNumber])
-  @@index([profileId, status, dueDate])
-  @@map("dps_installments")
 }
 
 model Notification {

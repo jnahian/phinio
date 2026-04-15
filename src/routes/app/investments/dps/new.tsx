@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
-import { useCreateDps } from '#/hooks/useDps'
+import { useCreateDps } from '#/hooks/useInvestments'
 import { dpsCreateSchema } from '#/lib/validators'
 import type { DpsCreateInput, DpsInterestType } from '#/lib/validators'
 

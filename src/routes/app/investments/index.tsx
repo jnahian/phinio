@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { PiggyBank, TrendingUp } from 'lucide-react'
+import { PiggyBank, TrendingUp, Wallet } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FABMenu } from '#/components/ui/FABMenu'
@@ -12,10 +12,9 @@ import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
 import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
 import { useInvestmentsQuery } from '#/hooks/useInvestments'
-import { useDpsListQuery } from '#/hooks/useDps'
 import type { InvestmentType } from '#/lib/validators'
 
-type TypeFilter = InvestmentType | 'dps' | 'all'
+type TypeFilter = InvestmentType | 'dps' | 'savings' | 'all'
 type StatusFilter = 'active' | 'completed'
 
 const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
@@ -26,28 +25,31 @@ const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
   { value: 'gold', label: 'Gold' },
   { value: 'crypto', label: 'Crypto' },
   { value: 'dps', label: 'DPS' },
+  { value: 'savings', label: 'Savings' },
   { value: 'other', label: 'Other' },
 ]
 
-const TYPE_LABELS: Record<InvestmentType, string> = {
+const TYPE_LABELS: Record<string, string> = {
   stock: 'Stock',
   mutual_fund: 'Mutual Fund',
   fd: 'Fixed Deposit',
   gold: 'Gold',
   crypto: 'Crypto',
+  dps: 'DPS',
+  savings: 'Savings',
   other: 'Other',
 }
 
-const TYPE_COLORS: Record<InvestmentType, string> = {
+const TYPE_COLORS: Record<string, string> = {
   stock: 'bg-primary-container/20 text-primary-fixed-dim',
   mutual_fund: 'bg-secondary-container/20 text-secondary',
   fd: 'bg-surface-container-highest text-on-surface-variant',
   gold: 'bg-[#a07521]/25 text-[#ffd46a]',
   crypto: 'bg-[#6a3fc7]/25 text-[#c4a8ff]',
+  dps: 'bg-[#1a4731]/40 text-[#4ade80]',
+  savings: 'bg-[#1a3147]/40 text-[#60a5fa]',
   other: 'bg-surface-container-highest text-on-surface-variant',
 }
-
-const DPS_COLOR = 'bg-[#1a4731]/40 text-[#4ade80]'
 
 export const Route = createFileRoute('/app/investments/')({
   component: InvestmentsListScreen,
@@ -60,53 +62,25 @@ function InvestmentsListScreen() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
 
-  const showInvestments = typeFilter !== 'dps'
-  const showDps = typeFilter === 'all' || typeFilter === 'dps'
+  const { data: items = [], isLoading } = useInvestmentsQuery({
+    status,
+    type: typeFilter,
+  })
 
-  const investmentTypeFilter =
-    showInvestments && typeFilter !== 'all' && typeFilter !== 'dps'
-      ? typeFilter
-      : 'all'
+  const totalItems = items.length
 
-  const { data: investments = [], isLoading: investmentsLoading } =
-    useInvestmentsQuery({
-      status,
-      type: investmentTypeFilter,
-    })
-
-  const { data: dpsList = [], isLoading: dpsLoading } = useDpsListQuery(status)
-
-  const isLoading = investmentsLoading || dpsLoading
-
-  // Filter investments when typeFilter is set to a specific non-DPS type
-  const filteredInvestments = showInvestments ? investments : []
-  const filteredDps = showDps ? dpsList : []
-
-  const totalItems = filteredInvestments.length + filteredDps.length
-
-  // Summary totals
-  const investmentTotals = filteredInvestments.reduce(
-    (acc, inv) => {
-      acc.invested += Number(inv.investedAmount)
-      acc.current += Number(
-        status === 'completed' ? (inv.exitValue ?? 0) : inv.currentValue,
-      )
+  const totals = items.reduce(
+    (acc, item) => {
+      acc.invested += Number(item.investedAmount)
+      acc.current +=
+        status === 'completed'
+          ? Number(item.exitValue ?? item.currentValue)
+          : Number(item.currentValue)
       return acc
     },
     { invested: 0, current: 0 },
   )
-  const dpsTotals = filteredDps.reduce(
-    (acc, dps) => {
-      acc.invested += Number(dps.totalDeposited)
-      acc.current += Number(dps.totalDeposited)
-      return acc
-    },
-    { invested: 0, current: 0 },
-  )
-  const totals = {
-    invested: investmentTotals.invested + dpsTotals.invested,
-    current: investmentTotals.current + dpsTotals.current,
-  }
+
   const totalReturn =
     totals.invested > 0
       ? calculateReturnPercent(
@@ -195,22 +169,33 @@ function InvestmentsListScreen() {
           }
           description={
             status === 'active'
-              ? 'Track stocks, mutual funds, FDs, DPS schemes and more.'
+              ? 'Track stocks, mutual funds, FDs, DPS schemes, savings pots and more.'
               : 'Investments you mark as completed will appear here.'
           }
         />
       ) : (
         <ul className="space-y-3">
-          {filteredInvestments.map((inv) => (
-            <li key={`inv-${inv.id}`}>
-              <InvestmentCard investment={inv} currency={currency} />
-            </li>
-          ))}
-          {filteredDps.map((dps) => (
-            <li key={`dps-${dps.id}`}>
-              <DpsCard dps={dps} currency={currency} />
-            </li>
-          ))}
+          {items.map((item) => {
+            if (item.mode === 'scheduled') {
+              return (
+                <li key={item.id}>
+                  <DpsCard item={item} currency={currency} />
+                </li>
+              )
+            }
+            if (item.mode === 'flexible') {
+              return (
+                <li key={item.id}>
+                  <SavingsCard item={item} currency={currency} />
+                </li>
+              )
+            }
+            return (
+              <li key={item.id}>
+                <InvestmentCard item={item} currency={currency} status={status} />
+              </li>
+            )
+          })}
         </ul>
       )}
 
@@ -226,6 +211,11 @@ function InvestmentsListScreen() {
             to: '/app/investments/dps/new',
             label: 'DPS Scheme',
             icon: <PiggyBank className="h-5 w-5" strokeWidth={1.75} />,
+          },
+          {
+            to: '/app/investments/savings/new',
+            label: 'Savings Pot',
+            icon: <Wallet className="h-5 w-5" strokeWidth={1.75} />,
           },
         ]}
       />
@@ -284,41 +274,49 @@ function StatusTab({
   )
 }
 
-interface InvestmentCardProps {
-  investment: {
+interface ListItemProps {
+  item: {
     id: string
     name: string
     type: string
+    mode: string
+    status: string
     investedAmount: string
     currentValue: string
     exitValue: string | null
-    dateOfInvestment: Date | string
-    status: string
+    dateOfInvestment: Date | string | null
+    monthlyDeposit: string | null
+    tenureMonths: number | null
+    interestRate: string | null
+    interestType: string | null
+    startDate: Date | string | null
+    paidCount: number
+    maturityValue: string | null
+    nextDueDate: Date | string | null
   }
   currency: Currency
+  status?: string
 }
 
-function InvestmentCard({ investment, currency }: InvestmentCardProps) {
-  const type = investment.type as InvestmentType
-  const isCompleted = investment.status === 'completed'
+function InvestmentCard({ item, currency, status }: ListItemProps) {
+  const isCompleted = item.status === 'completed'
   const displayValue = isCompleted
-    ? (investment.exitValue ?? investment.currentValue)
-    : investment.currentValue
-  const returnPercent = calculateReturnPercent(
-    investment.investedAmount,
-    displayValue,
-  )
-  const date = new Date(investment.dateOfInvestment)
-  const formattedDate = date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+    ? (item.exitValue ?? item.currentValue)
+    : item.currentValue
+  const returnPercent = calculateReturnPercent(item.investedAmount, displayValue)
+  const date = item.dateOfInvestment ? new Date(item.dateOfInvestment) : null
+  const formattedDate = date
+    ? date.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null
 
   return (
     <Link
       to="/app/investments/$id/edit"
-      params={{ id: investment.id }}
+      params={{ id: item.id }}
       className="block"
     >
       <Card
@@ -327,21 +325,21 @@ function InvestmentCard({ investment, currency }: InvestmentCardProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">
-              {investment.name}
-            </h3>
+            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(
                   'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
-                  TYPE_COLORS[type],
+                  TYPE_COLORS[item.type] ?? TYPE_COLORS.other,
                 )}
               >
-                {TYPE_LABELS[type]}
+                {TYPE_LABELS[item.type] ?? item.type}
               </span>
-              <span className="body-sm text-on-surface-variant/70">
-                {formattedDate}
-              </span>
+              {formattedDate && (
+                <span className="body-sm text-on-surface-variant/70">
+                  {formattedDate}
+                </span>
+              )}
             </div>
           </div>
           <div className="text-right">
@@ -365,7 +363,7 @@ function InvestmentCard({ investment, currency }: InvestmentCardProps) {
         <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant/70">
           <span>Invested</span>
           <span className="font-medium text-on-surface-variant">
-            {formatCurrency(investment.investedAmount, currency)}
+            {formatCurrency(item.investedAmount, currency)}
           </span>
         </div>
       </Card>
@@ -373,31 +371,16 @@ function InvestmentCard({ investment, currency }: InvestmentCardProps) {
   )
 }
 
-interface DpsCardProps {
-  dps: {
-    id: string
-    name: string
-    monthlyDeposit: string
-    tenureMonths: number
-    interestRate: string
-    interestType: string
-    status: string
-    paidCount: number
-    totalDeposited: string
-    maturityValue: string
-    nextDueDate: Date | string | null
-  }
-  currency: Currency
-}
-
-function DpsCard({ dps, currency }: DpsCardProps) {
+function DpsCard({ item, currency }: ListItemProps) {
   const progressPercent =
-    dps.tenureMonths > 0 ? (dps.paidCount / dps.tenureMonths) * 100 : 0
+    item.tenureMonths && item.tenureMonths > 0
+      ? (item.paidCount / item.tenureMonths) * 100
+      : 0
 
   return (
     <Link
-      to="/app/investments/dps/$dpsId"
-      params={{ dpsId: dps.id }}
+      to="/app/investments/dps/$id"
+      params={{ id: item.id }}
       className="block"
     >
       <Card
@@ -406,32 +389,33 @@ function DpsCard({ dps, currency }: DpsCardProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{dps.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(
                   'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
-                  DPS_COLOR,
+                  TYPE_COLORS.dps,
                 )}
               >
                 DPS
               </span>
               <span className="body-sm text-on-surface-variant/70">
-                {dps.paidCount}/{dps.tenureMonths} months
+                {item.paidCount}/{item.tenureMonths} months
               </span>
             </div>
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(dps.totalDeposited, currency)}
+              {formatCurrency(item.investedAmount, currency)}
             </p>
-            <p className="body-sm font-semibold text-secondary">
-              → {formatCurrency(dps.maturityValue, currency)}
-            </p>
+            {item.maturityValue && (
+              <p className="body-sm font-semibold text-secondary">
+                → {formatCurrency(item.maturityValue, currency)}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="mt-3 h-1 rounded-full bg-surface-container-highest">
           <div
             className="h-1 rounded-full bg-secondary transition-all"
@@ -441,15 +425,15 @@ function DpsCard({ dps, currency }: DpsCardProps) {
 
         <div className="mt-2 flex items-center gap-2 text-xs text-on-surface-variant/70">
           <span>
-            {formatCurrency(dps.monthlyDeposit, currency)}/mo ·{' '}
-            {dps.interestRate}% {dps.interestType}
+            {formatCurrency(item.monthlyDeposit ?? '0', currency)}/mo ·{' '}
+            {item.interestRate}% {item.interestType}
           </span>
-          {dps.nextDueDate && (
+          {item.nextDueDate && (
             <>
               <span>·</span>
               <span>
                 Next:{' '}
-                {new Date(dps.nextDueDate).toLocaleDateString(undefined, {
+                {new Date(item.nextDueDate).toLocaleDateString(undefined, {
                   month: 'short',
                   day: 'numeric',
                 })}
@@ -457,6 +441,73 @@ function DpsCard({ dps, currency }: DpsCardProps) {
             </>
           )}
         </div>
+      </Card>
+    </Link>
+  )
+}
+
+function SavingsCard({ item, currency }: ListItemProps) {
+  const returnPercent = calculateReturnPercent(
+    item.investedAmount,
+    item.currentValue,
+  )
+  const hasReturn = Number(item.investedAmount) > 0
+
+  return (
+    <Link
+      to="/app/investments/savings/$id"
+      params={{ id: item.id }}
+      className="block"
+    >
+      <Card
+        variant="default"
+        className="transition-colors hover:bg-surface-container-highest"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span
+                className={cn(
+                  'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
+                  TYPE_COLORS.savings,
+                )}
+              >
+                Savings
+              </span>
+              <span className="body-sm text-on-surface-variant/70">
+                {item.paidCount} deposit{item.paidCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="font-display text-lg font-bold text-on-surface">
+              {formatCurrency(item.currentValue, currency)}
+            </p>
+            {hasReturn && (
+              <p
+                className={cn(
+                  'body-sm font-semibold',
+                  returnPercent > 0
+                    ? 'text-secondary'
+                    : returnPercent < 0
+                      ? 'text-tertiary'
+                      : 'text-on-surface-variant',
+                )}
+              >
+                {formatReturnPercent(returnPercent)}
+              </p>
+            )}
+          </div>
+        </div>
+        {Number(item.investedAmount) > 0 && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant/70">
+            <span>Deposited</span>
+            <span className="font-medium text-on-surface-variant">
+              {formatCurrency(item.investedAmount, currency)}
+            </span>
+          </div>
+        )}
       </Card>
     </Link>
   )

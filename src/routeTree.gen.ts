@@ -23,8 +23,10 @@ import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/
 import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
 import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
+import { Route as AppInvestmentsSavingsIdRouteImport } from './routes/app/investments/savings/$id'
 import { Route as AppInvestmentsDpsNewRouteImport } from './routes/app/investments/dps/new'
-import { Route as AppInvestmentsDpsDpsIdRouteImport } from './routes/app/investments/dps/$dpsId'
+import { Route as AppInvestmentsDpsIdRouteImport } from './routes/app/investments/dps/$id'
 import { Route as AppInvestmentsIdEditRouteImport } from './routes/app/investments/$id.edit'
 
 const SignupRoute = SignupRouteImport.update({
@@ -97,14 +99,25 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppInvestmentsSavingsNewRoute =
+  AppInvestmentsSavingsNewRouteImport.update({
+    id: '/investments/savings/new',
+    path: '/investments/savings/new',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
+const AppInvestmentsSavingsIdRoute = AppInvestmentsSavingsIdRouteImport.update({
+  id: '/investments/savings/$id',
+  path: '/investments/savings/$id',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppInvestmentsDpsNewRoute = AppInvestmentsDpsNewRouteImport.update({
   id: '/investments/dps/new',
   path: '/investments/dps/new',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppInvestmentsDpsDpsIdRoute = AppInvestmentsDpsDpsIdRouteImport.update({
-  id: '/investments/dps/$dpsId',
-  path: '/investments/dps/$dpsId',
+const AppInvestmentsDpsIdRoute = AppInvestmentsDpsIdRouteImport.update({
+  id: '/investments/dps/$id',
+  path: '/investments/dps/$id',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
@@ -129,8 +142,10 @@ export interface FileRoutesByFullPath {
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
-  '/app/investments/dps/$dpsId': typeof AppInvestmentsDpsDpsIdRoute
+  '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
+  '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
+  '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,8 +162,10 @@ export interface FileRoutesByTo {
   '/app/emis': typeof AppEmisIndexRoute
   '/app/investments': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
-  '/app/investments/dps/$dpsId': typeof AppInvestmentsDpsDpsIdRoute
+  '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
+  '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
+  '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,8 +184,10 @@ export interface FileRoutesById {
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
-  '/app/investments/dps/$dpsId': typeof AppInvestmentsDpsDpsIdRoute
+  '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
+  '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
+  '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -188,8 +207,10 @@ export interface FileRouteTypes {
     | '/app/emis/'
     | '/app/investments/'
     | '/app/investments/$id/edit'
-    | '/app/investments/dps/$dpsId'
+    | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
+    | '/app/investments/savings/$id'
+    | '/app/investments/savings/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -206,8 +227,10 @@ export interface FileRouteTypes {
     | '/app/emis'
     | '/app/investments'
     | '/app/investments/$id/edit'
-    | '/app/investments/dps/$dpsId'
+    | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
+    | '/app/investments/savings/$id'
+    | '/app/investments/savings/new'
   id:
     | '__root__'
     | '/'
@@ -225,8 +248,10 @@ export interface FileRouteTypes {
     | '/app/emis/'
     | '/app/investments/'
     | '/app/investments/$id/edit'
-    | '/app/investments/dps/$dpsId'
+    | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
+    | '/app/investments/savings/$id'
+    | '/app/investments/savings/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -339,6 +364,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/investments/savings/new': {
+      id: '/app/investments/savings/new'
+      path: '/investments/savings/new'
+      fullPath: '/app/investments/savings/new'
+      preLoaderRoute: typeof AppInvestmentsSavingsNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/investments/savings/$id': {
+      id: '/app/investments/savings/$id'
+      path: '/investments/savings/$id'
+      fullPath: '/app/investments/savings/$id'
+      preLoaderRoute: typeof AppInvestmentsSavingsIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/investments/dps/new': {
       id: '/app/investments/dps/new'
       path: '/investments/dps/new'
@@ -346,11 +385,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvestmentsDpsNewRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/investments/dps/$dpsId': {
-      id: '/app/investments/dps/$dpsId'
-      path: '/investments/dps/$dpsId'
-      fullPath: '/app/investments/dps/$dpsId'
-      preLoaderRoute: typeof AppInvestmentsDpsDpsIdRouteImport
+    '/app/investments/dps/$id': {
+      id: '/app/investments/dps/$id'
+      path: '/investments/dps/$id'
+      fullPath: '/app/investments/dps/$id'
+      preLoaderRoute: typeof AppInvestmentsDpsIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/investments/$id/edit': {
@@ -372,8 +411,10 @@ interface AppRouteRouteChildren {
   AppEmisIndexRoute: typeof AppEmisIndexRoute
   AppInvestmentsIndexRoute: typeof AppInvestmentsIndexRoute
   AppInvestmentsIdEditRoute: typeof AppInvestmentsIdEditRoute
-  AppInvestmentsDpsDpsIdRoute: typeof AppInvestmentsDpsDpsIdRoute
+  AppInvestmentsDpsIdRoute: typeof AppInvestmentsDpsIdRoute
   AppInvestmentsDpsNewRoute: typeof AppInvestmentsDpsNewRoute
+  AppInvestmentsSavingsIdRoute: typeof AppInvestmentsSavingsIdRoute
+  AppInvestmentsSavingsNewRoute: typeof AppInvestmentsSavingsNewRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
@@ -385,8 +426,10 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppEmisIndexRoute: AppEmisIndexRoute,
   AppInvestmentsIndexRoute: AppInvestmentsIndexRoute,
   AppInvestmentsIdEditRoute: AppInvestmentsIdEditRoute,
-  AppInvestmentsDpsDpsIdRoute: AppInvestmentsDpsDpsIdRoute,
+  AppInvestmentsDpsIdRoute: AppInvestmentsDpsIdRoute,
   AppInvestmentsDpsNewRoute: AppInvestmentsDpsNewRoute,
+  AppInvestmentsSavingsIdRoute: AppInvestmentsSavingsIdRoute,
+  AppInvestmentsSavingsNewRoute: AppInvestmentsSavingsNewRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(

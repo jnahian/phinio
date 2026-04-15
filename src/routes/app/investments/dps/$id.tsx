@@ -6,26 +6,26 @@ import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
 import {
-  useDpsQuery,
+  useInvestmentQuery,
+  useMarkDepositPaid,
   useDeleteDps,
-  useMarkDpsInstallment,
   useUpdateDps,
-} from '#/hooks/useDps'
+} from '#/hooks/useInvestments'
 
-export const Route = createFileRoute('/app/investments/dps/$dpsId')({
+export const Route = createFileRoute('/app/investments/dps/$id')({
   staticData: { hideTabBar: true },
   component: DpsDetailScreen,
 })
 
 function DpsDetailScreen() {
-  const { dpsId } = Route.useParams()
+  const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
 
-  const { data: dps, isLoading } = useDpsQuery(dpsId)
-  const markInstallment = useMarkDpsInstallment(dpsId)
+  const { data: inv, isLoading } = useInvestmentQuery(id)
+  const markDeposit = useMarkDepositPaid(id)
   const deleteDps = useDeleteDps()
   const updateDps = useUpdateDps()
 
@@ -33,7 +33,7 @@ function DpsDetailScreen() {
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
 
-  if (isLoading || !dps) {
+  if (isLoading || !inv) {
     return (
       <main className="noir-bg flex min-h-dvh items-center justify-center text-on-surface-variant">
         Loading…
@@ -41,20 +41,18 @@ function DpsDetailScreen() {
     )
   }
 
-  const installments = dps.installments
-  const paidCount = installments.filter((i) => i.status === 'paid').length
-  const totalDeposited = installments
-    .filter((i) => i.status === 'paid')
-    .reduce((sum, i) => sum + Number(i.depositAmount), 0)
-  const maturityValue = installments.at(-1)?.accruedValue ?? '0.00'
+  const deposits = inv.deposits
+  const paidCount = deposits.filter((d) => d.status === 'paid').length
+  const maturityValue = deposits.at(-1)?.accruedValue ?? '0.00'
   const now = new Date()
 
   const interestEarned =
-    Number(maturityValue) - Number(dps.monthlyDeposit) * dps.tenureMonths
+    Number(maturityValue) -
+    Number(inv.monthlyDeposit ?? 0) * (inv.tenureMonths ?? 0)
 
   async function handleDelete() {
     try {
-      await deleteDps.mutateAsync(dpsId)
+      await deleteDps.mutateAsync(id)
       navigate({ to: '/app/investments' })
     } catch {
       // toast handled in hook
@@ -64,8 +62,8 @@ function DpsDetailScreen() {
   async function handleEditSave() {
     try {
       await updateDps.mutateAsync({
-        id: dpsId,
-        name: editName.trim() || dps?.name || '',
+        id,
+        name: editName.trim() || inv?.name || '',
       })
       setEditing(false)
     } catch {
@@ -84,17 +82,17 @@ function DpsDetailScreen() {
           <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="headline-sm truncate text-on-surface">{dps.name}</h1>
+          <h1 className="headline-sm truncate text-on-surface">{inv.name}</h1>
           <p className="body-sm text-on-surface-variant">
-            DPS · {dps.interestType === 'compound' ? 'Compound' : 'Simple'}{' '}
-            interest · {dps.interestRate}% p.a.
+            DPS · {inv.interestType === 'compound' ? 'Compound' : 'Simple'}{' '}
+            interest · {inv.interestRate}% p.a.
           </p>
         </div>
         <button
           type="button"
           aria-label="Edit name"
           onClick={() => {
-            setEditName(dps.name)
+            setEditName(inv.name)
             setEditing(true)
           }}
           className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
@@ -112,17 +110,16 @@ function DpsDetailScreen() {
           />
           <p className="label-sm text-white/70">Total deposited</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {formatCurrency(totalDeposited.toFixed(2), currency)}
+            {formatCurrency(inv.investedAmount, currency)}
           </p>
           <p className="body-sm mt-2 text-white/70">
-            {paidCount} of {dps.tenureMonths} months paid
+            {paidCount} of {inv.tenureMonths} months paid
           </p>
-          {/* Progress bar */}
           <div className="mt-4 h-1.5 rounded-full bg-white/10">
             <div
               className="h-1.5 rounded-full bg-secondary transition-all"
               style={{
-                width: `${dps.tenureMonths > 0 ? (paidCount / dps.tenureMonths) * 100 : 0}%`,
+                width: `${inv.tenureMonths && inv.tenureMonths > 0 ? (paidCount / inv.tenureMonths) * 100 : 0}%`,
               }}
             />
           </div>
@@ -132,7 +129,7 @@ function DpsDetailScreen() {
         <section className="grid grid-cols-3 gap-3">
           <StatTile
             label="Monthly"
-            value={formatCurrency(dps.monthlyDeposit, currency)}
+            value={formatCurrency(inv.monthlyDeposit ?? '0', currency)}
           />
           <StatTile
             label="Maturity value"
@@ -156,17 +153,17 @@ function DpsDetailScreen() {
           </h2>
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             <ul className="space-y-1">
-              {installments.map((inst) => {
-                const isPaid = inst.status === 'paid'
-                const due = new Date(inst.dueDate)
-                const isOverdue = !isPaid && due < now
+              {deposits.map((dep) => {
+                const isPaid = dep.status === 'paid'
+                const due = dep.dueDate ? new Date(dep.dueDate) : null
+                const isOverdue = !isPaid && due !== null && due < now
                 return (
-                  <li key={inst.id}>
+                  <li key={dep.id}>
                     <button
                       type="button"
                       onClick={() =>
-                        markInstallment.mutate({
-                          installmentId: inst.id,
+                        markDeposit.mutate({
+                          depositId: dep.id,
                           paid: !isPaid,
                         })
                       }
@@ -199,28 +196,32 @@ function DpsDetailScreen() {
                               isPaid && 'line-through',
                             )}
                           >
-                            #{inst.installmentNumber}
+                            #{dep.installmentNumber}
                           </span>
-                          <span className="body-sm">
-                            {due.toLocaleDateString(undefined, {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
+                          {due && (
+                            <span className="body-sm">
+                              {due.toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </span>
+                          )}
                           {isOverdue && (
                             <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
                               Overdue
                             </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-xs text-on-surface-variant/75">
-                          Balance after: {symbol}
-                          {Number(inst.accruedValue).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
+                        {dep.accruedValue && (
+                          <p className="mt-0.5 text-xs text-on-surface-variant/75">
+                            Balance after: {symbol}
+                            {Number(dep.accruedValue).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p
@@ -229,7 +230,7 @@ function DpsDetailScreen() {
                             isPaid && 'line-through',
                           )}
                         >
-                          {formatCurrency(inst.depositAmount, currency)}
+                          {formatCurrency(dep.amount, currency)}
                         </p>
                       </div>
                     </button>
@@ -240,7 +241,7 @@ function DpsDetailScreen() {
           </div>
         </section>
 
-        {/* Edit name inline */}
+        {/* Edit name */}
         {editing && (
           <Card variant="low">
             <p className="label-sm mb-3 text-on-surface-variant">Edit name</p>
@@ -275,7 +276,7 @@ function DpsDetailScreen() {
         {confirmDelete ? (
           <Card variant="low">
             <p className="body-md mb-4 text-on-surface">
-              Delete "{dps.name}" and all its installment rows?
+              Delete "{inv.name}" and all its installment rows?
             </p>
             <div className="flex gap-3">
               <button
