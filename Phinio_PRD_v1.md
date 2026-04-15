@@ -1,7 +1,7 @@
 # PHINIO — Product Requirements Document
 
 **Personal Finance Management App**
-Version 1.0 | April 2026 | Status: MVP
+Version 2.0 | April 2026 | Status: Active Development
 
 ---
 
@@ -14,25 +14,30 @@ Version 1.0 | April 2026 | Status: MVP
 | **Target Users**     | General public — anyone wanting to track investments and manage EMI payments      |
 | **Currency Support** | BDT (৳) and USD ($) — user selects preferred currency at signup                   |
 
-Phinio is a mobile-first personal finance app that helps users track their investment portfolio and manage EMI (Equated Monthly Installment) payments for bank loans and credit cards in one unified dashboard. The app provides a clear picture of net worth, investment returns, and upcoming payment obligations.
+Phinio is a mobile-first personal finance PWA that helps users track their investment portfolio (lump-sum, DPS schemes, and flexible savings pots) and manage EMI payments for bank loans and credit cards — unified in one private dashboard. The app provides a clear picture of net worth, investment returns, and upcoming payment obligations.
 
 ---
 
 ## 2. Technology Stack
 
-| Layer              | Technology                          | Notes                                                                     |
-| ------------------ | ----------------------------------- | ------------------------------------------------------------------------- |
-| Frontend Framework | **TanStack Start**                  | Full-stack React framework with file-based routing, SSR, server functions |
-| Server/API         | **TanStack Start Server Functions** | Type-safe server-side logic via `createServerFn()`                        |
-| Data Fetching      | **TanStack Query**                  | Client-side caching, mutations, optimistic updates, background refetch    |
-| ORM                | **Prisma**                          | Type-safe database access, migrations, schema management                  |
-| Database           | **PostgreSQL** (via Neon)           | Serverless Postgres for structured financial data                         |
-| Authentication     | **Better Auth**                     | Framework-agnostic auth library with email/password, session management   |
-| Styling            | **Tailwind CSS**                    | Mobile-first utility classes                                              |
-| Charts             | **Recharts**                        | Lightweight, React-native charting                                        |
-| Date Utilities     | **date-fns**                        | EMI schedule date calculations                                            |
-| Validation         | **Zod**                             | Schema validation for forms and server functions                          |
-| Hosting            | **Vercel / Netlify**                | Edge deployment with SSR support                                          |
+| Layer              | Technology                                                   | Version / Notes                                                    |
+| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Frontend Framework | **TanStack Start**                                           | React 19, Vite 8, SSR, file-based routing                          |
+| Server/API         | **TanStack Start Server Functions** (`createServerFn`)       | Dynamic import pattern — Prisma never leaks into the client bundle |
+| Data Fetching      | **TanStack Query**                                           | Caching, mutations, optimistic updates                             |
+| Routing            | **TanStack Router** + `@tanstack/router-plugin`              | Code-generated route tree (`src/routeTree.gen.ts`)                 |
+| ORM                | **Prisma 7** with `@prisma/adapter-pg`                       | Custom output to `src/generated/prisma/`; not `@prisma/client`     |
+| Database           | **PostgreSQL** via Neon                                      | Pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings |
+| Authentication     | **Better Auth 1.5**                                          | Email/password, email verification, password reset, cookie session |
+| Email              | **Resend**                                                   | Branded HTML templates for verification and password reset         |
+| Styling            | **Tailwind CSS v4** via `@tailwindcss/vite`                  | All tokens in `src/styles.css` under `@theme`; no config file      |
+| Design System      | **Material Design 3 / Digital Private Bank**                 | Nocturnal palette, dark-only, Manrope numerics, Inter body         |
+| Charts             | **Recharts**                                                 | Lazy-loaded; allocation donut + EMI principal/interest donut       |
+| Validation         | **Zod**                                                      | All forms and server function inputs                               |
+| Icons              | **lucide-react**                                             |                                                                    |
+| Toasts             | **Sonner**                                                   |                                                                    |
+| PWA                | **vite-plugin-pwa** + Workbox                                | Auto-update, precached assets, runtime caching                     |
+| Deployment         | **Vercel** (Nitro preset)                                    | With Vercel Analytics and Speed Insights                           |
 
 ---
 
@@ -40,31 +45,30 @@ Phinio is a mobile-first personal finance app that helps users track their inves
 
 ### 3.1 Signup
 
-- Fields: Full Name, Email, Password, Preferred Currency (BDT/USD)
+- Fields: Full Name, Email, Password, Preferred Currency (BDT / USD)
 - Better Auth email/password registration
-- **Email verification required** — Better Auth sends a verification link via Resend on signup; login is blocked until the user clicks it. `sendOnSignIn` re-sends the link automatically if the user tries to log in before verifying. Links expire after 1 hour.
-- Auto-creates a profile record via Better Auth hooks/callbacks (profile row exists immediately, but the user can't authenticate until verified)
-- Redirects to `/check-email` after signup, then auto-signs the user in and redirects to `/app` once they click the verification link
+- **Email verification required** — Better Auth sends a branded HTML verification email via Resend on signup. Login is blocked until the user clicks the link. `sendOnSignIn: true` re-sends the link if the user attempts login before verifying. Links expire after 1 hour.
+- A `Profile` row is created immediately via a Better Auth `user.create` hook, but the user cannot authenticate until verified.
+- Redirects to `/check-email` after signup, then auto-signs in and redirects to `/app` once the link is clicked.
 
 ### 3.2 Login
 
 - Fields: Email, Password
-- Session managed by Better Auth (cookie-based, httpOnly)
+- Session managed by Better Auth (httpOnly cookie, via `tanstackStartCookies()` plugin)
 - Redirects to `/app` on success
 
 ### 3.3 Forgot Password
 
 - User enters email address
-- Better Auth sends password reset email
-- User clicks link, sets new password
-- Redirects to login page
+- Better Auth sends a branded HTML password reset email via Resend
+- User clicks link, sets new password, redirects to login
 
 ### 3.4 Session Management
 
-- Protected routes use TanStack Start `beforeLoad` guards to check session via Better Auth
-- Session refresh handled automatically by Better Auth client
+- Protected routes use TanStack Start `beforeLoad` guards (session checked via `getSessionFn`)
+- Session context is available to all `/app/*` routes via `RouteContext`
 - Logout clears session and redirects to `/login`
-- Better Auth middleware integrated in TanStack Start's server context
+- `BETTER_AUTH_URL` must match the running origin — dev `:3000`, preview `:4173`
 
 ---
 
@@ -73,112 +77,186 @@ Phinio is a mobile-first personal finance app that helps users track their inves
 ### 4.1 Prisma Schema
 
 ```prisma
-generator client {
-  provider = "prisma-client-js"
+// Better Auth core models
+model User {
+  id                String    @id
+  name              String
+  email             String    @unique
+  emailVerified     Boolean   @default(false)
+  image             String?
+  preferredCurrency String    @default("BDT")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  sessions          Session[]
+  accounts          Account[]
+  profile           Profile?
+  @@map("user")
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+model Session { ... @@map("session") }
+model Account { ... @@map("account") }
+model Verification { ... @@map("verification") }
 
-// Better Auth manages its own tables (user, session, account, verification)
-// These are the app-specific models:
+// Application models
 
 model Profile {
-  id                String       @id @default(uuid())
-  userId            String       @unique // FK to Better Auth user.id
-  fullName          String
-  preferredCurrency String       @default("BDT") // "BDT" | "USD"
-  createdAt         DateTime     @default(now())
-  investments       Investment[]
-  emis              Emi[]
-  emiPayments       EmiPayment[]
-
+  id                 String              @id @default(uuid())
+  userId             String              @unique
+  fullName           String
+  preferredCurrency  String              @default("BDT")
+  createdAt          DateTime            @default(now())
+  investments        Investment[]
+  investmentDeposits InvestmentDeposit[]
+  emis               Emi[]
+  emiPayments        EmiPayment[]
+  notifications      Notification[]
   @@map("profiles")
 }
 
+// Investment.mode values:
+//   lump_sum  — one-time entry (stocks, mutual fund, FD, gold, crypto, other)
+//   scheduled — fixed monthly deposit with tenure + interest (DPS)
+//   flexible  — variable ad-hoc deposits, no tenure/interest (savings pot)
 model Investment {
-  id               String    @id @default(uuid())
+  id               String              @id @default(uuid())
   profileId        String
-  profile          Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   name             String
-  type             String    // "stock" | "mutual_fund" | "fd" | "gold" | "crypto" | "other"
-  investedAmount   Decimal   @db.Decimal(15, 2)
-  currentValue     Decimal   @db.Decimal(15, 2)
-  dateOfInvestment DateTime  @db.Date
-  notes            String?
-  status           String    @default("active") // "active" | "completed"
-  completedAt      DateTime? @db.Date
-  exitValue        Decimal?  @db.Decimal(15, 2)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  type             String              // stock | mutual_fund | fd | gold | crypto | dps | savings | other
+  mode             String              @default("lump_sum") // lump_sum | scheduled | flexible
 
+  // lump_sum mode
+  investedAmount   Decimal             @db.Decimal(15, 2) @default(0)
+  currentValue     Decimal             @db.Decimal(15, 2) @default(0)
+  exitValue        Decimal?            @db.Decimal(15, 2)
+  dateOfInvestment DateTime?           @db.Date
+  completedAt      DateTime?           @db.Date
+
+  // scheduled (DPS) — fixed monthly, pre-generated schedule
+  monthlyDeposit   Decimal?            @db.Decimal(15, 2)
+  tenureMonths     Int?
+  interestRate     Decimal?            @db.Decimal(5, 2)
+  interestType     String?             // simple | compound
+
+  // scheduled + flexible shared
+  startDate        DateTime?           @db.Date
+
+  status           String              @default("active") // active | completed | matured | closed
+  notes            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  deposits         InvestmentDeposit[]
+  @@index([profileId, status])
+  @@index([profileId, mode])
   @@map("investments")
+}
+
+// Tracks per-installment data for DPS and ad-hoc deposits for savings.
+// investedAmount on Investment is always kept in sync:
+//   scheduled/flexible: investedAmount = SUM(paid deposits) — updated server-side on every mutation
+//   lump_sum: investedAmount is user-set; deposits relation is unused
+model InvestmentDeposit {
+  id                String     @id @default(uuid())
+  investmentId      String
+  profileId         String
+  amount            Decimal    @db.Decimal(15, 2)
+  dueDate           DateTime?  @db.Date           // scheduled: pre-generated due date
+  paidAt            DateTime?                     // when paid / deposited
+  accruedValue      Decimal?   @db.Decimal(15, 2) // scheduled: running balance with interest
+  installmentNumber Int?                           // scheduled: sequence 1, 2, 3…
+  status            String     @default("upcoming") // upcoming | paid
+  notes             String?
+  createdAt         DateTime   @default(now())
+  @@index([investmentId, installmentNumber])
+  @@index([profileId, status, dueDate])
+  @@map("investment_deposits")
 }
 
 model Emi {
   id           String       @id @default(uuid())
   profileId    String
-  profile      Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
   label        String
-  type         String       // "bank_loan" | "credit_card"
+  type         String       // bank_loan | credit_card
   principal    Decimal      @db.Decimal(15, 2)
-  interestRate Decimal      @db.Decimal(5, 2) // Annual interest rate %
+  interestRate Decimal      @db.Decimal(5, 2)
   tenureMonths Int
-  emiAmount    Decimal      @db.Decimal(15, 2) // Calculated monthly EMI
+  emiAmount    Decimal      @db.Decimal(15, 2)
   startDate    DateTime     @db.Date
-  status       String       @default("active") // "active" | "closed"
+  status       String       @default("active")
   createdAt    DateTime     @default(now())
   payments     EmiPayment[]
-
+  @@index([profileId, status])
   @@map("emis")
 }
 
 model EmiPayment {
   id                 String    @id @default(uuid())
   emiId              String
-  emi                Emi       @relation(fields: [emiId], references: [id], onDelete: Cascade)
   profileId          String
-  profile            Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   paymentNumber      Int
   dueDate            DateTime  @db.Date
   emiAmount          Decimal   @db.Decimal(15, 2)
   principalComponent Decimal   @db.Decimal(15, 2)
   interestComponent  Decimal   @db.Decimal(15, 2)
   remainingBalance   Decimal   @db.Decimal(15, 2)
-  status             String    @default("upcoming") // "paid" | "upcoming" | "overdue"
+  status             String    @default("upcoming") // paid | upcoming
   paidAt             DateTime?
-
+  @@index([emiId, paymentNumber])
+  @@index([profileId, status, dueDate])
   @@map("emi_payments")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  profileId String
+  type      String
+  title     String
+  body      String
+  link      String?
+  dedupeKey String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  @@unique([profileId, dedupeKey])
+  @@index([profileId, readAt, createdAt])
+  @@map("notifications")
 }
 ```
 
-### 4.2 Computed Fields (UI-side, not stored)
+### 4.2 Computed and Synced Fields
 
-| Field                           | Formula                                                              |
-| ------------------------------- | -------------------------------------------------------------------- |
-| Investment Return % (active)    | `((currentValue - investedAmount) / investedAmount) × 100`           |
-| Investment Return % (completed) | `((exitValue - investedAmount) / investedAmount) × 100`              |
-| Profit/Loss (completed)         | `exitValue - investedAmount`                                         |
-| Net Worth                       | `Σ active investments currentValue - Σ active EMIs remainingBalance` |
+| Field | Where | How |
+| --- | --- | --- |
+| `investedAmount` (lump_sum) | DB, user-set | Entered at creation / update |
+| `investedAmount` (scheduled / flexible) | DB, server-synced | Updated in every deposit mutation = `SUM(paid deposits)` |
+| `currentValue` (lump_sum) | DB, user-set | Entered at creation / update |
+| `currentValue` (scheduled) | DB, server-synced | Set equal to `investedAmount` (total deposited; no gain until maturity) |
+| `currentValue` (flexible) | DB, user-set | User manually updates to reflect actual account balance incl. interest |
+| Return % (active, lump_sum) | UI | `((currentValue − investedAmount) / investedAmount) × 100` |
+| Return % (completed) | UI | `((exitValue − investedAmount) / investedAmount) × 100` |
+| Return % (flexible) | UI | `((currentValue − investedAmount) / investedAmount) × 100` |
+| Net Worth | UI / dashboard | `Σ active investments currentValue − Σ active EMIs remainingBalance` |
+| DPS maturity value | UI | Last deposit's `accruedValue` (pre-generated at creation) |
 
 ### 4.3 Authorization
 
-All server functions validate the authenticated user's profile ID before any database operation. Users can only access their own data. Every Prisma query includes a `where: { profileId }` filter derived from the Better Auth session.
+Every server function derives `profileId` from the Better Auth session before any database operation. All Prisma queries include `where: { profileId }`. Users can never read or mutate another user's data.
 
 ---
 
 ## 5. Screen Specifications
 
-### 5.1 Splash / Welcome Screen
+### 5.1 Landing Page
 
 **Route:** `/`
 
-- App logo and name "Phinio" centered
-- Tagline: "Your finances, simplified."
-- Two full-width buttons: "Login" and "Sign Up"
-- If session exists, auto-redirect to `/app`
+Full marketing page targeting new users. Sections:
+- **Nav bar** — logo, "Login" and "Sign Up" links. Glassmorphism effect on scroll.
+- **Hero** — animated ambient orbs, floating Phinio logo, headline, sub-headline, CTA buttons ("Get Started" → `/signup`, "Login" → `/login`), "DIGITAL PRIVATE VAULT" badge.
+- **Trust bar** — animated counters: portfolio value tracked, payment schedules managed, on-time payments (illustrative).
+- **Features** — three-column grid: Investment Portfolio, EMI Manager, Live Dashboard.
+- **How it works** — three-step illustrated flow.
+- **Testimonials** — user quotes.
+- **Final CTA** — "Your vault is waiting." with sign-up button.
+- Redirects to `/app` automatically if already logged in.
 
 ### 5.2 Login Screen
 
@@ -189,104 +267,191 @@ All server functions validate the authenticated user's profile ID before any dat
 - "Login" full-width button
 - "Forgot Password?" link → `/forgot-password`
 - "Don't have an account? Sign Up" link → `/signup`
-- Validation: required fields, email format, inline error messages (Zod)
-- Loading state on button during auth request
+- Inline error messages (Zod + Better Auth errors)
+- Loading state on button during auth
 
 ### 5.3 Signup Screen
 
 **Route:** `/signup`
 
-- Full Name input
-- Email input
-- Password input (min 8 chars, show/hide toggle)
-- Preferred Currency toggle: BDT / USD
+- Full Name, Email, Password (min 8 chars, show/hide toggle)
+- Preferred Currency selector: BDT / USD
 - "Create Account" full-width button
-- "Already have an account? Login" link → `/login`
-- On success: auto-login and redirect to `/app`
+- "Already have an account? Login" link
+- On submit: creates account → redirects to `/check-email`
 
-### 5.4 Forgot Password Screen
+### 5.4 Check Email Screen
+
+**Route:** `/check-email`
+
+- Confirms that a verification email was sent
+- "Resend email" option
+- After clicking the link in the email: auto-signs in → `/app`
+
+### 5.5 Forgot Password Screen
 
 **Route:** `/forgot-password`
 
 - Email input
 - "Send Reset Link" button
-- Success message: "Check your email for a reset link"
+- Success state: "Check your email" message
 - "Back to Login" link
+- Better Auth sends branded HTML reset email via Resend
 
-### 5.5 Home / Overview Screen (Tab 1)
+### 5.6 App Shell
+
+**Route prefix:** `/app/*`
+
+All authenticated app screens share:
+- **TopBar** — sticky header with user name (truncated) and avatar; **notification bell** (with unread count badge)
+- **BottomTabBar** — four tabs: Home (`/app`), Invest (`/app/investments`), EMIs (`/app/emis`), Profile (`/app/profile`). Hidden on sub-screens via `staticData: { hideTabBar: true }`.
+
+### 5.7 Home / Dashboard Screen
 
 **Route:** `/app`
 
-- Greeting: "Hi, {name}" with wave emoji
-- **Net Worth Hero Card** (gradient background): `net_worth = total_current_investment_value - total_remaining_emi_balance`
-- **Quick Stats Row** (2 cards): Total Investment Value with gain/loss % | Monthly EMI Outflow total
-- **Upcoming Payments Section**: list of next 5 EMI payments due within 30 days, each showing: EMI label, amount, due date, days until due. Tapping navigates to EMI detail
-- **Investment Summary Mini-Chart**: donut chart of investment allocation by type
+- **Net Worth Hero Card** — gradient background; value = `Σ active currentValue − Σ active EMI remainingBalance`
+- **Quick Stats Row** (2 columns):
+  - Total invested, current value, % gain/loss (green/red)
+  - Monthly EMI outflow total
+- **Upcoming Payments** — next 5 EMI payments due within 30 days. Each card: EMI label, amount, relative due date, overdue badge if past due. Tapping → EMI detail.
+- **Investment Allocation Donut** — lazy-loaded Recharts pie; groups active investments by type. Legend shows top 5 types with color and %.
+- **Empty state** (fresh account) — CTA cards linking to add first investment or EMI.
 
-### 5.6 Investments List Screen (Tab 2)
+### 5.8 Investments List Screen
 
 **Route:** `/app/investments`
 
-- **Summary Card** at top: Total Invested | Current Value | Total Returns (amount + %)
-- **Filter Pills** (horizontal scroll): All | Stocks | Mutual Fund | FD | Gold | Crypto | Other
-- **Active/Completed toggle** tabs to switch between active and completed (sold) investments
-- **Investment Cards** list, each showing: name, type badge (color-coded), invested amount, current value (or exit value if completed), return % (green positive / red negative), date
-- **Empty state**: illustration + "Add your first investment" message
-- **FAB "+"** button (bottom-right) → opens Add Investment form
+- **Summary Card** — Total Invested | Current Value | Return %. Includes all three investment modes.
+- **Status tabs** — Active / Completed toggle
+- **Type filter pills** (horizontal scroll) — All | Stocks | Mutual Fund | FD | Gold | Crypto | DPS | Savings | Other
+- **Investment cards** rendered by mode:
+  - **Lump-sum card** — name, type badge (color-coded), invested amount, current/exit value, return %, date
+  - **DPS card** — name, "DPS" badge (green), `paidCount/tenureMonths` months, total deposited → maturity value, progress bar, monthly/rate/next due footer
+  - **Savings card** — name, "Savings" badge (blue), deposit count, current balance, return % (if any), total deposited footer
+- **FABMenu** (bottom-right) — expands to three options: Investment, DPS Scheme, Savings Pot
+- **Empty state** when no items match current filters
 
-### 5.7 Add/Edit Investment Screen
+### 5.9 Add Investment Screen (Lump-sum)
 
-**Route:** `/app/investments/new` and `/app/investments/$id/edit`
+**Route:** `/app/investments/new`
 
-- Full-page form with back arrow at top
-- **Fields**: Name (text), Type (dropdown: Stock, Mutual Fund, FD, Gold, Crypto, Other), Date of Investment (date picker), Invested Amount (number), Current Value (number), Notes (optional textarea)
-- For editing completed investments, additional fields: Status toggle (Active/Completed), Exit Value (number, shown when completed), Completed Date (date picker, shown when completed)
-- "Save" full-width button at bottom
-- Validation: all required fields, amounts must be > 0 (Zod schema)
-- Delete option with confirmation dialog
+- Fields: Name, Type (Stock / Mutual Fund / FD / Gold / Crypto / Other), Date of Investment, Invested Amount, Current Value, Notes (optional)
+- "Create Investment" full-width button at bottom
+- Zod validation, inline field errors
 
-### 5.8 EMIs List Screen (Tab 3)
+### 5.10 Edit Investment Screen (Lump-sum)
+
+**Route:** `/app/investments/$id/edit`
+
+- All fields from Add form, pre-filled
+- **Status toggle** — Active / Completed. When set to Completed: Exit Value and Completed Date fields appear (both required)
+- **Delete** with confirmation dialog
+- "Save" button
+
+### 5.11 Add DPS Screen
+
+**Route:** `/app/investments/dps/new`
+
+- Fields: Scheme name, Monthly deposit (`prefix={symbol}`), Tenure (months), Start date
+- **Interest section**: Annual interest rate, Interest type selector (Simple / Compound — 2-column button grid)
+- **Live maturity preview** — calculated client-side as user types; shows projected maturity value and total deposited
+- Notes (optional)
+- "Create DPS scheme" button
+
+### 5.12 DPS Detail Screen
+
+**Route:** `/app/investments/dps/$id`
+
+- **Header** — back arrow, scheme name, "DPS · [Simple/Compound] interest · X% p.a.", edit (pencil) button
+- **Hero card** — dark green gradient; total deposited, `paidCount/tenureMonths` months, progress bar
+- **Stats row** (3 tiles) — Monthly deposit | Maturity value (secondary) | Interest earned (secondary)
+- **Deposit schedule** — scrollable list; each row: installment #, due date, monthly amount, accrued balance-after, paid checkbox. Overdue rows highlighted. Clicking checkbox marks paid/unpaid → server syncs `investedAmount` + `currentValue`.
+- **Auto-maturation** — when all installments paid, DPS status set to `matured` automatically
+- **Edit name** inline card (appears when pencil tapped)
+- **Delete** with confirmation
+
+### 5.13 Add Savings Pot Screen
+
+**Route:** `/app/investments/savings/new`
+
+- Fields: Name, Start date, Current balance (optional, default 0), Notes (optional)
+- Helper text: "Set to your current account balance if tracking an existing pot. Update anytime."
+- "Create savings pot" button
+- On success: navigates to savings detail screen
+
+### 5.14 Savings Pot Detail Screen
+
+**Route:** `/app/investments/savings/$id`
+
+- **Header** — back arrow, pot name, "Savings pot" subtitle, "Edit" button
+- **Hero card** — blue gradient; current balance, return % (if deposits exist)
+- **Stats row** (2 tiles) — Total deposited | Deposit count
+- **Add deposit** — dashed-border button opens inline form: Amount, Date, Notes (optional). On submit: creates `InvestmentDeposit` row, syncs `investedAmount`
+- **Deposit history** — chronological list (newest first); each row: date, notes, amount (+formatted). Remove button (X) with inline confirm/cancel
+- **Edit form** — update name and current balance
+- **Delete** with confirmation
+
+### 5.15 EMIs List Screen
 
 **Route:** `/app/emis`
 
-- **Summary Card** at top: Active EMIs Count | Monthly Outflow Total | Total Remaining Balance
-- **Filter Pills**: All | Bank Loan | Credit Card
-- **EMI Cards** list, each showing: label, type badge (Bank Loan = blue, Credit Card = purple), EMI amount/month, progress bar (paid months / total months), next due date, remaining balance
-- Tapping a card → navigates to EMI Detail screen
-- **Empty state**: illustration + "Add your first EMI" message
-- **FAB "+"** button → opens Add EMI form
+- **Summary Card** — Active EMIs count | Monthly outflow | Total remaining balance
+- **Type filter pills** — All | Bank Loan | Credit Card
+- **EMI cards** — type icon + label, EMI amount/month, remaining balance, progress bar (paid/total months), next due date
+- Tapping → EMI Detail
+- **FAB "+"** → Add EMI form
+- **Empty state** when no EMIs
 
-### 5.9 Add EMI Screen
+### 5.16 Add EMI Screen
 
 **Route:** `/app/emis/new`
 
-- Full-page form with back arrow
-- **Fields**: Label (text), Type (Bank Loan / Credit Card toggle), Principal Amount (number), Annual Interest Rate (% number), Tenure in Months (number), Start Date (date picker)
-- **Live EMI Preview Card**: as user fills in principal, rate, and tenure, auto-calculates and displays: Monthly EMI amount, Total Payment (EMI × tenure), Total Interest (total payment - principal)
-- "Create EMI" full-width button
-- On submit: creates EMI record + auto-generates all `emi_payments` rows with amortization breakdown
+- Fields: Label, Type (Bank Loan / Credit Card toggle), Principal, Annual Interest Rate (%), Tenure (months), Start date
+- **Live EMI Preview** — auto-calculates as user types: Monthly EMI | Total Payment | Total Interest
+- "Create EMI" button
+- On submit: creates EMI row + generates all `EmiPayment` rows upfront
 
-### 5.10 EMI Detail Screen
+### 5.17 EMI Detail Screen
 
 **Route:** `/app/emis/$emiId`
 
-- Back arrow + EMI label as page title + type badge
-- **Key Stats Row** (3 cards): Monthly EMI Amount | Remaining Months | Total Interest Paid so far
-- **Principal vs Interest Donut Chart**: visual split of total principal vs total interest over loan lifetime
-- **Amortization Schedule Table** (scrollable): columns — #, Due Date, EMI, Principal, Interest, Balance. Each row has a checkbox to mark as Paid. Paid rows are visually muted/greyed. Overdue rows (past due date + unpaid) highlighted red
-- **Summary Footer**: Total Paid | Total Remaining | Completion %
-- Delete EMI option with confirmation (cascade deletes all payment rows)
+- **Header** — back arrow, label, type badge
+- **Remaining balance** hero card
+- **Key stats** (3 tiles) — Paid months | Remaining months | Total interest paid
+- **Principal vs Interest donut chart** — lazy-loaded Recharts pie showing loan lifetime split
+- **Amortization schedule** — scrollable table; columns: #, Due Date, EMI, Principal, Interest, Balance. Paid rows muted + strikethrough. Overdue rows highlighted. Checkbox per row for mark paid (optimistic update with rollback on error).
+- **Delete** with confirmation (cascade deletes all payment rows)
 
-### 5.11 Profile / Settings Screen (Tab 4)
+### 5.18 Profile / Settings Screen
 
 **Route:** `/app/profile`
 
-- User avatar (initials-based, generated from name)
-- Display: Full Name, Email
-- Currency Preference: BDT / USD toggle (updates profile)
-- Theme Toggle: Light / Dark mode
-- "Logout" button with confirmation
-- App version display at bottom
+- **Avatar** — Gravatar (SHA-256 hash of email) or user-uploaded image. Tap to open camera/gallery picker. Uploading sets `user.image` via Better Auth `updateUser`.
+- **Name** — Editable inline (Pencil icon). Saves to both `Profile.fullName` and `User.name`.
+- **Email** — Read-only.
+- **Currency** — BDT / USD dropdown. Saved to `Profile.preferredCurrency` + `User.preferredCurrency`. Triggers router invalidation.
+- **Change Password** — Collapsible section: Current password, New password, Confirm password. Uses Better Auth `changePassword` endpoint.
+- **Logout** — Button with confirmation.
+
+### 5.19 Notification Center
+
+**Trigger:** Notification bell in TopBar (shows unread count badge)
+
+- **List** — All notifications sorted by unread first, then newest. Each: title, body, relative time, read/unread indicator. Tapping a notification with a link navigates to the linked screen and marks it read.
+- **Mark all read** button.
+- Notifications are synced lazily when the bell endpoint is hit — idempotent via `dedupeKey`.
+
+**Notification types generated:**
+
+| Type | Trigger |
+| --- | --- |
+| `investment.created` | Lump-sum investment added |
+| `dps.created` | DPS scheme created |
+| `emi.payment.due` | EMI payment due within 3 days |
+| `emi.payment.overdue` | EMI payment past due date |
+| `dps.installment.due` | DPS installment due within 3 days |
+| `dps.installment.overdue` | DPS installment past due date |
 
 ---
 
@@ -294,275 +459,346 @@ All server functions validate the authenticated user's profile ID before any dat
 
 ### 6.1 Bottom Tab Bar
 
-Persistent bottom navigation bar visible on all `/app/*` main routes. Four tabs:
+Persistent bottom navigation visible on all main `/app/*` routes. Hidden on sub-screens.
 
-| Tab | Icon             | Label       | Route              |
-| --- | ---------------- | ----------- | ------------------ |
-| 1   | Home/Dashboard   | Home        | `/app`             |
-| 2   | Trending-up      | Investments | `/app/investments` |
-| 3   | Calendar/Receipt | EMIs        | `/app/emis`        |
-| 4   | User/Settings    | Profile     | `/app/profile`     |
-
-- Active tab: filled icon + accent color + label visible
-- Inactive tabs: outline icon + muted color
-- Tab bar height: 60–64px with safe area padding for notched devices
-- Tab bar hidden on sub-screens (add/edit forms, EMI detail)
+| Tab | Icon         | Label       | Route              | Active Condition          |
+| --- | ------------ | ----------- | ------------------ | ------------------------- |
+| 1   | Home         | Home        | `/app`             | Exact match `/app`        |
+| 2   | TrendingUp   | Invest      | `/app/investments` | Starts with path          |
+| 3   | Receipt      | EMIs        | `/app/emis`        | Starts with path          |
+| 4   | User         | Profile     | `/app/profile`     | Starts with path          |
 
 ### 6.2 Route Map
 
-| Route                       | Screen           | Layout                  | Auth                  |
-| --------------------------- | ---------------- | ----------------------- | --------------------- |
-| `/`                         | Splash/Welcome   | Public (no tab bar)     | Redirect if logged in |
-| `/login`                    | Login            | Public                  | Redirect if logged in |
-| `/signup`                   | Signup           | Public                  | Redirect if logged in |
-| `/forgot-password`          | Forgot Password  | Public                  | No                    |
-| `/app`                      | Home Overview    | App (tab bar)           | Required              |
-| `/app/investments`          | Investments List | App (tab bar)           | Required              |
-| `/app/investments/new`      | Add Investment   | Sub-screen (back arrow) | Required              |
-| `/app/investments/$id/edit` | Edit Investment  | Sub-screen (back arrow) | Required              |
-| `/app/emis`                 | EMIs List        | App (tab bar)           | Required              |
-| `/app/emis/new`             | Add EMI          | Sub-screen (back arrow) | Required              |
-| `/app/emis/$emiId`          | EMI Detail       | Sub-screen (back arrow) | Required              |
-| `/app/profile`              | Profile/Settings | App (tab bar)           | Required              |
+| Route                              | Screen                  | Tab Bar | Auth     |
+| ---------------------------------- | ----------------------- | ------- | -------- |
+| `/`                                | Landing page            | No      | Redirect |
+| `/login`                           | Login                   | No      | Redirect |
+| `/signup`                          | Signup                  | No      | Redirect |
+| `/check-email`                     | Email verification wait | No      | No       |
+| `/forgot-password`                 | Forgot password         | No      | No       |
+| `/app`                             | Home / Dashboard        | Yes     | Required |
+| `/app/investments`                 | Investments list        | Yes     | Required |
+| `/app/investments/new`             | Add lump-sum investment | Hidden  | Required |
+| `/app/investments/$id/edit`        | Edit lump-sum investment| Hidden  | Required |
+| `/app/investments/dps/new`         | Add DPS scheme          | Hidden  | Required |
+| `/app/investments/dps/$id`         | DPS detail              | Hidden  | Required |
+| `/app/investments/savings/new`     | Add savings pot         | Hidden  | Required |
+| `/app/investments/savings/$id`     | Savings pot detail      | Hidden  | Required |
+| `/app/emis`                        | EMIs list               | Yes     | Required |
+| `/app/emis/new`                    | Add EMI                 | Hidden  | Required |
+| `/app/emis/$emiId`                 | EMI detail              | Hidden  | Required |
+| `/app/profile`                     | Profile / settings      | Yes     | Required |
 
 ---
 
 ## 7. Data Flow Architecture
 
-### 7.1 TanStack Start Server Functions
-
-All data operations use `createServerFn()` for type-safe, server-side Prisma calls:
+### 7.1 Pattern
 
 ```
 Client Component
   → TanStack Query (useQuery / useMutation)
-    → Server Function (createServerFn)
-      → Better Auth session check
-        → Prisma query (with profileId filter)
-          → PostgreSQL
+    → createServerFn() handler
+      → dynamic import('./investments.impl')   ← keeps Prisma out of client bundle
+        → Better Auth session check (requireProfileId)
+          → Prisma query scoped by profileId
+            → PostgreSQL (Neon)
 ```
 
-### 7.2 Query Key Structure
+### 7.2 Server Files Convention
 
-| Feature               | Query Key                           | Invalidation Trigger                 |
-| --------------------- | ----------------------------------- | ------------------------------------ |
-| Investments list      | `["investments", { status, type }]` | After add/edit/delete investment     |
-| Single investment     | `["investments", id]`               | After edit                           |
-| EMIs list             | `["emis", { type }]`                | After add/delete EMI                 |
-| Single EMI + payments | `["emis", emiId]`                   | After mark paid/unpaid               |
-| Dashboard stats       | `["dashboard-stats"]`               | After any investment or EMI mutation |
-| Profile               | `["profile"]`                       | After profile update                 |
-| Upcoming payments     | `["upcoming-payments"]`             | After mark paid/unpaid               |
+- `src/server/*.ts` — thin wrappers: `createServerFn` + `inputValidator` only. No Prisma imports.
+- `src/server/*.impl.ts` — all business logic, Prisma calls, notifications. Dynamically imported inside handler bodies.
 
-### 7.3 Mutation Pattern
+### 7.3 Query Key Structure
 
-```
-useMutation({
-  mutationFn: serverFunction,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: [...] })
-    // toast notification
-    // navigate if needed
-  }
-})
-```
+| Feature                      | Query Key                                     | Invalidated By                              |
+| ---------------------------- | --------------------------------------------- | ------------------------------------------- |
+| Investments list             | `['investments', 'list', { status, type }]`   | Any investment mutation                     |
+| Investment detail            | `['investments', 'detail', id]`               | Update, mark deposit paid/unpaid            |
+| EMIs list                    | `['emis', 'list', { type }]`                  | Create / delete EMI                         |
+| EMI detail + payments        | `['emis', 'detail', emiId]`                   | Mark payment paid/unpaid                    |
+| Dashboard stats              | `['dashboard-stats']`                         | Any investment or EMI mutation              |
+| Notifications list           | `['notifications']`                           | Mark read, mark all read                    |
+| Notification unread count    | `['notifications', 'unread-count']`           | Mark read, mark all read                    |
+| Profile                      | `['profile']`                                 | Name / currency update                      |
 
-Optimistic updates for mark-paid/unpaid toggle on EMI payments for instant UI feedback.
+### 7.4 Optimistic Updates
+
+- **Mark EMI payment paid/unpaid** — flips `status` in cached detail immediately; rolls back on error.
+- **Mark DPS deposit paid/unpaid** — flips `status` in cached detail immediately; rolls back on error.
 
 ---
 
-## 8. UI/UX Design Guidelines
+## 8. Business Logic
 
-### 8.1 Mobile-First Principles
+### 8.1 Investment Modes
 
-- All designs target 375px width (iPhone SE/standard) as base
-- Touch targets: minimum 44px height for all tappable elements
-- Side padding: 16px consistent on all screens
-- No sidebar navigation — everything stacks vertically
-- Bottom sheet / slide-up panels for secondary actions
+#### Lump-sum (`mode = 'lump_sum'`)
 
-### 8.2 Visual Design
+- `type` ∈ `stock | mutual_fund | fd | gold | crypto | other`
+- `investedAmount` and `currentValue` are user-entered and stored directly.
+- Can be marked Completed: requires `exitValue` and `completedAt`.
+- Return % active: `((currentValue − investedAmount) / investedAmount) × 100`
+- Return % completed: `((exitValue − investedAmount) / investedAmount) × 100`
 
-- Card-based layout: rounded corners (12–16px), subtle shadows
-- Gradient hero cards for summary stats at top of pages
-- Color-coded badges: investment types, EMI types
-- Green (#22C55E) for positive returns/gains, Red (#EF4444) for negative/losses
-- Progress bars for EMI completion tracking
-- FAB (Floating Action Button) on list screens for "Add" action
-- Dark/Light theme support via CSS variables
+#### Scheduled / DPS (`mode = 'scheduled'`, `type = 'dps'`)
 
-### 8.3 Interaction Patterns
+- Fixed `monthlyDeposit`, `tenureMonths`, `interestRate`, `interestType` set at creation.
+- Full `InvestmentDeposit` schedule generated upfront by `generateDpsSchedule()`.
+- `investedAmount` and `currentValue` are automatically synced to `SUM(paid deposits)` on every mark-paid mutation.
+- Auto-maturation: when all deposits are marked paid, `status` is set to `matured`.
 
-- Page transitions: slide-in from right for detail/sub-screens
-- Back arrow top-left on all sub-screens
-- Confirmation dialogs for destructive actions (delete)
-- Loading skeletons while data fetches
-- Toast notifications for success/error feedback
-- Empty states with illustrations and CTA on all list screens
+**DPS Schedule Formulas** (`src/lib/dps-calculator.ts`)
+
+Let D = monthly deposit, r = annualRate / 1200 (monthly rate), n = installment number.
+
+- **Compound interest:**
+  - If r > 0: `accruedValue(n) = D × (1 + r) × [(1 + r)^n − 1] / r`
+  - If r = 0: `accruedValue(n) = D × n`
+- **Simple interest:**
+  - `accruedValue(n) = D × n + D × r × n × (n + 1) / 2`
+
+Each row's `dueDate` = `startDate + (n − 1) months`.
+
+#### Flexible / Savings (`mode = 'flexible'`, `type = 'savings'`)
+
+- No tenure, interest rate, or pre-generated schedule.
+- Deposits are added ad-hoc via the detail screen (amount + date + optional notes).
+- `investedAmount` is synced = `SUM(all deposits)` on every add/remove mutation.
+- `currentValue` is user-set (reflects actual bank balance, including any interest earned).
+- Deposits can be individually removed; each removal re-syncs `investedAmount`.
+
+### 8.2 EMI Amortization
+
+When an EMI is created, all `EmiPayment` rows are generated upfront (`src/lib/emi-calculator.ts`).
+
+- **Monthly rate:** `r = annualInterestRate / 12 / 100`
+- **EMI formula:** `EMI = P × r × (1 + r)^n / ((1 + r)^n − 1)`. If `r = 0`: `EMI = P / n`.
+- **Each month (1 to n):** `interest = remainingBalance × r`, `principal = EMI − interest`, `newBalance = remainingBalance − principal`
+- **Final payment** absorbs floating-point residuals so `remainingBalance` lands at exactly `0.00`.
+- **Due dates:** `startDate + (paymentNumber − 1) months`
+- **Overdue detection:** client-side on load (`dueDate < today && status ≠ 'paid'`)
+
+### 8.3 Dashboard Calculations
+
+- **Net Worth** = `Σ active investments currentValue` − `Σ active EMIs remainingBalance` (from each EMI's first unpaid payment row)
+- **Monthly EMI Outflow** = `Σ emiAmount` for all active EMIs
+- **Upcoming Payments** = next 5 `EmiPayment` rows where `status ≠ 'paid'` and `dueDate ≤ today + 30 days`, ordered by `dueDate ASC`
+- **Investment Allocation** = group active investments by `type`, sum `currentValue` per type
+
+### 8.4 Notification Sync
+
+`syncDerivedNotifications(profileId)` runs lazily whenever the notification bell endpoint is hit. It scans:
+
+- EMI payments with `status ≠ 'paid'` and `dueDate` within the next 3 days → `emi.payment.due`
+- EMI payments with `status ≠ 'paid'` and `dueDate < now` → `emi.payment.overdue`
+- DPS deposits (`mode = 'scheduled'`) with `status ≠ 'paid'` and `dueDate` within 3 days → `dps.installment.due`
+- DPS deposits with `status ≠ 'paid'` and `dueDate < now` → `dps.installment.overdue`
+
+Each notification is created via an idempotent upsert keyed on `(profileId, dedupeKey)`. Existing notifications (including read state) are never overwritten.
+
+### 8.5 Money Handling
+
+- All money fields are `Decimal(15, 2)` in Prisma — stored in PostgreSQL as exact decimals.
+- Money values are serialized to `String` when crossing the server/client boundary (`String(prismaDecimal)`).
+- Never coerce to JS `number` for arithmetic; accumulate as `Number(stringValue)` only for summation, then `toFixed(2)` back to string before storing.
 
 ---
 
-## 9. Business Logic
+## 9. Progressive Web App
 
-### 9.1 Investment Management
-
-- Single entry for one-time investments (FD, gold purchase)
-- Multiple entries allowed for recurring investments (SIP in mutual funds, regular stock purchases) — each entry is a separate row with its own date and amount
-- Marking as "Completed": user sets status to completed, enters exit_value and completed_at date
-- **Profit/Loss** (on completion): `exit_value - invested_amount`
-- **Return %** (active): `((currentValue - investedAmount) / investedAmount) × 100`
-- **Return %** (completed): `((exitValue - investedAmount) / investedAmount) × 100`
-- Portfolio totals only include "active" investments unless user toggles to view completed
-
-### 9.2 EMI Calculation & Amortization
-
-When an EMI is created, the system auto-generates all monthly payment rows:
-
-- **Monthly rate**: `r = annual_interest_rate / 12 / 100`
-- **EMI formula**: `EMI = P × r × (1+r)^n / ((1+r)^n - 1)`
-- **For each month** (1 to n): `interest_component = remaining_balance × r`, `principal_component = EMI - interest_component`, `new_remaining = remaining_balance - principal_component`
-- **Due dates**: `start_date + (payment_number - 1) months`
-- **Payment status logic**: "paid" (user marked), "overdue" (due_date < today AND not paid), "upcoming" (default)
-- Overdue detection runs on page load (client-side check)
-
-### 9.3 Dashboard Calculations
-
-- **Net Worth** = Σ active investments `currentValue` − Σ active EMIs `remainingBalance` (from last unpaid payment row)
-- **Monthly EMI Outflow** = Σ `emiAmount` for all active EMIs
-- **Upcoming Payments** = Next 5 `emiPayments` where status ≠ "paid" AND `dueDate` within 30 days, ordered by `dueDate` ASC
-- **Investment Allocation** = Group active investments by type, sum `currentValue` per type for donut chart
+- **Manifest** (`public/site.webmanifest`) — `display: standalone`, `orientation: portrait`, `theme_color: #0b1326`. Icons at 16, 32, 180, 192 (maskable), 512 (maskable) px.
+- **Service worker** — registered manually in `__root.tsx` (no injected tag, avoids SSR hydration conflicts). `navigateFallback: null` (all routes must hit the server for SSR).
+- **Precache** — hashed JS, CSS, fonts, images. Runtime caching: JS/CSS (CacheFirst 30d), images (CacheFirst 7d), Google Fonts (CacheFirst 365d).
+- **Auto-update** — `registerType: 'autoUpdate'`; new SW takes over on next page load.
+- **Dev** — service worker disabled in development (`devOptions.enabled: false`).
 
 ---
 
-## 10. Implementation Phases
+## 10. Implementation Status
 
-### Phase 1: Foundation
+### ✅ Phase 1 — Foundation
+- TanStack Start project, Tailwind CSS v4, Vite 8
+- Neon PostgreSQL, Prisma 7 with pg adapter
+- Better Auth: email/password, email verification, password reset
+- Branded HTML emails (Resend)
+- Auth screens: Login, Signup, Check Email, Forgot Password
+- Route protection via `beforeLoad` session guards
 
-- TanStack Start project scaffolding with Tailwind CSS
-- PostgreSQL database setup (Neon)
-- Prisma schema, initial migration
-- Better Auth configuration (email/password, session)
-- Auth screens: Login, Signup, Forgot Password
-- Session-based route protection via `beforeLoad`
+### ✅ Phase 2 — App Shell
+- Bottom tab bar navigation (Home, Invest, EMIs, Profile)
+- TopBar with notification bell
+- Dark-only "Digital Private Bank" design system
+- Profile screen: avatar, name, currency, password, logout
+- Landing page with full marketing sections
 
-### Phase 2: App Shell
+### ✅ Phase 3 — Investments
+- **Lump-sum**: CRUD, status toggle (active → completed), exit value, return %
+- **DPS (scheduled)**: create with tenure + interest, auto-generated schedule, mark-paid per installment, auto-maturation, notifications
+- **Savings (flexible)**: create pot, add/remove ad-hoc deposits, manual balance update
+- Unified `Investment` + `InvestmentDeposit` schema (single model for all three modes)
+- Unified investments list: type filter pills (All/Stocks/MF/FD/Gold/Crypto/DPS/Savings/Other), status tabs, summary card
+- Mode-specific cards (lump-sum card, DPS card, savings card)
+- FABMenu with three creation options
 
-- App layout with bottom tab bar navigation
-- Home screen shell with greeting
-- Profile screen with logout and currency preference
-- Theme toggle (dark/light) with CSS variables
-- Empty states for all list screens
-
-### Phase 3: Investments
-
-- Server functions for investment CRUD (Prisma)
-- TanStack Query hooks for investments
-- Investments list page with summary card and filter pills
-- Add Investment form with Zod validation
-- Edit Investment with status change (active → completed)
+### ✅ Phase 4 — EMI Manager
+- Create EMI with live amortization preview
+- Auto-generate all payment rows on creation
+- EMI list with type filter, summary stats
+- EMI detail: full amortization schedule, mark paid (optimistic), principal/interest donut chart
 - Delete with confirmation
 
-### Phase 4: EMI Manager
-
-- Server functions for EMI CRUD + amortization generation
-- TanStack Query hooks for EMIs and payments
-- EMIs list page with summary card and filter pills
-- Add EMI form with live EMI preview calculation
-- Auto-generate amortization schedule on EMI creation
-- EMI Detail page with payment schedule table
-- Mark payments as paid/unpaid (optimistic updates)
-- Principal vs Interest donut chart
-
-### Phase 5: Dashboard & Polish
-
-- Dashboard server function aggregating investments + EMIs
-- Net worth calculation and hero card
-- Upcoming payments section on home screen
-- Investment allocation donut chart
-- Loading skeletons and error handling
-- Page transition animations
-- Final responsive testing and bug fixes
+### ✅ Phase 5 — Dashboard & Polish
+- Net worth calculation + hero card
+- Portfolio allocation donut chart (lazy-loaded)
+- Upcoming payments list (30-day window)
+- Notification system (bell, unread count, lazy sync, idempotent)
+- Loading skeletons on all list views
+- Empty states with CTAs on all list screens
+- PWA (installable, precached, auto-update)
+- Vercel Analytics + Speed Insights
 
 ---
 
-## 11. Non-Functional Requirements
-
-| Requirement     | Target                                                         |
-| --------------- | -------------------------------------------------------------- |
-| Performance     | First Contentful Paint < 1.5s on 4G mobile                     |
-| Responsiveness  | Optimized for 320px–428px viewport, functional up to 768px     |
-| Accessibility   | WCAG 2.1 AA — proper labels, contrast ratios, keyboard nav     |
-| Security        | Server-side auth checks on all data operations, HTTPS only     |
-| Browser Support | Chrome, Safari, Firefox (latest 2 versions) on iOS and Android |
-| PWA             | Add to Home Screen support, app-like full-screen mode (future) |
-| Data Privacy    | All queries scoped to authenticated user's profileId           |
-
----
-
-## 12. Future Enhancements (Post-MVP)
-
-- Push notifications / email reminders for upcoming EMI payments
-- Multi-currency portfolio with live exchange rates
-- CSV/Excel export of investment portfolio and EMI schedules
-- Recurring investment auto-tracker (SIP reminders)
-- Budget tracking and expense categories
-- Goal-based savings tracker
-- PWA offline support with local caching
-- Social login (Google, GitHub) via Better Auth providers
-
----
-
-## 13. File Structure (Reference)
+## 11. File Structure
 
 ```
 phinio/
-├── app/
-│   ├── routes/
-│   │   ├── __root.tsx              # Root layout, Better Auth provider
-│   │   ├── index.tsx               # Splash / Welcome
-│   │   ├── login.tsx               # Login
-│   │   ├── signup.tsx              # Signup
-│   │   ├── forgot-password.tsx     # Forgot Password
-│   │   └── app/
-│   │       ├── route.tsx           # App layout (tab bar + auth guard)
-│   │       ├── index.tsx           # Home / Overview
-│   │       ├── investments/
-│   │       │   ├── index.tsx       # Investments List
-│   │       │   ├── new.tsx         # Add Investment
-│   │       │   └── $id.edit.tsx    # Edit Investment
-│   │       ├── emis/
-│   │       │   ├── index.tsx       # EMIs List
-│   │       │   ├── new.tsx         # Add EMI
-│   │       │   └── $emiId.tsx      # EMI Detail
-│   │       └── profile.tsx         # Profile / Settings
-│   ├── components/
-│   │   ├── ui/                     # Reusable UI primitives
-│   │   ├── BottomTabBar.tsx
-│   │   ├── SummaryHeroCard.tsx
-│   │   ├── FAB.tsx
-│   │   ├── ItemCard.tsx
-│   │   ├── FilterPills.tsx
-│   │   ├── ProgressBar.tsx
-│   │   └── EmptyState.tsx
-│   ├── server/
-│   │   ├── auth.ts                 # Better Auth server config
-│   │   ├── db.ts                   # Prisma client singleton
-│   │   ├── investments.ts          # Investment server functions
-│   │   ├── emis.ts                 # EMI server functions
-│   │   └── dashboard.ts            # Dashboard aggregation functions
-│   ├── hooks/
-│   │   ├── useInvestments.ts       # TanStack Query hooks
-│   │   ├── useEmis.ts
-│   │   └── useDashboard.ts
-│   ├── lib/
-│   │   ├── emi-calculator.ts       # EMI formula + amortization generator
-│   │   ├── currency.ts             # Currency formatting (BDT/USD)
-│   │   └── validators.ts           # Zod schemas
-│   └── styles/
-│       └── globals.css             # Tailwind + CSS variables
 ├── prisma/
-│   └── schema.prisma
-├── .env
-├── tailwind.config.ts
+│   ├── schema.prisma
+│   ├── migrations/
+│   └── seed.ts
+├── public/
+│   ├── site.webmanifest
+│   └── icons/
+├── src/
+│   ├── generated/prisma/          # Prisma client output (never edit)
+│   ├── routes/
+│   │   ├── __root.tsx             # HTML shell, theme, SW registration
+│   │   ├── index.tsx              # Landing page (/)
+│   │   ├── login.tsx
+│   │   ├── signup.tsx
+│   │   ├── check-email.tsx
+│   │   ├── forgot-password.tsx
+│   │   ├── api/auth/$.ts          # Better Auth catch-all handler
+│   │   └── app/
+│   │       ├── route.tsx          # App layout (TopBar + BottomTabBar + auth guard)
+│   │       ├── index.tsx          # Home / Dashboard
+│   │       ├── profile.tsx
+│   │       └── investments/
+│   │           ├── index.tsx      # Unified investments list
+│   │           ├── new.tsx        # Add lump-sum
+│   │           ├── $id.edit.tsx   # Edit lump-sum
+│   │           ├── dps/
+│   │           │   ├── new.tsx
+│   │           │   └── $id.tsx
+│   │           └── savings/
+│   │               ├── new.tsx
+│   │               └── $id.tsx
+│   │       └── emis/
+│   │           ├── index.tsx
+│   │           ├── new.tsx
+│   │           └── $emiId.tsx
+│   ├── components/
+│   │   ├── BottomTabBar.tsx
+│   │   ├── TopBar.tsx
+│   │   ├── NotificationBell.tsx
+│   │   ├── Logo.tsx
+│   │   ├── AllocationDonut.tsx    # Lazy-loaded
+│   │   ├── PrincipalInterestDonut.tsx # Lazy-loaded
+│   │   └── ui/
+│   │       ├── Card.tsx
+│   │       ├── EmptyState.tsx
+│   │       ├── FAB.tsx
+│   │       ├── FABMenu.tsx
+│   │       ├── FilterPills.tsx
+│   │       ├── ProgressBar.tsx
+│   │       ├── Skeleton.tsx
+│   │       └── TextField.tsx      # + TextArea
+│   ├── server/
+│   │   ├── investments.ts         # Server function wrappers (no Prisma imports)
+│   │   ├── investments.impl.ts    # All investment business logic
+│   │   ├── emis.ts
+│   │   ├── emis.impl.ts
+│   │   ├── dashboard.ts
+│   │   ├── dashboard.impl.ts
+│   │   ├── notifications.ts
+│   │   ├── notifications.impl.ts
+│   │   ├── profile.ts
+│   │   ├── profile.impl.ts
+│   │   └── auth.ts
+│   ├── hooks/
+│   │   ├── useInvestments.ts      # All investment modes + deposits
+│   │   ├── useEmis.ts
+│   │   ├── useDashboard.ts
+│   │   └── useNotifications.ts
+│   ├── lib/
+│   │   ├── auth.ts                # Better Auth server config
+│   │   ├── auth-client.ts         # Better Auth client config
+│   │   ├── calculations.ts        # Return %, format helpers
+│   │   ├── cn.ts                  # Tailwind class merge
+│   │   ├── currency.ts            # formatCurrency, getCurrencySymbol
+│   │   ├── dps-calculator.ts      # DPS schedule generator (simple + compound)
+│   │   ├── emi-calculator.ts      # EMI formula + amortization generator
+│   │   └── validators.ts          # All Zod schemas
+│   ├── db.ts                      # Prisma singleton (globalThis.__prisma)
+│   ├── router.tsx                 # Router construction + QueryClient
+│   └── styles.css                 # Tailwind v4 + all design tokens
+├── .env.local                     # Not committed
+├── .env.example
+├── vite.config.ts
+├── eslint.config.js
+├── prettier.config.js
+├── tsconfig.json
 └── package.json
 ```
+
+---
+
+## 12. Environment Variables
+
+| Variable             | Description                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `DATABASE_URL`       | Pooled Neon connection string (used at runtime via PgBouncer)                      |
+| `DIRECT_URL`         | Direct Neon connection string (used by `prisma migrate deploy`)                    |
+| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret`                    |
+| `BETTER_AUTH_URL`    | Full app URL (e.g. `http://localhost:3000` in dev, Vercel URL in prod)             |
+| `RESEND_API_KEY`     | API key from Resend dashboard                                                      |
+| `RESEND_FROM`        | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`                   |
+
+> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim into every email link. In dev it must be `http://localhost:3000`; in `npm run preview` (port 4173) set it to `http://localhost:4173` or links will 404.
+
+---
+
+## 13. Commands
+
+```bash
+npm run dev          # Vite dev server on :3000
+npm run build        # Production build
+npm run test         # Vitest (run once)
+npm run lint         # ESLint
+npm run check        # prettier --write + eslint --fix (run before committing)
+
+npm run db:generate  # prisma generate (after schema changes)
+npm run db:push      # push schema to DB without migration (dev)
+npm run db:migrate   # prisma migrate dev
+npm run db:studio    # Prisma Studio
+npm run db:seed      # Seed test data
+```
+
+All `db:*` scripts are wrapped in `dotenv -e .env.local` — always use them, not raw `npx prisma`, or `DATABASE_URL` won't resolve.
+
+---
+
+## 14. Future Enhancements (Post-MVP)
+
+- Push notifications / email reminders for upcoming payments
+- Multi-currency portfolio with live exchange rates
+- CSV / Excel export of investment portfolio and EMI schedules
+- Goal-based savings targets on savings pots
+- Budget tracking and expense categories
+- Social login (Google) via Better Auth OAuth providers
+- PWA offline data access (background sync)
+- Bulk import from bank statements
