@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   HeadContent,
   Scripts,
@@ -86,6 +87,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // Register the Workbox service worker on first client mount.
+  // Production-only: dev has devOptions.enabled = false in vite.config.ts,
+  // but we guard here too so HMR never touches service worker state.
+  useEffect(() => {
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .catch((err) => console.warn('[sw] registration failed', err))
+    }
+  }, [])
+
   return (
     <html lang="en" className="dark">
       <head>
