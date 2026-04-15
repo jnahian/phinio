@@ -3,6 +3,12 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { Resend } from 'resend'
 import { prisma } from '#/db'
+import {
+  verificationEmailHtml,
+  verificationEmailText,
+  passwordResetEmailHtml,
+  passwordResetEmailText,
+} from '#/lib/email-templates'
 
 const resendApiKey = process.env.RESEND_API_KEY
 const resendFrom = process.env.RESEND_FROM ?? 'Phinio <onboarding@resend.dev>'
@@ -12,6 +18,7 @@ async function sendMail(args: {
   to: string
   subject: string
   text: string
+  html: string
   logLabel: string
   url: string
 }) {
@@ -25,6 +32,7 @@ async function sendMail(args: {
     from: resendFrom,
     to: args.to,
     subject: args.subject,
+    html: args.html,
     text: args.text,
   })
 }
@@ -42,7 +50,8 @@ export const auth = betterAuth({
       await sendMail({
         to: user.email,
         subject: 'Reset your Phinio password',
-        text: `Click the link below to reset your password:\n\n${url}\n\nIf you didn't request this, you can safely ignore this email.`,
+        html: passwordResetEmailHtml(user.name, url),
+        text: passwordResetEmailText(user.name, url),
         logLabel: 'reset link',
         url,
       })
@@ -59,7 +68,8 @@ export const auth = betterAuth({
       await sendMail({
         to: user.email,
         subject: 'Verify your Phinio email',
-        text: `Welcome to Phinio! Click the link below to verify your email and finish setting up your account:\n\n${url}\n\nThe link expires in 1 hour. If you didn't create an account, you can ignore this email.`,
+        html: verificationEmailHtml(user.name, url),
+        text: verificationEmailText(user.name, url),
         logLabel: 'verification link',
         url,
       })
