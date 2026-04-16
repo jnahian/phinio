@@ -16,10 +16,14 @@
  * amortization schedules and avoids -0.01 / +0.03 drift at the end.
  */
 
+export type EmiMethod = 'bank_loan' | 'credit_card'
+
 export interface CalculateEmiInput {
   principal: string | number
   annualRate: string | number // percent, e.g. 12 for 12%
   tenureMonths: number
+  /** bank_loan = reducing balance; credit_card = flat rate on original principal */
+  type?: EmiMethod
 }
 
 export interface EmiBreakdown {
@@ -68,11 +72,16 @@ export function calculateEmi(input: CalculateEmiInput): EmiBreakdown {
   }
 
   const r = annualRate / 12 / 100
+  const isFlat = input.type === 'credit_card'
 
   let emi: number
   if (r === 0) {
     emi = principal / n
+  } else if (isFlat) {
+    // Flat rate: interest calculated on original principal every month
+    emi = principal / n + principal * r
   } else {
+    // Reducing balance: standard amortization formula
     const pow = Math.pow(1 + r, n)
     emi = (principal * r * pow) / (pow - 1)
   }
@@ -120,6 +129,7 @@ export function generateAmortization(input: {
   annualRate: string | number
   tenureMonths: number
   startDate: Date
+  type?: EmiMethod
 }): AmortizationRow[] {
   const principal = toNumber(input.principal)
   const annualRate = toNumber(input.annualRate)
@@ -128,9 +138,11 @@ export function generateAmortization(input: {
     principal,
     annualRate,
     tenureMonths: n,
+    type: input.type,
   })
   const emi = Number(emiAmount)
   const r = annualRate / 12 / 100
+  const isFlat = input.type === 'credit_card'
 
   const rows: AmortizationRow[] = []
   let balance = principal
@@ -138,7 +150,8 @@ export function generateAmortization(input: {
   for (let i = 1; i <= n; i++) {
     const isLast = i === n
 
-    const interestComponent = round2(balance * r)
+    // Flat rate: interest on original principal; reducing: on remaining balance
+    const interestComponent = round2(isFlat ? principal * r : balance * r)
     let principalComponent: number
     let paymentAmount: number
 

@@ -48,11 +48,11 @@ function AddEmiScreen() {
       if (!Number.isFinite(p) || p <= 0) return null
       if (!Number.isFinite(r) || r < 0) return null
       if (!Number.isInteger(n) || n <= 0) return null
-      return calculateEmi({ principal: p, annualRate: r, tenureMonths: n })
+      return calculateEmi({ principal: p, annualRate: r, tenureMonths: n, type })
     } catch {
       return null
     }
-  }, [principal, interestRate, tenureMonths])
+  }, [principal, interestRate, tenureMonths, type])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

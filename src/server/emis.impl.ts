@@ -167,12 +167,14 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
     principal: data.principal,
     annualRate: data.interestRate,
     tenureMonths: data.tenureMonths,
+    type: data.type,
   })
   const schedule = generateAmortization({
     principal: data.principal,
     annualRate: data.interestRate,
     tenureMonths: data.tenureMonths,
     startDate: new Date(data.startDate),
+    type: data.type,
   })
 
   const emi = await prisma.$transaction(async (tx) => {
