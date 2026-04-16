@@ -199,7 +199,7 @@ function InvestmentsListScreen() {
             }
             return (
               <li key={item.id}>
-                <InvestmentCard item={item} currency={currency} status={status} />
+                <InvestmentCard item={item} currency={currency} />
               </li>
             )
           })}
@@ -282,10 +282,9 @@ interface ListItemProps {
     nextDueDate: Date | string | null
   }
   currency: Currency
-  status?: string
 }
 
-function InvestmentCard({ item, currency, status }: ListItemProps) {
+function InvestmentCard({ item, currency }: ListItemProps) {
   const isCompleted = item.status === 'completed'
   const displayValue = isCompleted
     ? (item.exitValue ?? item.currentValue)

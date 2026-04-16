@@ -30,7 +30,6 @@ import type {
   SavingsCreateInput,
   SavingsUpdateInput,
   AddDepositInput,
-  RemoveDepositInput,
 } from '#/lib/validators'
 
 function errorMessage(err: unknown, fallback: string): string {
