@@ -86,7 +86,6 @@ body {
 /* Atmospheric background glow — applied on auth/splash pages via .noir-bg */
 .noir-bg {
   position: relative;
-  overflow: hidden;
 }
 
 .noir-bg::before {
