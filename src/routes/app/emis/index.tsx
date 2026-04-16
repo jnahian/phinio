@@ -39,6 +39,7 @@ const TYPE_META: Record<
 }
 
 export const Route = createFileRoute('/app/emis/')({
+  staticData: { title: 'EMIs' },
   component: EmisListScreen,
 })
 
@@ -59,12 +60,7 @@ function EmisListScreen() {
   )
 
   return (
-    <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
-      <header className="mb-6">
-        <p className="label-md text-on-surface-variant">Obligations</p>
-        <h1 className="headline-lg mt-1 text-on-surface">EMIs</h1>
-      </header>
-
+    <main className="noir-bg min-h-dvh px-5 pb-28 pt-4">
       <Card variant="low" className="mb-6">
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell label="Active" value={String(emis.length)} />

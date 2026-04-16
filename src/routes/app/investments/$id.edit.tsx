@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
-  ArrowLeft,
   Bitcoin,
   Circle,
   Coins,
@@ -23,7 +22,7 @@ import { investmentUpdateSchema } from '#/lib/validators'
 import type { InvestmentType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/$id/edit')({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, title: 'Edit Investment', backTo: '/app/investments' },
   component: EditInvestmentScreen,
 })
 
@@ -137,17 +136,6 @@ function EditInvestmentScreen() {
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
-      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
-        <Link
-          to="/app/investments"
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
-        </Link>
-        <h1 className="headline-sm text-on-surface">Edit Investment</h1>
-      </header>
-
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">

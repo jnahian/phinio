@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Building2, CreditCard } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Building2, CreditCard } from 'lucide-react'
 import { TextField } from '#/components/ui/TextField'
 import { calculateEmi } from '#/lib/emi-calculator'
 import { cn } from '#/lib/cn'
@@ -10,7 +10,7 @@ import { emiCreateSchema } from '#/lib/validators'
 import type { EmiCreateInput, EmiType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/emis/new')({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, title: 'Add EMI', backTo: '/app/emis' },
   component: AddEmiScreen,
 })
 
@@ -87,17 +87,6 @@ function AddEmiScreen() {
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
-      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
-        <Link
-          to="/app/emis"
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
-        </Link>
-        <h1 className="headline-sm text-on-surface">Add EMI</h1>
-      </header>
-
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">

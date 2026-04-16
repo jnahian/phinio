@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useCreateSavings } from '#/hooks/useInvestments'
@@ -8,7 +7,7 @@ import { savingsCreateSchema } from '#/lib/validators'
 import type { SavingsCreateInput } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/savings/new')({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, title: 'Add Savings Pot', backTo: '/app/investments' },
   component: AddSavingsScreen,
 })
 
@@ -62,17 +61,6 @@ function AddSavingsScreen() {
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
-      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
-        <Link
-          to="/app/investments"
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
-        </Link>
-        <h1 className="headline-sm text-on-surface">Add Savings Pot</h1>
-      </header>
-
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">

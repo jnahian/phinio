@@ -1,23 +1,19 @@
 import { Suspense, lazy, useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Check, Trash2 } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Check, Trash2 } from 'lucide-react'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
 import { useDeleteEmi, useEmiQuery, useMarkPayment } from '#/hooks/useEmis'
-import type { EmiType } from '#/lib/validators'
 
 const PrincipalInterestDonut = lazy(
   () => import('#/components/PrincipalInterestDonut'),
 )
 
-const TYPE_LABELS: Record<EmiType, string> = {
-  bank_loan: 'Bank Loan',
-  credit_card: 'Credit Card',
-}
 
 export const Route = createFileRoute('/app/emis/$emiId')({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, backTo: '/app/emis' },
   component: EmiDetailScreen,
 })
 
@@ -28,6 +24,7 @@ function EmiDetailScreen() {
   const currency = profile.preferredCurrency
 
   const { data: emi, isLoading } = useEmiQuery(emiId)
+  useSetTopBarTitle(emi?.label ?? null)
   const markPayment = useMarkPayment(emiId)
   const deleteEmi = useDeleteEmi()
 
@@ -73,22 +70,6 @@ function EmiDetailScreen() {
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
-      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
-        <Link
-          to="/app/emis"
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="headline-sm truncate text-on-surface">{emi.label}</h1>
-          <p className="body-sm text-on-surface-variant">
-            {TYPE_LABELS[emi.type as EmiType]}
-          </p>
-        </div>
-      </header>
-
       <div className="space-y-6 px-5 pt-4">
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-container to-[#1e3a8a] p-6">
           <div

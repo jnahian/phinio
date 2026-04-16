@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Check, Pencil, Trash2 } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
@@ -14,7 +15,7 @@ import {
 } from '#/hooks/useInvestments'
 
 export const Route = createFileRoute('/app/investments/dps/$id')({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, backTo: '/app/investments' },
   component: DpsDetailScreen,
 })
 
@@ -26,6 +27,7 @@ function DpsDetailScreen() {
   const symbol = getCurrencySymbol(currency)
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
+  useSetTopBarTitle(inv?.name ?? null)
   const markDeposit = useMarkDepositPaid(id)
   const deleteDps = useDeleteDps()
   const updateDps = useUpdateDps()
@@ -74,35 +76,24 @@ function DpsDetailScreen() {
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
-      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
-        <Link
-          to="/app/investments"
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="headline-sm truncate text-on-surface">{inv.name}</h1>
+      <div className="space-y-6 px-5 pt-4">
+        <div className="flex items-center justify-between">
           <p className="body-sm text-on-surface-variant">
             DPS · {inv.interestType === 'compound' ? 'Compound' : 'Simple'}{' '}
             interest · {inv.interestRate}% p.a.
           </p>
+          <button
+            type="button"
+            aria-label="Edit name"
+            onClick={() => {
+              setEditName(inv.name)
+              setEditing(true)
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
+          >
+            <Pencil className="h-4 w-4" strokeWidth={1.75} />
+          </button>
         </div>
-        <button
-          type="button"
-          aria-label="Edit name"
-          onClick={() => {
-            setEditName(inv.name)
-            setEditing(true)
-          }}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
-        >
-          <Pencil className="h-4 w-4" strokeWidth={1.75} />
-        </button>
-      </header>
-
-      <div className="space-y-6 px-5 pt-4">
         {/* Hero card */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a4731] to-[#0f2d1f] p-6">
           <div

@@ -35,6 +35,7 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export const Route = createFileRoute('/app/')({
+  staticData: { title: 'Dashboard' },
   component: HomeScreen,
 })
 

@@ -20,6 +20,7 @@ import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import type { Currency } from '#/lib/currency'
 
 export const Route = createFileRoute('/app/profile')({
+  staticData: { title: 'Profile' },
   component: ProfileScreen,
 })
 

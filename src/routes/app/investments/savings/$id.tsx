@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Plus, Trash2, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
@@ -16,7 +17,7 @@ import {
 } from '#/hooks/useInvestments'
 
 export const Route = createFileRoute('/app/investments/savings/$id')({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, backTo: '/app/investments' },
   component: SavingsDetailScreen,
 })
 
@@ -33,6 +34,7 @@ function SavingsDetailScreen() {
   const symbol = getCurrencySymbol(currency)
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
+  useSetTopBarTitle(inv?.name ?? null)
   const updateSavings = useUpdateSavings()
   const addDeposit = useAddDeposit(id)
   const removeDeposit = useRemoveDeposit(id)
@@ -130,29 +132,18 @@ function SavingsDetailScreen() {
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
-      <header className="sticky top-0 z-40 flex items-center gap-4 bg-surface/80 px-5 py-4 backdrop-blur-xl">
-        <Link
-          to="/app/investments"
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="headline-sm truncate text-on-surface">{inv.name}</h1>
-          <p className="body-sm text-on-surface-variant">Savings pot</p>
-        </div>
-        <button
-          type="button"
-          aria-label="Edit"
-          onClick={openEdit}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5 text-sm font-semibold"
-        >
-          Edit
-        </button>
-      </header>
-
       <div className="space-y-6 px-5 pt-4">
+        <div className="flex items-center justify-between">
+          <p className="body-sm text-on-surface-variant">Savings pot</p>
+          <button
+            type="button"
+            aria-label="Edit"
+            onClick={openEdit}
+            className="rounded-xl px-3 py-1.5 text-sm font-semibold text-on-surface-variant hover:bg-white/5"
+          >
+            Edit
+          </button>
+        </div>
         {/* Hero card */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3147] to-[#0f1f2d] p-6">
           <div
