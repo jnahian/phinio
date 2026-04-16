@@ -463,7 +463,7 @@ function ProfileScreen() {
       />
 
       <p className="body-sm text-center text-on-surface-variant/60">
-        Phinio · v0.1.0
+        Phinio · v{__APP_VERSION__}
       </p>
     </main>
   )

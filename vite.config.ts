@@ -7,6 +7,9 @@ import { nitro } from 'nitro/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const config = defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
   resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
