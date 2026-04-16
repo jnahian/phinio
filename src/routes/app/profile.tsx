@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
+import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
@@ -439,41 +440,26 @@ function ProfileScreen() {
       {/* Sign out                                                             */}
       {/* ------------------------------------------------------------------ */}
       <section className="mb-10">
-        {!confirmLogout ? (
-          <button
-            type="button"
-            onClick={() => setConfirmLogout(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-outline-variant/30 px-4 py-4 text-on-surface transition hover:bg-white/5"
-          >
-            <LogOut className="h-5 w-5" strokeWidth={1.75} />
-            <span className="font-display font-semibold">Sign out</span>
-          </button>
-        ) : (
-          <Card variant="low">
-            <p className="body-md mb-4 text-on-surface">
-              Sign out of Phinio? You'll need to log in again next time.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmLogout(false)}
-                className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
-                disabled={isSigningOut}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                disabled={isSigningOut}
-                className="flex-1 rounded-xl bg-tertiary-container px-4 py-3 font-display font-semibold text-on-tertiary-container shadow-[0_10px_30px_-10px_rgba(207,44,48,0.5)] transition disabled:opacity-60"
-              >
-                {isSigningOut ? 'Signing out…' : 'Sign out'}
-              </button>
-            </div>
-          </Card>
-        )}
+        <button
+          type="button"
+          onClick={() => setConfirmLogout(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-outline-variant/30 px-4 py-4 text-on-surface transition hover:bg-white/5"
+        >
+          <LogOut className="h-5 w-5" strokeWidth={1.75} />
+          <span className="font-display font-semibold">Sign out</span>
+        </button>
       </section>
+
+      <ConfirmModal
+        open={confirmLogout}
+        title="Sign out"
+        message="Sign out of Phinio? You'll need to log in again next time."
+        confirmLabel="Sign out"
+        pendingLabel="Signing out…"
+        isPending={isSigningOut}
+        onConfirm={handleSignOut}
+        onCancel={() => setConfirmLogout(false)}
+      />
 
       <p className="body-sm text-center text-on-surface-variant/60">
         Phinio · v0.1.0

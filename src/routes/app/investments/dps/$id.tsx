@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
+import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
@@ -273,41 +274,26 @@ function DpsDetailScreen() {
         )}
 
         {/* Delete */}
-        {confirmDelete ? (
-          <Card variant="low">
-            <p className="body-md mb-4 text-on-surface">
-              Delete "{inv.name}" and all its installment rows?
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
-                disabled={deleteDps.isPending}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleteDps.isPending}
-                className="flex-1 rounded-xl bg-tertiary-container px-4 py-3 font-display font-semibold text-on-tertiary-container shadow-[0_10px_30px_-10px_rgba(207,44,48,0.5)] disabled:opacity-60"
-              >
-                {deleteDps.isPending ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </Card>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-            Delete scheme
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
+        >
+          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+          Delete scheme
+        </button>
       </div>
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete scheme"
+        message={`Delete "${inv.name}" and all its installment rows?`}
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        isPending={deleteDps.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </main>
   )
 }

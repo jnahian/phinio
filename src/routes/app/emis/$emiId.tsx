@@ -1,7 +1,7 @@
 import { Suspense, lazy, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Check, Trash2 } from 'lucide-react'
-import { Card } from '#/components/ui/Card'
+import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
 import { useDeleteEmi, useEmiQuery, useMarkPayment } from '#/hooks/useEmis'
@@ -253,41 +253,26 @@ function EmiDetailScreen() {
           </div>
         </section>
 
-        {confirmDelete ? (
-          <Card variant="low">
-            <p className="body-md mb-4 text-on-surface">
-              Delete "{emi.label}" and all its payment rows?
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
-                disabled={deleteEmi.isPending}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleteEmi.isPending}
-                className="flex-1 rounded-xl bg-tertiary-container px-4 py-3 font-display font-semibold text-on-tertiary-container shadow-[0_10px_30px_-10px_rgba(207,44,48,0.5)] disabled:opacity-60"
-              >
-                {deleteEmi.isPending ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </Card>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-            Delete EMI
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
+        >
+          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+          Delete EMI
+        </button>
       </div>
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete EMI"
+        message={`Delete "${emi.label}" and all its payment rows?`}
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        isPending={deleteEmi.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </main>
   )
 }

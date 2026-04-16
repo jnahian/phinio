@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Plus, Trash2, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
+import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
@@ -259,7 +260,6 @@ function SavingsDetailScreen() {
             <ul className="space-y-1">
               {deposits.map((dep) => {
                 const date = dep.dueDate ? new Date(dep.dueDate) : null
-                const isConfirmingRemove = confirmRemoveId === dep.id
                 return (
                   <li key={dep.id}>
                     <div className="flex w-full items-center gap-3 rounded-2xl px-3 py-3">
@@ -283,34 +283,14 @@ function SavingsDetailScreen() {
                         <p className="font-display text-sm font-bold text-on-surface">
                           +{formatCurrency(dep.amount, currency)}
                         </p>
-                        {isConfirmingRemove ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveDeposit(dep.id)}
-                              disabled={removeDeposit.isPending}
-                              className="rounded-lg bg-tertiary-container/30 px-2 py-1 text-xs font-semibold text-tertiary disabled:opacity-60"
-                            >
-                              Remove
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmRemoveId(null)}
-                              className="rounded-lg px-2 py-1 text-xs text-on-surface-variant"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setConfirmRemoveId(dep.id)}
-                            className="text-on-surface-variant/40 transition hover:text-tertiary"
-                            aria-label="Remove deposit"
-                          >
-                            <X className="h-4 w-4" strokeWidth={1.75} />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => setConfirmRemoveId(dep.id)}
+                          className="text-on-surface-variant/40 transition hover:text-tertiary"
+                          aria-label="Remove deposit"
+                        >
+                          <X className="h-4 w-4" strokeWidth={1.75} />
+                        </button>
                       </div>
                     </div>
                   </li>
@@ -363,41 +343,37 @@ function SavingsDetailScreen() {
         )}
 
         {/* Delete */}
-        {confirmDelete ? (
-          <Card variant="low">
-            <p className="body-md mb-4 text-on-surface">
-              Delete "{inv.name}" and all its deposit history?
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
-                disabled={deleteSavings.isPending}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleteSavings.isPending}
-                className="flex-1 rounded-xl bg-tertiary-container px-4 py-3 font-display font-semibold text-on-tertiary-container shadow-[0_10px_30px_-10px_rgba(207,44,48,0.5)] disabled:opacity-60"
-              >
-                {deleteSavings.isPending ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </Card>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-            Delete pot
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
+        >
+          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+          Delete pot
+        </button>
       </div>
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete pot"
+        message={`Delete "${inv.name}" and all its deposit history?`}
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        isPending={deleteSavings.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
+
+      <ConfirmModal
+        open={confirmRemoveId !== null}
+        title="Remove deposit"
+        message="Remove this deposit entry? This can't be undone."
+        confirmLabel="Remove"
+        pendingLabel="Removing…"
+        isPending={removeDeposit.isPending}
+        onConfirm={() => confirmRemoveId && handleRemoveDeposit(confirmRemoveId)}
+        onCancel={() => setConfirmRemoveId(null)}
+      />
     </main>
   )
 }
