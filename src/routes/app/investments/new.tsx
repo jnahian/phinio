@@ -2,11 +2,15 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Bitcoin,
+  Briefcase,
+  Building,
   Circle,
   Coins,
   LineChart,
   Package,
   PieChart,
+  Shield,
+  Sprout,
 } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
@@ -30,6 +34,10 @@ const TYPE_OPTIONS: Array<{
   { value: 'fd', label: 'Fixed Deposit', icon: Circle },
   { value: 'gold', label: 'Gold', icon: Coins },
   { value: 'crypto', label: 'Crypto', icon: Bitcoin },
+  { value: 'sanchayapatra', label: 'Sanchayapatra', icon: Shield },
+  { value: 'real_estate', label: 'Real Estate', icon: Building },
+  { value: 'agro_farm', label: 'Agro Farm', icon: Sprout },
+  { value: 'business', label: 'Business', icon: Briefcase },
   { value: 'other', label: 'Other', icon: Package },
 ]
 

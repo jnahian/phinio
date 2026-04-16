@@ -22,6 +22,10 @@ const TYPE_LABELS: Record<string, string> = {
   fd: 'Fixed Deposit',
   gold: 'Gold',
   crypto: 'Crypto',
+  sanchayapatra: 'Sanchayapatra',
+  real_estate: 'Real Estate',
+  agro_farm: 'Agro Farm',
+  business: 'Business',
   other: 'Other',
 }
 
@@ -31,6 +35,10 @@ const TYPE_COLORS: Record<string, string> = {
   fd: 'bg-outline-variant',
   gold: 'bg-[#ffd46a]',
   crypto: 'bg-[#c4a8ff]',
+  sanchayapatra: 'bg-[#6ee7a0]',
+  real_estate: 'bg-[#c4a8ff]',
+  agro_farm: 'bg-[#86efac]',
+  business: 'bg-[#fbbf24]',
   other: 'bg-outline-variant/60',
 }
 

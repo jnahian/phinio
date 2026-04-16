@@ -66,6 +66,10 @@ export const INVESTMENT_TYPES = [
   'fd',
   'gold',
   'crypto',
+  'sanchayapatra',
+  'real_estate',
+  'agro_farm',
+  'business',
   'other',
 ] as const
 export type InvestmentType = (typeof INVESTMENT_TYPES)[number]
