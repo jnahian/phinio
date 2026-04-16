@@ -446,18 +446,39 @@ export async function createSavingsInvestmentImpl(
   profileId: string,
   data: SavingsCreateInput,
 ) {
-  const row = await prisma.investment.create({
-    data: {
-      profileId,
-      name: data.name,
-      type: 'savings',
-      mode: 'flexible',
-      investedAmount: 0,
-      currentValue: data.currentValue,
-      startDate: new Date(data.startDate),
-      notes: data.notes,
-    },
+  const initialAmount = Number(data.currentValue)
+
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.investment.create({
+      data: {
+        profileId,
+        name: data.name,
+        type: 'savings',
+        mode: 'flexible',
+        investedAmount: initialAmount > 0 ? data.currentValue : 0,
+        currentValue: data.currentValue,
+        startDate: new Date(data.startDate),
+        notes: data.notes,
+      },
+    })
+
+    if (initialAmount > 0) {
+      await tx.investmentDeposit.create({
+        data: {
+          investmentId: created.id,
+          profileId,
+          amount: data.currentValue,
+          dueDate: new Date(data.startDate),
+          paidAt: new Date(data.startDate),
+          status: 'paid',
+          notes: 'Initial deposit',
+        },
+      })
+    }
+
+    return created
   })
+
   return { id: row.id, name: row.name }
 }
 
@@ -487,9 +508,11 @@ export async function addDepositImpl(
 ) {
   const investment = await prisma.investment.findFirst({
     where: { id: data.investmentId, profileId, mode: 'flexible' },
-    select: { id: true, investedAmount: true },
+    select: { id: true, investedAmount: true, currentValue: true },
   })
   if (!investment) throw new Error('Savings pot not found')
+
+  const depositAmount = Number(data.amount)
 
   await prisma.$transaction(async (tx) => {
     await tx.investmentDeposit.create({
@@ -503,11 +526,14 @@ export async function addDepositImpl(
         notes: data.notes,
       },
     })
-    // Sync investedAmount = sum of all deposits
-    const newTotal = Number(investment.investedAmount) + Number(data.amount)
+    const newInvested = Number(investment.investedAmount) + depositAmount
+    const newCurrentValue = Number(investment.currentValue) + depositAmount
     await tx.investment.update({
       where: { id: data.investmentId },
-      data: { investedAmount: newTotal.toFixed(2) },
+      data: {
+        investedAmount: newInvested.toFixed(2),
+        currentValue: newCurrentValue.toFixed(2),
+      },
     })
   })
 
@@ -524,6 +550,8 @@ export async function removeDepositImpl(
   })
   if (!deposit) throw new Error('Deposit not found')
 
+  const removedAmount = Number(deposit.amount)
+
   await prisma.$transaction(async (tx) => {
     await tx.investmentDeposit.delete({ where: { id: data.depositId } })
     // Re-sync investedAmount from remaining deposits
@@ -531,10 +559,26 @@ export async function removeDepositImpl(
       where: { investmentId: deposit.investmentId },
       select: { amount: true },
     })
-    const newTotal = remaining.reduce((sum, d) => sum + Number(d.amount), 0)
+    const newInvested = remaining.reduce(
+      (sum, d) => sum + Number(d.amount),
+      0,
+    )
+
+    const investment = await tx.investment.findUniqueOrThrow({
+      where: { id: deposit.investmentId },
+      select: { currentValue: true },
+    })
+    const newCurrentValue = Math.max(
+      0,
+      Number(investment.currentValue) - removedAmount,
+    )
+
     await tx.investment.update({
       where: { id: deposit.investmentId },
-      data: { investedAmount: newTotal.toFixed(2) },
+      data: {
+        investedAmount: newInvested.toFixed(2),
+        currentValue: newCurrentValue.toFixed(2),
+      },
     })
   })
 
