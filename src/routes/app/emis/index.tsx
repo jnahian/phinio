@@ -3,7 +3,6 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { Building2, CalendarClock, CreditCard } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
-import { FAB } from '#/components/ui/FAB'
 import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { ProgressBar } from '#/components/ui/ProgressBar'
@@ -119,7 +118,6 @@ function EmisListScreen() {
         </ul>
       )}
 
-      <FAB to="/app/emis/new" label="Add EMI" />
     </main>
   )
 }

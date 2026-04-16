@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { PiggyBank, TrendingUp, Wallet } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
-import { FABMenu } from '#/components/ui/FABMenu'
 import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
@@ -195,26 +194,6 @@ function InvestmentsListScreen() {
         </ul>
       )}
 
-      <FABMenu
-        label="Add"
-        items={[
-          {
-            to: '/app/investments/new',
-            label: 'Investment',
-            icon: <TrendingUp className="h-5 w-5" strokeWidth={1.75} />,
-          },
-          {
-            to: '/app/investments/dps/new',
-            label: 'DPS Scheme',
-            icon: <PiggyBank className="h-5 w-5" strokeWidth={1.75} />,
-          },
-          {
-            to: '/app/investments/savings/new',
-            label: 'Savings Pot',
-            icon: <Wallet className="h-5 w-5" strokeWidth={1.75} />,
-          },
-        ]}
-      />
     </main>
   )
 }
