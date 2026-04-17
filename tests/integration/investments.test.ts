@@ -464,7 +464,26 @@ describe('DPS (scheduled) investments', () => {
 // ---------------------------------------------------------------------------
 
 describe('savings pot (flexible) investments', () => {
-  it('createSavingsInvestmentImpl creates a pot with investedAmount=0', async () => {
+  it('createSavingsInvestmentImpl with currentValue=0 creates an empty pot', async () => {
+    const user = await createTestUser()
+
+    const created = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Empty Fund',
+      startDate: '2026-01-01',
+      currentValue: '0',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.name).toBe('Empty Fund')
+    expect(inv.mode).toBe('flexible')
+    expect(inv.type).toBe('savings')
+    expect(inv.investedAmount).toBe('0')
+    expect(inv.currentValue).toBe('0')
+    // No initial deposit row is created when starting at 0.
+    expect(inv.deposits).toHaveLength(0)
+  })
+
+  it('createSavingsInvestmentImpl with non-zero currentValue seeds an "Initial deposit"', async () => {
     const user = await createTestUser()
 
     const created = await createSavingsInvestmentImpl(user.profileId, {
@@ -477,9 +496,14 @@ describe('savings pot (flexible) investments', () => {
     expect(inv.name).toBe('Emergency Fund')
     expect(inv.mode).toBe('flexible')
     expect(inv.type).toBe('savings')
-    expect(inv.investedAmount).toBe('0')
-    // currentValue is set by the user
+    // Sync feature (commit 9d24138): non-zero starting balance creates a
+    // matching deposit row, so investedAmount tracks the synced total.
+    expect(inv.investedAmount).toBe('50000')
     expect(inv.currentValue).toBe('50000')
+    expect(inv.deposits).toHaveLength(1)
+    expect(inv.deposits[0].amount).toBe('50000')
+    expect(inv.deposits[0].notes).toBe('Initial deposit')
+    expect(inv.deposits[0].status).toBe('paid')
   })
 
   it('addDepositImpl creates a deposit row and syncs investedAmount', async () => {
