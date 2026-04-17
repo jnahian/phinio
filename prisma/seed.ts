@@ -3,8 +3,9 @@
  * Run via: npm run db:seed
  *
  * Safe to re-run: all domain data for the profile is deleted first so you
- * always get a clean slate. InvestmentDeposit rows cascade-delete with
- * their parent Investment, so no explicit delete is needed for them.
+ * always get a clean slate. InvestmentDeposit and InvestmentWithdrawal rows
+ * cascade-delete with their parent Investment, so no explicit delete is
+ * needed for them.
  */
 
 import { PrismaClient } from '../src/generated/prisma/client.js'
@@ -155,10 +156,51 @@ async function main() {
       exitValue: '333000.00',
       completedAt: d('2024-01-01'),
     },
+    // Closed via withdrawals (two tranches summing to exitValue)
+    {
+      profileId: profile.id,
+      name: 'Beximco Pharma — exited',
+      type: 'stock',
+      mode: 'lump_sum',
+      investedAmount: '120000.00',
+      currentValue: '0.00',
+      dateOfInvestment: d('2024-02-10'),
+      notes: 'Sold off in two tranches as price recovered',
+      status: 'completed',
+      exitValue: '142000.00',
+      completedAt: d('2025-09-15'),
+    },
   ]
 
   await prisma.investment.createMany({ data: lumpSumInvestments })
   console.log(`Created ${lumpSumInvestments.length} lump-sum investments.`)
+
+  // Withdrawal history for the closed-via-withdrawal lump-sum (two tranches
+  // summing to the exitValue above).
+  const beximco = await prisma.investment.findFirst({
+    where: { profileId: profile.id, name: 'Beximco Pharma — exited' },
+    select: { id: true },
+  })
+  if (beximco) {
+    await prisma.investmentWithdrawal.createMany({
+      data: [
+        {
+          investmentId: beximco.id,
+          profileId: profile.id,
+          amount: '70000.00',
+          withdrawalDate: d('2025-06-20'),
+          notes: 'First tranche — ~half the position',
+        },
+        {
+          investmentId: beximco.id,
+          profileId: profile.id,
+          amount: '72000.00',
+          withdrawalDate: d('2025-09-15'),
+          notes: 'Final tranche — closed position',
+        },
+      ],
+    })
+  }
 
   // -------------------------------------------------------------------------
   // DPS investments (mode: 'scheduled') — pre-generated deposit schedule
@@ -173,6 +215,9 @@ async function main() {
     startDate: Date
     paidMonths: number // how many installments to mark as paid
     notes?: string
+    // If set, the scheme is prematurely closed: upcoming installments are
+    // dropped, status flips to 'closed', exitValue = receivedAmount.
+    closedEarly?: { receivedAmount: string; closureDate: Date; notes?: string }
   }
 
   const dpsSeeds: DpsSeed[] = [
@@ -195,6 +240,22 @@ async function main() {
       startDate: d('2024-06-01'),
       paidMonths: 10,
       notes: 'Islami Bank — Mudaraba savings scheme',
+    },
+    {
+      name: 'Mercantile Bank DPS',
+      monthlyDeposit: '4000.00',
+      tenureMonths: 36,
+      interestRate: '7.00',
+      interestType: 'simple',
+      startDate: d('2024-03-01'),
+      paidMonths: 9,
+      notes: 'Closed prematurely after job change',
+      closedEarly: {
+        // 9 × 4000 = 36k contributed; bank paid out 34.5k after penalty.
+        receivedAmount: '34500.00',
+        closureDate: d('2024-12-15'),
+        notes: 'Job-change emergency cash',
+      },
     },
   ]
 
@@ -244,9 +305,36 @@ async function main() {
       })),
     })
 
-    console.log(
-      `  DPS: ${seed.name} (${seed.tenureMonths}m, ${seed.paidMonths} paid) — ৳${seed.monthlyDeposit}/month`,
-    )
+    if (seed.closedEarly) {
+      await prisma.investmentDeposit.deleteMany({
+        where: { investmentId: inv.id, status: 'upcoming' },
+      })
+      await prisma.investment.update({
+        where: { id: inv.id },
+        data: {
+          status: 'closed',
+          currentValue: '0.00',
+          exitValue: seed.closedEarly.receivedAmount,
+          completedAt: seed.closedEarly.closureDate,
+        },
+      })
+      await prisma.investmentWithdrawal.create({
+        data: {
+          investmentId: inv.id,
+          profileId: profile.id,
+          amount: seed.closedEarly.receivedAmount,
+          withdrawalDate: seed.closedEarly.closureDate,
+          notes: `Premature closure. ${seed.closedEarly.notes ?? ''}`.trim(),
+        },
+      })
+      console.log(
+        `  DPS: ${seed.name} (${seed.tenureMonths}m, ${seed.paidMonths} paid) — closed early, received ৳${seed.closedEarly.receivedAmount}`,
+      )
+    } else {
+      console.log(
+        `  DPS: ${seed.name} (${seed.tenureMonths}m, ${seed.paidMonths} paid) — ৳${seed.monthlyDeposit}/month`,
+      )
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -256,16 +344,18 @@ async function main() {
   type SavingsSeed = {
     name: string
     startDate: Date
-    currentValue: string // manually-set balance (may include interest)
+    currentValue: string // manually-set balance (already net of any withdrawals)
     notes?: string
     deposits: { amount: string; date: Date; notes?: string }[]
+    withdrawals?: { amount: string; date: Date; notes?: string }[]
   }
 
   const savingsSeeds: SavingsSeed[] = [
     {
       name: 'Emergency Fund',
       startDate: d('2024-01-01'),
-      currentValue: '185000.00', // slightly higher than total deposited due to interest
+      // 50+20+20+20+30+20+20 = 180k deposited; +5k interest, −25k withdrawn.
+      currentValue: '160000.00',
       notes: 'High-yield savings — target 6 months of expenses',
       deposits: [
         { amount: '50000.00', date: d('2024-01-05'), notes: 'Initial deposit' },
@@ -279,6 +369,13 @@ async function main() {
         },
         { amount: '20000.00', date: d('2024-08-05') },
         { amount: '20000.00', date: d('2024-10-05') },
+      ],
+      withdrawals: [
+        {
+          amount: '25000.00',
+          date: d('2025-02-10'),
+          notes: 'Laptop replacement',
+        },
       ],
     },
     {
@@ -325,8 +422,21 @@ async function main() {
       })),
     })
 
+    if (seed.withdrawals?.length) {
+      await prisma.investmentWithdrawal.createMany({
+        data: seed.withdrawals.map((w) => ({
+          investmentId: inv.id,
+          profileId: profile.id,
+          amount: w.amount,
+          withdrawalDate: w.date,
+          notes: w.notes,
+        })),
+      })
+    }
+
+    const wdCount = seed.withdrawals?.length ?? 0
     console.log(
-      `  Savings: ${seed.name} (${seed.deposits.length} deposits, total ৳${totalDeposited})`,
+      `  Savings: ${seed.name} (${seed.deposits.length} deposits, ${wdCount} withdrawals, total deposited ৳${totalDeposited})`,
     )
   }
 
