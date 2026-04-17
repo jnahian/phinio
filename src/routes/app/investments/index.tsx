@@ -81,13 +81,18 @@ function InvestmentsListScreen() {
 
   const totalItems = items.length
 
+  // ROI numerator semantics:
+  //   active    → currentValue + totalWithdrawn  (withdrawals reduced
+  //               currentValue, so add them back to recover realized + held)
+  //   completed → exitValue alone  (the realized total at close — for
+  //               withdrawal-closure exitValue already equals totalWithdrawn,
+  //               so adding it again would double-count)
   const totals = items.reduce(
     (acc, item) => {
       acc.invested += Number(item.investedAmount)
       acc.current +=
         status === 'completed'
-          ? Number(item.exitValue ?? item.currentValue) +
-            Number(item.totalWithdrawn)
+          ? Number(item.exitValue ?? item.currentValue)
           : Number(item.currentValue) + Number(item.totalWithdrawn)
       return acc
     },
@@ -290,9 +295,12 @@ function InvestmentCard({ item, currency }: ListItemProps) {
   const displayValue = isCompleted
     ? (item.exitValue ?? item.currentValue)
     : item.currentValue
-  const returnNumerator = (
-    Number(displayValue) + Number(item.totalWithdrawn)
-  ).toFixed(2)
+  // For completed items, exitValue is the full realized total (and equals
+  // totalWithdrawn for closures driven by withdrawal). Only add
+  // totalWithdrawn back for active items where currentValue was decremented.
+  const returnNumerator = isCompleted
+    ? displayValue
+    : (Number(displayValue) + Number(item.totalWithdrawn)).toFixed(2)
   const returnPercent = calculateReturnPercent(
     item.investedAmount,
     returnNumerator,

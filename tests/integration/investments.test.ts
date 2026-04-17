@@ -722,6 +722,40 @@ describe('withdrawals', () => {
     expect(inv.completedAt).toBeInstanceOf(Date)
   })
 
+  it('list view exposes exitValue==totalWithdrawn for withdrawal-closed items (UI must not double-add)', async () => {
+    // Pins the invariant the InvestmentCard / totals summary rely on:
+    // when an investment is closed via withdrawal, exitValue equals
+    // totalWithdrawn (currentValue is zero). The list-page ROI numerator
+    // uses exitValue alone for completed items; if it added totalWithdrawn
+    // the realized proceeds would be counted twice.
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '10000.00',
+      currentValue: '10000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '10000.00',
+      withdrawalDate: '2026-04-10',
+      closeInvestment: true,
+    })
+
+    const [row] = await listInvestmentsImpl(user.profileId, {
+      status: 'completed',
+      type: 'all',
+    })
+    expect(row.status).toBe('completed')
+    expect(row.currentValue).toBe('0')
+    expect(row.exitValue).toBe('10000')
+    expect(row.totalWithdrawn).toBe('10000.00')
+    // Sanity: the correct ROI numerator is exitValue alone — equal to
+    // invested for a break-even close, NOT exitValue + totalWithdrawn.
+    expect(Number(row.exitValue)).toBe(Number(row.investedAmount))
+  })
+
   it('savings (flexible) partial withdrawal mirrors lump-sum behavior', async () => {
     const user = await createTestUser()
     const pot = await createSavingsInvestmentImpl(user.profileId, {
