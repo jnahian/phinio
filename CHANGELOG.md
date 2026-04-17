@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-17
+
+Adds withdrawals across every investment type and corrects ROI math so
+realized proceeds are counted exactly once.
+
+### Added
+
+- **Withdrawals** — record money flowing out of any investment without
+  losing the original invested amount needed for ROI. Partial
+  withdrawals on lump-sum and savings pots, premature closure on DPS
+  schemes (with an optional bank-paid "received" amount that defaults to
+  the latest accrued value). Full withdrawals automatically close the
+  investment; partial withdrawals on scheduled DPS are not allowed, to
+  avoid silently stranding a residual balance.
+- **Shared Withdraw modal** opens from two entry points: a Withdraw link
+  next to the Active/Completed tabs on the investments index (with a
+  picker listing every active investment), or from the hero card on any
+  investment detail page (pre-selected to that investment). The modal
+  renders the correct form for the investment's mode — partial-withdraw
+  for lump-sum and savings, premature-closure for DPS — and re-defaults
+  the received amount when the user switches DPS schemes mid-modal.
+- Seed script now includes three withdrawal scenarios (emergency-fund
+  partial withdrawal, exited lump-sum closed via two tranches, DPS
+  closed early after nine paid installments) so a fresh `db:seed` has
+  visible data for the new flow.
+
+### Changed
+
+- The withdraw/close action now lives inside the hero balance card on
+  every investment detail screen — DPS "Close prematurely", the
+  savings-pot Deposit/Withdraw pair, and a new lump-sum hero card with
+  current value + return % and an inline Withdraw button. Previously
+  these actions were scattered below the page content.
+
+### Fixed
+
+- Completed investments closed via withdrawal no longer show inflated
+  ROI. For withdrawal-closed items `exitValue` already equals total
+  withdrawn, so the list view and investment card now use `exitValue`
+  alone as the numerator instead of summing it with withdrawals — a
+  break-even close (invest 10k, withdraw 10k) reads as 0% instead of
+  +100%.
+- Dashboard gain/loss % now folds realized withdrawals into the ROI
+  numerator, so a partial withdrawal on an active investment no longer
+  appears as a loss. Allocation totals still reflect only the money
+  still held.
+
 ## [1.0.0] - 2026-04-17
 
 Initial public release of Phinio — a mobile-first PWA for personal finance that
