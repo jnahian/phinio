@@ -7,7 +7,11 @@ import { savingsCreateSchema } from '#/lib/validators'
 import type { SavingsCreateInput } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/savings/new')({
-  staticData: { hideTabBar: true, title: 'Add Savings Pot', backTo: '/app/investments' },
+  staticData: {
+    hideTabBar: true,
+    title: 'Add Savings Pot',
+    backTo: '/app/investments',
+  },
   component: AddSavingsScreen,
 })
 
@@ -53,7 +57,10 @@ function AddSavingsScreen() {
 
     try {
       const result = await createSavings.mutateAsync(parsed.data)
-      navigate({ to: '/app/investments/savings/$id', params: { id: result.id } })
+      navigate({
+        to: '/app/investments/savings/$id',
+        params: { id: result.id },
+      })
     } catch {
       // handled by hook onError → toast.error
     }

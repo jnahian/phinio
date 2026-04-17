@@ -460,7 +460,8 @@ describe('dpsCreateSchema', () => {
 
   it('accepts compound interest type', () => {
     expect(
-      dpsCreateSchema.parse({ ...valid, interestType: 'compound' }).interestType,
+      dpsCreateSchema.parse({ ...valid, interestType: 'compound' })
+        .interestType,
     ).toBe('compound')
   })
 
@@ -471,7 +472,9 @@ describe('dpsCreateSchema', () => {
   })
 
   it('rejects an empty name', () => {
-    expect(dpsCreateSchema.safeParse({ ...valid, name: '' }).success).toBe(false)
+    expect(dpsCreateSchema.safeParse({ ...valid, name: '' }).success).toBe(
+      false,
+    )
   })
 
   it('rejects a non-positive monthly deposit', () => {
@@ -698,7 +701,8 @@ describe('addDepositSchema', () => {
 
   it('rejects an invalid deposit date', () => {
     expect(
-      addDepositSchema.safeParse({ ...valid, depositDate: 'not-a-date' }).success,
+      addDepositSchema.safeParse({ ...valid, depositDate: 'not-a-date' })
+        .success,
     ).toBe(false)
   })
 })

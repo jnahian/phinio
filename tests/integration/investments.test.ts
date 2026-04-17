@@ -292,14 +292,23 @@ describe('DPS (scheduled) investments', () => {
     })
 
     // Pay two deposits
-    await markDepositPaidImpl(user.profileId, { depositId: deposits[0].id, paid: true })
-    await markDepositPaidImpl(user.profileId, { depositId: deposits[1].id, paid: true })
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[0].id,
+      paid: true,
+    })
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[1].id,
+      paid: true,
+    })
 
     const twoIn = await getInvestmentImpl(user.profileId, created.id)
     expect(twoIn.investedAmount).toBe('2000')
 
     // Unpay the second
-    await markDepositPaidImpl(user.profileId, { depositId: deposits[1].id, paid: false })
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[1].id,
+      paid: false,
+    })
 
     const oneIn = await getInvestmentImpl(user.profileId, created.id)
     expect(oneIn.investedAmount).toBe('1000')
@@ -433,9 +442,15 @@ describe('DPS (scheduled) investments', () => {
       orderBy: { installmentNumber: 'asc' },
     })
 
-    await markDepositPaidImpl(user.profileId, { depositId: deposits[0].id, paid: true })
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[0].id,
+      paid: true,
+    })
 
-    const rows = await listInvestmentsImpl(user.profileId, { status: 'active', type: 'dps' })
+    const rows = await listInvestmentsImpl(user.profileId, {
+      status: 'active',
+      type: 'dps',
+    })
     expect(rows).toHaveLength(1)
     expect(rows[0].paidCount).toBe(1)
     expect(rows[0].nextDueDate).toEqual(deposits[1].dueDate)
@@ -541,9 +556,7 @@ describe('savings pot (flexible) investments', () => {
     const inv = await getInvestmentImpl(user.profileId, created.id)
     expect(inv.investedAmount).toBe('10000')
 
-    const secondDeposit = inv.deposits.find((d) =>
-      String(d.amount) === '2000',
-    )!
+    const secondDeposit = inv.deposits.find((d) => String(d.amount) === '2000')!
 
     await removeDepositImpl(user.profileId, { depositId: secondDeposit.id })
 

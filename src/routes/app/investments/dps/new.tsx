@@ -8,7 +8,11 @@ import { dpsCreateSchema } from '#/lib/validators'
 import type { DpsCreateInput, DpsInterestType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/dps/new')({
-  staticData: { hideTabBar: true, title: 'Add DPS Scheme', backTo: '/app/investments' },
+  staticData: {
+    hideTabBar: true,
+    title: 'Add DPS Scheme',
+    backTo: '/app/investments',
+  },
   component: AddDpsScreen,
 })
 

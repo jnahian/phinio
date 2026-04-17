@@ -272,7 +272,11 @@ async function main() {
         { amount: '20000.00', date: d('2024-02-05'), notes: 'February top-up' },
         { amount: '20000.00', date: d('2024-03-05'), notes: 'March top-up' },
         { amount: '20000.00', date: d('2024-04-05'), notes: 'April top-up' },
-        { amount: '30000.00', date: d('2024-06-01'), notes: 'Bonus allocation' },
+        {
+          amount: '30000.00',
+          date: d('2024-06-01'),
+          notes: 'Bonus allocation',
+        },
         { amount: '20000.00', date: d('2024-08-05') },
         { amount: '20000.00', date: d('2024-10-05') },
       ],
@@ -281,7 +285,7 @@ async function main() {
       name: 'Vacation Fund',
       startDate: d('2024-04-01'),
       currentValue: '62500.00',
-      notes: 'Cox\'s Bazar + Thailand trip savings',
+      notes: "Cox's Bazar + Thailand trip savings",
       deposits: [
         { amount: '15000.00', date: d('2024-04-01'), notes: 'Initial' },
         { amount: '10000.00', date: d('2024-05-01') },

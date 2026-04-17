@@ -11,7 +11,6 @@ const PrincipalInterestDonut = lazy(
   () => import('#/components/PrincipalInterestDonut'),
 )
 
-
 export const Route = createFileRoute('/app/emis/$emiId')({
   staticData: { hideTabBar: true, backTo: '/app/emis' },
   component: EmiDetailScreen,
