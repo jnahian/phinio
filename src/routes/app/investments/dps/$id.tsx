@@ -120,6 +120,16 @@ function DpsDetailScreen() {
               }}
             />
           </div>
+          {isActive && (
+            <button
+              type="button"
+              onClick={() => setShowClose(true)}
+              className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            >
+              <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
+              Close prematurely
+            </button>
+          )}
         </section>
 
         {/* Stats */}
@@ -264,18 +274,6 @@ function DpsDetailScreen() {
             </ul>
           </div>
         </section>
-
-        {/* Close prematurely */}
-        {isActive && (
-          <button
-            type="button"
-            onClick={() => setShowClose(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
-          >
-            <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-            Close prematurely
-          </button>
-        )}
 
         {/* Edit name */}
         {editing && (

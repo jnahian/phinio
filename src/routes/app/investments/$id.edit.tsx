@@ -150,10 +150,61 @@ function EditInvestmentScreen() {
     )
   }
 
+  const investedNum = Number(investment.investedAmount)
+  const currentNum = Number(investment.currentValue)
+  const withdrawnNum = investment.withdrawals.reduce(
+    (s, w) => s + Number(w.amount),
+    0,
+  )
+  const returnPct =
+    investedNum > 0
+      ? Math.round(
+          ((currentNum + withdrawnNum - investedNum) / investedNum) * 10000,
+        ) / 100
+      : 0
+  const hasReturn = investedNum > 0
+
   return (
     <main className="noir-bg min-h-dvh pb-32">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
+          {/* Hero card */}
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3147] to-[#0f1f2d] p-6">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+            />
+            <p className="label-sm text-white/70">Current value</p>
+            <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
+              {formatCurrency(investment.currentValue, currency)}
+            </p>
+            {hasReturn && (
+              <p
+                className={cn(
+                  'body-sm mt-2 font-semibold',
+                  returnPct > 0
+                    ? 'text-[#60a5fa]'
+                    : returnPct < 0
+                      ? 'text-tertiary'
+                      : 'text-white/70',
+                )}
+              >
+                {returnPct > 0 ? '+' : ''}
+                {returnPct}% return
+              </p>
+            )}
+            {investment.status === 'active' && (
+              <button
+                type="button"
+                onClick={() => setShowWithdraw(true)}
+                className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+              >
+                <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
+                Withdraw
+              </button>
+            )}
+          </section>
+
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
             <p className="label-sm text-on-surface-variant">Asset details</p>
             <TextField
@@ -271,17 +322,6 @@ function EditInvestmentScreen() {
               maxLength={1000}
             />
           </section>
-
-          {investment.status === 'active' && (
-            <button
-              type="button"
-              onClick={() => setShowWithdraw(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
-            >
-              <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-              Withdraw
-            </button>
-          )}
 
           {investment.withdrawals.length > 0 && (
             <section className="rounded-3xl bg-surface-container-low p-4">

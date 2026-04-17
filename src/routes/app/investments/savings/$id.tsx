@@ -215,6 +215,27 @@ function SavingsDetailScreen() {
               {formatReturnPercent(returnPercent)} return
             </p>
           )}
+          {isActive && !showDepositForm && (
+            <div className="relative mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDepositForm(true)}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2} />
+                Deposit
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowWithdraw(true)}
+                disabled={Number(inv.currentValue) <= 0}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-white/10"
+              >
+                <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
+                Withdraw
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Stats */}
@@ -275,28 +296,6 @@ function SavingsDetailScreen() {
               </button>
             </form>
           </Card>
-        )}
-
-        {!showDepositForm && isActive && (
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setShowDepositForm(true)}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
-            >
-              <Plus className="h-4 w-4" strokeWidth={2} />
-              Deposit
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowWithdraw(true)}
-              disabled={Number(inv.currentValue) <= 0}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface disabled:opacity-40 disabled:hover:border-outline-variant/40 disabled:hover:text-on-surface-variant"
-            >
-              <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-              Withdraw
-            </button>
-          </div>
         )}
 
         {/* Activity history (deposits + withdrawals) */}
