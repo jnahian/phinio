@@ -19,6 +19,7 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppInvestmentsIndexRouteImport } from './routes/app/investments/index'
 import { Route as AppEmisIndexRouteImport } from './routes/app/emis/index'
+import { Route as AppInvestmentsWithdrawRouteImport } from './routes/app/investments/withdraw'
 import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
 import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
 import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
@@ -77,6 +78,11 @@ const AppInvestmentsIndexRoute = AppInvestmentsIndexRouteImport.update({
 const AppEmisIndexRoute = AppEmisIndexRouteImport.update({
   id: '/emis/',
   path: '/emis/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvestmentsWithdrawRoute = AppInvestmentsWithdrawRouteImport.update({
+  id: '/investments/withdraw',
+  path: '/investments/withdraw',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppInvestmentsNewRoute = AppInvestmentsNewRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
+  '/app/investments/withdraw': typeof AppInvestmentsWithdrawRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
+  '/app/investments/withdraw': typeof AppInvestmentsWithdrawRoute
   '/app/emis': typeof AppEmisIndexRoute
   '/app/investments': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
+  '/app/investments/withdraw': typeof AppInvestmentsWithdrawRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
+    | '/app/investments/withdraw'
     | '/app/emis/'
     | '/app/investments/'
     | '/app/investments/$id/edit'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
+    | '/app/investments/withdraw'
     | '/app/emis'
     | '/app/investments'
     | '/app/investments/$id/edit'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
+    | '/app/investments/withdraw'
     | '/app/emis/'
     | '/app/investments/'
     | '/app/investments/$id/edit'
@@ -336,6 +348,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/investments/withdraw': {
+      id: '/app/investments/withdraw'
+      path: '/investments/withdraw'
+      fullPath: '/app/investments/withdraw'
+      preLoaderRoute: typeof AppInvestmentsWithdrawRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/investments/new': {
       id: '/app/investments/new'
       path: '/investments/new'
@@ -408,6 +427,7 @@ interface AppRouteRouteChildren {
   AppEmisEmiIdRoute: typeof AppEmisEmiIdRoute
   AppEmisNewRoute: typeof AppEmisNewRoute
   AppInvestmentsNewRoute: typeof AppInvestmentsNewRoute
+  AppInvestmentsWithdrawRoute: typeof AppInvestmentsWithdrawRoute
   AppEmisIndexRoute: typeof AppEmisIndexRoute
   AppInvestmentsIndexRoute: typeof AppInvestmentsIndexRoute
   AppInvestmentsIdEditRoute: typeof AppInvestmentsIdEditRoute
@@ -423,6 +443,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppEmisEmiIdRoute: AppEmisEmiIdRoute,
   AppEmisNewRoute: AppEmisNewRoute,
   AppInvestmentsNewRoute: AppInvestmentsNewRoute,
+  AppInvestmentsWithdrawRoute: AppInvestmentsWithdrawRoute,
   AppEmisIndexRoute: AppEmisIndexRoute,
   AppInvestmentsIndexRoute: AppInvestmentsIndexRoute,
   AppInvestmentsIdEditRoute: AppInvestmentsIdEditRoute,

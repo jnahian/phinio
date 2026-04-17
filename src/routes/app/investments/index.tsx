@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { TrendingUp } from 'lucide-react'
+import { ArrowDownLeft, TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
@@ -133,19 +133,28 @@ function InvestmentsListScreen() {
         </div>
       </Card>
 
-      <div className="mb-4 inline-flex gap-1 rounded-full bg-surface-container-low p-1">
-        <StatusTab
-          active={status === 'active'}
-          onClick={() => setStatus('active')}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="inline-flex gap-1 rounded-full bg-surface-container-low p-1">
+          <StatusTab
+            active={status === 'active'}
+            onClick={() => setStatus('active')}
+          >
+            Active
+          </StatusTab>
+          <StatusTab
+            active={status === 'completed'}
+            onClick={() => setStatus('completed')}
+          >
+            Completed
+          </StatusTab>
+        </div>
+        <Link
+          to="/app/investments/withdraw"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-semibold text-on-surface-variant transition hover:bg-surface-container hover:text-on-surface"
         >
-          Active
-        </StatusTab>
-        <StatusTab
-          active={status === 'completed'}
-          onClick={() => setStatus('completed')}
-        >
-          Completed
-        </StatusTab>
+          <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
+          Withdraw
+        </Link>
       </div>
 
       <FilterPills
