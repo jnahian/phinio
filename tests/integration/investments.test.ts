@@ -12,6 +12,8 @@ import {
   updateSavingsInvestmentImpl,
   addDepositImpl,
   removeDepositImpl,
+  withdrawImpl,
+  closeDpsImpl,
 } from '#/server/investments.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
@@ -637,5 +639,342 @@ describe('savings pot (flexible) investments', () => {
     expect(savingsOnly).toHaveLength(1)
     expect(savingsOnly[0].name).toBe('My Savings')
     expect(savingsOnly[0].mode).toBe('flexible')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Withdrawals (withdrawImpl + closeDpsImpl)
+// ---------------------------------------------------------------------------
+
+describe('withdrawals', () => {
+  it('partial lump-sum withdrawal reduces currentValue, preserves investedAmount, logs row', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Apple',
+      type: 'stock',
+      investedAmount: '10000.00',
+      currentValue: '12000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '3000.00',
+      withdrawalDate: '2026-03-01',
+      notes: 'partial sale',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.investedAmount).toBe('10000')
+    expect(inv.currentValue).toBe('9000')
+    expect(inv.status).toBe('active')
+    expect(inv.exitValue).toBeNull()
+    expect(inv.withdrawals).toHaveLength(1)
+    expect(inv.withdrawals[0].amount).toBe('3000')
+    expect(inv.withdrawals[0].notes).toBe('partial sale')
+  })
+
+  it('full lump-sum withdrawal with closeInvestment closes the investment and sets exitValue', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Gold bar',
+      type: 'gold',
+      investedAmount: '5000.00',
+      currentValue: '5500.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '5500.00',
+      withdrawalDate: '2026-04-10',
+      closeInvestment: true,
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.status).toBe('completed')
+    expect(inv.currentValue).toBe('0')
+    expect(inv.exitValue).toBe('5500')
+    expect(inv.completedAt).toBeInstanceOf(Date)
+  })
+
+  it('savings (flexible) partial withdrawal mirrors lump-sum behavior', async () => {
+    const user = await createTestUser()
+    const pot = await createSavingsInvestmentImpl(user.profileId, {
+      name: 'Emergency fund',
+      startDate: '2026-01-01',
+      currentValue: '10000.00',
+    })
+
+    await withdrawImpl(user.profileId, {
+      investmentId: pot.id,
+      amount: '3000.00',
+      withdrawalDate: '2026-02-15',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, pot.id)
+    expect(inv.investedAmount).toBe('10000') // preserved (deposits unchanged)
+    expect(inv.currentValue).toBe('7000')
+    expect(inv.status).toBe('active')
+    expect(inv.withdrawals).toHaveLength(1)
+  })
+
+  it('rejects a withdrawal amount that exceeds currentValue', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await expect(
+      withdrawImpl(user.profileId, {
+        investmentId: created.id,
+        amount: '1500.00',
+        withdrawalDate: '2026-02-01',
+      }),
+    ).rejects.toThrow(/exceeds/i)
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.currentValue).toBe('1000') // untouched
+    expect(inv.withdrawals).toHaveLength(0)
+  })
+
+  it('rejects withdrawImpl on a DPS (scheduled) investment — must use closeDpsImpl', async () => {
+    const user = await createTestUser()
+    const dps = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Bank DPS',
+      monthlyDeposit: '1000.00',
+      tenureMonths: 12,
+      interestRate: '8.00',
+      interestType: 'compound',
+      startDate: '2026-01-01',
+    })
+
+    await expect(
+      withdrawImpl(user.profileId, {
+        investmentId: dps.id,
+        amount: '500.00',
+        withdrawalDate: '2026-02-01',
+      }),
+    ).rejects.toThrow(/premature closure/i)
+  })
+
+  it('rejects withdrawals on a non-active investment', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+    // Close it via a full withdrawal first
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '1000.00',
+      withdrawalDate: '2026-02-01',
+      closeInvestment: true,
+    })
+
+    await expect(
+      withdrawImpl(user.profileId, {
+        investmentId: created.id,
+        amount: '100.00',
+        withdrawalDate: '2026-03-01',
+      }),
+    ).rejects.toThrow(/not active/i)
+  })
+
+  it("refuses withdrawals against another profile's investment", async () => {
+    const alice = await createTestUser({ email: 'alice@phinio.test' })
+    const bob = await createTestUser({ email: 'bob@phinio.test' })
+    const aliceInv = await createInvestmentImpl(alice.profileId, {
+      name: 'Alice stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await expect(
+      withdrawImpl(bob.profileId, {
+        investmentId: aliceInv.id,
+        amount: '100.00',
+        withdrawalDate: '2026-02-01',
+      }),
+    ).rejects.toThrow(/not found/i)
+  })
+
+  it('closeDpsImpl deletes upcoming installments, keeps paid ones, sets exitValue', async () => {
+    const user = await createTestUser()
+    const dps = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Bank DPS',
+      monthlyDeposit: '1000.00',
+      tenureMonths: 12,
+      interestRate: '8.00',
+      interestType: 'compound',
+      startDate: '2026-01-01',
+    })
+
+    // Pay the first 4 installments
+    const before = await getInvestmentImpl(user.profileId, dps.id)
+    for (const dep of before.deposits.slice(0, 4)) {
+      await markDepositPaidImpl(user.profileId, {
+        depositId: dep.id,
+        paid: true,
+      })
+    }
+
+    await closeDpsImpl(user.profileId, {
+      investmentId: dps.id,
+      receivedAmount: '3950.00',
+      closureDate: '2026-05-15',
+      notes: 'switched bank',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, dps.id)
+    expect(inv.status).toBe('closed')
+    expect(inv.currentValue).toBe('0')
+    expect(inv.exitValue).toBe('3950')
+    expect(inv.completedAt).toBeInstanceOf(Date)
+    // Only the 4 paid installments remain
+    expect(inv.deposits).toHaveLength(4)
+    expect(inv.deposits.every((d) => d.status === 'paid')).toBe(true)
+    expect(inv.withdrawals).toHaveLength(1)
+    expect(inv.withdrawals[0].amount).toBe('3950')
+    expect(inv.withdrawals[0].notes).toMatch(/Premature closure/)
+  })
+
+  it('closeDpsImpl rejects non-DPS investments', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await expect(
+      closeDpsImpl(user.profileId, {
+        investmentId: created.id,
+        receivedAmount: '500.00',
+        closureDate: '2026-02-01',
+      }),
+    ).rejects.toThrow(/DPS not found/i)
+  })
+
+  it('closeDpsImpl rejects an already-closed DPS', async () => {
+    const user = await createTestUser()
+    const dps = await createDpsInvestmentImpl(user.profileId, {
+      name: 'DPS',
+      monthlyDeposit: '500.00',
+      tenureMonths: 6,
+      interestRate: '5.00',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+    await closeDpsImpl(user.profileId, {
+      investmentId: dps.id,
+      receivedAmount: '100.00',
+      closureDate: '2026-02-01',
+    })
+
+    await expect(
+      closeDpsImpl(user.profileId, {
+        investmentId: dps.id,
+        receivedAmount: '50.00',
+        closureDate: '2026-03-01',
+      }),
+    ).rejects.toThrow(/not active/i)
+  })
+
+  it('listInvestmentsImpl returns totalWithdrawn summed across the table', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '5000.00',
+      currentValue: '5000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '1000.00',
+      withdrawalDate: '2026-02-01',
+    })
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '500.00',
+      withdrawalDate: '2026-03-01',
+    })
+
+    const rows = await listInvestmentsImpl(user.profileId, {
+      status: 'active',
+      type: 'all',
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0].totalWithdrawn).toBe('1500.00')
+    expect(rows[0].currentValue).toBe('3500')
+  })
+
+  it('getInvestmentImpl returns withdrawals sorted by date desc', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '5000.00',
+      currentValue: '5000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '500.00',
+      withdrawalDate: '2026-02-01',
+    })
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '300.00',
+      withdrawalDate: '2026-04-01',
+    })
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '200.00',
+      withdrawalDate: '2026-03-01',
+    })
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.withdrawals.map((w) => w.amount)).toEqual([
+      '300',
+      '200',
+      '500',
+    ])
+  })
+
+  it('cascades: deleting the investment removes its withdrawal rows', async () => {
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Stock',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+    await withdrawImpl(user.profileId, {
+      investmentId: created.id,
+      amount: '200.00',
+      withdrawalDate: '2026-02-01',
+    })
+    await deleteInvestmentImpl(user.profileId, created.id)
+
+    const remaining = await prisma.investmentWithdrawal.count({
+      where: { investmentId: created.id },
+    })
+    expect(remaining).toBe(0)
   })
 })
