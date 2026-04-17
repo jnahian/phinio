@@ -16,6 +16,8 @@ import type {
   SavingsUpdateInput,
   AddDepositInput,
   RemoveDepositInput,
+  WithdrawalInput,
+  DpsCloseInput,
 } from '#/lib/validators'
 
 export async function requireProfileId(): Promise<string> {
@@ -58,6 +60,7 @@ export interface InvestmentListItem {
   investedAmount: string
   currentValue: string
   exitValue: string | null
+  totalWithdrawn: string
   dateOfInvestment: Date | null
   // scheduled (DPS)
   monthlyDeposit: string | null
@@ -102,6 +105,7 @@ export async function listInvestmentsImpl(
         },
         orderBy: { installmentNumber: 'asc' },
       },
+      withdrawals: { select: { amount: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -117,6 +121,9 @@ export async function listInvestmentsImpl(
     const nextUnpaid = row.deposits.find((d) => d.status !== 'paid')
     const nextDueDate =
       row.mode === 'scheduled' ? (nextUnpaid?.dueDate ?? null) : null
+    const totalWithdrawn = row.withdrawals
+      .reduce((sum, w) => sum + Number(w.amount), 0)
+      .toFixed(2)
 
     return {
       id: row.id,
@@ -129,6 +136,7 @@ export async function listInvestmentsImpl(
       investedAmount: dec(row.investedAmount),
       currentValue: dec(row.currentValue),
       exitValue: decOrNull(row.exitValue),
+      totalWithdrawn,
       dateOfInvestment: row.dateOfInvestment,
       monthlyDeposit: decOrNull(row.monthlyDeposit),
       tenureMonths: row.tenureMonths,
@@ -159,6 +167,15 @@ export interface DepositItem {
   createdAt: Date
 }
 
+export interface WithdrawalItem {
+  id: string
+  investmentId: string
+  amount: string
+  withdrawalDate: Date
+  notes: string | null
+  createdAt: Date
+}
+
 export interface InvestmentDetail {
   id: string
   profileId: string
@@ -179,6 +196,7 @@ export interface InvestmentDetail {
   interestType: string | null
   startDate: Date | null
   deposits: DepositItem[]
+  withdrawals: WithdrawalItem[]
 }
 
 export async function getInvestmentImpl(
@@ -189,6 +207,7 @@ export async function getInvestmentImpl(
     where: { id, profileId },
     include: {
       deposits: { orderBy: { installmentNumber: 'asc' } },
+      withdrawals: { orderBy: { withdrawalDate: 'desc' } },
     },
   })
   if (!row) throw new Error('Investment not found')
@@ -222,6 +241,14 @@ export async function getInvestmentImpl(
       status: d.status,
       notes: d.notes,
       createdAt: d.createdAt,
+    })),
+    withdrawals: row.withdrawals.map((w) => ({
+      id: w.id,
+      investmentId: w.investmentId,
+      amount: dec(w.amount),
+      withdrawalDate: w.withdrawalDate,
+      notes: w.notes,
+      createdAt: w.createdAt,
     })),
   }
 }
@@ -409,10 +436,7 @@ export async function markDepositPaidImpl(
     where: { investmentId, status: 'paid' },
     select: { amount: true },
   })
-  const totalPaid = paidDeposits.reduce(
-    (sum, d) => sum + Number(d.amount),
-    0,
-  )
+  const totalPaid = paidDeposits.reduce((sum, d) => sum + Number(d.amount), 0)
 
   await prisma.investment.update({
     where: { id: investmentId },
@@ -502,10 +526,7 @@ export async function updateSavingsInvestmentImpl(
   return { id: data.id }
 }
 
-export async function addDepositImpl(
-  profileId: string,
-  data: AddDepositInput,
-) {
+export async function addDepositImpl(profileId: string, data: AddDepositInput) {
   const investment = await prisma.investment.findFirst({
     where: { id: data.investmentId, profileId, mode: 'flexible' },
     select: { id: true, investedAmount: true, currentValue: true },
@@ -559,10 +580,7 @@ export async function removeDepositImpl(
       where: { investmentId: deposit.investmentId },
       select: { amount: true },
     })
-    const newInvested = remaining.reduce(
-      (sum, d) => sum + Number(d.amount),
-      0,
-    )
+    const newInvested = remaining.reduce((sum, d) => sum + Number(d.amount), 0)
 
     const investment = await tx.investment.findUniqueOrThrow({
       where: { id: deposit.investmentId },
@@ -583,4 +601,152 @@ export async function removeDepositImpl(
   })
 
   return { id: data.depositId }
+}
+
+// ---------------------------------------------------------------------------
+// Withdrawals — lump_sum + flexible (savings) modes
+// ---------------------------------------------------------------------------
+
+function detailRoute(mode: string, id: string): string {
+  if (mode === 'flexible') return `/app/investments/savings/${id}`
+  if (mode === 'scheduled') return `/app/investments/dps/${id}`
+  return `/app/investments/${id}/edit`
+}
+
+export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
+  const investment = await prisma.investment.findFirst({
+    where: { id: data.investmentId, profileId },
+    select: {
+      id: true,
+      name: true,
+      mode: true,
+      status: true,
+      currentValue: true,
+    },
+  })
+  if (!investment) throw new Error('Investment not found')
+  if (investment.mode === 'scheduled') {
+    throw new Error('Use premature closure for DPS schemes')
+  }
+  if (investment.status !== 'active') {
+    throw new Error('Investment is not active')
+  }
+
+  const amount = Number(data.amount)
+  const currentValue = Number(investment.currentValue)
+  if (amount > currentValue + 0.001) {
+    throw new Error('Withdrawal amount exceeds current value')
+  }
+
+  const newCurrentValue = Math.max(0, currentValue - amount)
+  const shouldClose = data.closeInvestment === true || newCurrentValue === 0
+
+  await prisma.$transaction(async (tx) => {
+    await tx.investmentWithdrawal.create({
+      data: {
+        investmentId: data.investmentId,
+        profileId,
+        amount: data.amount,
+        withdrawalDate: new Date(data.withdrawalDate),
+        notes: data.notes,
+      },
+    })
+
+    if (shouldClose) {
+      const totals = await tx.investmentWithdrawal.aggregate({
+        where: { investmentId: data.investmentId },
+        _sum: { amount: true },
+      })
+      const totalExit = Number(totals._sum.amount ?? 0)
+      await tx.investment.update({
+        where: { id: data.investmentId },
+        data: {
+          currentValue: newCurrentValue.toFixed(2),
+          status: 'completed',
+          exitValue: totalExit.toFixed(2),
+          completedAt: new Date(data.withdrawalDate),
+        },
+      })
+    } else {
+      await tx.investment.update({
+        where: { id: data.investmentId },
+        data: { currentValue: newCurrentValue.toFixed(2) },
+      })
+    }
+  })
+
+  const profile = await prisma.profile.findUnique({
+    where: { id: profileId },
+    select: { preferredCurrency: true },
+  })
+  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
+  await createNotification({
+    profileId,
+    type: 'investment.withdrawal',
+    title: shouldClose ? 'Investment closed' : 'Withdrawal recorded',
+    body: `${investment.name} — ${formatCurrency(data.amount, currency)} withdrawn`,
+    link: detailRoute(investment.mode, investment.id),
+    dedupeKey: `investment-withdrawal:${investment.id}:${data.withdrawalDate}:${data.amount}`,
+  })
+
+  return { id: investment.id, closed: shouldClose }
+}
+
+// ---------------------------------------------------------------------------
+// DPS premature closure
+// ---------------------------------------------------------------------------
+
+export async function closeDpsImpl(profileId: string, data: DpsCloseInput) {
+  const investment = await prisma.investment.findFirst({
+    where: { id: data.investmentId, profileId, mode: 'scheduled' },
+    select: { id: true, name: true, status: true },
+  })
+  if (!investment) throw new Error('DPS not found')
+  if (investment.status !== 'active') {
+    throw new Error('DPS is not active')
+  }
+
+  const closureNote = data.notes
+    ? `Premature closure. ${data.notes}`
+    : 'Premature closure'
+
+  await prisma.$transaction(async (tx) => {
+    await tx.investmentWithdrawal.create({
+      data: {
+        investmentId: data.investmentId,
+        profileId,
+        amount: data.receivedAmount,
+        withdrawalDate: new Date(data.closureDate),
+        notes: closureNote,
+      },
+    })
+    await tx.investmentDeposit.deleteMany({
+      where: { investmentId: data.investmentId, status: 'upcoming' },
+    })
+    await tx.investment.update({
+      where: { id: data.investmentId },
+      data: {
+        currentValue: '0.00',
+        exitValue: data.receivedAmount,
+        status: 'closed',
+        completedAt: new Date(data.closureDate),
+      },
+    })
+  })
+
+  const profile = await prisma.profile.findUnique({
+    where: { id: profileId },
+    select: { preferredCurrency: true },
+  })
+  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
+  await createNotification({
+    profileId,
+    type: 'investment.dps_closed',
+    title: 'DPS closed',
+    body: `${investment.name} — received ${formatCurrency(data.receivedAmount, currency)}`,
+    link: detailRoute('scheduled', investment.id),
+    dedupeKey: `dps-closed:${investment.id}:${data.closureDate}`,
+  })
+
+  return { id: investment.id }
 }

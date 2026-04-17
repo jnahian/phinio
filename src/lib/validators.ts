@@ -106,7 +106,7 @@ export const investmentUpdateSchema = investmentCreateSchema
 export type InvestmentUpdateInput = z.infer<typeof investmentUpdateSchema>
 
 export const investmentListQuerySchema = z.object({
-  status: z.enum(['active', 'completed']).default('active'),
+  status: z.enum(['active', 'completed', 'closed']).default('active'),
   type: z.enum([...INVESTMENT_TYPES, 'dps', 'savings', 'all']).default('all'),
 })
 export type InvestmentListQuery = z.infer<typeof investmentListQuerySchema>
@@ -180,6 +180,27 @@ export const removeDepositSchema = z.object({
   depositId: z.string().min(1),
 })
 export type RemoveDepositInput = z.infer<typeof removeDepositSchema>
+
+// ----------------------------------------------------------------------------
+// Investments — withdrawals (lump_sum + flexible) and DPS premature closure
+// ----------------------------------------------------------------------------
+
+export const withdrawalSchema = z.object({
+  investmentId: z.string().min(1),
+  amount: positiveDecimalString,
+  withdrawalDate: isoDateString,
+  notes: z.string().trim().max(500).optional(),
+  closeInvestment: z.boolean().optional(),
+})
+export type WithdrawalInput = z.infer<typeof withdrawalSchema>
+
+export const dpsCloseSchema = z.object({
+  investmentId: z.string().min(1),
+  receivedAmount: positiveDecimalString,
+  closureDate: isoDateString,
+  notes: z.string().trim().max(500).optional(),
+})
+export type DpsCloseInput = z.infer<typeof dpsCloseSchema>
 
 // ----------------------------------------------------------------------------
 // EMIs (PRD §4.1, §9.2)

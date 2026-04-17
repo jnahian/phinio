@@ -12,6 +12,8 @@ import {
   savingsUpdateSchema,
   addDepositSchema,
   removeDepositSchema,
+  withdrawalSchema,
+  dpsCloseSchema,
 } from '#/lib/validators'
 
 // NOTE: This wrapper file must not statically import anything that pulls
@@ -137,6 +139,26 @@ export const deleteSavingsFn = createServerFn({ method: 'POST' })
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
     return deleteInvestmentImpl(await requireProfileId(), data.id)
+  })
+
+// ---------------------------------------------------------------------------
+// Withdrawals (lump_sum + flexible) and DPS premature closure
+// ---------------------------------------------------------------------------
+
+export const withdrawFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => withdrawalSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { requireProfileId, withdrawImpl } =
+      await import('./investments.impl')
+    return withdrawImpl(await requireProfileId(), data)
+  })
+
+export const closeDpsFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => dpsCloseSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { requireProfileId, closeDpsImpl } =
+      await import('./investments.impl')
+    return closeDpsImpl(await requireProfileId(), data)
   })
 
 export type InvestmentListFilters = z.infer<typeof investmentListQuerySchema>

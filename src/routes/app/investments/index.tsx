@@ -86,8 +86,9 @@ function InvestmentsListScreen() {
       acc.invested += Number(item.investedAmount)
       acc.current +=
         status === 'completed'
-          ? Number(item.exitValue ?? item.currentValue)
-          : Number(item.currentValue)
+          ? Number(item.exitValue ?? item.currentValue) +
+            Number(item.totalWithdrawn)
+          : Number(item.currentValue) + Number(item.totalWithdrawn)
       return acc
     },
     { invested: 0, current: 0 },
@@ -205,7 +206,6 @@ function InvestmentsListScreen() {
           })}
         </ul>
       )}
-
     </main>
   )
 }
@@ -271,6 +271,7 @@ interface ListItemProps {
     investedAmount: string
     currentValue: string
     exitValue: string | null
+    totalWithdrawn: string
     dateOfInvestment: Date | string | null
     monthlyDeposit: string | null
     tenureMonths: number | null
@@ -289,7 +290,13 @@ function InvestmentCard({ item, currency }: ListItemProps) {
   const displayValue = isCompleted
     ? (item.exitValue ?? item.currentValue)
     : item.currentValue
-  const returnPercent = calculateReturnPercent(item.investedAmount, displayValue)
+  const returnNumerator = (
+    Number(displayValue) + Number(item.totalWithdrawn)
+  ).toFixed(2)
+  const returnPercent = calculateReturnPercent(
+    item.investedAmount,
+    returnNumerator,
+  )
   const date = item.dateOfInvestment ? new Date(item.dateOfInvestment) : null
   const formattedDate = date
     ? date.toLocaleDateString(undefined, {
@@ -311,7 +318,9 @@ function InvestmentCard({ item, currency }: ListItemProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">
+              {item.name}
+            </h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(
@@ -375,7 +384,9 @@ function DpsCard({ item, currency }: ListItemProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">
+              {item.name}
+            </h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(
@@ -433,9 +444,12 @@ function DpsCard({ item, currency }: ListItemProps) {
 }
 
 function SavingsCard({ item, currency }: ListItemProps) {
+  const returnNumerator = (
+    Number(item.currentValue) + Number(item.totalWithdrawn)
+  ).toFixed(2)
   const returnPercent = calculateReturnPercent(
     item.investedAmount,
-    item.currentValue,
+    returnNumerator,
   )
   const hasReturn = Number(item.investedAmount) > 0
 
@@ -451,7 +465,9 @@ function SavingsCard({ item, currency }: ListItemProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">
+              {item.name}
+            </h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(

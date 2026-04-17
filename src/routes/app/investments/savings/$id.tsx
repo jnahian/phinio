@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Plus, Trash2, X } from 'lucide-react'
+import { ArrowDownLeft, Plus, Trash2, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
@@ -14,6 +14,7 @@ import {
   useAddDeposit,
   useRemoveDeposit,
   useDeleteSavings,
+  useWithdraw,
 } from '#/hooks/useInvestments'
 
 export const Route = createFileRoute('/app/investments/savings/$id')({
@@ -39,10 +40,12 @@ function SavingsDetailScreen() {
   const addDeposit = useAddDeposit(id)
   const removeDeposit = useRemoveDeposit(id)
   const deleteSavings = useDeleteSavings()
+  const withdraw = useWithdraw(id)
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [showDepositForm, setShowDepositForm] = useState(false)
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false)
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
 
   // Edit form state
@@ -53,6 +56,12 @@ function SavingsDetailScreen() {
   const [depositAmount, setDepositAmount] = useState('')
   const [depositDate, setDepositDate] = useState(todayIso())
   const [depositNotes, setDepositNotes] = useState('')
+
+  // Withdraw form state
+  const [wAmount, setWAmount] = useState('')
+  const [wDate, setWDate] = useState(todayIso())
+  const [wNotes, setWNotes] = useState('')
+  const [wError, setWError] = useState<string | null>(null)
 
   if (isLoading || !inv) {
     return (
@@ -68,9 +77,56 @@ function SavingsDetailScreen() {
     return db - da
   })
 
+  type ActivityRow =
+    | {
+        kind: 'deposit'
+        id: string
+        date: number
+        amount: string
+        notes: string | null
+      }
+    | {
+        kind: 'withdrawal'
+        id: string
+        date: number
+        amount: string
+        notes: string | null
+      }
+
+  const activity: Array<ActivityRow> = [
+    ...inv.deposits.map(
+      (d): ActivityRow => ({
+        kind: 'deposit',
+        id: d.id,
+        date: d.dueDate ? new Date(d.dueDate).getTime() : 0,
+        amount: d.amount,
+        notes: d.notes,
+      }),
+    ),
+    ...inv.withdrawals.map(
+      (w): ActivityRow => ({
+        kind: 'withdrawal',
+        id: w.id,
+        date: new Date(w.withdrawalDate).getTime(),
+        amount: w.amount,
+        notes: w.notes,
+      }),
+    ),
+  ].sort((a, b) => b.date - a.date)
+
+  const isActive = inv.status === 'active'
+  const wAmountNum = Number(wAmount)
+  const wMaxAmount = Number(inv.currentValue)
+  const wIsFull = wAmountNum > 0 && Math.abs(wAmountNum - wMaxAmount) < 0.005
+
+  const totalWithdrawn = inv.withdrawals.reduce(
+    (sum, w) => sum + Number(w.amount),
+    0,
+  )
+  const returnNumerator = (Number(inv.currentValue) + totalWithdrawn).toFixed(2)
   const returnPercent =
     Number(inv.investedAmount) > 0
-      ? calculateReturnPercent(inv.investedAmount, inv.currentValue)
+      ? calculateReturnPercent(inv.investedAmount, returnNumerator)
       : 0
   const hasReturn = Number(inv.investedAmount) > 0
 
@@ -130,6 +186,39 @@ function SavingsDetailScreen() {
     }
   }
 
+  function openWithdrawForm() {
+    setWAmount('')
+    setWDate(todayIso())
+    setWNotes('')
+    setWError(null)
+    setShowWithdrawForm(true)
+  }
+
+  async function handleWithdraw(e: React.FormEvent) {
+    e.preventDefault()
+    setWError(null)
+    if (!wAmount || wAmountNum <= 0) {
+      setWError('Enter an amount greater than 0')
+      return
+    }
+    if (wAmountNum > wMaxAmount + 0.001) {
+      setWError('Amount exceeds current balance')
+      return
+    }
+    try {
+      await withdraw.mutateAsync({
+        investmentId: id,
+        amount: wAmount,
+        withdrawalDate: wDate,
+        notes: wNotes.trim() || undefined,
+        closeInvestment: wIsFull,
+      })
+      setShowWithdrawForm(false)
+    } catch {
+      // handled in hook
+    }
+  }
+
   return (
     <main className="noir-bg min-h-dvh pb-32">
       <div className="space-y-6 px-5 pt-4">
@@ -176,14 +265,11 @@ function SavingsDetailScreen() {
             label="Total deposited"
             value={formatCurrency(inv.investedAmount, currency)}
           />
-          <StatTile
-            label="Deposits"
-            value={String(deposits.length)}
-          />
+          <StatTile label="Deposits" value={String(deposits.length)} />
         </section>
 
         {/* Add deposit */}
-        {showDepositForm ? (
+        {showDepositForm && (
           <Card variant="low">
             <div className="mb-3 flex items-center justify-between">
               <p className="label-sm text-on-surface-variant">Add deposit</p>
@@ -231,28 +317,101 @@ function SavingsDetailScreen() {
               </button>
             </form>
           </Card>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowDepositForm(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
-          >
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            Add deposit
-          </button>
         )}
 
-        {/* Deposit history */}
-        {deposits.length > 0 && (
+        {showWithdrawForm && (
+          <Card variant="low">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="label-sm text-on-surface-variant">Withdraw</p>
+              <button
+                type="button"
+                onClick={() => setShowWithdrawForm(false)}
+                className="text-on-surface-variant/60 hover:text-on-surface"
+              >
+                <X className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            </div>
+            <p className="body-sm mb-4 text-on-surface-variant">
+              Available: {formatCurrency(inv.currentValue, currency)}
+            </p>
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <TextField
+                  id="wAmount"
+                  label="Amount"
+                  placeholder="0.00"
+                  inputMode="decimal"
+                  prefix={symbol}
+                  value={wAmount}
+                  onChange={(e) => setWAmount(e.target.value)}
+                  autoFocus
+                  error={wError ?? undefined}
+                />
+                <TextField
+                  id="wDate"
+                  label="Date"
+                  type="date"
+                  value={wDate}
+                  onChange={(e) => setWDate(e.target.value)}
+                />
+              </div>
+              <TextField
+                id="wNotes"
+                label="Notes (optional)"
+                placeholder="e.g. rent, emergency"
+                value={wNotes}
+                onChange={(e) => setWNotes(e.target.value)}
+              />
+              {wIsFull && (
+                <p className="text-xs text-on-surface-variant">
+                  Full withdrawal — pot will be marked as closed.
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={withdraw.isPending}
+                className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
+              >
+                {withdraw.isPending ? 'Recording…' : 'Confirm withdrawal'}
+              </button>
+            </form>
+          </Card>
+        )}
+
+        {!showDepositForm && !showWithdrawForm && isActive && (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDepositForm(true)}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Deposit
+            </button>
+            <button
+              type="button"
+              onClick={openWithdrawForm}
+              disabled={Number(inv.currentValue) <= 0}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface disabled:opacity-40 disabled:hover:border-outline-variant/40 disabled:hover:text-on-surface-variant"
+            >
+              <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
+              Withdraw
+            </button>
+          </div>
+        )}
+
+        {/* Activity history (deposits + withdrawals) */}
+        {activity.length > 0 && (
           <section className="rounded-3xl bg-surface-container-low p-4">
             <h2 className="label-md mb-3 px-2 text-on-surface-variant">
-              Deposit history
+              Activity
             </h2>
             <ul className="space-y-1">
-              {deposits.map((dep) => {
-                const date = dep.dueDate ? new Date(dep.dueDate) : null
+              {activity.map((row) => {
+                const date = row.date > 0 ? new Date(row.date) : null
+                const isDeposit = row.kind === 'deposit'
                 return (
-                  <li key={dep.id}>
+                  <li key={`${row.kind}:${row.id}`}>
                     <div className="flex w-full items-center gap-3 rounded-2xl px-3 py-3">
                       <div className="min-w-0 flex-1">
                         {date && (
@@ -264,24 +423,32 @@ function SavingsDetailScreen() {
                             })}
                           </p>
                         )}
-                        {dep.notes && (
+                        {row.notes && (
                           <p className="mt-0.5 text-xs text-on-surface-variant/70">
-                            {dep.notes}
+                            {row.notes}
                           </p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className="font-display text-sm font-bold text-on-surface">
-                          +{formatCurrency(dep.amount, currency)}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmRemoveId(dep.id)}
-                          className="text-on-surface-variant/40 transition hover:text-tertiary"
-                          aria-label="Remove deposit"
+                        <p
+                          className={cn(
+                            'font-display text-sm font-bold',
+                            isDeposit ? 'text-on-surface' : 'text-tertiary',
+                          )}
                         >
-                          <X className="h-4 w-4" strokeWidth={1.75} />
-                        </button>
+                          {isDeposit ? '+' : '−'}
+                          {formatCurrency(row.amount, currency)}
+                        </p>
+                        {isDeposit && (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmRemoveId(row.id)}
+                            className="text-on-surface-variant/40 transition hover:text-tertiary"
+                            aria-label="Remove deposit"
+                          >
+                            <X className="h-4 w-4" strokeWidth={1.75} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -362,7 +529,9 @@ function SavingsDetailScreen() {
         confirmLabel="Remove"
         pendingLabel="Removing…"
         isPending={removeDeposit.isPending}
-        onConfirm={() => confirmRemoveId && handleRemoveDeposit(confirmRemoveId)}
+        onConfirm={() =>
+          confirmRemoveId && handleRemoveDeposit(confirmRemoveId)
+        }
         onCancel={() => setConfirmRemoveId(null)}
       />
     </main>
