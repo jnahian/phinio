@@ -20,24 +20,24 @@ Phinio is a mobile-first personal finance PWA that helps users track their inves
 
 ## 2. Technology Stack
 
-| Layer              | Technology                                                   | Version / Notes                                                    |
-| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Frontend Framework | **TanStack Start**                                           | React 19, Vite 8, SSR, file-based routing                          |
-| Server/API         | **TanStack Start Server Functions** (`createServerFn`)       | Dynamic import pattern — Prisma never leaks into the client bundle |
-| Data Fetching      | **TanStack Query**                                           | Caching, mutations, optimistic updates                             |
-| Routing            | **TanStack Router** + `@tanstack/router-plugin`              | Code-generated route tree (`src/routeTree.gen.ts`)                 |
-| ORM                | **Prisma 7** with `@prisma/adapter-pg`                       | Custom output to `src/generated/prisma/`; not `@prisma/client`     |
-| Database           | **PostgreSQL** via Neon                                      | Pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings |
-| Authentication     | **Better Auth 1.5**                                          | Email/password, email verification, password reset, cookie session |
-| Email              | **Resend**                                                   | Branded HTML templates for verification and password reset         |
-| Styling            | **Tailwind CSS v4** via `@tailwindcss/vite`                  | All tokens in `src/styles.css` under `@theme`; no config file      |
-| Design System      | **Material Design 3 / Digital Private Bank**                 | Nocturnal palette, dark-only, Manrope numerics, Inter body         |
-| Charts             | **Recharts**                                                 | Lazy-loaded; allocation donut + EMI principal/interest donut       |
-| Validation         | **Zod**                                                      | All forms and server function inputs                               |
-| Icons              | **lucide-react**                                             |                                                                    |
-| Toasts             | **Sonner**                                                   |                                                                    |
-| PWA                | **vite-plugin-pwa** + Workbox                                | Auto-update, precached assets, runtime caching                     |
-| Deployment         | **Vercel** (Nitro preset)                                    | With Vercel Analytics and Speed Insights                           |
+| Layer              | Technology                                             | Version / Notes                                                    |
+| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------ |
+| Frontend Framework | **TanStack Start**                                     | React 19, Vite 8, SSR, file-based routing                          |
+| Server/API         | **TanStack Start Server Functions** (`createServerFn`) | Dynamic import pattern — Prisma never leaks into the client bundle |
+| Data Fetching      | **TanStack Query**                                     | Caching, mutations, optimistic updates                             |
+| Routing            | **TanStack Router** + `@tanstack/router-plugin`        | Code-generated route tree (`src/routeTree.gen.ts`)                 |
+| ORM                | **Prisma 7** with `@prisma/adapter-pg`                 | Custom output to `src/generated/prisma/`; not `@prisma/client`     |
+| Database           | **PostgreSQL** via Neon                                | Pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings |
+| Authentication     | **Better Auth 1.5**                                    | Email/password, email verification, password reset, cookie session |
+| Email              | **Resend**                                             | Branded HTML templates for verification and password reset         |
+| Styling            | **Tailwind CSS v4** via `@tailwindcss/vite`            | All tokens in `src/styles.css` under `@theme`; no config file      |
+| Design System      | **Material Design 3 / Digital Private Bank**           | Nocturnal palette, dark-only, Manrope numerics, Inter body         |
+| Charts             | **Recharts**                                           | Lazy-loaded; allocation donut + EMI principal/interest donut       |
+| Validation         | **Zod**                                                | All forms and server function inputs                               |
+| Icons              | **lucide-react**                                       |                                                                    |
+| Toasts             | **Sonner**                                             |                                                                    |
+| PWA                | **vite-plugin-pwa** + Workbox                          | Auto-update, precached assets, runtime caching                     |
+| Deployment         | **Vercel** (Nitro preset)                              | With Vercel Analytics and Speed Insights                           |
 
 ---
 
@@ -223,18 +223,18 @@ model Notification {
 
 ### 4.2 Computed and Synced Fields
 
-| Field | Where | How |
-| --- | --- | --- |
-| `investedAmount` (lump_sum) | DB, user-set | Entered at creation / update |
-| `investedAmount` (scheduled / flexible) | DB, server-synced | Updated in every deposit mutation = `SUM(paid deposits)` |
-| `currentValue` (lump_sum) | DB, user-set | Entered at creation / update |
-| `currentValue` (scheduled) | DB, server-synced | Set equal to `investedAmount` (total deposited; no gain until maturity) |
-| `currentValue` (flexible) | DB, user-set | User manually updates to reflect actual account balance incl. interest |
-| Return % (active, lump_sum) | UI | `((currentValue − investedAmount) / investedAmount) × 100` |
-| Return % (completed) | UI | `((exitValue − investedAmount) / investedAmount) × 100` |
-| Return % (flexible) | UI | `((currentValue − investedAmount) / investedAmount) × 100` |
-| Net Worth | UI / dashboard | `Σ active investments currentValue − Σ active EMIs remainingBalance` |
-| DPS maturity value | UI | Last deposit's `accruedValue` (pre-generated at creation) |
+| Field                                   | Where             | How                                                                     |
+| --------------------------------------- | ----------------- | ----------------------------------------------------------------------- |
+| `investedAmount` (lump_sum)             | DB, user-set      | Entered at creation / update                                            |
+| `investedAmount` (scheduled / flexible) | DB, server-synced | Updated in every deposit mutation = `SUM(paid deposits)`                |
+| `currentValue` (lump_sum)               | DB, user-set      | Entered at creation / update                                            |
+| `currentValue` (scheduled)              | DB, server-synced | Set equal to `investedAmount` (total deposited; no gain until maturity) |
+| `currentValue` (flexible)               | DB, user-set      | User manually updates to reflect actual account balance incl. interest  |
+| Return % (active, lump_sum)             | UI                | `((currentValue − investedAmount) / investedAmount) × 100`              |
+| Return % (completed)                    | UI                | `((exitValue − investedAmount) / investedAmount) × 100`                 |
+| Return % (flexible)                     | UI                | `((currentValue − investedAmount) / investedAmount) × 100`              |
+| Net Worth                               | UI / dashboard    | `Σ active investments currentValue − Σ active EMIs remainingBalance`    |
+| DPS maturity value                      | UI                | Last deposit's `accruedValue` (pre-generated at creation)               |
 
 ### 4.3 Authorization
 
@@ -249,6 +249,7 @@ Every server function derives `profileId` from the Better Auth session before an
 **Route:** `/`
 
 Full marketing page targeting new users. Sections:
+
 - **Nav bar** — logo, "Login" and "Sign Up" links. Glassmorphism effect on scroll.
 - **Hero** — animated ambient orbs, floating Phinio logo, headline, sub-headline, CTA buttons ("Get Started" → `/signup`, "Login" → `/login`), "DIGITAL PRIVATE VAULT" badge.
 - **Trust bar** — animated counters: portfolio value tracked, payment schedules managed, on-time payments (illustrative).
@@ -303,6 +304,7 @@ Full marketing page targeting new users. Sections:
 **Route prefix:** `/app/*`
 
 All authenticated app screens share:
+
 - **TopBar** — sticky header with user name (truncated) and avatar; **notification bell** (with unread count badge)
 - **BottomTabBar** — four tabs: Home (`/app`), Invest (`/app/investments`), EMIs (`/app/emis`), Profile (`/app/profile`). Hidden on sub-screens via `staticData: { hideTabBar: true }`.
 
@@ -444,14 +446,14 @@ All authenticated app screens share:
 
 **Notification types generated:**
 
-| Type | Trigger |
-| --- | --- |
-| `investment.created` | Lump-sum investment added |
-| `dps.created` | DPS scheme created |
-| `emi.payment.due` | EMI payment due within 3 days |
-| `emi.payment.overdue` | EMI payment past due date |
-| `dps.installment.due` | DPS installment due within 3 days |
-| `dps.installment.overdue` | DPS installment past due date |
+| Type                      | Trigger                           |
+| ------------------------- | --------------------------------- |
+| `investment.created`      | Lump-sum investment added         |
+| `dps.created`             | DPS scheme created                |
+| `emi.payment.due`         | EMI payment due within 3 days     |
+| `emi.payment.overdue`     | EMI payment past due date         |
+| `dps.installment.due`     | DPS installment due within 3 days |
+| `dps.installment.overdue` | DPS installment past due date     |
 
 ---
 
@@ -461,34 +463,34 @@ All authenticated app screens share:
 
 Persistent bottom navigation visible on all main `/app/*` routes. Hidden on sub-screens.
 
-| Tab | Icon         | Label       | Route              | Active Condition          |
-| --- | ------------ | ----------- | ------------------ | ------------------------- |
-| 1   | Home         | Home        | `/app`             | Exact match `/app`        |
-| 2   | TrendingUp   | Invest      | `/app/investments` | Starts with path          |
-| 3   | Receipt      | EMIs        | `/app/emis`        | Starts with path          |
-| 4   | User         | Profile     | `/app/profile`     | Starts with path          |
+| Tab | Icon       | Label   | Route              | Active Condition   |
+| --- | ---------- | ------- | ------------------ | ------------------ |
+| 1   | Home       | Home    | `/app`             | Exact match `/app` |
+| 2   | TrendingUp | Invest  | `/app/investments` | Starts with path   |
+| 3   | Receipt    | EMIs    | `/app/emis`        | Starts with path   |
+| 4   | User       | Profile | `/app/profile`     | Starts with path   |
 
 ### 6.2 Route Map
 
-| Route                              | Screen                  | Tab Bar | Auth     |
-| ---------------------------------- | ----------------------- | ------- | -------- |
-| `/`                                | Landing page            | No      | Redirect |
-| `/login`                           | Login                   | No      | Redirect |
-| `/signup`                          | Signup                  | No      | Redirect |
-| `/check-email`                     | Email verification wait | No      | No       |
-| `/forgot-password`                 | Forgot password         | No      | No       |
-| `/app`                             | Home / Dashboard        | Yes     | Required |
-| `/app/investments`                 | Investments list        | Yes     | Required |
-| `/app/investments/new`             | Add lump-sum investment | Hidden  | Required |
-| `/app/investments/$id/edit`        | Edit lump-sum investment| Hidden  | Required |
-| `/app/investments/dps/new`         | Add DPS scheme          | Hidden  | Required |
-| `/app/investments/dps/$id`         | DPS detail              | Hidden  | Required |
-| `/app/investments/savings/new`     | Add savings pot         | Hidden  | Required |
-| `/app/investments/savings/$id`     | Savings pot detail      | Hidden  | Required |
-| `/app/emis`                        | EMIs list               | Yes     | Required |
-| `/app/emis/new`                    | Add EMI                 | Hidden  | Required |
-| `/app/emis/$emiId`                 | EMI detail              | Hidden  | Required |
-| `/app/profile`                     | Profile / settings      | Yes     | Required |
+| Route                          | Screen                   | Tab Bar | Auth     |
+| ------------------------------ | ------------------------ | ------- | -------- |
+| `/`                            | Landing page             | No      | Redirect |
+| `/login`                       | Login                    | No      | Redirect |
+| `/signup`                      | Signup                   | No      | Redirect |
+| `/check-email`                 | Email verification wait  | No      | No       |
+| `/forgot-password`             | Forgot password          | No      | No       |
+| `/app`                         | Home / Dashboard         | Yes     | Required |
+| `/app/investments`             | Investments list         | Yes     | Required |
+| `/app/investments/new`         | Add lump-sum investment  | Hidden  | Required |
+| `/app/investments/$id/edit`    | Edit lump-sum investment | Hidden  | Required |
+| `/app/investments/dps/new`     | Add DPS scheme           | Hidden  | Required |
+| `/app/investments/dps/$id`     | DPS detail               | Hidden  | Required |
+| `/app/investments/savings/new` | Add savings pot          | Hidden  | Required |
+| `/app/investments/savings/$id` | Savings pot detail       | Hidden  | Required |
+| `/app/emis`                    | EMIs list                | Yes     | Required |
+| `/app/emis/new`                | Add EMI                  | Hidden  | Required |
+| `/app/emis/$emiId`             | EMI detail               | Hidden  | Required |
+| `/app/profile`                 | Profile / settings       | Yes     | Required |
 
 ---
 
@@ -513,16 +515,16 @@ Client Component
 
 ### 7.3 Query Key Structure
 
-| Feature                      | Query Key                                     | Invalidated By                              |
-| ---------------------------- | --------------------------------------------- | ------------------------------------------- |
-| Investments list             | `['investments', 'list', { status, type }]`   | Any investment mutation                     |
-| Investment detail            | `['investments', 'detail', id]`               | Update, mark deposit paid/unpaid            |
-| EMIs list                    | `['emis', 'list', { type }]`                  | Create / delete EMI                         |
-| EMI detail + payments        | `['emis', 'detail', emiId]`                   | Mark payment paid/unpaid                    |
-| Dashboard stats              | `['dashboard-stats']`                         | Any investment or EMI mutation              |
-| Notifications list           | `['notifications']`                           | Mark read, mark all read                    |
-| Notification unread count    | `['notifications', 'unread-count']`           | Mark read, mark all read                    |
-| Profile                      | `['profile']`                                 | Name / currency update                      |
+| Feature                   | Query Key                                   | Invalidated By                   |
+| ------------------------- | ------------------------------------------- | -------------------------------- |
+| Investments list          | `['investments', 'list', { status, type }]` | Any investment mutation          |
+| Investment detail         | `['investments', 'detail', id]`             | Update, mark deposit paid/unpaid |
+| EMIs list                 | `['emis', 'list', { type }]`                | Create / delete EMI              |
+| EMI detail + payments     | `['emis', 'detail', emiId]`                 | Mark payment paid/unpaid         |
+| Dashboard stats           | `['dashboard-stats']`                       | Any investment or EMI mutation   |
+| Notifications list        | `['notifications']`                         | Mark read, mark all read         |
+| Notification unread count | `['notifications', 'unread-count']`         | Mark read, mark all read         |
+| Profile                   | `['profile']`                               | Name / currency update           |
 
 ### 7.4 Optimistic Updates
 
@@ -620,6 +622,7 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 ## 10. Implementation Status
 
 ### ✅ Phase 1 — Foundation
+
 - TanStack Start project, Tailwind CSS v4, Vite 8
 - Neon PostgreSQL, Prisma 7 with pg adapter
 - Better Auth: email/password, email verification, password reset
@@ -628,6 +631,7 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 - Route protection via `beforeLoad` session guards
 
 ### ✅ Phase 2 — App Shell
+
 - Bottom tab bar navigation (Home, Invest, EMIs, Profile)
 - TopBar with notification bell
 - Dark-only "Digital Private Bank" design system
@@ -635,6 +639,7 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 - Landing page with full marketing sections
 
 ### ✅ Phase 3 — Investments
+
 - **Lump-sum**: CRUD, status toggle (active → completed), exit value, return %
 - **DPS (scheduled)**: create with tenure + interest, auto-generated schedule, mark-paid per installment, auto-maturation, notifications
 - **Savings (flexible)**: create pot, add/remove ad-hoc deposits, manual balance update
@@ -644,6 +649,7 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 - FABMenu with three creation options
 
 ### ✅ Phase 4 — EMI Manager
+
 - Create EMI with live amortization preview
 - Auto-generate all payment rows on creation
 - EMI list with type filter, summary stats
@@ -651,6 +657,7 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 - Delete with confirmation
 
 ### ✅ Phase 5 — Dashboard & Polish
+
 - Net worth calculation + hero card
 - Portfolio allocation donut chart (lazy-loaded)
 - Upcoming payments list (30-day window)
@@ -759,14 +766,14 @@ phinio/
 
 ## 12. Environment Variables
 
-| Variable             | Description                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `DATABASE_URL`       | Pooled Neon connection string (used at runtime via PgBouncer)                      |
-| `DIRECT_URL`         | Direct Neon connection string (used by `prisma migrate deploy`)                    |
-| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret`                    |
-| `BETTER_AUTH_URL`    | Full app URL (e.g. `http://localhost:3000` in dev, Vercel URL in prod)             |
-| `RESEND_API_KEY`     | API key from Resend dashboard                                                      |
-| `RESEND_FROM`        | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`                   |
+| Variable             | Description                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`       | Pooled Neon connection string (used at runtime via PgBouncer)          |
+| `DIRECT_URL`         | Direct Neon connection string (used by `prisma migrate deploy`)        |
+| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret`         |
+| `BETTER_AUTH_URL`    | Full app URL (e.g. `http://localhost:3000` in dev, Vercel URL in prod) |
+| `RESEND_API_KEY`     | API key from Resend dashboard                                          |
+| `RESEND_FROM`        | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`        |
 
 > **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim into every email link. In dev it must be `http://localhost:3000`; in `npm run preview` (port 4173) set it to `http://localhost:4173` or links will 404.
 

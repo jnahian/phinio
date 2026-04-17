@@ -48,10 +48,17 @@ export async function getDashboardStatsImpl(
 
   const [activeInvestments, activeEmis, upcomingRows] = await Promise.all([
     // All active investments — investedAmount + currentValue already synced for
-    // scheduled/flexible modes, so no deposit join needed here.
+    // scheduled/flexible modes, so no deposit join needed here. Withdrawals
+    // restore realized gains to the ROI numerator without inflating the
+    // currentValue / allocation totals (withdrawn money is no longer held).
     prisma.investment.findMany({
       where: { profileId, status: 'active' },
-      select: { type: true, investedAmount: true, currentValue: true },
+      select: {
+        type: true,
+        investedAmount: true,
+        currentValue: true,
+        withdrawals: { select: { amount: true } },
+      },
     }),
     prisma.emi.findMany({
       where: { profileId, status: 'active' },
@@ -82,18 +89,21 @@ export async function getDashboardStatsImpl(
 
   let invested = 0
   let current = 0
+  let withdrawn = 0
   const byType = new Map<string, number>()
   for (const row of activeInvestments) {
     const inv = Number(row.investedAmount)
     const cur = Number(row.currentValue)
+    const wd = row.withdrawals.reduce((s, w) => s + Number(w.amount), 0)
     invested += inv
     current += cur
+    withdrawn += wd
     byType.set(row.type, (byType.get(row.type) ?? 0) + cur)
   }
 
   const gainLossPercent =
     invested > 0
-      ? Math.round(((current - invested) / invested) * 10000) / 100
+      ? Math.round(((current + withdrawn - invested) / invested) * 10000) / 100
       : 0
 
   let remainingEmiBalance = 0

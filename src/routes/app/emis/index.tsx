@@ -117,7 +117,6 @@ function EmisListScreen() {
           ))}
         </ul>
       )}
-
     </main>
   )
 }

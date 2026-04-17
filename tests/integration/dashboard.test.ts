@@ -156,6 +156,66 @@ describe('getDashboardStatsImpl', () => {
     expect(stats.investmentTotals.gainLossPercent).toBe(12.35)
   })
 
+  it('adds totalWithdrawn back into the gainLossPercent numerator', async () => {
+    const user = await createTestUser()
+    // User invested 10000, withdrew 3000, currentValue is now 7000.
+    // True ROI is break-even, not −30%.
+    const inv = await insertInvestment(user.profileId, {
+      investedAmount: '10000.00',
+      currentValue: '7000.00',
+    })
+    await prisma.investmentWithdrawal.create({
+      data: {
+        investmentId: inv.id,
+        profileId: user.profileId,
+        amount: '3000.00',
+        withdrawalDate: new Date('2026-03-01'),
+      },
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    // current=7000, invested=10000, withdrawn=3000
+    // (7000 + 3000 - 10000) / 10000 = 0%
+    expect(stats.investmentTotals.gainLossPercent).toBe(0)
+    // currentValue and allocation reflect what's still held, not realized.
+    expect(stats.investmentTotals.current).toBe('7000.00')
+  })
+
+  it('keeps allocation based on currentValue (withdrawn money is not held)', async () => {
+    const user = await createTestUser()
+    const stock = await insertInvestment(user.profileId, {
+      type: 'stock',
+      investedAmount: '5000.00',
+      currentValue: '4000.00',
+    })
+    await insertInvestment(user.profileId, {
+      type: 'gold',
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+    })
+    await prisma.investmentWithdrawal.create({
+      data: {
+        investmentId: stock.id,
+        profileId: user.profileId,
+        amount: '1000.00',
+        withdrawalDate: new Date('2026-03-01'),
+      },
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    // Allocation should not be inflated by the 1000 withdrawal — only
+    // currentValue counts toward holdings.
+    expect(stats.allocation).toHaveLength(2)
+    const stockAlloc = stats.allocation.find((a) => a.type === 'stock')
+    const goldAlloc = stats.allocation.find((a) => a.type === 'gold')
+    expect(stockAlloc?.value).toBe('4000.00')
+    expect(goldAlloc?.value).toBe('1000.00')
+    expect(stockAlloc?.percent).toBe(80)
+    expect(goldAlloc?.percent).toBe(20)
+  })
+
   it('excludes completed investments from totals and allocation', async () => {
     const user = await createTestUser()
     await insertInvestment(user.profileId, {

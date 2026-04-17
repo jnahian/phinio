@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { TrendingUp } from 'lucide-react'
+import { ArrowDownLeft, TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
+import { WithdrawModal } from '#/components/WithdrawModal'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
@@ -73,6 +74,7 @@ function InvestmentsListScreen() {
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
+  const [showWithdraw, setShowWithdraw] = useState(false)
 
   const { data: items = [], isLoading } = useInvestmentsQuery({
     status,
@@ -81,13 +83,19 @@ function InvestmentsListScreen() {
 
   const totalItems = items.length
 
+  // ROI numerator semantics:
+  //   active    → currentValue + totalWithdrawn  (withdrawals reduced
+  //               currentValue, so add them back to recover realized + held)
+  //   completed → exitValue alone  (the realized total at close — for
+  //               withdrawal-closure exitValue already equals totalWithdrawn,
+  //               so adding it again would double-count)
   const totals = items.reduce(
     (acc, item) => {
       acc.invested += Number(item.investedAmount)
       acc.current +=
         status === 'completed'
           ? Number(item.exitValue ?? item.currentValue)
-          : Number(item.currentValue)
+          : Number(item.currentValue) + Number(item.totalWithdrawn)
       return acc
     },
     { invested: 0, current: 0 },
@@ -127,19 +135,29 @@ function InvestmentsListScreen() {
         </div>
       </Card>
 
-      <div className="mb-4 inline-flex gap-1 rounded-full bg-surface-container-low p-1">
-        <StatusTab
-          active={status === 'active'}
-          onClick={() => setStatus('active')}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="inline-flex gap-1 rounded-full bg-surface-container-low p-1">
+          <StatusTab
+            active={status === 'active'}
+            onClick={() => setStatus('active')}
+          >
+            Active
+          </StatusTab>
+          <StatusTab
+            active={status === 'completed'}
+            onClick={() => setStatus('completed')}
+          >
+            Completed
+          </StatusTab>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowWithdraw(true)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-semibold text-on-surface-variant transition hover:bg-surface-container hover:text-on-surface"
         >
-          Active
-        </StatusTab>
-        <StatusTab
-          active={status === 'completed'}
-          onClick={() => setStatus('completed')}
-        >
-          Completed
-        </StatusTab>
+          <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
+          Withdraw
+        </button>
       </div>
 
       <FilterPills
@@ -206,6 +224,11 @@ function InvestmentsListScreen() {
         </ul>
       )}
 
+      <WithdrawModal
+        open={showWithdraw}
+        onClose={() => setShowWithdraw(false)}
+        currency={currency}
+      />
     </main>
   )
 }
@@ -271,6 +294,7 @@ interface ListItemProps {
     investedAmount: string
     currentValue: string
     exitValue: string | null
+    totalWithdrawn: string
     dateOfInvestment: Date | string | null
     monthlyDeposit: string | null
     tenureMonths: number | null
@@ -289,7 +313,16 @@ function InvestmentCard({ item, currency }: ListItemProps) {
   const displayValue = isCompleted
     ? (item.exitValue ?? item.currentValue)
     : item.currentValue
-  const returnPercent = calculateReturnPercent(item.investedAmount, displayValue)
+  // For completed items, exitValue is the full realized total (and equals
+  // totalWithdrawn for closures driven by withdrawal). Only add
+  // totalWithdrawn back for active items where currentValue was decremented.
+  const returnNumerator = isCompleted
+    ? displayValue
+    : (Number(displayValue) + Number(item.totalWithdrawn)).toFixed(2)
+  const returnPercent = calculateReturnPercent(
+    item.investedAmount,
+    returnNumerator,
+  )
   const date = item.dateOfInvestment ? new Date(item.dateOfInvestment) : null
   const formattedDate = date
     ? date.toLocaleDateString(undefined, {
@@ -311,7 +344,9 @@ function InvestmentCard({ item, currency }: ListItemProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">
+              {item.name}
+            </h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(
@@ -375,7 +410,9 @@ function DpsCard({ item, currency }: ListItemProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">
+              {item.name}
+            </h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(
@@ -433,9 +470,12 @@ function DpsCard({ item, currency }: ListItemProps) {
 }
 
 function SavingsCard({ item, currency }: ListItemProps) {
+  const returnNumerator = (
+    Number(item.currentValue) + Number(item.totalWithdrawn)
+  ).toFixed(2)
   const returnPercent = calculateReturnPercent(
     item.investedAmount,
-    item.currentValue,
+    returnNumerator,
   )
   const hasReturn = Number(item.investedAmount) > 0
 
@@ -451,7 +491,9 @@ function SavingsCard({ item, currency }: ListItemProps) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="headline-sm truncate text-on-surface">{item.name}</h3>
+            <h3 className="headline-sm truncate text-on-surface">
+              {item.name}
+            </h3>
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={cn(

@@ -19,6 +19,8 @@ import {
   addDepositFn,
   removeDepositFn,
   deleteSavingsFn,
+  withdrawFn,
+  closeDpsFn,
 } from '#/server/investments'
 import type { InvestmentListFilters } from '#/server/investments'
 import type {
@@ -30,6 +32,8 @@ import type {
   SavingsCreateInput,
   SavingsUpdateInput,
   AddDepositInput,
+  WithdrawalInput,
+  DpsCloseInput,
 } from '#/lib/validators'
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -152,7 +156,9 @@ export function useMarkDepositPaid(investmentId: string) {
       const prev = qc.getQueryData(investmentKeys.detail(investmentId))
       qc.setQueryData(
         investmentKeys.detail(investmentId),
-        (old: { deposits?: Array<{ id: string; status: string }> } | undefined) => {
+        (
+          old: { deposits?: Array<{ id: string; status: string }> } | undefined,
+        ) => {
           if (!old) return old
           return {
             ...old,
@@ -241,8 +247,7 @@ export function useAddDeposit(investmentId: string) {
 export function useRemoveDeposit(investmentId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (depositId: string) =>
-      removeDepositFn({ data: { depositId } }),
+    mutationFn: (depositId: string) => removeDepositFn({ data: { depositId } }),
     onSuccess: () => {
       toast.success('Deposit removed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
@@ -263,5 +268,37 @@ export function useDeleteSavings() {
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Withdrawals (lump_sum + flexible) and DPS premature closure
+// ---------------------------------------------------------------------------
+
+export function useWithdraw(investmentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: WithdrawalInput) => withdrawFn({ data: input }),
+    onSuccess: (data) => {
+      toast.success(data.closed ? 'Investment closed' : 'Withdrawal recorded')
+      qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
+      qc.invalidateQueries({ queryKey: investmentKeys.all })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
+    onError: (err) => toast.error(errorMessage(err, 'Failed to withdraw')),
+  })
+}
+
+export function useCloseDps(investmentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: DpsCloseInput) => closeDpsFn({ data: input }),
+    onSuccess: () => {
+      toast.success('DPS closed')
+      qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
+      qc.invalidateQueries({ queryKey: investmentKeys.all })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
+    onError: (err) => toast.error(errorMessage(err, 'Failed to close')),
   })
 }

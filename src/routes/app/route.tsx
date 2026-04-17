@@ -5,12 +5,7 @@ import {
   redirect,
   useMatches,
 } from '@tanstack/react-router'
-import {
-  CalendarClock,
-  PiggyBank,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react'
+import { CalendarClock, PiggyBank, TrendingUp, Wallet } from 'lucide-react'
 import { BottomTabBar } from '#/components/BottomTabBar'
 import { FABMenu } from '#/components/ui/FABMenu'
 import { TopBar } from '#/components/TopBar'
@@ -70,31 +65,33 @@ function AppLayout() {
           <Outlet />
         </div>
         {!hideTabBar && <BottomTabBar />}
-        {!hideTabBar && <FABMenu
-          label="Create"
-          items={[
-            {
-              to: '/app/investments/new',
-              label: 'Investment',
-              icon: <TrendingUp className="h-5 w-5" strokeWidth={1.75} />,
-            },
-            {
-              to: '/app/investments/dps/new',
-              label: 'DPS Scheme',
-              icon: <PiggyBank className="h-5 w-5" strokeWidth={1.75} />,
-            },
-            {
-              to: '/app/investments/savings/new',
-              label: 'Savings Pot',
-              icon: <Wallet className="h-5 w-5" strokeWidth={1.75} />,
-            },
-            {
-              to: '/app/emis/new',
-              label: 'EMI',
-              icon: <CalendarClock className="h-5 w-5" strokeWidth={1.75} />,
-            },
-          ]}
-        />}
+        {!hideTabBar && (
+          <FABMenu
+            label="Create"
+            items={[
+              {
+                to: '/app/investments/new',
+                label: 'Investment',
+                icon: <TrendingUp className="h-5 w-5" strokeWidth={1.75} />,
+              },
+              {
+                to: '/app/investments/dps/new',
+                label: 'DPS Scheme',
+                icon: <PiggyBank className="h-5 w-5" strokeWidth={1.75} />,
+              },
+              {
+                to: '/app/investments/savings/new',
+                label: 'Savings Pot',
+                icon: <Wallet className="h-5 w-5" strokeWidth={1.75} />,
+              },
+              {
+                to: '/app/emis/new',
+                label: 'EMI',
+                icon: <CalendarClock className="h-5 w-5" strokeWidth={1.75} />,
+              },
+            ]}
+          />
+        )}
       </div>
     </TopBarTitleContext.Provider>
   )

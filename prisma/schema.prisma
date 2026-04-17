@@ -87,11 +87,12 @@ model Profile {
   fullName           String
   preferredCurrency  String              @default("BDT")
   createdAt          DateTime            @default(now())
-  investments        Investment[]
-  investmentDeposits InvestmentDeposit[]
-  emis               Emi[]
-  emiPayments        EmiPayment[]
-  notifications      Notification[]
+  investments           Investment[]
+  investmentDeposits    InvestmentDeposit[]
+  investmentWithdrawals InvestmentWithdrawal[]
+  emis                  Emi[]
+  emiPayments           EmiPayment[]
+  notifications         Notification[]
 
   @@map("profiles")
 }
@@ -136,6 +137,7 @@ model Investment {
   updatedAt        DateTime            @updatedAt
 
   deposits         InvestmentDeposit[]
+  withdrawals      InvestmentWithdrawal[]
 
   @@index([profileId, status])
   @@index([profileId, mode])
@@ -161,6 +163,23 @@ model InvestmentDeposit {
   @@index([investmentId, installmentNumber])
   @@index([profileId, status, dueDate])
   @@map("investment_deposits")
+}
+
+model InvestmentWithdrawal {
+  id             String     @id @default(uuid())
+  investmentId   String
+  investment     Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  profileId      String
+  profile        Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  amount         Decimal    @db.Decimal(15, 2)
+  withdrawalDate DateTime   @db.Date
+  notes          String?
+  createdAt      DateTime   @default(now())
+
+  @@index([investmentId, withdrawalDate])
+  @@index([profileId])
+  @@map("investment_withdrawals")
 }
 
 model Emi {

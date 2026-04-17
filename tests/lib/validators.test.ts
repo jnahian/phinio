@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   addDepositSchema,
+  dpsCloseSchema,
   dpsCreateSchema,
   dpsUpdateSchema,
   emiCreateSchema,
@@ -18,6 +19,7 @@ import {
   savingsCreateSchema,
   savingsUpdateSchema,
   signupSchema,
+  withdrawalSchema,
 } from '#/lib/validators'
 
 describe('loginSchema', () => {
@@ -460,7 +462,8 @@ describe('dpsCreateSchema', () => {
 
   it('accepts compound interest type', () => {
     expect(
-      dpsCreateSchema.parse({ ...valid, interestType: 'compound' }).interestType,
+      dpsCreateSchema.parse({ ...valid, interestType: 'compound' })
+        .interestType,
     ).toBe('compound')
   })
 
@@ -471,7 +474,9 @@ describe('dpsCreateSchema', () => {
   })
 
   it('rejects an empty name', () => {
-    expect(dpsCreateSchema.safeParse({ ...valid, name: '' }).success).toBe(false)
+    expect(dpsCreateSchema.safeParse({ ...valid, name: '' }).success).toBe(
+      false,
+    )
   })
 
   it('rejects a non-positive monthly deposit', () => {
@@ -698,7 +703,8 @@ describe('addDepositSchema', () => {
 
   it('rejects an invalid deposit date', () => {
     expect(
-      addDepositSchema.safeParse({ ...valid, depositDate: 'not-a-date' }).success,
+      addDepositSchema.safeParse({ ...valid, depositDate: 'not-a-date' })
+        .success,
     ).toBe(false)
   })
 })
@@ -712,5 +718,155 @@ describe('removeDepositSchema', () => {
 
   it('rejects an empty depositId', () => {
     expect(removeDepositSchema.safeParse({ depositId: '' }).success).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Withdrawal schemas
+// ---------------------------------------------------------------------------
+
+describe('withdrawalSchema', () => {
+  const valid = {
+    investmentId: 'inv_1',
+    amount: '500.00',
+    withdrawalDate: '2026-03-15',
+  }
+
+  it('parses a valid withdrawal payload', () => {
+    expect(withdrawalSchema.parse(valid)).toEqual(valid)
+  })
+
+  it('notes and closeInvestment are optional', () => {
+    const result = withdrawalSchema.parse(valid)
+    expect(result.notes).toBeUndefined()
+    expect(result.closeInvestment).toBeUndefined()
+  })
+
+  it('accepts closeInvestment: true', () => {
+    expect(
+      withdrawalSchema.parse({ ...valid, closeInvestment: true })
+        .closeInvestment,
+    ).toBe(true)
+  })
+
+  it('accepts closeInvestment: false', () => {
+    expect(
+      withdrawalSchema.parse({ ...valid, closeInvestment: false })
+        .closeInvestment,
+    ).toBe(false)
+  })
+
+  it('trims and accepts notes', () => {
+    expect(
+      withdrawalSchema.parse({ ...valid, notes: '  partial sale  ' }).notes,
+    ).toBe('partial sale')
+  })
+
+  it('rejects an empty investmentId', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, investmentId: '' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a non-positive amount', () => {
+    expect(withdrawalSchema.safeParse({ ...valid, amount: '0' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rejects a negative amount', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, amount: '-100' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects 3+ decimal places on amount', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, amount: '10.123' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects an invalid withdrawal date', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, withdrawalDate: 'not-a-date' })
+        .success,
+    ).toBe(false)
+  })
+
+  it('rejects an out-of-range calendar date', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, withdrawalDate: '2026-13-01' })
+        .success,
+    ).toBe(false)
+  })
+
+  it('rejects notes longer than 500 characters', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, notes: 'x'.repeat(501) }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a non-boolean closeInvestment', () => {
+    expect(
+      withdrawalSchema.safeParse({ ...valid, closeInvestment: 'yes' }).success,
+    ).toBe(false)
+  })
+})
+
+describe('dpsCloseSchema', () => {
+  const valid = {
+    investmentId: 'inv_1',
+    receivedAmount: '3950.00',
+    closureDate: '2026-05-15',
+  }
+
+  it('parses a valid DPS-close payload', () => {
+    expect(dpsCloseSchema.parse(valid)).toEqual(valid)
+  })
+
+  it('notes is optional', () => {
+    expect(dpsCloseSchema.parse(valid).notes).toBeUndefined()
+  })
+
+  it('trims and accepts notes', () => {
+    expect(
+      dpsCloseSchema.parse({ ...valid, notes: '  switched bank  ' }).notes,
+    ).toBe('switched bank')
+  })
+
+  it('rejects an empty investmentId', () => {
+    expect(
+      dpsCloseSchema.safeParse({ ...valid, investmentId: '' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a non-positive receivedAmount', () => {
+    expect(
+      dpsCloseSchema.safeParse({ ...valid, receivedAmount: '0' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a negative receivedAmount', () => {
+    expect(
+      dpsCloseSchema.safeParse({ ...valid, receivedAmount: '-50' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects 3+ decimal places on receivedAmount', () => {
+    expect(
+      dpsCloseSchema.safeParse({ ...valid, receivedAmount: '100.123' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects an invalid closure date', () => {
+    expect(
+      dpsCloseSchema.safeParse({ ...valid, closureDate: 'not-a-date' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects notes longer than 500 characters', () => {
+    expect(
+      dpsCloseSchema.safeParse({ ...valid, notes: 'x'.repeat(501) }).success,
+    ).toBe(false)
   })
 })

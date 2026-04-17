@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Check, Pencil, Trash2 } from 'lucide-react'
+import { ArrowDownLeft, Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
@@ -35,6 +36,7 @@ function DpsDetailScreen() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
+  const [showClose, setShowClose] = useState(false)
 
   if (isLoading || !inv) {
     return (
@@ -47,6 +49,9 @@ function DpsDetailScreen() {
   const deposits = inv.deposits
   const paidCount = deposits.filter((d) => d.status === 'paid').length
   const maturityValue = deposits.at(-1)?.accruedValue ?? '0.00'
+  const isClosed = inv.status === 'closed'
+  const isMatured = inv.status === 'matured'
+  const isActive = inv.status === 'active'
   const now = new Date()
 
   const interestEarned =
@@ -115,6 +120,16 @@ function DpsDetailScreen() {
               }}
             />
           </div>
+          {isActive && (
+            <button
+              type="button"
+              onClick={() => setShowClose(true)}
+              className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            >
+              <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
+              Close prematurely
+            </button>
+          )}
         </section>
 
         {/* Stats */}
@@ -137,6 +152,30 @@ function DpsDetailScreen() {
             accent="secondary"
           />
         </section>
+
+        {/* Closure banner */}
+        {(isClosed || isMatured) && inv.exitValue && inv.completedAt && (
+          <section
+            className={cn(
+              'rounded-3xl p-5',
+              isClosed
+                ? 'bg-tertiary-container/15 text-on-surface'
+                : 'bg-secondary-container/15 text-on-surface',
+            )}
+          >
+            <p className="label-sm text-on-surface-variant">
+              {isClosed ? 'Closed prematurely' : 'Matured'}
+            </p>
+            <p className="font-display mt-1 text-lg font-bold">
+              Received {formatCurrency(inv.exitValue, currency)} on{' '}
+              {new Date(inv.completedAt).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          </section>
+        )}
 
         {/* Installment schedule */}
         <section className="rounded-3xl bg-surface-container-low p-4">
@@ -208,10 +247,13 @@ function DpsDetailScreen() {
                         {dep.accruedValue && (
                           <p className="mt-0.5 text-xs text-on-surface-variant/75">
                             Balance after: {symbol}
-                            {Number(dep.accruedValue).toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
+                            {Number(dep.accruedValue).toLocaleString(
+                              undefined,
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              },
+                            )}
                           </p>
                         )}
                       </div>
@@ -284,6 +326,13 @@ function DpsDetailScreen() {
         isPending={deleteDps.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      <WithdrawModal
+        open={showClose}
+        onClose={() => setShowClose(false)}
+        currency={currency}
+        preselectedInvestmentId={id}
       />
     </main>
   )

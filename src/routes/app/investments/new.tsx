@@ -20,7 +20,11 @@ import { investmentCreateSchema } from '#/lib/validators'
 import type { InvestmentCreateInput, InvestmentType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/investments/new')({
-  staticData: { hideTabBar: true, title: 'Add Investment', backTo: '/app/investments' },
+  staticData: {
+    hideTabBar: true,
+    title: 'Add Investment',
+    backTo: '/app/investments',
+  },
   component: AddInvestmentScreen,
 })
 
