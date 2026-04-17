@@ -616,33 +616,36 @@ function detailRoute(mode: string, id: string): string {
 export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
   const investment = await prisma.investment.findFirst({
     where: { id: data.investmentId, profileId },
-    select: {
-      id: true,
-      name: true,
-      mode: true,
-      status: true,
-      currentValue: true,
-    },
+    select: { id: true, name: true, mode: true },
   })
   if (!investment) throw new Error('Investment not found')
   if (investment.mode === 'scheduled') {
     throw new Error('Use premature closure for DPS schemes')
   }
-  if (investment.status !== 'active') {
-    throw new Error('Investment is not active')
-  }
 
   const amount = Number(data.amount)
-  const currentValue = Number(investment.currentValue)
-  if (amount > currentValue + 0.001) {
-    throw new Error('Withdrawal amount exceeds current value')
-  }
+  const epsilon = 0.001
 
-  const newCurrentValue = Math.max(0, currentValue - amount)
-  const shouldClose = data.closeInvestment === true || newCurrentValue === 0
+  const result = await prisma.$transaction(async (tx) => {
+    const fresh = await tx.investment.findUniqueOrThrow({
+      where: { id: data.investmentId },
+      select: { status: true, currentValue: true },
+    })
+    if (fresh.status !== 'active') {
+      throw new Error('Investment is not active')
+    }
+    const currentValue = Number(fresh.currentValue)
+    if (amount > currentValue + epsilon) {
+      throw new Error('Withdrawal amount exceeds current value')
+    }
+    const newCurrentValue = Math.max(0, currentValue - amount)
+    if (data.closeInvestment === true && newCurrentValue > epsilon) {
+      throw new Error('Only full withdrawals can close an investment')
+    }
+    const shouldClose =
+      data.closeInvestment === true || newCurrentValue <= epsilon
 
-  await prisma.$transaction(async (tx) => {
-    await tx.investmentWithdrawal.create({
+    const created = await tx.investmentWithdrawal.create({
       data: {
         investmentId: data.investmentId,
         profileId,
@@ -650,6 +653,7 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
         withdrawalDate: new Date(data.withdrawalDate),
         notes: data.notes,
       },
+      select: { id: true },
     })
 
     if (shouldClose) {
@@ -673,6 +677,8 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
         data: { currentValue: newCurrentValue.toFixed(2) },
       })
     }
+
+    return { withdrawalId: created.id, shouldClose }
   })
 
   const profile = await prisma.profile.findUnique({
@@ -683,13 +689,13 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
   await createNotification({
     profileId,
     type: 'investment.withdrawal',
-    title: shouldClose ? 'Investment closed' : 'Withdrawal recorded',
+    title: result.shouldClose ? 'Investment closed' : 'Withdrawal recorded',
     body: `${investment.name} — ${formatCurrency(data.amount, currency)} withdrawn`,
     link: detailRoute(investment.mode, investment.id),
-    dedupeKey: `investment-withdrawal:${investment.id}:${data.withdrawalDate}:${data.amount}`,
+    dedupeKey: `investment-withdrawal:${result.withdrawalId}`,
   })
 
-  return { id: investment.id, closed: shouldClose }
+  return { id: investment.id, closed: result.shouldClose }
 }
 
 // ---------------------------------------------------------------------------

@@ -106,7 +106,7 @@ export const investmentUpdateSchema = investmentCreateSchema
 export type InvestmentUpdateInput = z.infer<typeof investmentUpdateSchema>
 
 export const investmentListQuerySchema = z.object({
-  status: z.enum(['active', 'completed', 'closed']).default('active'),
+  status: z.enum(['active', 'completed']).default('active'),
   type: z.enum([...INVESTMENT_TYPES, 'dps', 'savings', 'all']).default('all'),
 })
 export type InvestmentListQuery = z.infer<typeof investmentListQuerySchema>

@@ -722,6 +722,35 @@ describe('withdrawals', () => {
     expect(inv.completedAt).toBeInstanceOf(Date)
   })
 
+  it('rejects closeInvestment=true when the withdrawal is partial', async () => {
+    // Server-side guard: even if a buggy client (or hand-crafted request)
+    // sends closeInvestment=true alongside a partial amount, the server must
+    // refuse — otherwise status flips to 'completed' while currentValue
+    // remains positive, breaking ROI accounting.
+    const user = await createTestUser()
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Crypto',
+      type: 'crypto',
+      investedAmount: '8000.00',
+      currentValue: '8000.00',
+      dateOfInvestment: '2026-01-01',
+    })
+
+    await expect(
+      withdrawImpl(user.profileId, {
+        investmentId: created.id,
+        amount: '3000.00',
+        withdrawalDate: '2026-04-10',
+        closeInvestment: true,
+      }),
+    ).rejects.toThrow(/Only full withdrawals/i)
+
+    const inv = await getInvestmentImpl(user.profileId, created.id)
+    expect(inv.status).toBe('active')
+    expect(inv.currentValue).toBe('8000')
+    expect(inv.withdrawals).toHaveLength(0)
+  })
+
   it('list view exposes exitValue==totalWithdrawn for withdrawal-closed items (UI must not double-add)', async () => {
     // Pins the invariant the InvestmentCard / totals summary rely on:
     // when an investment is closed via withdrawal, exitValue equals
