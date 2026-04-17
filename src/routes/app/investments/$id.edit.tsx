@@ -13,18 +13,16 @@ import {
   Shield,
   Sprout,
   Trash2,
-  X,
 } from 'lucide-react'
-import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { WithdrawModal } from '#/components/WithdrawModal'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
 import {
   useDeleteInvestment,
   useInvestmentQuery,
   useUpdateInvestment,
-  useWithdraw,
 } from '#/hooks/useInvestments'
 import { investmentUpdateSchema } from '#/lib/validators'
 import type { InvestmentType } from '#/lib/validators'
@@ -62,11 +60,6 @@ function toDateInput(value: Date | string | null | undefined): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function todayIso(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 function EditInvestmentScreen() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
@@ -77,7 +70,6 @@ function EditInvestmentScreen() {
   const { data: investment, isLoading } = useInvestmentQuery(id)
   const updateInvestment = useUpdateInvestment()
   const deleteInvestment = useDeleteInvestment()
-  const withdraw = useWithdraw(id)
 
   const [name, setName] = useState('')
   const [type, setType] = useState<InvestmentType>('stock')
@@ -91,12 +83,7 @@ function EditInvestmentScreen() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  // Withdraw modal state
   const [showWithdraw, setShowWithdraw] = useState(false)
-  const [wAmount, setWAmount] = useState('')
-  const [wDate, setWDate] = useState(todayIso())
-  const [wNotes, setWNotes] = useState('')
-  const [wError, setWError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!investment) return
@@ -152,43 +139,6 @@ function EditInvestmentScreen() {
       navigate({ to: '/app/investments' })
     } catch {
       // handled by useDeleteInvestment onError → toast.error
-    }
-  }
-
-  function openWithdraw() {
-    setWAmount('')
-    setWDate(todayIso())
-    setWNotes('')
-    setWError(null)
-    setShowWithdraw(true)
-  }
-
-  const wAmountNum = Number(wAmount)
-  const wMaxAmount = investment ? Number(investment.currentValue) : 0
-  const wIsFull = wAmountNum > 0 && Math.abs(wAmountNum - wMaxAmount) < 0.005
-
-  async function handleWithdraw(e: React.FormEvent) {
-    e.preventDefault()
-    setWError(null)
-    if (!wAmount || wAmountNum <= 0) {
-      setWError('Enter an amount greater than 0')
-      return
-    }
-    if (wAmountNum > wMaxAmount + 0.001) {
-      setWError('Amount exceeds current value')
-      return
-    }
-    try {
-      await withdraw.mutateAsync({
-        investmentId: id,
-        amount: wAmount,
-        withdrawalDate: wDate,
-        notes: wNotes.trim() || undefined,
-        closeInvestment: wIsFull,
-      })
-      setShowWithdraw(false)
-    } catch {
-      // handled in hook
     }
   }
 
@@ -325,7 +275,7 @@ function EditInvestmentScreen() {
           {investment.status === 'active' && (
             <button
               type="button"
-              onClick={openWithdraw}
+              onClick={() => setShowWithdraw(true)}
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
             >
               <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
@@ -401,75 +351,12 @@ function EditInvestmentScreen() {
         onCancel={() => setConfirmDelete(false)}
       />
 
-      {showWithdraw && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
-          onClick={() => setShowWithdraw(false)}
-        >
-          <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <Card
-              variant="low"
-              className="rounded-t-3xl rounded-b-none sm:rounded-3xl"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <p className="label-sm text-on-surface-variant">Withdraw</p>
-                <button
-                  type="button"
-                  onClick={() => setShowWithdraw(false)}
-                  className="text-on-surface-variant/60 hover:text-on-surface"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-              </div>
-              <p className="body-sm mb-4 text-on-surface-variant">
-                Available: {formatCurrency(investment.currentValue, currency)}
-              </p>
-              <form onSubmit={handleWithdraw} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <TextField
-                    id="wAmount"
-                    label="Amount"
-                    placeholder="0.00"
-                    inputMode="decimal"
-                    prefix={symbol}
-                    value={wAmount}
-                    onChange={(e) => setWAmount(e.target.value)}
-                    autoFocus
-                    error={wError ?? undefined}
-                  />
-                  <TextField
-                    id="wDate"
-                    label="Date"
-                    type="date"
-                    value={wDate}
-                    onChange={(e) => setWDate(e.target.value)}
-                  />
-                </div>
-                <TextField
-                  id="wNotes"
-                  label="Notes (optional)"
-                  placeholder="e.g. partial sale, FD breakage"
-                  value={wNotes}
-                  onChange={(e) => setWNotes(e.target.value)}
-                />
-                {wIsFull && (
-                  <p className="text-xs text-on-surface-variant">
-                    Full withdrawal — investment will be marked as closed.
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={withdraw.isPending}
-                  className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
-                >
-                  {withdraw.isPending ? 'Recording…' : 'Confirm withdrawal'}
-                </button>
-              </form>
-            </Card>
-          </div>
-        </div>
-      )}
+      <WithdrawModal
+        open={showWithdraw}
+        onClose={() => setShowWithdraw(false)}
+        currency={currency}
+        preselectedInvestmentId={id}
+      />
     </main>
   )
 }

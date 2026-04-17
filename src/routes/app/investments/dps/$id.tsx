@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowDownLeft, Check, Pencil, Trash2, X } from 'lucide-react'
+import { ArrowDownLeft, Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
@@ -12,18 +13,12 @@ import {
   useMarkDepositPaid,
   useDeleteDps,
   useUpdateDps,
-  useCloseDps,
 } from '#/hooks/useInvestments'
 
 export const Route = createFileRoute('/app/investments/dps/$id')({
   staticData: { hideTabBar: true, backTo: '/app/investments' },
   component: DpsDetailScreen,
 })
-
-function todayIso(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 function DpsDetailScreen() {
   const { id } = Route.useParams()
@@ -37,18 +32,11 @@ function DpsDetailScreen() {
   const markDeposit = useMarkDepositPaid(id)
   const deleteDps = useDeleteDps()
   const updateDps = useUpdateDps()
-  const closeDps = useCloseDps(id)
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
-
-  // Premature closure modal state
   const [showClose, setShowClose] = useState(false)
-  const [cReceived, setCReceived] = useState('')
-  const [cDate, setCDate] = useState(todayIso())
-  const [cNotes, setCNotes] = useState('')
-  const [cError, setCError] = useState<string | null>(null)
 
   if (isLoading || !inv) {
     return (
@@ -60,14 +48,7 @@ function DpsDetailScreen() {
 
   const deposits = inv.deposits
   const paidCount = deposits.filter((d) => d.status === 'paid').length
-  const upcomingCount = deposits.filter((d) => d.status !== 'paid').length
   const maturityValue = deposits.at(-1)?.accruedValue ?? '0.00'
-  const paidSorted = [...deposits]
-    .filter((d) => d.status === 'paid')
-    .sort((a, b) => (b.installmentNumber ?? 0) - (a.installmentNumber ?? 0))
-  const accruedNow =
-    (paidSorted.length > 0 ? paidSorted[0].accruedValue : null) ??
-    inv.investedAmount
   const isClosed = inv.status === 'closed'
   const isMatured = inv.status === 'matured'
   const isActive = inv.status === 'active'
@@ -93,34 +74,6 @@ function DpsDetailScreen() {
         name: editName.trim() || inv?.name || '',
       })
       setEditing(false)
-    } catch {
-      // toast handled in hook
-    }
-  }
-
-  function openClose() {
-    setCReceived(String(accruedNow))
-    setCDate(todayIso())
-    setCNotes('')
-    setCError(null)
-    setShowClose(true)
-  }
-
-  async function handleClose(e: React.FormEvent) {
-    e.preventDefault()
-    setCError(null)
-    if (!cReceived || Number(cReceived) <= 0) {
-      setCError('Enter the amount received')
-      return
-    }
-    try {
-      await closeDps.mutateAsync({
-        investmentId: id,
-        receivedAmount: cReceived,
-        closureDate: cDate,
-        notes: cNotes.trim() || undefined,
-      })
-      setShowClose(false)
     } catch {
       // toast handled in hook
     }
@@ -316,7 +269,7 @@ function DpsDetailScreen() {
         {isActive && (
           <button
             type="button"
-            onClick={openClose}
+            onClick={() => setShowClose(true)}
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface"
           >
             <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
@@ -377,76 +330,12 @@ function DpsDetailScreen() {
         onCancel={() => setConfirmDelete(false)}
       />
 
-      {showClose && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
-          onClick={() => setShowClose(false)}
-        >
-          <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <Card
-              variant="low"
-              className="rounded-t-3xl rounded-b-none sm:rounded-3xl"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <p className="label-sm text-on-surface-variant">
-                  Close DPS prematurely
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowClose(false)}
-                  className="text-on-surface-variant/60 hover:text-on-surface"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-              </div>
-              <p className="body-sm mb-4 text-on-surface-variant">
-                Accrued so far: {formatCurrency(accruedNow, currency)}. Banks
-                often deduct a penalty — enter the amount you actually receive.{' '}
-                {upcomingCount} upcoming installment
-                {upcomingCount !== 1 ? 's' : ''} will be cancelled.
-              </p>
-              <form onSubmit={handleClose} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <TextField
-                    id="cReceived"
-                    label="Amount received"
-                    placeholder="0.00"
-                    inputMode="decimal"
-                    prefix={symbol}
-                    value={cReceived}
-                    onChange={(e) => setCReceived(e.target.value)}
-                    autoFocus
-                    error={cError ?? undefined}
-                  />
-                  <TextField
-                    id="cDate"
-                    label="Closure date"
-                    type="date"
-                    value={cDate}
-                    onChange={(e) => setCDate(e.target.value)}
-                  />
-                </div>
-                <TextField
-                  id="cNotes"
-                  label="Notes (optional)"
-                  placeholder="e.g. emergency, switched bank"
-                  value={cNotes}
-                  onChange={(e) => setCNotes(e.target.value)}
-                />
-                <p className="text-xs text-tertiary">This cannot be undone.</p>
-                <button
-                  type="submit"
-                  disabled={closeDps.isPending}
-                  className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
-                >
-                  {closeDps.isPending ? 'Closing…' : 'Confirm closure'}
-                </button>
-              </form>
-            </Card>
-          </div>
-        </div>
-      )}
+      <WithdrawModal
+        open={showClose}
+        onClose={() => setShowClose(false)}
+        currency={currency}
+        preselectedInvestmentId={id}
+      />
     </main>
   )
 }

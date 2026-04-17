@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowDownLeft, Plus, Trash2, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
@@ -14,7 +15,6 @@ import {
   useAddDeposit,
   useRemoveDeposit,
   useDeleteSavings,
-  useWithdraw,
 } from '#/hooks/useInvestments'
 
 export const Route = createFileRoute('/app/investments/savings/$id')({
@@ -40,12 +40,11 @@ function SavingsDetailScreen() {
   const addDeposit = useAddDeposit(id)
   const removeDeposit = useRemoveDeposit(id)
   const deleteSavings = useDeleteSavings()
-  const withdraw = useWithdraw(id)
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [showDepositForm, setShowDepositForm] = useState(false)
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false)
+  const [showWithdraw, setShowWithdraw] = useState(false)
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
 
   // Edit form state
@@ -56,12 +55,6 @@ function SavingsDetailScreen() {
   const [depositAmount, setDepositAmount] = useState('')
   const [depositDate, setDepositDate] = useState(todayIso())
   const [depositNotes, setDepositNotes] = useState('')
-
-  // Withdraw form state
-  const [wAmount, setWAmount] = useState('')
-  const [wDate, setWDate] = useState(todayIso())
-  const [wNotes, setWNotes] = useState('')
-  const [wError, setWError] = useState<string | null>(null)
 
   if (isLoading || !inv) {
     return (
@@ -115,9 +108,6 @@ function SavingsDetailScreen() {
   ].sort((a, b) => b.date - a.date)
 
   const isActive = inv.status === 'active'
-  const wAmountNum = Number(wAmount)
-  const wMaxAmount = Number(inv.currentValue)
-  const wIsFull = wAmountNum > 0 && Math.abs(wAmountNum - wMaxAmount) < 0.005
 
   const totalWithdrawn = inv.withdrawals.reduce(
     (sum, w) => sum + Number(w.amount),
@@ -186,38 +176,6 @@ function SavingsDetailScreen() {
     }
   }
 
-  function openWithdrawForm() {
-    setWAmount('')
-    setWDate(todayIso())
-    setWNotes('')
-    setWError(null)
-    setShowWithdrawForm(true)
-  }
-
-  async function handleWithdraw(e: React.FormEvent) {
-    e.preventDefault()
-    setWError(null)
-    if (!wAmount || wAmountNum <= 0) {
-      setWError('Enter an amount greater than 0')
-      return
-    }
-    if (wAmountNum > wMaxAmount + 0.001) {
-      setWError('Amount exceeds current balance')
-      return
-    }
-    try {
-      await withdraw.mutateAsync({
-        investmentId: id,
-        amount: wAmount,
-        withdrawalDate: wDate,
-        notes: wNotes.trim() || undefined,
-        closeInvestment: wIsFull,
-      })
-      setShowWithdrawForm(false)
-    } catch {
-      // handled in hook
-    }
-  }
 
   return (
     <main className="noir-bg min-h-dvh pb-32">
@@ -319,66 +277,7 @@ function SavingsDetailScreen() {
           </Card>
         )}
 
-        {showWithdrawForm && (
-          <Card variant="low">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="label-sm text-on-surface-variant">Withdraw</p>
-              <button
-                type="button"
-                onClick={() => setShowWithdrawForm(false)}
-                className="text-on-surface-variant/60 hover:text-on-surface"
-              >
-                <X className="h-4 w-4" strokeWidth={1.75} />
-              </button>
-            </div>
-            <p className="body-sm mb-4 text-on-surface-variant">
-              Available: {formatCurrency(inv.currentValue, currency)}
-            </p>
-            <form onSubmit={handleWithdraw} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <TextField
-                  id="wAmount"
-                  label="Amount"
-                  placeholder="0.00"
-                  inputMode="decimal"
-                  prefix={symbol}
-                  value={wAmount}
-                  onChange={(e) => setWAmount(e.target.value)}
-                  autoFocus
-                  error={wError ?? undefined}
-                />
-                <TextField
-                  id="wDate"
-                  label="Date"
-                  type="date"
-                  value={wDate}
-                  onChange={(e) => setWDate(e.target.value)}
-                />
-              </div>
-              <TextField
-                id="wNotes"
-                label="Notes (optional)"
-                placeholder="e.g. rent, emergency"
-                value={wNotes}
-                onChange={(e) => setWNotes(e.target.value)}
-              />
-              {wIsFull && (
-                <p className="text-xs text-on-surface-variant">
-                  Full withdrawal — pot will be marked as closed.
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={withdraw.isPending}
-                className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
-              >
-                {withdraw.isPending ? 'Recording…' : 'Confirm withdrawal'}
-              </button>
-            </form>
-          </Card>
-        )}
-
-        {!showDepositForm && !showWithdrawForm && isActive && (
+        {!showDepositForm && isActive && (
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -390,7 +289,7 @@ function SavingsDetailScreen() {
             </button>
             <button
               type="button"
-              onClick={openWithdrawForm}
+              onClick={() => setShowWithdraw(true)}
               disabled={Number(inv.currentValue) <= 0}
               className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-4 text-sm font-semibold text-on-surface-variant transition hover:border-outline-variant hover:text-on-surface disabled:opacity-40 disabled:hover:border-outline-variant/40 disabled:hover:text-on-surface-variant"
             >
@@ -533,6 +432,13 @@ function SavingsDetailScreen() {
           confirmRemoveId && handleRemoveDeposit(confirmRemoveId)
         }
         onCancel={() => setConfirmRemoveId(null)}
+      />
+
+      <WithdrawModal
+        open={showWithdraw}
+        onClose={() => setShowWithdraw(false)}
+        currency={currency}
+        preselectedInvestmentId={id}
       />
     </main>
   )

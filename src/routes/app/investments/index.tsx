@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowDownLeft, TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
+import { WithdrawModal } from '#/components/WithdrawModal'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
@@ -73,6 +74,7 @@ function InvestmentsListScreen() {
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
+  const [showWithdraw, setShowWithdraw] = useState(false)
 
   const { data: items = [], isLoading } = useInvestmentsQuery({
     status,
@@ -148,13 +150,14 @@ function InvestmentsListScreen() {
             Completed
           </StatusTab>
         </div>
-        <Link
-          to="/app/investments/withdraw"
+        <button
+          type="button"
+          onClick={() => setShowWithdraw(true)}
           className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-semibold text-on-surface-variant transition hover:bg-surface-container hover:text-on-surface"
         >
           <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
           Withdraw
-        </Link>
+        </button>
       </div>
 
       <FilterPills
@@ -220,6 +223,12 @@ function InvestmentsListScreen() {
           })}
         </ul>
       )}
+
+      <WithdrawModal
+        open={showWithdraw}
+        onClose={() => setShowWithdraw(false)}
+        currency={currency}
+      />
     </main>
   )
 }
