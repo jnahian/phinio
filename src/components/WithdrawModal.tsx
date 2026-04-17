@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { TextField } from '#/components/ui/TextField'
@@ -48,6 +49,21 @@ export function WithdrawModal({
     if (open) setSelectedId(preselectedInvestmentId ?? '')
   }, [open, preselectedInvestmentId])
 
+  // Close on Escape; lock body scroll while open.
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open, onClose])
+
   const selected = useMemo(
     () => items.find((i) => i.id === selectedId) ?? null,
     [items, selectedId],
@@ -60,10 +76,12 @@ export function WithdrawModal({
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       <div
         className="w-full max-w-md"
@@ -129,7 +147,8 @@ export function WithdrawModal({
           )}
         </Card>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
