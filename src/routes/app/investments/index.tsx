@@ -393,6 +393,11 @@ function InvestmentCard({ item, currency }: ListItemProps) {
 }
 
 function DpsCard({ item, currency }: ListItemProps) {
+  const isActive = item.status === 'active'
+  // Closed (premature) or matured — exitValue is what was actually received,
+  // which differs from investedAmount (penalty deducted) or maturityValue.
+  const headlineValue =
+    !isActive && item.exitValue !== null ? item.exitValue : item.investedAmount
   const progressPercent =
     item.tenureMonths && item.tenureMonths > 0
       ? (item.paidCount / item.tenureMonths) * 100
@@ -429,9 +434,9 @@ function DpsCard({ item, currency }: ListItemProps) {
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(item.investedAmount, currency)}
+              {formatCurrency(headlineValue, currency)}
             </p>
-            {item.maturityValue && (
+            {isActive && item.maturityValue && (
               <p className="body-sm font-semibold text-secondary">
                 → {formatCurrency(item.maturityValue, currency)}
               </p>
@@ -470,12 +475,18 @@ function DpsCard({ item, currency }: ListItemProps) {
 }
 
 function SavingsCard({ item, currency }: ListItemProps) {
-  const returnNumerator = (
-    Number(item.currentValue) + Number(item.totalWithdrawn)
-  ).toFixed(2)
+  const isActive = item.status === 'active'
+  // After closure, currentValue is 0 — fall back to exitValue (the realized
+  // payout, recorded at closure time) so the headline reflects the actual
+  // amount the user took out.
+  const realizedValue =
+    !isActive && item.exitValue !== null
+      ? Number(item.exitValue)
+      : Number(item.currentValue) + Number(item.totalWithdrawn)
+  const headlineValue = isActive ? item.currentValue : realizedValue.toFixed(2)
   const returnPercent = calculateReturnPercent(
     item.investedAmount,
-    returnNumerator,
+    realizedValue.toFixed(2),
   )
   const hasReturn = Number(item.investedAmount) > 0
 
@@ -510,7 +521,7 @@ function SavingsCard({ item, currency }: ListItemProps) {
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(item.currentValue, currency)}
+              {formatCurrency(headlineValue, currency)}
             </p>
             {hasReturn && (
               <p
