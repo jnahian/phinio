@@ -1,8 +1,6 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { formatCurrency } from '#/lib/currency'
-import type { Currency } from '#/lib/currency'
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())
@@ -56,133 +54,55 @@ interface CreateNotificationArgs {
 }
 
 /**
- * Idempotent notification create. Safe to call multiple times with the same
- * dedupeKey — the unique (profileId, dedupeKey) constraint prevents duplicates
- * and we silently ignore the conflict.
+ * Idempotent notification create. Returns `created: true` only when a new row
+ * is inserted — callers use this to gate expensive side-effects like sending
+ * a web-push, so a duplicate call within the dedupe window is a no-op.
  */
-export async function createNotification(args: CreateNotificationArgs) {
-  await prisma.notification.upsert({
+export async function createNotification(
+  args: CreateNotificationArgs,
+): Promise<{ id: string; created: boolean }> {
+  const existing = await prisma.notification.findUnique({
     where: {
       profileId_dedupeKey: {
         profileId: args.profileId,
         dedupeKey: args.dedupeKey,
       },
     },
-    create: {
-      profileId: args.profileId,
-      type: args.type,
-      title: args.title,
-      body: args.body,
-      link: args.link ?? null,
-      dedupeKey: args.dedupeKey,
-    },
-    // No-op update: keep the existing row and its read state.
-    update: {},
+    select: { id: true },
   })
-}
+  if (existing) return { id: existing.id, created: false }
 
-/**
- * Scan the user's data for things that warrant a notification right now and
- * insert any that don't already exist. This is the "background job" for
- * time-based notifications (payment due / overdue), executed lazily whenever
- * the bell endpoint is hit. Cheap and idempotent.
- */
-export async function syncDerivedNotifications(profileId: string) {
-  const profile = await prisma.profile.findUnique({
-    where: { id: profileId },
-    select: { preferredCurrency: true },
-  })
-  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
-
-  const now = new Date()
-  const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
-
-  const dueSoon = await prisma.emiPayment.findMany({
-    where: {
-      profileId,
-      status: { not: 'paid' },
-      dueDate: { gte: now, lte: in3Days },
-    },
-    include: { emi: { select: { label: true } } },
-  })
-
-  const overdue = await prisma.emiPayment.findMany({
-    where: {
-      profileId,
-      status: { not: 'paid' },
-      dueDate: { lt: now },
-    },
-    include: { emi: { select: { label: true } } },
-  })
-
-  for (const p of dueSoon) {
-    await createNotification({
-      profileId,
-      type: 'emi.payment.due',
-      title: 'Payment due soon',
-      body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} due ${p.dueDate.toLocaleDateString()}`,
-      link: `/app/emis/${p.emiId}`,
-      dedupeKey: `payment-due:${p.id}`,
+  try {
+    const row = await prisma.notification.create({
+      data: {
+        profileId: args.profileId,
+        type: args.type,
+        title: args.title,
+        body: args.body,
+        link: args.link ?? null,
+        dedupeKey: args.dedupeKey,
+      },
+      select: { id: true },
     })
-  }
-
-  for (const p of overdue) {
-    await createNotification({
-      profileId,
-      type: 'emi.payment.overdue',
-      title: 'Payment overdue',
-      body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} was due ${p.dueDate.toLocaleDateString()}`,
-      link: `/app/emis/${p.emiId}`,
-      dedupeKey: `payment-overdue:${p.id}`,
+    return { id: row.id, created: true }
+  } catch {
+    // Race: another process inserted the same (profileId, dedupeKey) between
+    // the findUnique above and our create. Re-read and treat as not-created.
+    const raced = await prisma.notification.findUnique({
+      where: {
+        profileId_dedupeKey: {
+          profileId: args.profileId,
+          dedupeKey: args.dedupeKey,
+        },
+      },
+      select: { id: true },
     })
-  }
-
-  // DPS installments (scheduled mode deposits)
-  const dpsDueSoon = await prisma.investmentDeposit.findMany({
-    where: {
-      profileId,
-      status: { not: 'paid' },
-      dueDate: { gte: now, lte: in3Days },
-      investment: { mode: 'scheduled' },
-    },
-    include: { investment: { select: { id: true, name: true } } },
-  })
-
-  const dpsOverdue = await prisma.investmentDeposit.findMany({
-    where: {
-      profileId,
-      status: { not: 'paid' },
-      dueDate: { lt: now },
-      investment: { mode: 'scheduled' },
-    },
-    include: { investment: { select: { id: true, name: true } } },
-  })
-
-  for (const i of dpsDueSoon) {
-    await createNotification({
-      profileId,
-      type: 'dps.installment.due',
-      title: 'DPS deposit due soon',
-      body: `${i.investment.name} — ${formatCurrency(i.amount, currency)} due ${i.dueDate!.toLocaleDateString()}`,
-      link: `/app/investments/dps/${i.investmentId}`,
-      dedupeKey: `dps-due:${i.id}`,
-    })
-  }
-
-  for (const i of dpsOverdue) {
-    await createNotification({
-      profileId,
-      type: 'dps.installment.overdue',
-      title: 'DPS deposit overdue',
-      body: `${i.investment.name} — ${formatCurrency(i.amount, currency)} was due ${i.dueDate!.toLocaleDateString()}`,
-      link: `/app/investments/dps/${i.investmentId}`,
-      dedupeKey: `dps-overdue:${i.id}`,
-    })
+    if (!raced) throw new Error('Failed to create notification')
+    return { id: raced.id, created: false }
   }
 }
 
 export async function listNotificationsImpl(profileId: string) {
-  await syncDerivedNotifications(profileId)
   const rows = await prisma.notification.findMany({
     where: { profileId },
     orderBy: [
@@ -195,7 +115,6 @@ export async function listNotificationsImpl(profileId: string) {
 }
 
 export async function unreadNotificationCountImpl(profileId: string) {
-  await syncDerivedNotifications(profileId)
   const count = await prisma.notification.count({
     where: { profileId, readAt: null },
   })

@@ -93,6 +93,7 @@ model Profile {
   emis                  Emi[]
   emiPayments           EmiPayment[]
   notifications         Notification[]
+  pushSubscriptions     PushSubscription[]
 
   @@map("profiles")
 }
@@ -236,4 +237,19 @@ model Notification {
   @@unique([profileId, dedupeKey])
   @@index([profileId, readAt, createdAt])
   @@map("notifications")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([profileId])
+  @@map("push_subscriptions")
 }
