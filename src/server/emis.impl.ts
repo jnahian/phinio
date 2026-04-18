@@ -5,6 +5,7 @@ import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
 import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
 import { createNotification } from './notifications.impl'
+import { logActivity } from './activity-log.impl'
 import type {
   EmiCreateInput,
   EmiListQuery,
@@ -202,6 +203,13 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
         remainingBalance: row.remainingBalance,
       })),
     })
+    await logActivity(tx, profileId, {
+      action: 'create',
+      entityType: 'emi',
+      entityId: created.id,
+      entityLabel: created.label,
+      summary: `Created EMI '${created.label}' — ${schedule.length} payments scheduled`,
+    })
     return created
   })
 
@@ -228,10 +236,21 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
 }
 
 export async function deleteEmiImpl(profileId: string, emiId: string) {
-  const result = await prisma.emi.deleteMany({
-    where: { id: emiId, profileId },
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.emi.findFirst({
+      where: { id: emiId, profileId },
+      select: { id: true, label: true },
+    })
+    if (!existing) throw new Error('EMI not found')
+    await tx.emi.delete({ where: { id: emiId } })
+    await logActivity(tx, profileId, {
+      action: 'delete',
+      entityType: 'emi',
+      entityId: null,
+      entityLabel: existing.label,
+      summary: `Deleted EMI '${existing.label}'`,
+    })
   })
-  if (result.count === 0) throw new Error('EMI not found')
   return { id: emiId }
 }
 
@@ -239,14 +258,32 @@ export async function markPaymentPaidImpl(
   profileId: string,
   data: MarkPaymentPaidInput,
 ) {
-  const result = await prisma.emiPayment.updateMany({
-    where: { id: data.paymentId, profileId },
-    data: {
-      status: data.paid ? 'paid' : 'upcoming',
-      paidAt: data.paid ? new Date() : null,
-    },
+  await prisma.$transaction(async (tx) => {
+    const payment = await tx.emiPayment.findFirst({
+      where: { id: data.paymentId, profileId },
+      select: {
+        id: true,
+        paymentNumber: true,
+        emi: { select: { label: true } },
+      },
+    })
+    if (!payment) throw new Error('Payment not found')
+    await tx.emiPayment.update({
+      where: { id: data.paymentId },
+      data: {
+        status: data.paid ? 'paid' : 'upcoming',
+        paidAt: data.paid ? new Date() : null,
+      },
+    })
+    const verb = data.paid ? 'paid' : 'unpaid'
+    await logActivity(tx, profileId, {
+      action: 'update',
+      entityType: 'emi_payment',
+      entityId: payment.id,
+      entityLabel: payment.emi.label,
+      summary: `Marked payment #${payment.paymentNumber} of '${payment.emi.label}' as ${verb}`,
+    })
   })
-  if (result.count === 0) throw new Error('Payment not found')
   return { id: data.paymentId, paid: data.paid }
 }
 

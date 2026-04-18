@@ -1,9 +1,14 @@
 import { Link } from '@tanstack/react-router'
-import { CalendarClock, Home, TrendingUp, User } from 'lucide-react'
+import { CalendarClock, History, Home, TrendingUp, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '#/lib/cn'
 
-type TabPath = '/app' | '/app/investments' | '/app/emis' | '/app/profile'
+type TabPath =
+  | '/app'
+  | '/app/investments'
+  | '/app/emis'
+  | '/app/activity'
+  | '/app/profile'
 
 interface Tab {
   to: TabPath
@@ -16,6 +21,7 @@ const TABS: Tab[] = [
   { to: '/app', label: 'Home', icon: Home, exact: true },
   { to: '/app/investments', label: 'Invest', icon: TrendingUp },
   { to: '/app/emis', label: 'EMIs', icon: CalendarClock },
+  { to: '/app/activity', label: 'Activity', icon: History },
   { to: '/app/profile', label: 'Profile', icon: User },
 ]
 

@@ -62,6 +62,7 @@ export function useCreateEmi() {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to create EMI')),
   })
@@ -76,6 +77,7 @@ export function useDeleteEmi() {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
@@ -126,6 +128,7 @@ export function useMarkPayment(emiId: string) {
       qc.invalidateQueries({ queryKey: emiKeys.detail(emiId) })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
 }

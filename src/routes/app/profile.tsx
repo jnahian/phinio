@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Camera,
   Check,
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/app/profile')({
 
 function ProfileScreen() {
   const router = useRouter()
+  const qc = useQueryClient()
   const { user, profile, shellUser } = Route.useRouteContext()
 
   const [currency, setCurrency] = useState<Currency>(profile.preferredCurrency)
@@ -64,6 +66,7 @@ function ProfileScreen() {
     try {
       await updateProfileCurrencyFn({ data: { preferredCurrency: next } })
       await router.invalidate()
+      qc.invalidateQueries({ queryKey: ['activity'] })
       toast.success(`Currency set to ${next}`)
     } catch (err) {
       setCurrency(previous)
@@ -100,6 +103,7 @@ function ProfileScreen() {
     try {
       await updateProfileNameFn({ data: { fullName: trimmed } })
       await router.invalidate()
+      qc.invalidateQueries({ queryKey: ['activity'] })
       setIsEditingName(false)
       toast.success('Name updated')
     } catch (err) {
