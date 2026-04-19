@@ -364,192 +364,199 @@ function ProfileScreen() {
       </header>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Currency                                                             */}
+      {/* Preferences                                                         */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
+      <section className="mb-8">
         <h2 className="label-md mb-3 px-1 text-on-surface-variant">
-          Preferred currency
+          Preferences
         </h2>
-        <Card variant="low" className="p-2">
-          <div className="grid grid-cols-2 gap-2">
-            <CurrencyOption
-              active={currency === 'BDT'}
-              onClick={() => handleCurrencyChange('BDT')}
-              symbol="৳"
-              label="BDT"
-              hint="Bangladeshi Taka"
-              disabled={isSavingCurrency}
-            />
-            <CurrencyOption
-              active={currency === 'USD'}
-              onClick={() => handleCurrencyChange('USD')}
-              symbol="$"
-              label="USD"
-              hint="US Dollar"
-              disabled={isSavingCurrency}
-            />
-          </div>
-        </Card>
-      </section>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Activity history                                                     */}
-      {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
-        <Link
-          to="/app/activity"
-          className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
-        >
-          <div className="flex items-center gap-3">
-            <History
-              className="h-5 w-5 text-on-surface-variant"
-              strokeWidth={1.75}
-            />
-            <span className="font-display font-semibold">Activity history</span>
-          </div>
-          <ChevronRight
-            className="h-4 w-4 text-on-surface-variant/50"
-            strokeWidth={2}
-          />
-        </Link>
-      </section>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Browser notifications                                                */}
-      {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
-        <h2 className="label-md mb-3 px-1 text-on-surface-variant">
-          Browser notifications
-        </h2>
-        <Card variant="low" className="p-4">
-          <div className="flex items-start gap-3">
-            <BellRing
-              className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
-              strokeWidth={1.75}
-            />
-            <div className="flex-1">
-              <p className="body-sm text-on-surface">Payment reminders</p>
-              <p className="mt-1 text-xs text-on-surface-variant">
-                {push.permission === 'unsupported'
-                  ? "This browser doesn't support push notifications."
-                  : push.permission === 'denied'
-                    ? 'Blocked in browser settings. Re-enable there to turn on.'
-                    : push.isSubscribed
-                      ? 'You will be notified about upcoming and overdue payments.'
-                      : 'Get notified about upcoming and overdue payments.'}
-              </p>
+        <div className="space-y-3">
+          <Card variant="low" className="p-2">
+            <div className="grid grid-cols-2 gap-2">
+              <CurrencyOption
+                active={currency === 'BDT'}
+                onClick={() => handleCurrencyChange('BDT')}
+                symbol="৳"
+                label="BDT"
+                hint="Bangladeshi Taka"
+                disabled={isSavingCurrency}
+              />
+              <CurrencyOption
+                active={currency === 'USD'}
+                onClick={() => handleCurrencyChange('USD')}
+                symbol="$"
+                label="USD"
+                hint="US Dollar"
+                disabled={isSavingCurrency}
+              />
             </div>
-            <PushToggle push={push} />
-          </div>
-        </Card>
+          </Card>
+          <Card variant="low" className="p-4">
+            <div className="flex items-start gap-3">
+              <BellRing
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <div className="flex-1">
+                <p className="body-sm text-on-surface">Payment reminders</p>
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  {push.permission === 'unsupported'
+                    ? "This browser doesn't support push notifications."
+                    : push.permission === 'denied'
+                      ? 'Blocked in browser settings. Re-enable there to turn on.'
+                      : push.isSubscribed
+                        ? 'You will be notified about upcoming and overdue payments.'
+                        : 'Get notified about upcoming and overdue payments.'}
+                </p>
+              </div>
+              <PushToggle push={push} />
+            </div>
+          </Card>
+        </div>
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Change password                                                      */}
+      {/* Account                                                             */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
-        {!isChangingPassword ? (
-          <button
-            type="button"
-            onClick={openChangePassword}
+      <section className="mb-8">
+        <h2 className="label-md mb-3 px-1 text-on-surface-variant">Account</h2>
+        <div className="space-y-2">
+          <Link
+            to="/app/activity"
             className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
           >
             <div className="flex items-center gap-3">
-              <KeyRound
+              <History
                 className="h-5 w-5 text-on-surface-variant"
                 strokeWidth={1.75}
               />
               <span className="font-display font-semibold">
-                Change password
+                Activity history
               </span>
             </div>
-            <ChevronDown
+            <ChevronRight
               className="h-4 w-4 text-on-surface-variant/50"
               strokeWidth={2}
             />
-          </button>
-        ) : (
-          <Card variant="low">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="label-md text-on-surface-variant">
-                Change password
-              </h2>
-              <button
-                type="button"
-                onClick={closeChangePassword}
-                className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
-                aria-label="Cancel"
-              >
-                <X className="h-4 w-4" strokeWidth={2} />
-              </button>
-            </div>
-            <form onSubmit={handleChangePassword} className="space-y-3">
-              <TextField
-                id="pw-current"
-                type="password"
-                placeholder="Current password"
-                value={pwForm.current}
-                onChange={(e) =>
-                  setPwForm((f) => ({ ...f, current: e.target.value }))
-                }
-                disabled={isSavingPassword}
-                autoComplete="current-password"
+          </Link>
+
+          {!isChangingPassword ? (
+            <button
+              type="button"
+              onClick={openChangePassword}
+              className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+            >
+              <div className="flex items-center gap-3">
+                <KeyRound
+                  className="h-5 w-5 text-on-surface-variant"
+                  strokeWidth={1.75}
+                />
+                <span className="font-display font-semibold">
+                  Change password
+                </span>
+              </div>
+              <ChevronDown
+                className="h-4 w-4 text-on-surface-variant/50"
+                strokeWidth={2}
               />
-              <TextField
-                id="pw-new"
-                type="password"
-                placeholder="New password"
-                value={pwForm.next}
-                onChange={(e) =>
-                  setPwForm((f) => ({ ...f, next: e.target.value }))
-                }
-                disabled={isSavingPassword}
-                autoComplete="new-password"
-              />
-              <TextField
-                id="pw-confirm"
-                type="password"
-                placeholder="Confirm new password"
-                value={pwForm.confirm}
-                onChange={(e) =>
-                  setPwForm((f) => ({ ...f, confirm: e.target.value }))
-                }
-                disabled={isSavingPassword}
-                autoComplete="new-password"
-              />
-              {pwError && (
-                <p className="body-sm px-1 text-error" role="alert">
-                  {pwError}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={
-                  isSavingPassword ||
-                  !pwForm.current ||
-                  !pwForm.next ||
-                  !pwForm.confirm
-                }
-                className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
-              >
-                {isSavingPassword ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
-                ) : (
-                  <Check className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+          ) : (
+            <Card variant="low">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="label-md text-on-surface-variant">
+                  Change password
+                </h3>
+                <button
+                  type="button"
+                  onClick={closeChangePassword}
+                  className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
+                  aria-label="Cancel"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </div>
+              <form onSubmit={handleChangePassword} className="space-y-3">
+                <TextField
+                  id="pw-current"
+                  type="password"
+                  placeholder="Current password"
+                  value={pwForm.current}
+                  onChange={(e) =>
+                    setPwForm((f) => ({ ...f, current: e.target.value }))
+                  }
+                  disabled={isSavingPassword}
+                  autoComplete="current-password"
+                />
+                <TextField
+                  id="pw-new"
+                  type="password"
+                  placeholder="New password"
+                  value={pwForm.next}
+                  onChange={(e) =>
+                    setPwForm((f) => ({ ...f, next: e.target.value }))
+                  }
+                  disabled={isSavingPassword}
+                  autoComplete="new-password"
+                />
+                <TextField
+                  id="pw-confirm"
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={pwForm.confirm}
+                  onChange={(e) =>
+                    setPwForm((f) => ({ ...f, confirm: e.target.value }))
+                  }
+                  disabled={isSavingPassword}
+                  autoComplete="new-password"
+                />
+                {pwError && (
+                  <p className="body-sm px-1 text-error" role="alert">
+                    {pwError}
+                  </p>
                 )}
-                {isSavingPassword ? 'Saving…' : 'Update password'}
-              </button>
-            </form>
-          </Card>
-        )}
+                <button
+                  type="submit"
+                  disabled={
+                    isSavingPassword ||
+                    !pwForm.current ||
+                    !pwForm.next ||
+                    !pwForm.confirm
+                  }
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
+                >
+                  {isSavingPassword ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
+                  ) : (
+                    <Check className="h-4 w-4" strokeWidth={2.5} />
+                  )}
+                  {isSavingPassword ? 'Saving…' : 'Update password'}
+                </button>
+              </form>
+            </Card>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setConfirmLogout(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">Sign out</span>
+            </div>
+          </button>
+        </div>
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Test data                                                            */}
+      {/* Developer tools                                                     */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
+      <section className="mb-10">
         <h2 className="label-md mb-3 px-1 text-on-surface-variant">
-          Test data
+          Developer tools
         </h2>
         <div className="space-y-2">
           <button
@@ -586,20 +593,6 @@ function ProfileScreen() {
             />
           </button>
         </div>
-      </section>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Sign out                                                             */}
-      {/* ------------------------------------------------------------------ */}
-      <section className="mb-10">
-        <button
-          type="button"
-          onClick={() => setConfirmLogout(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-outline-variant/30 px-4 py-4 text-on-surface transition hover:bg-white/5"
-        >
-          <LogOut className="h-5 w-5" strokeWidth={1.75} />
-          <span className="font-display font-semibold">Sign out</span>
-        </button>
       </section>
 
       <ConfirmModal
