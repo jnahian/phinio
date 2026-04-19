@@ -324,8 +324,8 @@ export async function updateInvestmentImpl(
         ? new Date(data.completedAt)
         : null
 
-    const updated = await tx.investment.update({
-      where: { id: data.id },
+    const res = await tx.investment.updateMany({
+      where: { id: data.id, profileId },
       data: {
         name: data.name,
         type: data.type,
@@ -338,6 +338,7 @@ export async function updateInvestmentImpl(
         completedAt: nextCompletedAt,
       },
     })
+    if (res.count !== 1) throw new Error('Investment not found')
 
     const changes = diffFields(
       before,
@@ -369,20 +370,20 @@ export async function updateInvestmentImpl(
     if (changes.length > 0) {
       const summary =
         data.status === 'completed' && before.status !== 'completed'
-          ? `Marked investment '${updated.name}' as completed`
-          : `Edited investment '${updated.name}'`
+          ? `Marked investment '${data.name}' as completed`
+          : `Edited investment '${data.name}'`
 
       await logActivity(tx, profileId, {
         action: 'update',
         entityType: 'investment',
-        entityId: updated.id,
-        entityLabel: updated.name,
+        entityId: data.id,
+        entityLabel: data.name,
         summary,
         changes,
       })
     }
 
-    return updated
+    return { id: data.id }
   })
   return { id: row.id }
 }
@@ -394,7 +395,7 @@ export async function deleteInvestmentImpl(profileId: string, id: string) {
       select: { id: true, name: true, mode: true },
     })
     if (!existing) throw new Error('Investment not found')
-    await tx.investment.delete({ where: { id } })
+    await tx.investment.deleteMany({ where: { id, profileId } })
     const label =
       existing.mode === 'flexible'
         ? `savings pot '${existing.name}'`
@@ -494,10 +495,11 @@ export async function updateDpsInvestmentImpl(
     })
     if (!before) throw new Error('DPS not found')
 
-    const updated = await tx.investment.update({
-      where: { id: data.id },
+    const res = await tx.investment.updateMany({
+      where: { id: data.id, profileId, mode: 'scheduled' },
       data: { name: data.name, notes: data.notes },
     })
+    if (res.count !== 1) throw new Error('DPS not found')
 
     const changes = diffFields(
       before,
@@ -512,9 +514,9 @@ export async function updateDpsInvestmentImpl(
       await logActivity(tx, profileId, {
         action: 'update',
         entityType: 'investment',
-        entityId: updated.id,
-        entityLabel: updated.name,
-        summary: `Edited DPS '${updated.name}'`,
+        entityId: data.id,
+        entityLabel: data.name,
+        summary: `Edited DPS '${data.name}'`,
         changes,
       })
     }
@@ -543,8 +545,8 @@ export async function markDepositPaidImpl(
     })
     if (!deposit) throw new Error('Deposit not found')
 
-    await tx.investmentDeposit.update({
-      where: { id: data.depositId },
+    await tx.investmentDeposit.updateMany({
+      where: { id: data.depositId, profileId },
       data: {
         status: data.paid ? 'paid' : 'upcoming',
         paidAt: data.paid ? new Date() : null,
@@ -557,8 +559,8 @@ export async function markDepositPaidImpl(
       select: { amount: true },
     })
     const totalPaid = paidDeposits.reduce((sum, d) => sum + Number(d.amount), 0)
-    await tx.investment.update({
-      where: { id: deposit.investmentId },
+    await tx.investment.updateMany({
+      where: { id: deposit.investmentId, profileId },
       data: {
         investedAmount: totalPaid.toFixed(2),
         currentValue: totalPaid.toFixed(2),
@@ -572,8 +574,8 @@ export async function markDepositPaidImpl(
         where: { investmentId: deposit.investmentId, status: { not: 'paid' } },
       })
       if (unpaidCount === 0) {
-        await tx.investment.update({
-          where: { id: deposit.investmentId },
+        await tx.investment.updateMany({
+          where: { id: deposit.investmentId, profileId },
           data: { status: 'matured' },
         })
         autoMatured = true
@@ -695,14 +697,15 @@ export async function updateSavingsInvestmentImpl(
     if (!before) throw new Error('Savings pot not found')
     const currency = await getProfileCurrency(tx, profileId)
 
-    const updated = await tx.investment.update({
-      where: { id: data.id },
+    const res = await tx.investment.updateMany({
+      where: { id: data.id, profileId, mode: 'flexible' },
       data: {
         name: data.name,
         currentValue: data.currentValue,
         notes: data.notes,
       },
     })
+    if (res.count !== 1) throw new Error('Savings pot not found')
 
     const changes = diffFields(
       before,
@@ -723,9 +726,9 @@ export async function updateSavingsInvestmentImpl(
       await logActivity(tx, profileId, {
         action: 'update',
         entityType: 'investment',
-        entityId: updated.id,
-        entityLabel: updated.name,
-        summary: `Edited savings pot '${updated.name}'`,
+        entityId: data.id,
+        entityLabel: data.name,
+        summary: `Edited savings pot '${data.name}'`,
         changes,
       })
     }
@@ -762,8 +765,8 @@ export async function addDepositImpl(profileId: string, data: AddDepositInput) {
     })
     const newInvested = Number(investment.investedAmount) + depositAmount
     const newCurrentValue = Number(investment.currentValue) + depositAmount
-    await tx.investment.update({
-      where: { id: data.investmentId },
+    await tx.investment.updateMany({
+      where: { id: data.investmentId, profileId },
       data: {
         investedAmount: newInvested.toFixed(2),
         currentValue: newCurrentValue.toFixed(2),
@@ -801,7 +804,9 @@ export async function removeDepositImpl(
 
     const removedAmount = Number(deposit.amount)
 
-    await tx.investmentDeposit.delete({ where: { id: data.depositId } })
+    await tx.investmentDeposit.deleteMany({
+      where: { id: data.depositId, profileId },
+    })
     // Re-sync investedAmount from remaining deposits
     const remaining = await tx.investmentDeposit.findMany({
       where: { investmentId: deposit.investmentId },
@@ -818,8 +823,8 @@ export async function removeDepositImpl(
       Number(investment.currentValue) - removedAmount,
     )
 
-    await tx.investment.update({
-      where: { id: deposit.investmentId },
+    await tx.investment.updateMany({
+      where: { id: deposit.investmentId, profileId },
       data: {
         investedAmount: newInvested.toFixed(2),
         currentValue: newCurrentValue.toFixed(2),
@@ -895,8 +900,8 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
         _sum: { amount: true },
       })
       const totalExit = Number(totals._sum.amount ?? 0)
-      await tx.investment.update({
-        where: { id: data.investmentId },
+      await tx.investment.updateMany({
+        where: { id: data.investmentId, profileId },
         data: {
           currentValue: newCurrentValue.toFixed(2),
           status: 'completed',
@@ -905,8 +910,8 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
         },
       })
     } else {
-      await tx.investment.update({
-        where: { id: data.investmentId },
+      await tx.investment.updateMany({
+        where: { id: data.investmentId, profileId },
         data: { currentValue: newCurrentValue.toFixed(2) },
       })
     }
@@ -967,10 +972,14 @@ export async function closeDpsImpl(profileId: string, data: DpsCloseInput) {
       },
     })
     await tx.investmentDeposit.deleteMany({
-      where: { investmentId: data.investmentId, status: 'upcoming' },
+      where: {
+        investmentId: data.investmentId,
+        profileId,
+        status: 'upcoming',
+      },
     })
-    await tx.investment.update({
-      where: { id: data.investmentId },
+    await tx.investment.updateMany({
+      where: { id: data.investmentId, profileId },
       data: {
         currentValue: '0.00',
         exitValue: data.receivedAmount,

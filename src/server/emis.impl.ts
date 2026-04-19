@@ -242,7 +242,7 @@ export async function deleteEmiImpl(profileId: string, emiId: string) {
       select: { id: true, label: true },
     })
     if (!existing) throw new Error('EMI not found')
-    await tx.emi.delete({ where: { id: emiId } })
+    await tx.emi.deleteMany({ where: { id: emiId, profileId } })
     await logActivity(tx, profileId, {
       action: 'delete',
       entityType: 'emi',
@@ -268,8 +268,8 @@ export async function markPaymentPaidImpl(
       },
     })
     if (!payment) throw new Error('Payment not found')
-    await tx.emiPayment.update({
-      where: { id: data.paymentId },
+    await tx.emiPayment.updateMany({
+      where: { id: data.paymentId, profileId },
       data: {
         status: data.paid ? 'paid' : 'upcoming',
         paidAt: data.paid ? new Date() : null,
