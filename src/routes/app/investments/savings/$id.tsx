@@ -177,7 +177,7 @@ function SavingsDetailScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
         <div className="flex items-center justify-between">
           <p className="body-sm text-on-surface-variant">Savings pot</p>

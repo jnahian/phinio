@@ -165,7 +165,7 @@ function EditInvestmentScreen() {
   const hasReturn = investedNum > 0
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           {/* Hero card */}

@@ -85,7 +85,7 @@ function AddDpsScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">

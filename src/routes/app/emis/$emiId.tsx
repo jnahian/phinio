@@ -68,7 +68,7 @@ function EmiDetailScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-container to-[#1e3a8a] p-6">
           <div

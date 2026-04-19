@@ -92,7 +92,7 @@ function ActivityScreen() {
 
   if (isLoading) {
     return (
-      <main className="noir-bg min-h-dvh px-5 pb-28 pt-4">
+      <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
             <li key={i}>
@@ -116,7 +116,7 @@ function ActivityScreen() {
 
   if (items.length === 0) {
     return (
-      <main className="noir-bg min-h-dvh px-5 pb-28 pt-4">
+      <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
         <EmptyState
           icon={<History className="h-7 w-7" strokeWidth={1.75} />}
           title="No activity yet"
@@ -129,7 +129,7 @@ function ActivityScreen() {
   const groups = groupByDay(items)
 
   return (
-    <main className="noir-bg min-h-dvh px-5 pb-28 pt-4">
+    <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
       <div className="space-y-6">
         {groups.map((group) => (
           <section key={group.key}>

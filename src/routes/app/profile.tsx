@@ -250,7 +250,7 @@ function ProfileScreen() {
   const initials = getInitials(profile.fullName)
 
   return (
-    <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
+    <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-12">
       {/* ------------------------------------------------------------------ */}
       {/* Header — avatar + name                                               */}
       {/* ------------------------------------------------------------------ */}

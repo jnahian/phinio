@@ -110,7 +110,7 @@ function InvestmentsListScreen() {
       : 0
 
   return (
-    <main className="noir-bg min-h-dvh px-5 pb-28 pt-4">
+    <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
       <Card variant="low" className="mb-6">
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell

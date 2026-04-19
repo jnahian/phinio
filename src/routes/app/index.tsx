@@ -64,7 +64,7 @@ function HomeScreen() {
     : false
 
   return (
-    <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
+    <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-12">
       <header className="mb-6">
         <p className="label-md text-on-surface-variant">Welcome</p>
         <h1 className="headline-lg mt-1 text-on-surface">
