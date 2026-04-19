@@ -366,19 +366,21 @@ export async function updateInvestmentImpl(
       currency,
     )
 
-    const summary =
-      data.status === 'completed' && before.status !== 'completed'
-        ? `Marked investment '${updated.name}' as completed`
-        : `Edited investment '${updated.name}'`
+    if (changes.length > 0) {
+      const summary =
+        data.status === 'completed' && before.status !== 'completed'
+          ? `Marked investment '${updated.name}' as completed`
+          : `Edited investment '${updated.name}'`
 
-    await logActivity(tx, profileId, {
-      action: 'update',
-      entityType: 'investment',
-      entityId: updated.id,
-      entityLabel: updated.name,
-      summary,
-      changes,
-    })
+      await logActivity(tx, profileId, {
+        action: 'update',
+        entityType: 'investment',
+        entityId: updated.id,
+        entityLabel: updated.name,
+        summary,
+        changes,
+      })
+    }
 
     return updated
   })
@@ -506,14 +508,16 @@ export async function updateDpsInvestmentImpl(
       ],
     )
 
-    await logActivity(tx, profileId, {
-      action: 'update',
-      entityType: 'investment',
-      entityId: updated.id,
-      entityLabel: updated.name,
-      summary: `Edited DPS '${updated.name}'`,
-      changes,
-    })
+    if (changes.length > 0) {
+      await logActivity(tx, profileId, {
+        action: 'update',
+        entityType: 'investment',
+        entityId: updated.id,
+        entityLabel: updated.name,
+        summary: `Edited DPS '${updated.name}'`,
+        changes,
+      })
+    }
   })
   return { id: data.id }
 }
@@ -562,6 +566,7 @@ export async function markDepositPaidImpl(
     })
 
     let autoMatured = false
+    let reactivated = false
     if (data.paid) {
       const unpaidCount = await tx.investmentDeposit.count({
         where: { investmentId: deposit.investmentId, status: { not: 'paid' } },
@@ -573,14 +578,26 @@ export async function markDepositPaidImpl(
         })
         autoMatured = true
       }
+    } else {
+      // Unmarking after auto-maturity leaves unpaid installments behind; roll
+      // the status back to active so the DPS is consistent with its deposits.
+      const res = await tx.investment.updateMany({
+        where: {
+          id: deposit.investmentId,
+          profileId,
+          status: 'matured',
+        },
+        data: { status: 'active' },
+      })
+      reactivated = res.count > 0
     }
 
-    const installmentLabel = deposit.installmentNumber
-      ? `#${deposit.installmentNumber}`
-      : ''
+    const depositTarget = deposit.installmentNumber
+      ? `installment #${deposit.installmentNumber} of '${deposit.investment.name}'`
+      : `'${deposit.investment.name}'`
     const summary = data.paid
-      ? `Marked installment ${installmentLabel} of '${deposit.investment.name}' as paid`
-      : `Unmarked installment ${installmentLabel} of '${deposit.investment.name}' as paid`
+      ? `Marked ${depositTarget} as paid`
+      : `Unmarked ${depositTarget} as paid`
 
     await logActivity(tx, profileId, {
       action: 'update',
@@ -597,6 +614,16 @@ export async function markDepositPaidImpl(
         entityId: deposit.investmentId,
         entityLabel: deposit.investment.name,
         summary: `DPS '${deposit.investment.name}' matured — all installments paid`,
+      })
+    }
+
+    if (reactivated) {
+      await logActivity(tx, profileId, {
+        action: 'update',
+        entityType: 'investment',
+        entityId: deposit.investmentId,
+        entityLabel: deposit.investment.name,
+        summary: `DPS '${deposit.investment.name}' reactivated — installment unmarked`,
       })
     }
   })
@@ -692,14 +719,16 @@ export async function updateSavingsInvestmentImpl(
       currency,
     )
 
-    await logActivity(tx, profileId, {
-      action: 'update',
-      entityType: 'investment',
-      entityId: updated.id,
-      entityLabel: updated.name,
-      summary: `Edited savings pot '${updated.name}'`,
-      changes,
-    })
+    if (changes.length > 0) {
+      await logActivity(tx, profileId, {
+        action: 'update',
+        entityType: 'investment',
+        entityId: updated.id,
+        entityLabel: updated.name,
+        summary: `Edited savings pot '${updated.name}'`,
+        changes,
+      })
+    }
   })
   return { id: data.id }
 }

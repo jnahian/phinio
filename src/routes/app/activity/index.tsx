@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   ArrowRight,
@@ -150,6 +150,7 @@ interface ActivityItemCardProps {
 
 function ActivityItemCard({ item, currency }: ActivityItemCardProps) {
   const [open, setOpen] = useState(false)
+  const changesId = useId()
   const entity = ENTITY_META[item.entityType]
   const action = ACTION_META[item.action]
   const EntityIcon = entity.icon
@@ -161,6 +162,8 @@ function ActivityItemCard({ item, currency }: ActivityItemCardProps) {
       <button
         type="button"
         disabled={!hasChanges}
+        aria-expanded={hasChanges ? open : undefined}
+        aria-controls={hasChanges ? changesId : undefined}
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'flex w-full items-start gap-3 text-left',
@@ -202,7 +205,10 @@ function ActivityItemCard({ item, currency }: ActivityItemCardProps) {
       </button>
 
       {hasChanges && open && (
-        <ul className="mt-3 space-y-2 border-t border-outline-variant/15 pt-3">
+        <ul
+          id={changesId}
+          className="mt-3 space-y-2 border-t border-outline-variant/15 pt-3"
+        >
           {item.changes!.map((change, idx) => (
             <ChangeRow key={idx} change={change} currency={currency} />
           ))}

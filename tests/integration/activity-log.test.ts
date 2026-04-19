@@ -8,7 +8,9 @@ import {
   logActivity,
 } from '#/server/activity-log.impl'
 import {
+  createDpsInvestmentImpl,
   createInvestmentImpl,
+  markDepositPaidImpl,
   updateInvestmentImpl,
 } from '#/server/investments.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
@@ -232,7 +234,6 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
       investedAmount: '1000.00',
       currentValue: '1500.00',
       dateOfInvestment: '2026-01-15',
-      notes: null,
       status: 'active',
     })
 
@@ -250,5 +251,80 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
     const nameChange = changes.find((c) => c.field === 'Name')
     expect(nameChange).toMatchObject({ from: 'Apple', to: 'Apple Inc' })
     expect(nameChange).not.toHaveProperty('currency')
+  })
+
+  it('update does not log when nothing changed', async () => {
+    const user = await createTestUser()
+
+    const created = await createInvestmentImpl(user.profileId, {
+      name: 'Apple',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1200.00',
+      dateOfInvestment: '2026-01-15',
+    })
+
+    await updateInvestmentImpl(user.profileId, {
+      id: created.id,
+      name: 'Apple',
+      type: 'stock',
+      investedAmount: '1000.00',
+      currentValue: '1200.00',
+      dateOfInvestment: '2026-01-15',
+      status: 'active',
+    })
+
+    const { items } = await listActivityImpl(user.profileId, {})
+    // Only the create log should exist — the no-op update must not emit a row.
+    expect(items.filter((r) => r.action === 'update')).toHaveLength(0)
+    expect(items.filter((r) => r.action === 'create')).toHaveLength(1)
+  })
+})
+
+describe('markDepositPaidImpl DPS status transitions', () => {
+  it('reactivates a matured DPS when an installment is unmarked', async () => {
+    const user = await createTestUser()
+
+    const dps = await createDpsInvestmentImpl(user.profileId, {
+      name: 'Short DPS',
+      monthlyDeposit: '100.00',
+      tenureMonths: 2,
+      interestRate: '0',
+      interestType: 'simple',
+      startDate: '2026-01-01',
+    })
+
+    const deposits = await prisma.investmentDeposit.findMany({
+      where: { investmentId: dps.id },
+      orderBy: { installmentNumber: 'asc' },
+    })
+    expect(deposits).toHaveLength(2)
+
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[0].id,
+      paid: true,
+    })
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[1].id,
+      paid: true,
+    })
+
+    let inv = await prisma.investment.findUniqueOrThrow({
+      where: { id: dps.id },
+    })
+    expect(inv.status).toBe('matured')
+
+    await markDepositPaidImpl(user.profileId, {
+      depositId: deposits[1].id,
+      paid: false,
+    })
+
+    inv = await prisma.investment.findUniqueOrThrow({ where: { id: dps.id } })
+    expect(inv.status).toBe('active')
+
+    const { items } = await listActivityImpl(user.profileId, {})
+    expect(
+      items.some((r) => r.summary.includes('reactivated')),
+    ).toBe(true)
   })
 })
