@@ -1,13 +1,13 @@
 ---
 name: changelog
-description: Write or update CHANGELOG.md for the Phinio project. Use whenever the user mentions changelog, release notes, "what changed", preparing a release, or wants to document recent commits for users. Encodes Phinio's release-notes conventions — Keep a Changelog format, SemVer, user-facing prose (not raw commit subjects), gitmoji prefixes stripped. Works in an isolated git worktree so main-branch history is read cleanly without disturbing the current branch.
+description: Write or update CHANGELOG.md for the Phinio project. Use whenever the user mentions changelog, release notes, "what changed", preparing a release, or wants to document recent commits for users. Encodes Phinio's release-notes conventions — Keep a Changelog format, SemVer, user-facing prose (not raw commit subjects), gitmoji prefixes stripped. Writes directly on the current branch and leaves the file unstaged for review.
 ---
 
 # Writing the Phinio CHANGELOG
 
 The goal of this workflow is to turn raw git history into a release-notes document a real user can read and understand. Commit subjects are written for _developers looking back at code_ — a changelog is written for _users looking forward at the product_. These are different audiences, and the translation step is what makes the output valuable.
 
-This skill exists because that translation has conventions specific to Phinio (format, grouping rules, gitmoji handling, worktree workflow) that would be tedious to re-derive every time.
+This skill exists because that translation has conventions specific to Phinio (format, grouping rules, gitmoji handling) that would be tedious to re-derive every time.
 
 ## Before writing: ask, don't assume
 
@@ -26,27 +26,15 @@ If the user has already answered these in their prompt, skip the question.
 
 ## Workflow
 
-### 1. Set up an isolated worktree
-
-Use a **native git worktree** at a sibling path (not inside `.claude/`, not inside the repo). This keeps the current branch's uncommitted work untouched while you read and write against `main`.
+### 1. Read the full commit range
 
 ```bash
-git worktree add -b changelog/v<VERSION> ../phinio-changelog main
+git log --pretty=format:"%h %s%n%b%n---" <range>
 ```
 
-If `../phinio-changelog` already exists from a prior run, either `git worktree remove` it first (confirm with the user — it may have uncommitted changes) or pick a new suffix like `../phinio-changelog-v1-1-0`.
+Where `<range>` is `main` for a first release, or `<last-tag>..main` / `<since-date>..main` / `<last-changelog-commit>..HEAD` for an update. Read the **entire** output — skimming the first page and extrapolating is how you miss whole features. Commits are often out of narrative order; early commits may be superseded by later ones in the same range.
 
-All file reads and writes for the rest of the workflow happen inside that worktree.
-
-### 2. Read the full commit range
-
-```bash
-git -C ../phinio-changelog log --pretty=format:"%h %s%n%b%n---" <range>
-```
-
-Where `<range>` is `main` for a first release, or `<last-tag>..main` / `<since-date>..main` for an update. Read the **entire** output — skimming the first page and extrapolating is how you miss whole features. Commits are often out of narrative order; early commits may be superseded by later ones in the same range.
-
-### 3. Translate commits into user-facing entries
+### 2. Translate commits into user-facing entries
 
 This is the work. Some principles:
 
@@ -57,7 +45,7 @@ This is the work. Some principles:
 - **Order within a section by impact**, not by commit date. The marquee feature goes first.
 - **When a later commit supersedes an earlier one in the same range**, describe the end state, not the journey. If a feature was added then refactored then renamed within the range, the bullet is about what shipped — not "added X, then changed it to Y."
 
-### 4. Format — Keep a Changelog + SemVer
+### 3. Format — Keep a Changelog + SemVer
 
 ```markdown
 # Changelog
@@ -88,23 +76,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use today's date (the project uses absolute dates).
 - For an **update** (not first release), prepend the new `## [<VERSION>]` block above the previous one. Do not rewrite prior entries.
 
-### 5. Leave the file unstaged for review
+### 4. Leave the file unstaged for review
 
-Write the file. Do **not** `git add`, do **not** commit. The user needs to review the prose — the rewrites from commit subjects to user-facing items involve judgment calls they should eyeball before it lands.
+Write the file directly on the current branch. Do **not** `git add`, do **not** commit. The user needs to review the prose — the rewrites from commit subjects to user-facing items involve judgment calls they should eyeball before it lands.
 
 Report back with:
 
-- Worktree path and branch name.
 - Entry counts per section.
 - Any judgment calls the user should verify — especially commits you folded, dropped, or grouped in non-obvious ways, and any version/package.json mismatches.
-
-### 6. (Optional) Clean up
-
-The worktree stays around until the user decides what to do — merge the branch, cherry-pick the file, or discard. Don't auto-remove it. Mention in the final report how to remove it when they're done:
-
-```bash
-git worktree remove ../phinio-changelog
-```
 
 ## Example translation
 
