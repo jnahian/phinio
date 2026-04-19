@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-04-19
+
+### Changed
+
+- **Profile screen** reorganized into three labelled groups:
+  _Preferences_ (currency, payment reminders), _Account_ (activity
+  history, change password, sign out), and _Developer tools_ (load test
+  data, clear all my data). Sign out now sits under Account as a row
+  entry matching the rest of the group.
+
+### Fixed
+
+- **Payment reminders toggle** no longer gets stuck off after
+  successfully enabling. A focus-event race between the in-flight
+  subscribe call and the hook's periodic sync could overwrite
+  `isSubscribed` back to false; the toggle now reflects the subscribed
+  state immediately without needing a page reload.
+
 ## [1.2.0] - 2026-04-19
 
 Adds a user-facing activity log and replaces in-app reminder polling with
