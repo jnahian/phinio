@@ -1,10 +1,7 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { formatCurrency } from '#/lib/currency'
-import type { Currency } from '#/lib/currency'
 import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
-import { createNotification } from './notifications.impl'
 import { logActivity } from './activity-log.impl'
 import type {
   EmiCreateInput,
@@ -211,20 +208,6 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
       summary: `Created EMI '${created.label}' — ${schedule.length} payments scheduled`,
     })
     return created
-  })
-
-  const profile = await prisma.profile.findUnique({
-    where: { id: profileId },
-    select: { preferredCurrency: true },
-  })
-  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
-  await createNotification({
-    profileId,
-    type: 'emi.created',
-    title: 'Loan added',
-    body: `${emi.label} — ${formatCurrency(emi.principal, currency)} over ${emi.tenureMonths} months at ${String(emi.interestRate)}%`,
-    link: `/app/emis/${emi.id}`,
-    dedupeKey: `emi-created:${emi.id}`,
   })
 
   return {

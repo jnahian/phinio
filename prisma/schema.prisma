@@ -94,6 +94,7 @@ model Profile {
   emiPayments           EmiPayment[]
   notifications         Notification[]
   activityLogs          ActivityLog[]
+  pushSubscriptions     PushSubscription[]
 
   @@map("profiles")
 }
@@ -257,4 +258,19 @@ model ActivityLog {
 
   @@index([profileId, createdAt])
   @@map("activity_log")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([profileId])
+  @@map("push_subscriptions")
 }

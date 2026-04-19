@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
+  BellRing,
   Camera,
   Check,
   ChevronDown,
@@ -26,6 +27,7 @@ import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import { cleanupProfileDataFn, seedProfileDataFn } from '#/server/dev-data'
 import type { Currency } from '#/lib/currency'
 import type { SeedCategories } from '#/server/dev-data'
+import { usePushSubscription } from '#/hooks/usePushSubscription'
 
 export const Route = createFileRoute('/app/profile')({
   staticData: { title: 'Profile' },
@@ -63,6 +65,8 @@ function ProfileScreen() {
   const [isSeeding, setIsSeeding] = useState(false)
   const [confirmCleanup, setConfirmCleanup] = useState(false)
   const [isCleaningUp, setIsCleaningUp] = useState(false)
+
+  const push = usePushSubscription()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -408,6 +412,36 @@ function ProfileScreen() {
       </section>
 
       {/* ------------------------------------------------------------------ */}
+      {/* Browser notifications                                                */}
+      {/* ------------------------------------------------------------------ */}
+      <section className="mb-6">
+        <h2 className="label-md mb-3 px-1 text-on-surface-variant">
+          Browser notifications
+        </h2>
+        <Card variant="low" className="p-4">
+          <div className="flex items-start gap-3">
+            <BellRing
+              className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
+              strokeWidth={1.75}
+            />
+            <div className="flex-1">
+              <p className="body-sm text-on-surface">Payment reminders</p>
+              <p className="mt-1 text-xs text-on-surface-variant">
+                {push.permission === 'unsupported'
+                  ? "This browser doesn't support push notifications."
+                  : push.permission === 'denied'
+                    ? 'Blocked in browser settings. Re-enable there to turn on.'
+                    : push.isSubscribed
+                      ? 'You will be notified about upcoming and overdue payments.'
+                      : 'Get notified about upcoming and overdue payments.'}
+              </p>
+            </div>
+            <PushToggle push={push} />
+          </div>
+        </Card>
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
       {/* Change password                                                      */}
       {/* ------------------------------------------------------------------ */}
       <section className="mb-6">
@@ -607,6 +641,40 @@ function ProfileScreen() {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
+
+function PushToggle({
+  push,
+}: {
+  push: ReturnType<typeof usePushSubscription>
+}) {
+  const disabled =
+    !push.isSupported ||
+    push.permission === 'unsupported' ||
+    push.permission === 'denied' ||
+    push.isBusy
+  const on = push.isSubscribed && push.permission === 'granted'
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={() => (on ? push.unsubscribe() : push.subscribe())}
+      className={cn(
+        'relative h-6 w-11 flex-shrink-0 rounded-full transition disabled:opacity-50',
+        on ? 'bg-primary-container' : 'bg-surface-container-highest',
+      )}
+    >
+      <span
+        className={cn(
+          'absolute top-0.5 h-5 w-5 rounded-full bg-on-surface transition-all',
+          on ? 'left-[1.375rem]' : 'left-0.5',
+        )}
+      />
+    </button>
+  )
+}
 
 function CurrencyOption({
   active,

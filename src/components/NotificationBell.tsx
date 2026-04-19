@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Bell, BellOff, Check, CheckCheck } from 'lucide-react'
+import { Bell, BellOff, BellRing, Check, CheckCheck } from 'lucide-react'
 import { cn } from '#/lib/cn'
 import {
   useMarkAllNotificationsRead,
@@ -8,6 +8,7 @@ import {
   useNotificationsQuery,
   useUnreadNotificationCountQuery,
 } from '#/hooks/useNotifications'
+import { usePushSubscription } from '#/hooks/usePushSubscription'
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
@@ -16,6 +17,7 @@ export function NotificationBell() {
   const listQuery = useNotificationsQuery()
   const markRead = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()
+  const push = usePushSubscription()
 
   useEffect(() => {
     if (!open) return
@@ -78,6 +80,38 @@ export function NotificationBell() {
               </button>
             )}
           </div>
+
+          {push.isSupported &&
+            push.permission === 'default' &&
+            !push.isSubscribed && (
+              <button
+                type="button"
+                onClick={() => push.subscribe()}
+                disabled={push.isBusy}
+                className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center gap-2 rounded-xl bg-primary-container/40 px-3 py-2 text-left text-xs text-on-primary-container transition hover:bg-primary-container/60 disabled:opacity-60"
+              >
+                <BellRing
+                  className="h-4 w-4 flex-shrink-0"
+                  strokeWidth={1.75}
+                />
+                <span className="flex-1">
+                  Enable reminders so you don't miss a payment.
+                </span>
+              </button>
+            )}
+
+          {push.isSupported && push.permission === 'denied' && (
+            <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-error-container/30 px-3 py-2 text-xs text-on-error-container">
+              <BellOff
+                className="mt-0.5 h-4 w-4 flex-shrink-0"
+                strokeWidth={1.75}
+              />
+              <span className="flex-1">
+                Reminders are blocked. Re-enable notifications in your browser
+                settings to turn them on.
+              </span>
+            </div>
+          )}
 
           <div className="max-h-[60vh] overflow-y-auto">
             {listQuery.isLoading ? (

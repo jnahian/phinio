@@ -2,9 +2,7 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { formatCurrency } from '#/lib/currency'
-import type { Currency } from '#/lib/currency'
 import { generateDpsSchedule } from '#/lib/dps-calculator'
-import { createNotification } from './notifications.impl'
 import {
   diffFields,
   fmtDate,
@@ -290,19 +288,6 @@ export async function createInvestmentImpl(
     })
     return created
   })
-  const profile = await prisma.profile.findUnique({
-    where: { id: profileId },
-    select: { preferredCurrency: true },
-  })
-  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
-  await createNotification({
-    profileId,
-    type: 'investment.created',
-    title: 'Investment added',
-    body: `${row.name} — ${formatCurrency(row.investedAmount, currency)}`,
-    link: `/app/investments/${row.id}/edit`,
-    dedupeKey: `investment-created:${row.id}`,
-  })
   return { id: row.id }
 }
 
@@ -465,20 +450,6 @@ export async function createDpsInvestmentImpl(
       summary: `Created DPS '${inv.name}' — ${schedule.length} installments scheduled`,
     })
     return inv
-  })
-
-  const profile = await prisma.profile.findUnique({
-    where: { id: profileId },
-    select: { preferredCurrency: true },
-  })
-  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
-  await createNotification({
-    profileId,
-    type: 'dps.created',
-    title: 'DPS scheme added',
-    body: `${row.name} — ${formatCurrency(row.monthlyDeposit ?? '0', currency)}/month for ${row.tenureMonths} months`,
-    link: `/app/investments/dps/${row.id}`,
-    dedupeKey: `dps-created:${row.id}`,
   })
 
   return { id: row.id, name: row.name }
@@ -847,12 +818,6 @@ export async function removeDepositImpl(
 // Withdrawals — lump_sum + flexible (savings) modes
 // ---------------------------------------------------------------------------
 
-function detailRoute(mode: string, id: string): string {
-  if (mode === 'flexible') return `/app/investments/savings/${id}`
-  if (mode === 'scheduled') return `/app/investments/dps/${id}`
-  return `/app/investments/${id}/edit`
-}
-
 export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
   const investment = await prisma.investment.findFirst({
     where: { id: data.investmentId, profileId },
@@ -929,15 +894,6 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
     })
   })
 
-  await createNotification({
-    profileId,
-    type: 'investment.withdrawal',
-    title: shouldClose ? 'Investment closed' : 'Withdrawal recorded',
-    body: `${investment.name} — ${formatCurrency(data.amount, currency)} withdrawn`,
-    link: detailRoute(investment.mode, investment.id),
-    dedupeKey: `investment-withdrawal:${investment.id}:${data.withdrawalDate}:${data.amount}`,
-  })
-
   return { id: investment.id, closed: shouldClose }
 }
 
@@ -994,15 +950,6 @@ export async function closeDpsImpl(profileId: string, data: DpsCloseInput) {
       entityLabel: investment.name,
       summary: `Closed DPS '${investment.name}' — received ${formatCurrency(data.receivedAmount, currency)}`,
     })
-  })
-
-  await createNotification({
-    profileId,
-    type: 'investment.dps_closed',
-    title: 'DPS closed',
-    body: `${investment.name} — received ${formatCurrency(data.receivedAmount, currency)}`,
-    link: detailRoute('scheduled', investment.id),
-    dedupeKey: `dps-closed:${investment.id}:${data.closureDate}`,
   })
 
   return { id: investment.id }
