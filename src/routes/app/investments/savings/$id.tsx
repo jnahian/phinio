@@ -176,7 +176,6 @@ function SavingsDetailScreen() {
     }
   }
 
-
   return (
     <main className="noir-bg min-h-dvh pb-32">
       <div className="space-y-6 px-5 pt-4">

@@ -83,10 +83,7 @@ export function WithdrawModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div
-        className="w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <Card
           variant="low"
           className="rounded-t-3xl rounded-b-none sm:rounded-3xl"

@@ -1007,11 +1007,7 @@ describe('withdrawals', () => {
     })
 
     const inv = await getInvestmentImpl(user.profileId, created.id)
-    expect(inv.withdrawals.map((w) => w.amount)).toEqual([
-      '300',
-      '200',
-      '500',
-    ])
+    expect(inv.withdrawals.map((w) => w.amount)).toEqual(['300', '200', '500'])
   })
 
   it('cascades: deleting the investment removes its withdrawal rows', async () => {
