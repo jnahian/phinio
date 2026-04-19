@@ -8,8 +8,8 @@ import { createNotification } from './notifications.impl'
 import {
   diffFields,
   fmtDate,
-  fmtMoney,
   fmtText,
+  getProfileCurrency,
   logActivity,
 } from './activity-log.impl'
 import type {
@@ -315,6 +315,7 @@ export async function updateInvestmentImpl(
       where: { id: data.id, profileId },
     })
     if (!before) throw new Error('Investment not found')
+    const currency = await getProfileCurrency(tx, profileId)
 
     const nextExitValue =
       data.status === 'completed' && data.exitValue ? data.exitValue : null
@@ -339,7 +340,7 @@ export async function updateInvestmentImpl(
     })
 
     const changes = diffFields(
-      before as unknown as Record<string, unknown>,
+      before,
       {
         name: data.name,
         type: data.type,
@@ -354,14 +355,15 @@ export async function updateInvestmentImpl(
       [
         { key: 'name', label: 'Name', format: fmtText },
         { key: 'type', label: 'Type', format: fmtText },
-        { key: 'investedAmount', label: 'Invested amount', format: fmtMoney },
-        { key: 'currentValue', label: 'Current value', format: fmtMoney },
+        { key: 'investedAmount', label: 'Invested amount', isMoney: true },
+        { key: 'currentValue', label: 'Current value', isMoney: true },
         { key: 'dateOfInvestment', label: 'Date', format: fmtDate },
         { key: 'notes', label: 'Notes', format: fmtText },
         { key: 'status', label: 'Status', format: fmtText },
-        { key: 'exitValue', label: 'Exit value', format: fmtMoney },
+        { key: 'exitValue', label: 'Exit value', isMoney: true },
         { key: 'completedAt', label: 'Completed on', format: fmtDate },
       ],
+      currency,
     )
 
     const summary =
@@ -496,7 +498,7 @@ export async function updateDpsInvestmentImpl(
     })
 
     const changes = diffFields(
-      before as unknown as Record<string, unknown>,
+      before,
       { name: data.name, notes: data.notes ?? null },
       [
         { key: 'name', label: 'Name', format: fmtText },
@@ -664,6 +666,7 @@ export async function updateSavingsInvestmentImpl(
       select: { id: true, name: true, currentValue: true, notes: true },
     })
     if (!before) throw new Error('Savings pot not found')
+    const currency = await getProfileCurrency(tx, profileId)
 
     const updated = await tx.investment.update({
       where: { id: data.id },
@@ -675,7 +678,7 @@ export async function updateSavingsInvestmentImpl(
     })
 
     const changes = diffFields(
-      before as unknown as Record<string, unknown>,
+      before,
       {
         name: data.name,
         currentValue: data.currentValue,
@@ -683,9 +686,10 @@ export async function updateSavingsInvestmentImpl(
       },
       [
         { key: 'name', label: 'Name', format: fmtText },
-        { key: 'currentValue', label: 'Current value', format: fmtMoney },
+        { key: 'currentValue', label: 'Current value', isMoney: true },
         { key: 'notes', label: 'Notes', format: fmtText },
       ],
+      currency,
     )
 
     await logActivity(tx, profileId, {
@@ -714,6 +718,7 @@ export async function addDepositImpl(profileId: string, data: AddDepositInput) {
       },
     })
     if (!investment) throw new Error('Savings pot not found')
+    const currency = await getProfileCurrency(tx, profileId)
 
     const deposit = await tx.investmentDeposit.create({
       data: {
@@ -741,7 +746,7 @@ export async function addDepositImpl(profileId: string, data: AddDepositInput) {
       entityType: 'investment_deposit',
       entityId: deposit.id,
       entityLabel: investment.name,
-      summary: `Added deposit of ${depositAmount.toFixed(2)} to '${investment.name}'`,
+      summary: `Added deposit of ${formatCurrency(data.amount, currency)} to '${investment.name}'`,
     })
   })
 
@@ -763,6 +768,7 @@ export async function removeDepositImpl(
       },
     })
     if (!deposit) throw new Error('Deposit not found')
+    const currency = await getProfileCurrency(tx, profileId)
 
     const removedAmount = Number(deposit.amount)
 
@@ -796,7 +802,7 @@ export async function removeDepositImpl(
       entityType: 'investment_deposit',
       entityId: null,
       entityLabel: deposit.investment.name,
-      summary: `Removed deposit of ${removedAmount.toFixed(2)} from '${deposit.investment.name}'`,
+      summary: `Removed deposit of ${formatCurrency(deposit.amount, currency)} from '${deposit.investment.name}'`,
     })
   })
 
@@ -841,6 +847,8 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
   const newCurrentValue = Math.max(0, currentValue - amount)
   const shouldClose = data.closeInvestment === true || newCurrentValue === 0
 
+  const currency = await getProfileCurrency(prisma, profileId)
+
   await prisma.$transaction(async (tx) => {
     const withdrawal = await tx.investmentWithdrawal.create({
       data: {
@@ -874,9 +882,10 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
       })
     }
 
+    const amountFmt = formatCurrency(data.amount, currency)
     const summary = shouldClose
-      ? `Closed '${investment.name}' with final withdrawal of ${amount.toFixed(2)}`
-      : `Withdrew ${amount.toFixed(2)} from '${investment.name}'`
+      ? `Closed '${investment.name}' with final withdrawal of ${amountFmt}`
+      : `Withdrew ${amountFmt} from '${investment.name}'`
     await logActivity(tx, profileId, {
       action: 'create',
       entityType: 'investment_withdrawal',
@@ -886,11 +895,6 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
     })
   })
 
-  const profile = await prisma.profile.findUnique({
-    where: { id: profileId },
-    select: { preferredCurrency: true },
-  })
-  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
   await createNotification({
     profileId,
     type: 'investment.withdrawal',
@@ -921,6 +925,8 @@ export async function closeDpsImpl(profileId: string, data: DpsCloseInput) {
     ? `Premature closure. ${data.notes}`
     : 'Premature closure'
 
+  const currency = await getProfileCurrency(prisma, profileId)
+
   await prisma.$transaction(async (tx) => {
     await tx.investmentWithdrawal.create({
       data: {
@@ -948,15 +954,10 @@ export async function closeDpsImpl(profileId: string, data: DpsCloseInput) {
       entityType: 'investment',
       entityId: investment.id,
       entityLabel: investment.name,
-      summary: `Closed DPS '${investment.name}' — received ${Number(data.receivedAmount).toFixed(2)}`,
+      summary: `Closed DPS '${investment.name}' — received ${formatCurrency(data.receivedAmount, currency)}`,
     })
   })
 
-  const profile = await prisma.profile.findUnique({
-    where: { id: profileId },
-    select: { preferredCurrency: true },
-  })
-  const currency = (profile?.preferredCurrency ?? 'BDT') as Currency
   await createNotification({
     profileId,
     type: 'investment.dps_closed',

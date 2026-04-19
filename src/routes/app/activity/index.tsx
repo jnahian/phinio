@@ -64,10 +64,6 @@ const ACTION_META: Record<
   },
 }
 
-// Field names we recognise as money and format with the user's currency symbol
-// at render time. Everything else is rendered verbatim.
-const MONEY_FIELDS = new Set(['Invested amount', 'Current value', 'Exit value'])
-
 function ActivityScreen() {
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
@@ -223,9 +219,12 @@ function ChangeRow({
   change: ActivityChange
   currency: Currency
 }) {
-  const isMoney = MONEY_FIELDS.has(change.field)
-  const from = formatValue(change.from, isMoney, currency)
-  const to = formatValue(change.to, isMoney, currency)
+  // Money changes carry the currency that was active when the change was
+  // recorded; fall back to the user's current preference for legacy rows.
+  const moneyCurrency = change.currency ?? null
+  const isMoney = moneyCurrency !== null
+  const from = formatValue(change.from, isMoney, moneyCurrency ?? currency)
+  const to = formatValue(change.to, isMoney, moneyCurrency ?? currency)
 
   return (
     <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">

@@ -1,8 +1,10 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
+import { z } from 'zod'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { Prisma } from '#/generated/prisma/client'
 import type { PrismaClient } from '#/generated/prisma/client'
+import type { Currency } from '#/lib/currency'
 
 // Either the root client or a $transaction tx client — both expose
 // `.activityLog.create`, which is all we need here.
@@ -22,6 +24,10 @@ export interface ActivityChange {
   field: string
   from: string | null
   to: string | null
+  // Set when the field is monetary. The UI renders the stored value with this
+  // currency's symbol so history doesn't flip when the user later switches
+  // their preferred currency.
+  currency?: Currency | null
 }
 
 export interface LogActivityArgs {
@@ -54,16 +60,33 @@ export async function logActivity(
   })
 }
 
+// Resolves the profile's currency at call time. Kept here so every impl that
+// logs money-field diffs has one canonical place to ask.
+export async function getProfileCurrency(
+  client: Pick<PrismaClient, 'profile'>,
+  profileId: string,
+): Promise<Currency> {
+  const p = await client.profile.findUnique({
+    where: { id: profileId },
+    select: { preferredCurrency: true },
+  })
+  return (p?.preferredCurrency ?? 'BDT') as Currency
+}
+
 // ---------------------------------------------------------------------------
 // Diff helper — callers supply a list of fields with labels and optional
-// formatters, and we return only the changed entries. Callers format money
-// and dates to display strings themselves so the stored diff is render-ready.
+// formatters, and we return only the changed entries.
 // ---------------------------------------------------------------------------
 
 export interface DiffFieldSpec<T> {
   key: keyof T
   label: string
-  format?: (value: T[keyof T]) => string | null
+  // Formatters accept `unknown` so that a Prisma-shaped `before` and a
+  // loosely-typed `after` (e.g. input strings) can share the same spec.
+  format?: (value: unknown) => string | null
+  // When true, fmtMoney is used by default and the passed `currency` is
+  // attached to the resulting change entry.
+  isMoney?: boolean
 }
 
 function defaultFormat(v: unknown): string | null {
@@ -72,19 +95,26 @@ function defaultFormat(v: unknown): string | null {
   return String(v)
 }
 
-export function diffFields<T extends Record<string, unknown>>(
+export function diffFields<T extends object>(
   before: T,
-  after: Partial<T>,
+  after: Partial<Record<keyof T, unknown>>,
   specs: Array<DiffFieldSpec<T>>,
+  currency?: Currency,
 ): Array<ActivityChange> {
   const changes: Array<ActivityChange> = []
   for (const spec of specs) {
     if (!(spec.key in after)) continue
-    const fmt = spec.format ?? defaultFormat
+    const fmt = spec.format ?? (spec.isMoney ? fmtMoney : defaultFormat)
     const fromVal = fmt(before[spec.key])
-    const toVal = fmt(after[spec.key] as T[keyof T])
+    const toVal = fmt(after[spec.key])
     if (fromVal !== toVal) {
-      changes.push({ field: spec.label, from: fromVal, to: toVal })
+      const change: ActivityChange = {
+        field: spec.label,
+        from: fromVal,
+        to: toVal,
+      }
+      if (spec.isMoney && currency) change.currency = currency
+      changes.push(change)
     }
   }
   return changes
@@ -92,13 +122,16 @@ export function diffFields<T extends Record<string, unknown>>(
 
 // Render helpers shared across impls so the stored `from`/`to` strings are
 // consistent with what the UI displays.
+
+// Prisma.Decimal-aware so Decimal(15,2) values keep their precision. Falls
+// back to String(v) on anything Decimal can't parse (e.g. NaN).
 export function fmtMoney(v: unknown): string | null {
   if (v === null || v === undefined) return null
-  // Keep two decimals, no currency symbol — the UI prepends the user's currency
-  // when rendering the log so historical entries respect the current symbol.
-  const n = typeof v === 'number' ? v : Number(String(v))
-  if (Number.isNaN(n)) return String(v)
-  return n.toFixed(2)
+  try {
+    return new Prisma.Decimal(v as string | number).toFixed(2)
+  } catch {
+    return String(v)
+  }
 }
 
 export function fmtDate(v: unknown): string | null {
@@ -139,6 +172,22 @@ export interface ActivityListResult {
   nextCursor: string | null
 }
 
+// Defence-in-depth parse of the JSON blob. Only our own server code writes it,
+// but a bad row shouldn't crash the render.
+const activityChangeSchema = z.object({
+  field: z.string(),
+  from: z.string().nullable(),
+  to: z.string().nullable(),
+  currency: z.enum(['BDT', 'USD']).nullish(),
+})
+const activityChangesSchema = z.array(activityChangeSchema)
+
+function parseChanges(raw: unknown): Array<ActivityChange> | null {
+  if (raw === null || raw === undefined) return null
+  const parsed = activityChangesSchema.safeParse(raw)
+  return parsed.success ? parsed.data : null
+}
+
 export async function listActivityImpl(
   profileId: string,
   data: ActivityListQuery,
@@ -162,7 +211,7 @@ export async function listActivityImpl(
       entityId: r.entityId,
       entityLabel: r.entityLabel,
       summary: r.summary,
-      changes: (r.changes as Array<ActivityChange> | null) ?? null,
+      changes: parseChanges(r.changes),
       createdAt: r.createdAt,
     })),
     nextCursor: hasMore ? page[page.length - 1].id : null,
