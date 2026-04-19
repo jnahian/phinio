@@ -36,7 +36,7 @@ function cronRequest(init?: { auth?: string | null; method?: string }) {
     headers.set('authorization', init?.auth ?? `Bearer ${CRON_SECRET}`)
   }
   return new Request('http://localhost/api/cron/send-reminders', {
-    method: init?.method ?? 'POST',
+    method: init?.method ?? 'GET',
     headers,
   })
 }

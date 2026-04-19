@@ -12,13 +12,12 @@ import type { PushPayload, PushSubscriptionRow } from '#/server/web-push'
  * installments, creates a Notification row for each (idempotent via dedupeKey),
  * and sends a Web Push to every subscription tied to the owning profile.
  *
- * Invoke from an external scheduler (Vercel Cron / GitHub Actions / host cron)
- * with `Authorization: Bearer ${CRON_SECRET}` via POST.
+ * Invoked by Vercel Cron (GET) with `Authorization: Bearer ${CRON_SECRET}`.
  */
 export const Route = createFileRoute('/api/cron/send-reminders')({
   server: {
     handlers: {
-      POST: ({ request }) => handleCron(request),
+      GET: ({ request }) => handleCron(request),
     },
   },
 })
