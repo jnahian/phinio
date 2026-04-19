@@ -4,20 +4,25 @@ import {
   Camera,
   Check,
   ChevronDown,
+  Database,
   KeyRound,
   LogOut,
   Mail,
   Pencil,
+  Trash2,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { SeedDataModal } from '#/components/SeedDataModal'
 import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
 import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
+import { cleanupProfileDataFn, seedProfileDataFn } from '#/server/dev-data'
 import type { Currency } from '#/lib/currency'
+import type { SeedCategories } from '#/server/dev-data'
 
 export const Route = createFileRoute('/app/profile')({
   staticData: { title: 'Profile' },
@@ -49,6 +54,11 @@ function ProfileScreen() {
 
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+
+  const [seedModalOpen, setSeedModalOpen] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
+  const [confirmCleanup, setConfirmCleanup] = useState(false)
+  const [isCleaningUp, setIsCleaningUp] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -190,6 +200,38 @@ function ProfileScreen() {
     setIsSigningOut(true)
     await authClient.signOut()
     window.location.href = '/login'
+  }
+
+  // -------------------------------------------------------------------------
+  // Test data — seed / cleanup
+  // -------------------------------------------------------------------------
+
+  async function handleSeed(input: { categories: SeedCategories; wipe: boolean }) {
+    setIsSeeding(true)
+    try {
+      await seedProfileDataFn({ data: input })
+      await router.invalidate()
+      setSeedModalOpen(false)
+      toast.success('Test data loaded')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load data')
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  async function handleCleanup() {
+    setIsCleaningUp(true)
+    try {
+      await cleanupProfileDataFn()
+      await router.invalidate()
+      setConfirmCleanup(false)
+      toast.success('All your app data was cleared')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to clear data')
+    } finally {
+      setIsCleaningUp(false)
+    }
   }
 
   const initials = getInitials(profile.fullName)
@@ -438,6 +480,53 @@ function ProfileScreen() {
       </section>
 
       {/* ------------------------------------------------------------------ */}
+      {/* Test data                                                            */}
+      {/* ------------------------------------------------------------------ */}
+      <section className="mb-6">
+        <h2 className="label-md mb-3 px-1 text-on-surface-variant">
+          Test data
+        </h2>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setSeedModalOpen(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <Database
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">Load test data</span>
+            </div>
+            <ChevronDown
+              className="h-4 w-4 -rotate-90 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmCleanup(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <Trash2
+                className="h-5 w-5 text-error"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">
+                Clear all my data
+              </span>
+            </div>
+            <ChevronDown
+              className="h-4 w-4 -rotate-90 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
+          </button>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
       {/* Sign out                                                             */}
       {/* ------------------------------------------------------------------ */}
       <section className="mb-10">
@@ -460,6 +549,24 @@ function ProfileScreen() {
         isPending={isSigningOut}
         onConfirm={handleSignOut}
         onCancel={() => setConfirmLogout(false)}
+      />
+
+      <SeedDataModal
+        open={seedModalOpen}
+        isPending={isSeeding}
+        onConfirm={handleSeed}
+        onCancel={() => setSeedModalOpen(false)}
+      />
+
+      <ConfirmModal
+        open={confirmCleanup}
+        title="Clear all your data?"
+        message="This permanently deletes all your investments, EMIs, deposits, withdrawals, and notifications. Your account and profile are kept — sign-in still works."
+        confirmLabel="Delete everything"
+        pendingLabel="Deleting…"
+        isPending={isCleaningUp}
+        onConfirm={handleCleanup}
+        onCancel={() => setConfirmCleanup(false)}
       />
 
       <p className="body-sm text-center text-on-surface-variant/60">

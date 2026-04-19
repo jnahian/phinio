@@ -1,15 +1,12 @@
 /**
  * Shared seed fixtures and per-category seeding functions.
- * Consumed by `seed.ts` (first-user, all categories) and
- * `seed-user.ts` (interactive, email-scoped, selective).
+ * Consumed by the prisma CLI scripts (`seed.ts`, `seed-user.ts`,
+ * `cleanup-user.ts`) and by the in-app dev-data server functions.
  */
 
-import type { PrismaClient } from '../src/generated/prisma/client.js'
-import {
-  generateAmortization,
-  calculateEmi,
-} from '../src/lib/emi-calculator.js'
-import { generateDpsSchedule } from '../src/lib/dps-calculator.js'
+import type { PrismaClient } from '../generated/prisma/client.js'
+import { generateAmortization, calculateEmi } from './emi-calculator.js'
+import { generateDpsSchedule } from './dps-calculator.js'
 
 function d(iso: string): Date {
   return new Date(iso)

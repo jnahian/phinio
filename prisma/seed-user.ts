@@ -15,7 +15,7 @@ import {
   seedDps,
   seedSavings,
   seedEmis,
-} from './seed-helpers.js'
+} from '../src/lib/seed-fixtures.js'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
