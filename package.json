@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
-    "build": "prisma migrate deploy && prisma generate && vite build",
+    "build": "prisma migrate deploy && prisma generate && vite build && node scripts/copy-sw-to-vercel.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
