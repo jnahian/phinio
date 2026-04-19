@@ -93,6 +93,7 @@ model Profile {
   emis                  Emi[]
   emiPayments           EmiPayment[]
   notifications         Notification[]
+  activityLogs          ActivityLog[]
   pushSubscriptions     PushSubscription[]
 
   @@map("profiles")
@@ -237,6 +238,26 @@ model Notification {
   @@unique([profileId, dedupeKey])
   @@index([profileId, readAt, createdAt])
   @@map("notifications")
+}
+
+// User-facing activity log — one row per user-initiated mutation.
+// entityId is a dangling reference: the entity it points to may be deleted.
+// entityLabel denormalizes the name at the time of the action so the log
+// still reads correctly after deletion.
+model ActivityLog {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  action      String   // create | update | delete
+  entityType  String   // investment | investment_deposit | investment_withdrawal | emi | emi_payment | profile
+  entityId    String?
+  entityLabel String
+  summary     String
+  changes     Json?    // [{ field, from, to }] for updates
+  createdAt   DateTime @default(now())
+
+  @@index([profileId, createdAt])
+  @@map("activity_log")
 }
 
 model PushSubscription {

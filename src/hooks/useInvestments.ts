@@ -83,6 +83,7 @@ export function useCreateInvestment() {
       toast.success('Investment added')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -98,6 +99,7 @@ export function useUpdateInvestment() {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -111,6 +113,7 @@ export function useDeleteInvestment() {
       toast.success('Investment deleted')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
@@ -128,6 +131,7 @@ export function useCreateDps() {
       toast.success('DPS scheme added')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -182,6 +186,7 @@ export function useMarkDepositPaid(investmentId: string) {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
 }
@@ -194,6 +199,7 @@ export function useDeleteDps() {
       toast.success('DPS scheme deleted')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
@@ -211,6 +217,7 @@ export function useCreateSavings() {
       toast.success('Savings pot added')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -225,6 +232,7 @@ export function useUpdateSavings() {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -239,6 +247,7 @@ export function useAddDeposit(investmentId: string) {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to add deposit')),
   })
@@ -253,6 +262,7 @@ export function useRemoveDeposit(investmentId: string) {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to remove')),
   })
@@ -266,6 +276,7 @@ export function useDeleteSavings() {
       toast.success('Savings pot deleted')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
@@ -284,6 +295,7 @@ export function useWithdraw(investmentId: string) {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to withdraw')),
   })
@@ -298,6 +310,7 @@ export function useCloseDps(investmentId: string) {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to close')),
   })
