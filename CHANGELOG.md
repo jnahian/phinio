@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-19
+
+Adds a user-facing activity log and replaces in-app reminder polling with
+real browser push notifications that arrive even when Phinio is closed.
+
+### Added
+
+- **Activity log** — a new `/app/activity` screen (reached from the
+  profile menu) lists every user-initiated mutation across investments,
+  deposits, withdrawals, EMIs, payments, and profile settings. Edit
+  entries expand to show field-level before → after diffs. Money diffs
+  record the currency in effect at write time, so historical entries
+  always render with the currency the user was actually using. Infinite
+  scroll loads 15 entries at a time as you scroll.
+- **Browser push notifications** — due and overdue EMI installments and
+  DPS deposits now arrive as real OS-level push notifications, delivered
+  even when the app is closed. Enable from a toggle on the profile
+  screen or an inline banner in the notification bell; the bell popover
+  shows a clear "blocked" hint when permission has been denied. A
+  scheduled job sends reminders once per day.
+- **In-app test data** — the profile screen gains a "Test data" section
+  with a Load dialog (per-category toggles for lump-sum, DPS, savings,
+  EMIs, plus an optional "wipe first" switch) and a Clear-all-my-data
+  action that wipes every investment, EMI, deposit, withdrawal, and
+  notification for the signed-in profile while keeping the account
+  itself intact.
+
+### Changed
+
+- **Activity tab moved** — removed from the bottom navigation (back to
+  four tabs) and surfaced as a row on the profile screen.
+- **Notification bell** is now a log of pushes that were actually sent,
+  not a list synthesised on every open. Action notifications (EMI
+  created, investment created, DPS created, withdrawal, DPS closed) no
+  longer appear in the bell.
+- **Unmarking a paid installment** on an auto-matured DPS now
+  reactivates the scheme and records the reactivation in the activity
+  log.
+
+### Fixed
+
+- **PWA install UI** — corrected manifest icon sizes, split combined
+  `purpose: "maskable any"` icon entries per Chrome's recommendation,
+  and added mobile and desktop screenshots so the richer install
+  experience appears on both form factors.
+- **No-op edits** no longer produce empty "Edited …" activity entries
+  when nothing actually changed.
+- **Assistive-tech announcements** on expandable activity cards now
+  correctly report their state via `aria-expanded` and `aria-controls`.
+
+### Security
+
+- Every mutating query now scopes by `profileId` in its `where` clause,
+  so a write cannot cross into another profile even if an id were
+  somehow leaked.
+
 ## [1.1.0] - 2026-04-17
 
 Adds withdrawals across every investment type and corrects ROI math so
