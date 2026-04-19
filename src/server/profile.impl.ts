@@ -2,6 +2,7 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import type { Currency } from '#/lib/currency'
+import { logActivity } from './activity-log.impl'
 
 export interface SerializedProfile {
   id: string
@@ -75,16 +76,43 @@ export async function updateProfileCurrencyImpl(
   userId: string,
   data: UpdateCurrencyInput,
 ): Promise<SerializedProfile> {
-  const profile = await prisma.profile.update({
-    where: { userId },
-    data: { preferredCurrency: data.preferredCurrency },
-    select: {
-      id: true,
-      userId: true,
-      fullName: true,
-      preferredCurrency: true,
-      createdAt: true,
-    },
+  const profile = await prisma.$transaction(async (tx) => {
+    const before = await tx.profile.findUnique({
+      where: { userId },
+      select: { id: true, fullName: true, preferredCurrency: true },
+    })
+    if (!before) throw new Error('Profile not found')
+
+    const updated = await tx.profile.update({
+      where: { userId },
+      data: { preferredCurrency: data.preferredCurrency },
+      select: {
+        id: true,
+        userId: true,
+        fullName: true,
+        preferredCurrency: true,
+        createdAt: true,
+      },
+    })
+
+    if (before.preferredCurrency !== data.preferredCurrency) {
+      await logActivity(tx, before.id, {
+        action: 'update',
+        entityType: 'profile',
+        entityId: before.id,
+        entityLabel: before.fullName,
+        summary: `Changed preferred currency to ${data.preferredCurrency}`,
+        changes: [
+          {
+            field: 'Preferred currency',
+            from: before.preferredCurrency,
+            to: data.preferredCurrency,
+          },
+        ],
+      })
+    }
+
+    return updated
   })
   return serializeProfile(profile)
 }
@@ -94,8 +122,14 @@ export async function updateProfileNameImpl(
   fullName: string,
 ): Promise<SerializedProfile> {
   const profile = await prisma.$transaction(async (tx) => {
+    const before = await tx.profile.findUnique({
+      where: { userId },
+      select: { id: true, fullName: true },
+    })
+    if (!before) throw new Error('Profile not found')
+
     await tx.user.update({ where: { id: userId }, data: { name: fullName } })
-    return tx.profile.update({
+    const updated = await tx.profile.update({
       where: { userId },
       data: { fullName },
       select: {
@@ -106,6 +140,19 @@ export async function updateProfileNameImpl(
         createdAt: true,
       },
     })
+
+    if (before.fullName !== fullName) {
+      await logActivity(tx, before.id, {
+        action: 'update',
+        entityType: 'profile',
+        entityId: before.id,
+        entityLabel: fullName,
+        summary: `Changed display name`,
+        changes: [{ field: 'Full name', from: before.fullName, to: fullName }],
+      })
+    }
+
+    return updated
   })
   return serializeProfile(profile)
 }
