@@ -17,7 +17,7 @@ export function useActivityLogQuery() {
   >({
     queryKey: activityKeys.list(),
     queryFn: ({ pageParam }) =>
-      listActivityFn({ data: { cursor: pageParam ?? null, limit: 30 } }),
+      listActivityFn({ data: { cursor: pageParam ?? null, limit: 15 } }),
     initialPageParam: null,
     getNextPageParam: (last) => last.nextCursor,
   })

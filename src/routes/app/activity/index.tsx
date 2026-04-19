@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   ArrowRight,
@@ -69,6 +69,26 @@ function ActivityScreen() {
   const currency = profile.preferredCurrency
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useActivityLogQuery()
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  // Auto-fetch the next page when the sentinel scrolls into view. The
+  // rootMargin gives us ~one card-height of head start so pages land before
+  // the user hits the end of the list.
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node || !hasNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '200px 0px' },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   if (isLoading) {
     return (
@@ -128,15 +148,18 @@ function ActivityScreen() {
       </div>
 
       {hasNextPage && (
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-            className="rounded-full bg-surface-container-high px-5 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-highest disabled:opacity-50"
-          >
-            {isFetchingNextPage ? 'Loading…' : 'Load more'}
-          </button>
+        <div
+          ref={sentinelRef}
+          className="mt-6 flex items-center justify-center py-4"
+          aria-hidden={!isFetchingNextPage}
+        >
+          {isFetchingNextPage && (
+            <span
+              role="status"
+              aria-label="Loading more activity"
+              className="h-5 w-5 animate-spin rounded-full border-2 border-on-surface-variant/20 border-t-on-surface-variant"
+            />
+          )}
         </div>
       )}
     </main>
