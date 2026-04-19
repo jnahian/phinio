@@ -5,7 +5,7 @@ description: Write or update CHANGELOG.md for the Phinio project. Use whenever t
 
 # Writing the Phinio CHANGELOG
 
-The goal of this workflow is to turn raw git history into a release-notes document a real user can read and understand. Commit subjects are written for *developers looking back at code* — a changelog is written for *users looking forward at the product*. These are different audiences, and the translation step is what makes the output valuable.
+The goal of this workflow is to turn raw git history into a release-notes document a real user can read and understand. Commit subjects are written for _developers looking back at code_ — a changelog is written for _users looking forward at the product_. These are different audiences, and the translation step is what makes the output valuable.
 
 This skill exists because that translation has conventions specific to Phinio (format, grouping rules, gitmoji handling, worktree workflow) that would be tedious to re-derive every time.
 
@@ -51,7 +51,7 @@ Where `<range>` is `main` for a first release, or `<last-tag>..main` / `<since-d
 This is the work. Some principles:
 
 - **User-facing means "what can the user now do, or what changed for them."** "Added `computeMonthlyTotal` helper" is developer-facing. "Home dashboard now shows monthly EMI outflow" is user-facing. Rewrite accordingly.
-- **Group related commits.** A feature that landed across ten commits ("wip", "fix typo", "refactor part 2", "final tweak") becomes *one* bullet describing the feature. The reader does not care about the development path.
+- **Group related commits.** A feature that landed across ten commits ("wip", "fix typo", "refactor part 2", "final tweak") becomes _one_ bullet describing the feature. The reader does not care about the development path.
 - **Drop gitmoji prefixes** (✨ 🐛 ♻️ 🚀 🌱 🚨 etc.) in the changelog prose. They're useful in `git log`, noisy in release notes.
 - **Drop purely internal commits** with no user-visible effect (formatting passes, lint fixes, build config tweaks, dependency bumps without behavior change). Or fold them into a single "Internal" bullet under `### Changed` if you want to acknowledge them without cluttering.
 - **Order within a section by impact**, not by commit date. The marquee feature goes first.
@@ -72,12 +72,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <optional one-paragraph lede describing the release>
 
 ### Added
+
 - ...
 
 ### Changed
+
 - ...
 
 ### Fixed
+
 - ...
 ```
 
@@ -90,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Write the file. Do **not** `git add`, do **not** commit. The user needs to review the prose — the rewrites from commit subjects to user-facing items involve judgment calls they should eyeball before it lands.
 
 Report back with:
+
 - Worktree path and branch name.
 - Entry counts per section.
 - Any judgment calls the user should verify — especially commits you folded, dropped, or grouped in non-obvious ways, and any version/package.json mismatches.
@@ -120,11 +124,13 @@ Translated changelog entries:
 
 ```markdown
 ### Added
+
 - **Withdrawals** — withdraw from any investment via a shared modal or from a
   global Withdraw page with an investment picker. Withdrawal scenarios are
   included in the seed script.
 
 ### Fixed
+
 - Completed-item ROI no longer double-counts withdrawals.
 ```
 
