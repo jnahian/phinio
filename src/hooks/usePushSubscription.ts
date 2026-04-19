@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { deletePushSubscriptionFn, savePushSubscriptionFn } from '#/server/push'
 
@@ -39,6 +39,13 @@ export function usePushSubscription(): UsePushSubscription {
   )
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isBusy, setIsBusy] = useState(false)
+  // Mirror isBusy in a ref so the focus/visibilitychange listener can skip
+  // syncSubscriptionState while a subscribe/unsubscribe is in flight.
+  // A ref is required — the listener's closure would capture a stale
+  // `isBusy` value otherwise — and without this guard the listener's
+  // getSubscription() races subscribe()'s own updates and can overwrite
+  // setIsSubscribed(true) with a stale false.
+  const busyRef = useRef(false)
 
   const syncSubscriptionState = useCallback(async () => {
     if (!isSupported) return
@@ -64,7 +71,7 @@ export function usePushSubscription(): UsePushSubscription {
     // focus + visibilitychange, which covers the return-to-tab case.
     const refresh = () => {
       setPermission(Notification.permission)
-      void syncSubscriptionState()
+      if (!busyRef.current) void syncSubscriptionState()
     }
     window.addEventListener('focus', refresh)
     document.addEventListener('visibilitychange', refresh)
@@ -83,7 +90,8 @@ export function usePushSubscription(): UsePushSubscription {
       toast.error('Push notifications are not configured')
       return
     }
-    if (isBusy) return
+    if (busyRef.current) return
+    busyRef.current = true
     setIsBusy(true)
     try {
       const perm = await Notification.requestPermission()
@@ -126,12 +134,14 @@ export function usePushSubscription(): UsePushSubscription {
         err instanceof Error ? err.message : 'Could not enable notifications',
       )
     } finally {
+      busyRef.current = false
       setIsBusy(false)
     }
-  }, [isBusy, isSupported])
+  }, [isSupported])
 
   const unsubscribe = useCallback(async () => {
-    if (!isSupported || isBusy) return
+    if (!isSupported || busyRef.current) return
+    busyRef.current = true
     setIsBusy(true)
     try {
       const registration = await navigator.serviceWorker.ready
@@ -148,9 +158,10 @@ export function usePushSubscription(): UsePushSubscription {
         err instanceof Error ? err.message : 'Could not disable notifications',
       )
     } finally {
+      busyRef.current = false
       setIsBusy(false)
     }
-  }, [isBusy, isSupported])
+  }, [isSupported])
 
   return {
     isSupported,
