@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-04-19
+
+### Fixed
+
+- **Service worker 404 in production** — `dist/sw.js` was being built by
+  vite-plugin-pwa but never made it into `.vercel/output/static/`, so
+  `/sw.js` returned 404 on the live site. No service worker ever
+  activated, every `navigator.serviceWorker.ready` call hung silently,
+  and the Payment reminders toggle would fire its success toast but the
+  subscription never completed. A post-build step now copies the SW
+  into Vercel's static output.
+- **Activity log back button** — the activity log screen is reached
+  from the profile menu but was missing the TopBar back arrow. Now
+  navigates back to Profile.
+
 ## [1.2.1] - 2026-04-19
 
 ### Changed
