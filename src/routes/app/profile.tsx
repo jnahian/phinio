@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Camera,
   Check,
   ChevronDown,
+  ChevronRight,
+  History,
   KeyRound,
   LogOut,
   Mail,
@@ -339,6 +341,28 @@ function ProfileScreen() {
             />
           </div>
         </Card>
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Activity history                                                     */}
+      {/* ------------------------------------------------------------------ */}
+      <section className="mb-6">
+        <Link
+          to="/app/activity"
+          className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+        >
+          <div className="flex items-center gap-3">
+            <History
+              className="h-5 w-5 text-on-surface-variant"
+              strokeWidth={1.75}
+            />
+            <span className="font-display font-semibold">Activity history</span>
+          </div>
+          <ChevronRight
+            className="h-4 w-4 text-on-surface-variant/50"
+            strokeWidth={2}
+          />
+        </Link>
       </section>
 
       {/* ------------------------------------------------------------------ */}
