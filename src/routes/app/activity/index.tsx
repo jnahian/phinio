@@ -30,7 +30,7 @@ import type {
 } from '#/server/activity-log.impl'
 
 export const Route = createFileRoute('/app/activity/')({
-  staticData: { title: 'Activity' },
+  staticData: { title: 'Activity', backTo: '/app/profile' },
   component: ActivityScreen,
 })
 
