@@ -93,7 +93,7 @@ model Profile {
   emis                  Emi[]
   emiPayments           EmiPayment[]
   notifications         Notification[]
-  activityLog           ActivityLog[]
+  activityLogs          ActivityLog[]
 
   @@map("profiles")
 }
