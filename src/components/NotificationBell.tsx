@@ -100,6 +100,19 @@ export function NotificationBell() {
               </button>
             )}
 
+          {push.isSupported && push.permission === 'denied' && (
+            <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-error-container/30 px-3 py-2 text-xs text-on-error-container">
+              <BellOff
+                className="mt-0.5 h-4 w-4 flex-shrink-0"
+                strokeWidth={1.75}
+              />
+              <span className="flex-1">
+                Reminders are blocked. Re-enable notifications in your browser
+                settings to turn them on.
+              </span>
+            </div>
+          )}
+
           <div className="max-h-[60vh] overflow-y-auto">
             {listQuery.isLoading ? (
               <div className="px-4 py-10 text-center text-sm text-on-surface-variant">

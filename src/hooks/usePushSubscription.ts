@@ -58,6 +58,20 @@ export function usePushSubscription(): UsePushSubscription {
     }
     setPermission(Notification.permission)
     void syncSubscriptionState()
+
+    // Pick up permission flips made in another tab / browser settings.
+    // `Notification.permission` is not observable directly; re-read on
+    // focus + visibilitychange, which covers the return-to-tab case.
+    const refresh = () => {
+      setPermission(Notification.permission)
+      void syncSubscriptionState()
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
   }, [isSupported, syncSubscriptionState])
 
   const subscribe = useCallback(async () => {

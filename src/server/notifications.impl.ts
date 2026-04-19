@@ -85,9 +85,11 @@ export async function createNotification(
       select: { id: true },
     })
     return { id: row.id, created: true }
-  } catch {
-    // Race: another process inserted the same (profileId, dedupeKey) between
-    // the findUnique above and our create. Re-read and treat as not-created.
+  } catch (err) {
+    // Only treat unique-constraint violations as a "lost race" — any other
+    // error (connection, permission, etc.) must propagate so the caller sees
+    // the real failure instead of a generic re-read miss.
+    if (!isUniqueViolation(err)) throw err
     const raced = await prisma.notification.findUnique({
       where: {
         profileId_dedupeKey: {
@@ -97,9 +99,18 @@ export async function createNotification(
       },
       select: { id: true },
     })
-    if (!raced) throw new Error('Failed to create notification')
+    if (!raced) throw err
     return { id: raced.id, created: false }
   }
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code?: unknown }).code === 'P2002'
+  )
 }
 
 export async function listNotificationsImpl(profileId: string) {
