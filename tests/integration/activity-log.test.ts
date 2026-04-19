@@ -323,8 +323,6 @@ describe('markDepositPaidImpl DPS status transitions', () => {
     expect(inv.status).toBe('active')
 
     const { items } = await listActivityImpl(user.profileId, {})
-    expect(
-      items.some((r) => r.summary.includes('reactivated')),
-    ).toBe(true)
+    expect(items.some((r) => r.summary.includes('reactivated'))).toBe(true)
   })
 })

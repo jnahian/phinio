@@ -38,21 +38,15 @@ async function requireProfileId(userId: string): Promise<string> {
 }
 
 async function countProfileData(profileId: string): Promise<DevDataResult> {
-  const [
-    investments,
-    deposits,
-    withdrawals,
-    emis,
-    emiPayments,
-    notifications,
-  ] = await Promise.all([
-    prisma.investment.count({ where: { profileId } }),
-    prisma.investmentDeposit.count({ where: { profileId } }),
-    prisma.investmentWithdrawal.count({ where: { profileId } }),
-    prisma.emi.count({ where: { profileId } }),
-    prisma.emiPayment.count({ where: { profileId } }),
-    prisma.notification.count({ where: { profileId } }).catch(() => 0),
-  ])
+  const [investments, deposits, withdrawals, emis, emiPayments, notifications] =
+    await Promise.all([
+      prisma.investment.count({ where: { profileId } }),
+      prisma.investmentDeposit.count({ where: { profileId } }),
+      prisma.investmentWithdrawal.count({ where: { profileId } }),
+      prisma.emi.count({ where: { profileId } }),
+      prisma.emiPayment.count({ where: { profileId } }),
+      prisma.notification.count({ where: { profileId } }).catch(() => 0),
+    ])
   return {
     investments,
     deposits,

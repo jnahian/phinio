@@ -216,7 +216,10 @@ function ProfileScreen() {
   // Test data — seed / cleanup
   // -------------------------------------------------------------------------
 
-  async function handleSeed(input: { categories: SeedCategories; wipe: boolean }) {
+  async function handleSeed(input: {
+    categories: SeedCategories
+    wipe: boolean
+  }) {
     setIsSeeding(true)
     try {
       await seedProfileDataFn({ data: input })
@@ -572,10 +575,7 @@ function ProfileScreen() {
             className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
           >
             <div className="flex items-center gap-3">
-              <Trash2
-                className="h-5 w-5 text-error"
-                strokeWidth={1.75}
-              />
+              <Trash2 className="h-5 w-5 text-error" strokeWidth={1.75} />
               <span className="font-display font-semibold">
                 Clear all my data
               </span>
