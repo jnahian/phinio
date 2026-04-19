@@ -11,7 +11,7 @@ interface TopBarProps {
 
 export function TopBar({ title, backTo, userName, avatarUrl }: TopBarProps) {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-surface/85 px-5 py-3 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-surface/85 px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-xl">
       {/* Left side: back arrow + title OR logo icon + title */}
       <div className="flex min-w-0 items-center gap-3">
         {backTo ? (

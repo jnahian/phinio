@@ -57,7 +57,7 @@ function Nav() {
 
   return (
     <nav
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 inset-x-0 z-50 pt-[env(safe-area-inset-top)] transition-all duration-300 ${
         scrolled ? 'glass' : 'bg-transparent'
       }`}
       style={
@@ -91,7 +91,7 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-20 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-[calc(6rem+env(safe-area-inset-top))] pb-20 overflow-hidden">
       {/* Drifting ambient orbs */}
       <div className="pointer-events-none select-none" aria-hidden>
         <div className="absolute -top-24 -left-32 w-[560px] h-[560px] rounded-full bg-primary-container/8 blur-[120px] animate-lp-orb-drift" />
