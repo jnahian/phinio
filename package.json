@@ -21,7 +21,8 @@
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:studio": "dotenv -e .env.local -- prisma studio",
     "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
-    "db:seed:user": "dotenv -e .env.local -- tsx prisma/seed-user.ts"
+    "db:seed:user": "dotenv -e .env.local -- tsx prisma/seed-user.ts",
+    "db:cleanup:user": "dotenv -e .env.local -- tsx prisma/cleanup-user.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
