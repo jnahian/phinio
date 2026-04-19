@@ -6,7 +6,7 @@ export { prisma }
 export async function resetDb() {
   // Order matters only if RESTART IDENTITY mattered; CASCADE makes it moot.
   await prisma.$executeRawUnsafe(
-    `TRUNCATE TABLE "notifications", "emi_payments", "emis", "investments", "profiles", "verification", "account", "session", "user" RESTART IDENTITY CASCADE`,
+    `TRUNCATE TABLE "activity_log", "notifications", "emi_payments", "emis", "investments", "profiles", "verification", "account", "session", "user" RESTART IDENTITY CASCADE`,
   )
 }
 
