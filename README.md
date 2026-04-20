@@ -8,10 +8,13 @@
 
 ### Investment Portfolio
 
-- Track stocks, mutual funds, fixed deposits, gold, crypto, and custom asset types
-- Log invested amount and current value; returns (%) are computed automatically
-- Mark investments as completed with an exit value to record realised P&L
-- Per-investment notes and status tracking (active / completed)
+Three investment modes under one unified schema:
+
+- **Lump-sum** — stocks, mutual funds, fixed deposits, gold, crypto, real estate, agro farms, businesses, sanchayapatra, and custom types. Log invested amount + current value; returns (%) are computed automatically. Mark completed with an exit value to record realised P&L.
+- **DPS (scheduled)** — fixed monthly deposit over a tenure with simple or compound interest. Full installment schedule (with running accrued value) is generated up-front at creation. Mark individual installments paid; DPS auto-matures when every row is paid.
+- **Savings pots (flexible)** — no tenure or interest math. Add ad-hoc deposits with amount / date / notes; the `investedAmount` syncs to the deposit sum. `currentValue` is user-maintained to reflect actual bank balance.
+- **Withdrawals** — record partial withdrawals against lump-sum or savings; close an investment entirely from the same modal. DPS supports premature closure with realised payout.
+- Per-investment notes, status tracking (`active`, `completed`, `matured`, `closed`), and a full activity log of every mutation.
 
 ### EMI Management
 
@@ -25,6 +28,13 @@
 - Net worth snapshot: `Σ active investment values − Σ active EMI remaining balances`
 - Portfolio overview with total invested, current value, and overall return %
 - Upcoming and overdue EMI payments at a glance
+- Allocation donut with an interactive legend — tap a type to highlight its slice and visually mute the others
+
+### Notifications
+
+- **In-app** — bell icon with unread count, notification center with mark-all-read, link-through to the related screen
+- **Web push** — optional browser push reminders for upcoming / overdue EMI and DPS installments, powered by VAPID + a Vercel cron worker
+- **Activity history** — full audit trail of every create / update / delete across investments, deposits, withdrawals, EMIs, payments, and profile changes, with infinite-scroll pagination
 
 ### Auth & Security
 
@@ -37,26 +47,31 @@
 
 - Installable on Android and iOS (standalone display mode)
 - Dark-only "Digital Private Bank" design system — nocturnal palette, glassmorphism, Manrope numerics + Inter body
+- Safe-area aware — reserves space under the iOS Dynamic Island / notch and above the home indicator when installed
+- Custom service worker adds push + `notificationclick` handlers on top of Workbox precache
+- Public marketing and auth pages are prerendered at build time and served from the CDN for near-zero TTFB
 - Optimised for mobile viewports; works in any modern browser
 
 ---
 
 ## Tech Stack
 
-| Layer         | Technology                                                               |
-| ------------- | ------------------------------------------------------------------------ |
-| Framework     | TanStack Start (React 19 + Vite + SSR)                                   |
-| Routing       | TanStack Router (file-based, code-generated route tree)                  |
-| Data fetching | TanStack Query (caching, mutations, optimistic updates)                  |
-| Auth          | Better Auth with `tanstackStartCookies` plugin                           |
-| ORM           | Prisma 7 with `@prisma/adapter-pg` (pg adapter, not default engine)      |
-| Database      | PostgreSQL via Neon (serverless, pooled + direct URLs)                   |
-| Email         | Resend (verification links, password reset)                              |
-| Styling       | Tailwind CSS v4 via `@tailwindcss/vite` — all tokens in `src/styles.css` |
-| Validation    | Zod                                                                      |
-| Date math     | date-fns                                                                 |
-| Charts        | Recharts                                                                 |
-| Deployment    | Vercel (with Vercel Analytics)                                           |
+| Layer         | Technology                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| Framework     | TanStack Start (React 19 + Vite + SSR)                                                   |
+| Routing       | TanStack Router (file-based, code-generated route tree, intent-preload loaders)          |
+| Data fetching | TanStack Query (caching, mutations, optimistic updates, shared `queryOptions` factories) |
+| Auth          | Better Auth with `tanstackStartCookies` plugin                                           |
+| ORM           | Prisma 7 with `@prisma/adapter-pg` (pg adapter, not default engine)                      |
+| Database      | PostgreSQL via Neon (serverless, pooled + direct URLs)                                   |
+| Email         | Resend (verification links, password reset)                                              |
+| Web Push      | `web-push` + VAPID, delivered via Vercel cron worker                                     |
+| Styling       | Tailwind CSS v4 via `@tailwindcss/vite` — all tokens in `src/styles.css`                 |
+| Validation    | Zod                                                                                      |
+| Date math     | date-fns                                                                                 |
+| Charts        | Recharts (lazy-loaded)                                                                   |
+| PWA           | vite-plugin-pwa (Workbox `injectManifest`) + custom `src/sw.ts`                          |
+| Deployment    | Vercel (Nitro preset with build-time prerender for public routes; Analytics)             |
 
 ---
 
@@ -83,16 +98,21 @@ Copy `.env.example` to `.env.local` and fill in all values:
 cp .env.example .env.local
 ```
 
-| Variable             | Description                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `DATABASE_URL`       | Pooled Neon connection string (used by the app at runtime via PgBouncer)           |
-| `DIRECT_URL`         | Direct (non-pooled) Neon connection string (used by `prisma migrate deploy`)       |
-| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret`                     |
-| `BETTER_AUTH_URL`    | Full URL of the app (e.g. `http://localhost:3000` in dev, your Vercel URL in prod) |
-| `RESEND_API_KEY`     | API key from your Resend dashboard                                                 |
-| `RESEND_FROM`        | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`                    |
+| Variable                | Description                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | Pooled Neon connection string (used by the app at runtime via PgBouncer)                        |
+| `DIRECT_URL`            | Direct (non-pooled) Neon connection string (used by `prisma migrate deploy`)                    |
+| `BETTER_AUTH_SECRET`    | Random secret — generate with `npx -y @better-auth/cli secret`                                  |
+| `BETTER_AUTH_URL`       | Full URL of the app (e.g. `http://localhost:3000` in dev, your Vercel URL in prod)              |
+| `RESEND_API_KEY`        | API key from your Resend dashboard                                                              |
+| `RESEND_FROM`           | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`                                 |
+| `VAPID_PUBLIC_KEY`      | Web-push VAPID public key — generate a pair with `npx web-push generate-vapid-keys`             |
+| `VAPID_PRIVATE_KEY`     | Web-push VAPID private key (server-only; never exposed to the client)                           |
+| `VAPID_SUBJECT`         | `mailto:` or `https:` URI registered with the push service                                      |
+| `VITE_VAPID_PUBLIC_KEY` | Same value as `VAPID_PUBLIC_KEY`, exposed to the client so `PushManager.subscribe()` can use it |
+| `CRON_SECRET`           | Guards `/api/cron/send-reminders` — generate with `openssl rand -hex 32`                        |
 
-> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim in every email link (verification, password reset). In dev it must be `http://localhost:3000`; in preview (`npm run preview`, port 4173) you must temporarily set it to `http://localhost:4173` or links will 404.
+> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim in every email link (verification, password reset). In dev it must be `http://localhost:3000`; in preview (`npm run preview:local`, port 4173) temporarily set it to `http://localhost:4173` or links will 404.
 
 ### 3. Run database migrations and generate the Prisma client
 
@@ -114,21 +134,25 @@ npm run dev          # Vite dev server on http://localhost:3000
 ## Scripts
 
 ```bash
-npm run dev          # Development server on :3000
-npm run build        # Production build (runs migrations + prisma generate first)
-npm run preview      # Preview the production build locally on :4173
+npm run dev             # Development server on :3000
+npm run build           # Production build for Vercel (expects host-provided env)
+npm run build:local     # Same build chain wrapped in dotenv -e .env.local for local testing
+npm run preview         # Preview the production build on :4173 (expects host-provided env)
+npm run preview:local   # dotenv-wrapped preview for local testing
 
-npm run test         # Vitest (run once)
-npm run lint         # ESLint (TanStack config)
-npm run format       # Prettier --check
-npm run check        # prettier --write + eslint --fix (run before committing)
+npm run test            # Vitest (run once)
+npm run lint            # ESLint (TanStack config)
+npm run format          # Prettier --check
+npm run check           # prettier --write + eslint --fix (run before committing)
 
-npm run db:generate  # prisma generate → src/generated/prisma/
-npm run db:push      # Push schema changes without a migration file (dev only)
-npm run db:migrate   # prisma migrate dev (creates and applies a migration)
-npm run db:studio    # Open Prisma Studio in the browser
-npm run db:seed      # Run the seed script
+npm run db:generate     # prisma generate → src/generated/prisma/
+npm run db:push         # Push schema changes without a migration file (dev only)
+npm run db:migrate      # prisma migrate dev (creates and applies a migration)
+npm run db:studio       # Open Prisma Studio in the browser
+npm run db:seed         # Run the seed script
 ```
+
+> `build` and `preview` assume `DATABASE_URL` (and the other vars) come from the hosting platform — they will fail locally with `PrismaConfigEnvError`. Use `build:local` / `preview:local` for local prod-style testing; those wrap the chain with `dotenv -e .env.local`.
 
 ---
 
@@ -137,22 +161,33 @@ npm run db:seed      # Run the seed script
 ```
 src/
 ├── routes/
-│   ├── __root.tsx          # HTML shell, head tags, Toaster, Analytics
-│   ├── index.tsx           # Landing page (always public)
-│   ├── login.tsx           # /login
-│   ├── signup.tsx          # /signup
-│   ├── check-email.tsx     # Post-signup email verification prompt
-│   ├── forgot-password.tsx # /forgot-password
+│   ├── __root.tsx          # HTML shell, head tags, Toaster, Analytics, SW registration
+│   ├── index.tsx           # Landing page (prerendered)
+│   ├── login.tsx           # /login (prerendered)
+│   ├── signup.tsx          # /signup (prerendered)
+│   ├── check-email.tsx     # Post-signup email verification prompt (prerendered)
+│   ├── forgot-password.tsx # /forgot-password (prerendered)
+│   ├── api/
+│   │   ├── auth/$.ts       # Better Auth catch-all handler
+│   │   └── cron/send-reminders.ts  # Scheduled push-notification worker
 │   └── app/
-│       ├── route.tsx       # Auth guard + app shell layout
-│       ├── index.tsx       # /app — unified dashboard
+│       ├── route.tsx       # Auth guard + app shell layout (TopBar + BottomTabBar + FAB)
+│       ├── index.tsx       # /app — unified dashboard (loader-prefetched)
 │       ├── profile.tsx     # /app/profile — settings
+│       ├── activity/
+│       │   └── index.tsx   # /app/activity — infinite-scroll audit log
 │       ├── investments/
-│       │   ├── index.tsx   # Portfolio list
-│       │   ├── new.tsx     # Add investment
-│       │   └── $id.edit.tsx
+│       │   ├── index.tsx   # Portfolio list (loader-prefetched)
+│       │   ├── new.tsx     # Add lump-sum investment
+│       │   ├── $id.edit.tsx
+│       │   ├── dps/
+│       │   │   ├── new.tsx
+│       │   │   └── $id.tsx
+│       │   └── savings/
+│       │       ├── new.tsx
+│       │       └── $id.tsx
 │       └── emis/
-│           ├── index.tsx   # EMI overview
+│           ├── index.tsx   # EMI overview (loader-prefetched)
 │           ├── new.tsx     # Add EMI
 │           └── $emiId.tsx  # Amortization schedule detail
 ├── lib/
@@ -207,8 +242,10 @@ Client component
 - **Route tree is code-generated** to `src/routeTree.gen.ts` — never edit it. Add route files under `src/routes/` and the TanStack Router plugin regenerates it automatically.
 - **Tailwind v4 — no `tailwind.config.js`.** All design tokens live under `@theme` in `src/styles.css`. The app is dark-only; `<html>` has a permanent `className="dark"`.
 - **Money fields are `Decimal(15,2)` in Prisma.** Handle them as strings or `Decimal` objects — never coerce to JS `number` for arithmetic.
-- **EMI amortization is pre-computed on creation.** When an EMI is saved, all `EmiPayment` rows are generated upfront using the standard reducing-balance formula (see PRD §9.2). Do not compute the schedule at read time.
+- **EMI amortization and DPS schedules are pre-computed on creation.** All `EmiPayment` and `InvestmentDeposit` rows are generated upfront using the standard reducing-balance / DPS accrual formulas (see PRD §8). Do not compute schedules at read time.
 - **Path aliases:** `#/*` and `@/*` both resolve to `src/*`. Existing code uses the `#/` style; follow that.
+- **Hooks expose shared `queryOptions` factories** so route loaders and `useQuery` use the same keys / fetchers. Tab routes call `queryClient.ensureQueryData(factory())` in their `loader` — combined with `defaultPreload: 'intent'` this warms the cache before the user taps.
+- **Public marketing / auth pages are prerendered** via Nitro (`vite.config.ts`), not server-rendered per request. Copy changes there require a redeploy to appear.
 
 ---
 
