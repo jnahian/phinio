@@ -11,7 +11,10 @@ import { cn } from '#/lib/cn'
 import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
 import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
-import { useInvestmentsQuery } from '#/hooks/useInvestments'
+import {
+  investmentsListQueryOptions,
+  useInvestmentsQuery,
+} from '#/hooks/useInvestments'
 import type { InvestmentType } from '#/lib/validators'
 
 type TypeFilter = InvestmentType | 'dps' | 'savings' | 'all'
@@ -65,6 +68,10 @@ const TYPE_COLORS: Record<string, string> = {
 
 export const Route = createFileRoute('/app/investments/')({
   staticData: { title: 'Investments' },
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(
+      investmentsListQueryOptions({ status: 'active', type: 'all' }),
+    ),
   component: InvestmentsListScreen,
 })
 

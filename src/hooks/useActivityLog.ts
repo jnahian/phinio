@@ -1,4 +1,8 @@
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  infiniteQueryOptions,
+  useInfiniteQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { listActivityFn } from '#/server/activity-log'
 import type { ActivityListResult } from '#/server/activity-log'
 
@@ -7,8 +11,8 @@ export const activityKeys = {
   list: () => ['activity', 'list'] as const,
 }
 
-export function useActivityLogQuery() {
-  return useInfiniteQuery<
+export function activityInfiniteQueryOptions() {
+  return infiniteQueryOptions<
     ActivityListResult,
     Error,
     { pages: Array<ActivityListResult>; pageParams: Array<string | null> },
@@ -21,6 +25,10 @@ export function useActivityLogQuery() {
     initialPageParam: null,
     getNextPageParam: (last) => last.nextCursor,
   })
+}
+
+export function useActivityLogQuery() {
+  return useInfiniteQuery(activityInfiniteQueryOptions())
 }
 
 export function useInvalidateActivity() {

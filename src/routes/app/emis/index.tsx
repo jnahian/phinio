@@ -10,7 +10,7 @@ import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
-import { useEmisQuery } from '#/hooks/useEmis'
+import { emisListQueryOptions, useEmisQuery } from '#/hooks/useEmis'
 import type { EmiType } from '#/lib/validators'
 
 type TypeFilter = EmiType | 'all'
@@ -39,6 +39,8 @@ const TYPE_META: Record<
 
 export const Route = createFileRoute('/app/emis/')({
   staticData: { title: 'EMIs' },
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(emisListQueryOptions({ type: 'all' })),
   component: EmisListScreen,
 })
 

@@ -12,7 +12,7 @@ import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatReturnPercent } from '#/lib/calculations'
 import { formatCurrency } from '#/lib/currency'
-import { useDashboardQuery } from '#/hooks/useDashboard'
+import { dashboardQueryOptions, useDashboardQuery } from '#/hooks/useDashboard'
 
 const AllocationDonut = lazy(() => import('#/components/AllocationDonut'))
 
@@ -44,6 +44,8 @@ const TYPE_COLORS: Record<string, string> = {
 
 export const Route = createFileRoute('/app/')({
   staticData: { title: 'Dashboard' },
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(dashboardQueryOptions()),
   component: HomeScreen,
 })
 

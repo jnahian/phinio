@@ -21,7 +21,10 @@ import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
-import { useActivityLogQuery } from '#/hooks/useActivityLog'
+import {
+  activityInfiniteQueryOptions,
+  useActivityLogQuery,
+} from '#/hooks/useActivityLog'
 import type {
   ActivityChange,
   ActivityEntityType,
@@ -31,6 +34,10 @@ import type {
 
 export const Route = createFileRoute('/app/activity/')({
   staticData: { title: 'Activity', backTo: '/app/profile' },
+  loader: ({ context }) =>
+    context.queryClient.ensureInfiniteQueryData(
+      activityInfiniteQueryOptions(),
+    ),
   component: ActivityScreen,
 })
 
