@@ -32,7 +32,7 @@ export function BottomTabBar() {
               {({ isActive }) => (
                 <div
                   className={cn(
-                    'flex flex-col items-center gap-1 rounded-xl px-2 py-2 transition-colors',
+                    'flex flex-col items-center gap-1 rounded-xl px-2 py-2 transition-[color,transform] duration-150 ease-out active:scale-95',
                     isActive
                       ? 'text-primary-fixed-dim'
                       : 'text-on-surface-variant',

@@ -242,6 +242,85 @@ body {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
+ * Global tap/click feedback
+ * Subtle scale-down on press for every interactive element. Uses :where()
+ * so specificity is 0 — any component-level active:scale-* (Tailwind utility)
+ * or .btn-primary:active override wins automatically.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :where(
+    button,
+    a,
+    summary,
+    label[for],
+    [role='button'],
+    [role='link'],
+    [role='tab'],
+    [role='menuitem'],
+    [role='option'],
+    [role='switch'],
+    [role='checkbox'],
+    [role='radio'],
+    input[type='button'],
+    input[type='submit'],
+    input[type='reset'],
+    input[type='checkbox'],
+    input[type='radio']
+  ) {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: transform 120ms ease;
+  }
+
+  :where(
+      button,
+      a,
+      summary,
+      label[for],
+      [role='button'],
+      [role='link'],
+      [role='tab'],
+      [role='menuitem'],
+      [role='option'],
+      [role='switch'],
+      [role='checkbox'],
+      [role='radio'],
+      input[type='button'],
+      input[type='submit'],
+      input[type='reset'],
+      input[type='checkbox'],
+      input[type='radio']
+    ):active:not(:disabled):not([aria-disabled='true']) {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(
+        button,
+        a,
+        summary,
+        label[for],
+        [role='button'],
+        [role='link'],
+        [role='tab'],
+        [role='menuitem'],
+        [role='option'],
+        [role='switch'],
+        [role='checkbox'],
+        [role='radio'],
+        input[type='button'],
+        input[type='submit'],
+        input[type='reset'],
+        input[type='checkbox'],
+        input[type='radio']
+      ):active {
+      transform: none;
+    }
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
  * Landing page animations
  * ──────────────────────────────────────────────────────────────────────────── */
 
