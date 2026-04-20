@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "prisma migrate deploy && prisma generate && vite build && node scripts/copy-sw-to-vercel.mjs",
+    "build:local": "dotenv -e .env.local -- vite build",
     "preview": "vite preview",
+    "preview:local": "dotenv -e .env.local -- vite preview",
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier --check .",
