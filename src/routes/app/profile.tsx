@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -440,112 +441,34 @@ function ProfileScreen() {
             />
           </Link>
 
-          {!isChangingPassword ? (
-            <button
-              type="button"
-              onClick={openChangePassword}
-              className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
-            >
-              <div className="flex items-center gap-3">
-                <KeyRound
-                  className="h-5 w-5 text-on-surface-variant"
-                  strokeWidth={1.75}
-                />
-                <span className="font-display font-semibold">
-                  Change password
-                </span>
-              </div>
-              <ChevronDown
-                className="h-4 w-4 text-on-surface-variant/50"
-                strokeWidth={2}
+          <button
+            type="button"
+            onClick={openChangePassword}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <KeyRound
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
               />
-            </button>
-          ) : (
-            <Card variant="low">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="label-md text-on-surface-variant">
-                  Change password
-                </h3>
-                <button
-                  type="button"
-                  onClick={closeChangePassword}
-                  className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
-                  aria-label="Cancel"
-                >
-                  <X className="h-4 w-4" strokeWidth={2} />
-                </button>
-              </div>
-              <form onSubmit={handleChangePassword} className="space-y-3">
-                <TextField
-                  id="pw-current"
-                  type="password"
-                  placeholder="Current password"
-                  value={pwForm.current}
-                  onChange={(e) =>
-                    setPwForm((f) => ({ ...f, current: e.target.value }))
-                  }
-                  disabled={isSavingPassword}
-                  autoComplete="current-password"
-                />
-                <TextField
-                  id="pw-new"
-                  type="password"
-                  placeholder="New password"
-                  value={pwForm.next}
-                  onChange={(e) =>
-                    setPwForm((f) => ({ ...f, next: e.target.value }))
-                  }
-                  disabled={isSavingPassword}
-                  autoComplete="new-password"
-                />
-                <TextField
-                  id="pw-confirm"
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={pwForm.confirm}
-                  onChange={(e) =>
-                    setPwForm((f) => ({ ...f, confirm: e.target.value }))
-                  }
-                  disabled={isSavingPassword}
-                  autoComplete="new-password"
-                />
-                {pwError && (
-                  <p className="body-sm px-1 text-error" role="alert">
-                    {pwError}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={
-                    isSavingPassword ||
-                    !pwForm.current ||
-                    !pwForm.next ||
-                    !pwForm.confirm
-                  }
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
-                >
-                  {isSavingPassword ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
-                  ) : (
-                    <Check className="h-4 w-4" strokeWidth={2.5} />
-                  )}
-                  {isSavingPassword ? 'Saving…' : 'Update password'}
-                </button>
-              </form>
-            </Card>
-          )}
+              <span className="font-display font-semibold">Change password</span>
+            </div>
+            <ChevronRight
+              className="h-4 w-4 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
+          </button>
 
           <button
             type="button"
             onClick={() => setConfirmLogout(true)}
-            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 transition hover:bg-white/5"
           >
             <div className="flex items-center gap-3">
-              <LogOut
-                className="h-5 w-5 text-on-surface-variant"
-                strokeWidth={1.75}
-              />
-              <span className="font-display font-semibold">Sign out</span>
+              <LogOut className="h-5 w-5 text-error" strokeWidth={1.75} />
+              <span className="font-display font-semibold text-error">
+                Sign out
+              </span>
             </div>
           </button>
         </div>
@@ -595,6 +518,16 @@ function ProfileScreen() {
         </div>
       </section>
 
+      <ChangePasswordModal
+        open={isChangingPassword}
+        form={pwForm}
+        setForm={setPwForm}
+        error={pwError}
+        isPending={isSavingPassword}
+        onSubmit={handleChangePassword}
+        onClose={closeChangePassword}
+      />
+
       <ConfirmModal
         open={confirmLogout}
         title="Sign out"
@@ -634,6 +567,120 @@ function ProfileScreen() {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
+
+interface PwForm {
+  current: string
+  next: string
+  confirm: string
+}
+
+function ChangePasswordModal({
+  open,
+  form,
+  setForm,
+  error,
+  isPending,
+  onSubmit,
+  onClose,
+}: {
+  open: boolean
+  form: PwForm
+  setForm: React.Dispatch<React.SetStateAction<PwForm>>
+  error: string
+  isPending: boolean
+  onSubmit: (e: React.FormEvent) => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !isPending) onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [open, isPending, onClose])
+
+  if (!open) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/70 px-4 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isPending) onClose()
+      }}
+    >
+      <div className="w-full max-w-sm rounded-3xl bg-surface-container-high p-6 text-on-surface shadow-[0_20px_60px_-10px_rgba(6,14,32,0.8)]">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold text-on-surface">
+            Change password
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-lg p-1 text-on-surface-variant/70 transition hover:bg-white/5 hover:text-on-surface disabled:opacity-50"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <TextField
+            id="pw-current"
+            type="password"
+            placeholder="Current password"
+            value={form.current}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, current: e.target.value }))
+            }
+            disabled={isPending}
+            autoComplete="current-password"
+          />
+          <TextField
+            id="pw-new"
+            type="password"
+            placeholder="New password"
+            value={form.next}
+            onChange={(e) => setForm((f) => ({ ...f, next: e.target.value }))}
+            disabled={isPending}
+            autoComplete="new-password"
+          />
+          <TextField
+            id="pw-confirm"
+            type="password"
+            placeholder="Confirm new password"
+            value={form.confirm}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, confirm: e.target.value }))
+            }
+            disabled={isPending}
+            autoComplete="new-password"
+          />
+          {error && (
+            <p className="body-sm px-1 text-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={
+              isPending || !form.current || !form.next || !form.confirm
+            }
+            className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
+          >
+            {isPending ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
+            ) : (
+              <Check className="h-4 w-4" strokeWidth={2.5} />
+            )}
+            {isPending ? 'Saving…' : 'Update password'}
+          </button>
+        </form>
+      </div>
+    </div>,
+    document.body,
+  )
+}
 
 function PushToggle({
   push,
