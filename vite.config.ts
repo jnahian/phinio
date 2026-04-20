@@ -25,6 +25,7 @@ const config = defineConfig({
           '/signup',
           '/check-email',
           '/forgot-password',
+          '/changelog',
         ],
       },
     }),
