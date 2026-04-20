@@ -2,6 +2,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 
 interface AllocationDonutProps {
   data: Array<{ type: string; value: string; percent: number }>
+  selectedType?: string | null
 }
 
 const COLORS: Record<string, string> = {
@@ -17,7 +18,10 @@ const COLORS: Record<string, string> = {
  * Compact donut chart for the home-screen investment allocation snapshot.
  * Lazy-loaded so recharts stays out of bundles that don't need it.
  */
-export default function AllocationDonut({ data }: AllocationDonutProps) {
+export default function AllocationDonut({
+  data,
+  selectedType = null,
+}: AllocationDonutProps) {
   if (data.length === 0) {
     return null
   }
@@ -44,10 +48,20 @@ export default function AllocationDonut({ data }: AllocationDonutProps) {
             endAngle={450}
             stroke="none"
             paddingAngle={2}
+            isAnimationActive={false}
           >
-            {chartData.map((entry) => (
-              <Cell key={entry.name} fill={entry.fill} />
-            ))}
+            {chartData.map((entry) => {
+              const isDimmed =
+                selectedType !== null && entry.name !== selectedType
+              return (
+                <Cell
+                  key={entry.name}
+                  fill={entry.fill}
+                  fillOpacity={isDimmed ? 0.15 : 1}
+                  style={{ transition: 'fill-opacity 200ms ease' }}
+                />
+              )
+            })}
           </Pie>
         </PieChart>
       </ResponsiveContainer>

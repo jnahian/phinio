@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   AlertTriangle,
@@ -53,6 +53,9 @@ function HomeScreen() {
   const firstName = profile.fullName.split(' ')[0]
 
   const { data, isLoading } = useDashboardQuery()
+  const [selectedAllocationType, setSelectedAllocationType] = useState<
+    string | null
+  >(null)
 
   // Fresh accounts with no investments and no EMIs get a single welcome CTA
   // instead of three stacked empty sections.
@@ -270,28 +273,47 @@ function HomeScreen() {
               <Suspense
                 fallback={<Skeleton className="h-32 w-32 rounded-full" />}
               >
-                <AllocationDonut data={data.allocation} />
+                <AllocationDonut
+                  data={data.allocation}
+                  selectedType={selectedAllocationType}
+                />
               </Suspense>
               <ul className="flex-1 space-y-2">
-                {data.allocation.slice(0, 5).map((item) => (
-                  <li
-                    key={item.type}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <span
-                      className={cn(
-                        'h-2.5 w-2.5 flex-shrink-0 rounded-full',
-                        TYPE_COLORS[item.type] ?? TYPE_COLORS.other,
-                      )}
-                    />
-                    <span className="flex-1 truncate text-on-surface-variant">
-                      {TYPE_LABELS[item.type] ?? 'Other'}
-                    </span>
-                    <span className="font-display font-semibold text-on-surface">
-                      {item.percent}%
-                    </span>
-                  </li>
-                ))}
+                {data.allocation.slice(0, 5).map((item) => {
+                  const isSelected = selectedAllocationType === item.type
+                  const isDimmed =
+                    selectedAllocationType !== null && !isSelected
+                  return (
+                    <li key={item.type}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedAllocationType((prev) =>
+                            prev === item.type ? null : item.type,
+                          )
+                        }
+                        aria-pressed={isSelected}
+                        className={cn(
+                          'flex w-full items-center gap-2 rounded-md text-sm transition-opacity',
+                          isDimmed && 'opacity-40',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'h-2.5 w-2.5 flex-shrink-0 rounded-full',
+                            TYPE_COLORS[item.type] ?? TYPE_COLORS.other,
+                          )}
+                        />
+                        <span className="flex-1 truncate text-left text-on-surface-variant">
+                          {TYPE_LABELS[item.type] ?? 'Other'}
+                        </span>
+                        <span className="font-display font-semibold text-on-surface">
+                          {item.percent}%
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           </Card>
