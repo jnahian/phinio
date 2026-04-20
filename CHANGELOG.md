@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-20
+
+Adds a public changelog page, a refreshed landing page, a selectable allocation
+legend on the dashboard, and a batch of UX polish — tap feedback on every
+interactive surface, a proper change-password modal, and snappier tab navigation.
+
+### Added
+
+- **Public changelog** — a new `/changelog` page lists every release's notes
+  with version, date, and categorized changes. Linked from the landing-page
+  footer. Rendered from `CHANGELOG.md` at build time so new releases appear
+  automatically without any extra dependencies.
+
+### Changed
+
+- **Landing page refreshed** — the hero now names DPS schemes, savings pots,
+  EMI amortization, and push reminders. The features grid grows from four
+  cards to six, covering unified portfolio, EMI amortization, net-worth
+  dashboard, push reminders, activity history, and privacy. The "how it
+  works" flow and footer copy are updated to match.
+- **Dashboard allocation donut** has a selectable legend. Tap a type to
+  highlight its slice on the donut and visually dim the others; dimmed rows
+  stay tappable so you can switch focus directly between types. Tap the
+  selected row again to clear.
+- **Change password** opens as a dedicated modal instead of expanding inline
+  on the profile screen, matching how the other confirmation dialogs work.
+- **Sign out** row on the profile screen renders its icon and label in the
+  alert red already used for destructive actions, so it reads clearly at a
+  glance.
+- **Tap feedback everywhere** — every button, link, nav item, bottom-tab
+  pill, and form control now scales down subtly on press. The default mobile
+  tap flash is replaced by this consistent squeeze animation. Respects
+  `prefers-reduced-motion`.
+- **Tab navigation feels instant** — the four primary tabs (dashboard,
+  investments, EMIs, activity) now prefetch their default view on
+  hover/touch, and back-navigation between screens hits the local cache
+  instead of refetching. Mutations still refresh the relevant data.
+- **Installed PWA bottom clearance** — every `/app/*` page now reserves extra
+  space below the iOS home indicator, so the bottom tab bar and sticky
+  submit bars sit above the gesture handle instead of behind it. No effect
+  on desktop or browser-tab mobile.
+
 ## [1.2.3] - 2026-04-20
 
 ### Fixed
