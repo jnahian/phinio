@@ -108,6 +108,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Toaster
           position="top-center"
           theme="dark"
+          offset="calc(env(safe-area-inset-top) + 16px)"
+          mobileOffset="calc(env(safe-area-inset-top) + 16px)"
           toastOptions={{
             style: {
               background: '#171f33',
