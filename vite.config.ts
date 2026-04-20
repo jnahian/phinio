@@ -15,7 +15,19 @@ const config = defineConfig({
     devtools(),
     tailwindcss(),
     tanstackStart(),
-    nitro({ preset: 'vercel' }),
+    nitro({
+      preset: 'vercel',
+      prerender: {
+        crawlLinks: false,
+        routes: [
+          '/',
+          '/login',
+          '/signup',
+          '/check-email',
+          '/forgot-password',
+        ],
+      },
+    }),
     viteReact(),
     VitePWA({
       // We register the service worker manually (see __root.tsx) so the plugin
