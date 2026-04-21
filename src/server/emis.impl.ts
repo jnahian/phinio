@@ -119,7 +119,7 @@ export async function listEmisImpl(profileId: string, data: EmiListQuery) {
           paymentNumber: true,
           dueDate: true,
           status: true,
-          remainingBalance: true,
+          emiAmount: true,
         },
         orderBy: { paymentNumber: 'asc' },
       },
@@ -129,7 +129,10 @@ export async function listEmisImpl(profileId: string, data: EmiListQuery) {
     const totalPayments = emi.payments.length
     const paidCount = emi.payments.filter((p) => p.status === 'paid').length
     const nextUnpaid = emi.payments.find((p) => p.status !== 'paid')
-    const remaining = nextUnpaid ? String(nextUnpaid.remainingBalance) : '0.00'
+    const remaining = emi.payments
+      .filter((p) => p.status !== 'paid')
+      .reduce((sum, p) => sum + Number(p.emiAmount), 0)
+      .toFixed(2)
     return {
       id: emi.id,
       label: emi.label,

@@ -67,9 +67,7 @@ export async function getDashboardStatsImpl(
         emiAmount: true,
         payments: {
           where: { status: { not: 'paid' } },
-          select: { remainingBalance: true },
-          orderBy: { paymentNumber: 'asc' },
-          take: 1,
+          select: { emiAmount: true },
         },
       },
     }),
@@ -110,9 +108,8 @@ export async function getDashboardStatsImpl(
   let monthlyEmiOutflow = 0
   for (const emi of activeEmis) {
     monthlyEmiOutflow += Number(emi.emiAmount)
-    const nextUnpaid = emi.payments.at(0)
-    if (nextUnpaid) {
-      remainingEmiBalance += Number(nextUnpaid.remainingBalance)
+    for (const p of emi.payments) {
+      remainingEmiBalance += Number(p.emiAmount)
     }
   }
 

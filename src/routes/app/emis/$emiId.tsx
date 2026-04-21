@@ -46,8 +46,9 @@ function EmiDetailScreen() {
   const principalPaid = payments
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + Number(p.principalComponent), 0)
-  const nextUnpaid = payments.find((p) => p.status !== 'paid')
-  const remainingBalance = nextUnpaid ? Number(nextUnpaid.remainingBalance) : 0
+  const remainingBalance = payments
+    .filter((p) => p.status !== 'paid')
+    .reduce((sum, p) => sum + Number(p.emiAmount), 0)
   const totalLifetimePayment = payments.reduce(
     (sum, p) => sum + Number(p.emiAmount),
     0,
