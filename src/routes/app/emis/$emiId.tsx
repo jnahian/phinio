@@ -11,6 +11,8 @@ const PrincipalInterestDonut = lazy(
   () => import('#/components/PrincipalInterestDonut'),
 )
 
+type PiSegment = 'Principal' | 'Interest'
+
 export const Route = createFileRoute('/app/emis/$emiId')({
   staticData: { hideTabBar: true, backTo: '/app/emis' },
   component: EmiDetailScreen,
@@ -28,6 +30,7 @@ function EmiDetailScreen() {
   const deleteEmi = useDeleteEmi()
 
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [selectedSegment, setSelectedSegment] = useState<PiSegment | null>(null)
 
   if (isLoading || !emi) {
     return (
@@ -115,6 +118,7 @@ function EmiDetailScreen() {
             <PrincipalInterestDonut
               principal={Number(emi.principal)}
               interest={totalInterest}
+              selectedSegment={selectedSegment}
             />
           </Suspense>
           <div className="mt-4 grid grid-cols-2 gap-3">
@@ -122,12 +126,38 @@ function EmiDetailScreen() {
               color="bg-primary-container"
               label="Principal"
               value={formatCurrency(emi.principal, currency)}
+              selected={selectedSegment === 'Principal'}
+              dimmed={
+                selectedSegment !== null && selectedSegment !== 'Principal'
+              }
+              onClick={() =>
+                setSelectedSegment((prev) =>
+                  prev === 'Principal' ? null : 'Principal',
+                )
+              }
             />
             <LegendPill
               color="bg-tertiary-container"
               label="Interest"
               value={formatCurrency(totalInterest.toFixed(2), currency)}
+              selected={selectedSegment === 'Interest'}
+              dimmed={
+                selectedSegment !== null && selectedSegment !== 'Interest'
+              }
+              onClick={() =>
+                setSelectedSegment((prev) =>
+                  prev === 'Interest' ? null : 'Interest',
+                )
+              }
             />
+          </div>
+          <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
+            <p className="label-sm normal-case tracking-wide text-on-surface-variant">
+              Total
+            </p>
+            <p className="font-display text-sm font-bold text-on-surface">
+              {formatCurrency(totalLifetimePayment.toFixed(2), currency)}
+            </p>
           </div>
         </section>
 
@@ -288,15 +318,21 @@ function LegendPill({
   color,
   label,
   value,
+  selected = false,
+  dimmed = false,
+  onClick,
 }: {
   color: string
   label: string
   value: string
+  selected?: boolean
+  dimmed?: boolean
+  onClick?: () => void
 }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl bg-surface-container-lowest px-3 py-2">
+  const content = (
+    <>
       <span className={cn('h-2.5 w-2.5 flex-shrink-0 rounded-full', color)} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 text-left">
         <p className="label-sm normal-case tracking-wide text-on-surface-variant">
           {label}
         </p>
@@ -304,6 +340,26 @@ function LegendPill({
           {value}
         </p>
       </div>
+    </>
+  )
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={selected}
+        className={cn(
+          'flex w-full items-center gap-2 rounded-xl bg-surface-container-lowest px-3 py-2 transition-opacity',
+          dimmed && 'opacity-40',
+        )}
+      >
+        {content}
+      </button>
+    )
+  }
+  return (
+    <div className="flex items-center gap-2 rounded-xl bg-surface-container-lowest px-3 py-2">
+      {content}
     </div>
   )
 }
