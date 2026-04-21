@@ -54,9 +54,16 @@ function DpsDetailScreen() {
   const isActive = inv.status === 'active'
   const now = new Date()
 
+  let contiguousPaid = 0
+  for (const d of deposits) {
+    if (d.status !== 'paid') break
+    contiguousPaid++
+  }
   const interestEarned =
-    Number(maturityValue) -
-    Number(inv.monthlyDeposit ?? 0) * (inv.tenureMonths ?? 0)
+    contiguousPaid === 0
+      ? 0
+      : Number(deposits[contiguousPaid - 1].accruedValue) -
+        contiguousPaid * Number(inv.monthlyDeposit ?? 0)
 
   async function handleDelete() {
     try {
