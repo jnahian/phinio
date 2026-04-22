@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-22
+
+Sharpens the numbers Phinio shows you for EMIs and DPS — what you owe, and
+what you've earned, now reflect reality more directly. Plus a couple of
+quality-of-life touches on the EMI detail page.
+
+### Added
+
+- **EMI detail — Total row.** The principal-vs-interest breakdown now shows
+  a "Total" row beneath it so you can see the full lifetime cost
+  (principal + all interest) at a glance.
+- **EMI detail — selectable donut legend.** Tap the Principal or Interest
+  pill to highlight just that segment of the donut; tap again to clear. Same
+  interaction as the dashboard allocation donut.
+
+### Changed
+
+- **EMI "remaining balance" now reflects the full unpaid payoff.** The figure
+  on EMI cards, the detail page's headline, and the dashboard's aggregate
+  EMI balance now sum the `emiAmount` of every unpaid installment — i.e. the
+  total principal + interest still owed over the remaining term. Previously
+  it showed the schedule's running balance *after* the next payment, which
+  was effectively off by one installment's principal.
+- **DPS "interest earned" now tracks what you've actually earned.** Instead
+  of showing a fixed projection of total interest over the full tenure, the
+  number grows as you pay each installment — computed as the accrued value
+  at the last contiguously paid deposit, minus the principal you've put in.
+  Deposits paid out of order don't contribute until the gap is filled.
+
 ## [1.3.1] - 2026-04-20
 
 ### Fixed
