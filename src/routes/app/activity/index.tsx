@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CalendarClock,
   ChevronDown,
+  CloudOff,
   CreditCard,
   History,
   PencilLine,
@@ -75,8 +76,15 @@ const ACTION_META: Record<
 function ActivityScreen() {
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useActivityLogQuery()
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useActivityLogQuery()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   // Auto-fetch the next page when the sentinel scrolls into view. The
@@ -97,6 +105,29 @@ function ActivityScreen() {
     observer.observe(node)
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  const items = data?.pages.flatMap((p) => p.items) ?? []
+
+  if (isError && items.length === 0) {
+    return (
+      <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
+        <EmptyState
+          icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
+          title="Couldn't load activity"
+          description="Check your connection and try again."
+          action={
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="btn-primary"
+            >
+              Retry
+            </button>
+          }
+        />
+      </main>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -119,8 +150,6 @@ function ActivityScreen() {
       </main>
     )
   }
-
-  const items = data?.pages.flatMap((p) => p.items) ?? []
 
   if (items.length === 0) {
     return (

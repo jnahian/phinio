@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Building2, CalendarClock, CreditCard } from 'lucide-react'
+import { Building2, CalendarClock, CloudOff, CreditCard } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
@@ -52,7 +52,12 @@ function EmisListScreen() {
   const currency = profile.preferredCurrency
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
-  const { data: emis = [], isLoading } = useEmisQuery({ type: typeFilter })
+  const {
+    data: emis = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useEmisQuery({ type: typeFilter })
 
   const totals = emis.reduce(
     (acc, emi) => {
@@ -86,7 +91,22 @@ function EmisListScreen() {
         className="mb-6"
       />
 
-      {isLoading ? (
+      {isError && emis.length === 0 ? (
+        <EmptyState
+          icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
+          title="Couldn't load EMIs"
+          description="Check your connection and try again."
+          action={
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="btn-primary"
+            >
+              Retry
+            </button>
+          }
+        />
+      ) : isLoading ? (
         <ul className="space-y-3">
           {[0, 1].map((i) => (
             <li key={i}>

@@ -4,10 +4,12 @@ import {
   AlertTriangle,
   CalendarClock,
   ChevronRight,
+  CloudOff,
   Sparkles,
   TrendingUp,
 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
+import { EmptyState } from '#/components/ui/EmptyState'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatReturnPercent } from '#/lib/calculations'
@@ -55,10 +57,31 @@ function HomeScreen() {
   const currency = profile.preferredCurrency
   const firstName = profile.fullName.split(' ')[0]
 
-  const { data, isLoading } = useDashboardQuery()
+  const { data, isLoading, isError, refetch } = useDashboardQuery()
   const [selectedAllocationType, setSelectedAllocationType] = useState<
     string | null
   >(null)
+
+  if (isError && !data) {
+    return (
+      <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-12">
+        <EmptyState
+          icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
+          title="Couldn't load dashboard"
+          description="Check your connection and try again."
+          action={
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="btn-primary"
+            >
+              Retry
+            </button>
+          }
+        />
+      </main>
+    )
+  }
 
   // Fresh accounts with no investments and no EMIs get a single welcome CTA
   // instead of three stacked empty sections.

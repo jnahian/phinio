@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowDownLeft, TrendingUp } from 'lucide-react'
+import { ArrowDownLeft, CloudOff, TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { EmptyState } from '#/components/ui/EmptyState'
@@ -84,7 +84,12 @@ function InvestmentsListScreen() {
   const [status, setStatus] = useState<StatusFilter>('active')
   const [showWithdraw, setShowWithdraw] = useState(false)
 
-  const { data: items = [], isLoading } = useInvestmentsQuery({
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useInvestmentsQuery({
     status,
     type: typeFilter,
   })
@@ -175,7 +180,22 @@ function InvestmentsListScreen() {
         className="mb-6"
       />
 
-      {isLoading ? (
+      {isError && totalItems === 0 ? (
+        <EmptyState
+          icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
+          title="Couldn't load investments"
+          description="Check your connection and try again."
+          action={
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="btn-primary"
+            >
+              Retry
+            </button>
+          }
+        />
+      ) : isLoading ? (
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
             <li key={i}>
