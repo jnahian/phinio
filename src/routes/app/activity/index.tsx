@@ -34,10 +34,11 @@ import type {
 
 export const Route = createFileRoute('/app/activity/')({
   staticData: { title: 'Activity', backTo: '/app/profile' },
-  loader: ({ context }) =>
-    context.queryClient.ensureInfiniteQueryData(
+  loader: ({ context }) => {
+    void context.queryClient.prefetchInfiniteQuery(
       activityInfiniteQueryOptions(),
-    ),
+    )
+  },
   component: ActivityScreen,
 })
 

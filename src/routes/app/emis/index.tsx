@@ -39,8 +39,11 @@ const TYPE_META: Record<
 
 export const Route = createFileRoute('/app/emis/')({
   staticData: { title: 'EMIs' },
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(emisListQueryOptions({ type: 'all' })),
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(
+      emisListQueryOptions({ type: 'all' }),
+    )
+  },
   component: EmisListScreen,
 })
 

@@ -68,10 +68,11 @@ const TYPE_COLORS: Record<string, string> = {
 
 export const Route = createFileRoute('/app/investments/')({
   staticData: { title: 'Investments' },
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(
       investmentsListQueryOptions({ status: 'active', type: 'all' }),
-    ),
+    )
+  },
   component: InvestmentsListScreen,
 })
 
