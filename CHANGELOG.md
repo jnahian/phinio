@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-04-28
+
+### Changed
+
+- **Tab navigation renders instantly.** Switching between dashboard,
+  investments, EMIs, and activity no longer freezes on the previous screen
+  while data loads — the new tab mounts immediately and its existing
+  skeleton states cover the fetch. Cached tab data also stays fresh for
+  five minutes within a session, so repeated taps don't re-fetch.
+
+### Fixed
+
+- **Failed fetches now show a retry, not endless skeletons.** If the
+  dashboard, investments list, EMIs list, or activity log can't reach the
+  server and has no cached data, you'll now see a "couldn't load" message
+  with a Retry button instead of perpetual loading shimmer. When cached
+  data is already on screen, a background-refetch failure leaves the
+  existing data in place.
+
 ## [1.4.0] - 2026-04-22
 
 Sharpens the numbers Phinio shows you for EMIs and DPS — what you owe, and
