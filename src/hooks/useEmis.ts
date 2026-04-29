@@ -187,16 +187,54 @@ export function useCreateEmi() {
 
 export function useDeleteEmi() {
   const qc = useQueryClient()
-  return useOfflineMutation<unknown, Error, { emiId: string }>({
+  return useOfflineMutation<
+    unknown,
+    Error,
+    { emiId: string },
+    {
+      previousLists: Array<[ReadonlyArray<unknown>, unknown]>
+      previousDetail: unknown
+    }
+  >({
     mutationKey: mutationKeys.emiDelete,
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: emiKeys.all })
+      const previousLists: Array<[ReadonlyArray<unknown>, unknown]> = qc
+        .getQueriesData({ queryKey: ['emis', 'list'] })
+        .map(([key, value]) => [key, value])
+      const previousDetail = qc.getQueryData(emiKeys.detail(input.emiId))
+
+      // Filter the row out of every cached list page.
+      for (const [key, value] of previousLists) {
+        if (!Array.isArray(value)) continue
+        qc.setQueryData(
+          key,
+          value.filter((row: { id: string }) => row.id !== input.emiId),
+        )
+      }
+      qc.removeQueries({ queryKey: emiKeys.detail(input.emiId) })
+      return { previousLists, previousDetail }
+    },
+    onError: (err, input, ctx) => {
+      if (ctx) {
+        for (const [key, value] of ctx.previousLists) {
+          qc.setQueryData(key, value)
+        }
+        if (ctx.previousDetail) {
+          qc.setQueryData(emiKeys.detail(input.emiId), ctx.previousDetail)
+        }
+      }
+      toast.error(errorMessage(err, 'Failed to delete'))
+    },
     onSuccess: () => {
       toast.success('EMI deleted')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
 }
 

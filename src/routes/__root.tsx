@@ -12,6 +12,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
+import { OfflineBanner } from '#/components/OfflineBanner'
 import { RouteStatus } from '#/components/RouteStatus'
 import { getSessionFn } from '#/server/auth'
 
@@ -143,6 +144,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="bg-surface text-on-surface font-sans antialiased">
+        <OfflineBanner />
         {children}
         <Toaster
           position="top-center"
