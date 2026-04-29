@@ -275,6 +275,7 @@ export async function createInvestmentImpl(
   return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const created = await tx.investment.create({
       data: {
+        ...(data.id ? { id: data.id } : {}),
         profileId,
         name: data.name,
         type: data.type,
@@ -450,6 +451,7 @@ export async function createDpsInvestmentImpl(
   return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const inv = await tx.investment.create({
       data: {
+        ...(data.id ? { id: data.id } : {}),
         profileId,
         name: data.name,
         type: 'dps',
@@ -668,6 +670,7 @@ export async function createSavingsInvestmentImpl(
   return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const created = await tx.investment.create({
       data: {
+        ...(data.id ? { id: data.id } : {}),
         profileId,
         name: data.name,
         type: 'savings',

@@ -28,7 +28,14 @@ type ProfileData = Awaited<ReturnType<typeof getProfileFn>>
 
 export const Route = createFileRoute('/app')({
   beforeLoad: async ({ context }) => {
-    const { queryClient } = context
+    const { queryClient, persisterReady } = context
+
+    // Wait for IndexedDB restore before deciding anything cache-dependent.
+    // Without this, a cold launch beats the persister to the punch: the
+    // network call below throws (offline), the catch reads getQueryData,
+    // sees nothing yet (cache hasn't hydrated), and redirects the user
+    // to /login despite a valid persisted session.
+    await persisterReady
 
     try {
       const session = await queryClient.fetchQuery({

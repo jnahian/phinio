@@ -1,7 +1,10 @@
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getInvestmentFn, listInvestmentsFn } from '#/server/investments'
-import type { InvestmentListFilters } from '#/server/investments'
+import type {
+  InvestmentListFilters,
+  InvestmentListItem,
+} from '#/server/investments'
 import type {
   AddDepositInput,
   DpsCloseInput,
@@ -61,15 +64,54 @@ export function useInvestmentQuery(id: string) {
 
 export function useCreateInvestment() {
   const qc = useQueryClient()
-  return useOfflineMutation<{ id: string }, Error, InvestmentCreateInput>({
+  return useOfflineMutation<
+    { id: string },
+    Error,
+    InvestmentCreateInput,
+    { snapshot: ListSnapshot; id: string }
+  >({
     mutationKey: mutationKeys.investmentCreate,
+    prepareVariables: (input) => ({ ...input, id: input.id ?? crypto.randomUUID() }),
+    onMutate: async (input) => {
+      const id = input.id!
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      const row: InvestmentListItem = {
+        id,
+        name: input.name,
+        type: input.type,
+        mode: 'lump_sum',
+        status: 'active',
+        notes: input.notes ?? null,
+        createdAt: new Date(),
+        investedAmount: input.investedAmount,
+        currentValue: input.currentValue,
+        exitValue: null,
+        totalWithdrawn: '0',
+        dateOfInvestment: new Date(input.dateOfInvestment),
+        monthlyDeposit: null,
+        tenureMonths: null,
+        interestRate: null,
+        interestType: null,
+        startDate: null,
+        paidCount: 0,
+        maturityValue: null,
+        nextDueDate: null,
+      }
+      const snapshot = applyOptimisticCreate(qc, row)
+      return { snapshot, id }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) rollbackOptimisticCreate(qc, ctx.snapshot, investmentKeys.detail(ctx.id))
+      toast.error(errorMessage(err, 'Failed to save'))
+    },
     onSuccess: () => {
       toast.success('Investment added')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 
@@ -148,6 +190,44 @@ function buildDeleteRollback(
   return { previousLists: entries, detailKey, previousDetail }
 }
 
+/**
+ * Inserts an optimistic row into every list cache whose filter would have
+ * matched the new investment server-side. Returns a snapshot the caller
+ * can pass to `rollbackOptimisticCreate` on error. Active-only because
+ * brand-new rows always start with `status: 'active'` — completed/closed
+ * filter views must NOT show them.
+ */
+type ListSnapshot = Array<[ReadonlyArray<unknown>, unknown]>
+
+function applyOptimisticCreate(
+  qc: ReturnType<typeof useQueryClient>,
+  row: InvestmentListItem,
+): ListSnapshot {
+  const previous: ListSnapshot = qc
+    .getQueriesData({ queryKey: ['investments', 'list'] })
+    .map(([key, value]) => [key, value])
+  for (const [key, value] of previous) {
+    if (!Array.isArray(value)) continue
+    const filter = key[2] as { status?: string; type?: string } | undefined
+    if (filter?.status && filter.status !== 'active') continue
+    const filterType = filter?.type ?? 'all'
+    if (filterType !== 'all' && filterType !== row.type) continue
+    qc.setQueryData(key, [row, ...value])
+  }
+  return previous
+}
+
+function rollbackOptimisticCreate(
+  qc: ReturnType<typeof useQueryClient>,
+  snapshot: ListSnapshot,
+  detailKey: ReadonlyArray<unknown>,
+) {
+  for (const [key, value] of snapshot) {
+    qc.setQueryData(key, value)
+  }
+  qc.removeQueries({ queryKey: detailKey })
+}
+
 function rollbackDeletes(
   qc: ReturnType<typeof useQueryClient>,
   ctx: DeleteRollbackContext,
@@ -202,16 +282,51 @@ export function useCreateDps() {
   return useOfflineMutation<
     { id: string; name: string },
     Error,
-    DpsCreateInput
+    DpsCreateInput,
+    { snapshot: ListSnapshot; id: string }
   >({
     mutationKey: mutationKeys.dpsCreate,
+    prepareVariables: (input) => ({ ...input, id: input.id ?? crypto.randomUUID() }),
+    onMutate: async (input) => {
+      const id = input.id!
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      const row: InvestmentListItem = {
+        id,
+        name: input.name,
+        type: 'dps',
+        mode: 'scheduled',
+        status: 'active',
+        notes: input.notes ?? null,
+        createdAt: new Date(),
+        investedAmount: '0',
+        currentValue: '0',
+        exitValue: null,
+        totalWithdrawn: '0',
+        dateOfInvestment: null,
+        monthlyDeposit: input.monthlyDeposit,
+        tenureMonths: input.tenureMonths,
+        interestRate: input.interestRate,
+        interestType: input.interestType,
+        startDate: new Date(input.startDate),
+        paidCount: 0,
+        maturityValue: null,
+        nextDueDate: new Date(input.startDate),
+      }
+      const snapshot = applyOptimisticCreate(qc, row)
+      return { snapshot, id }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) rollbackOptimisticCreate(qc, ctx.snapshot, investmentKeys.detail(ctx.id))
+      toast.error(errorMessage(err, 'Failed to save'))
+    },
     onSuccess: () => {
       toast.success('DPS scheme added')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 
@@ -320,16 +435,52 @@ export function useCreateSavings() {
   return useOfflineMutation<
     { id: string; name: string },
     Error,
-    SavingsCreateInput
+    SavingsCreateInput,
+    { snapshot: ListSnapshot; id: string }
   >({
     mutationKey: mutationKeys.savingsCreate,
+    prepareVariables: (input) => ({ ...input, id: input.id ?? crypto.randomUUID() }),
+    onMutate: async (input) => {
+      const id = input.id!
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      const initial = Number(input.currentValue)
+      const row: InvestmentListItem = {
+        id,
+        name: input.name,
+        type: 'savings',
+        mode: 'flexible',
+        status: 'active',
+        notes: input.notes ?? null,
+        createdAt: new Date(),
+        investedAmount: initial > 0 ? input.currentValue : '0',
+        currentValue: input.currentValue,
+        exitValue: null,
+        totalWithdrawn: '0',
+        dateOfInvestment: null,
+        monthlyDeposit: null,
+        tenureMonths: null,
+        interestRate: null,
+        interestType: null,
+        startDate: new Date(input.startDate),
+        paidCount: 0,
+        maturityValue: null,
+        nextDueDate: null,
+      }
+      const snapshot = applyOptimisticCreate(qc, row)
+      return { snapshot, id }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) rollbackOptimisticCreate(qc, ctx.snapshot, investmentKeys.detail(ctx.id))
+      toast.error(errorMessage(err, 'Failed to save'))
+    },
     onSuccess: () => {
       toast.success('Savings pot added')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 

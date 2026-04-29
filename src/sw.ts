@@ -72,17 +72,42 @@ registerRoute(
 // hydrates from IndexedDB.
 
 const SHELL_CACHE = 'phinio-shell-v1'
+// Routes ranked best→worst as offline boot shells. We cache whatever
+// succeeds; the navigation fallback walks them in order. /login is
+// preferred (no user data, prerendered, contains the React boot scripts)
+// but / is a safe second choice if the user's first visit ever was a
+// deep link into /signup or /forgot-password.
+const SHELL_ROUTES = ['/login', '/'] as const
 
-// Best-effort warm cache on activation so users who never visited /login
-// (e.g. signed up via /signup) still have a shell available offline.
-self.addEventListener('activate', (event) => {
+self.addEventListener('install', (event) => {
+  // Aggressively warm the shell cache during install. The SW file itself
+  // was just downloaded so we know the network was reachable a moment
+  // ago — much better odds than waiting for activate.
   event.waitUntil(
     (async () => {
       try {
         const cache = await caches.open(SHELL_CACHE)
-        await cache.add('/login')
+        await Promise.allSettled(SHELL_ROUTES.map((r) => cache.add(r)))
       } catch {
-        // Network unavailable at activation — SWR below picks it up later.
+        // SWR routes below pick this up on the next online navigation.
+      }
+    })(),
+  )
+})
+
+self.addEventListener('activate', (event) => {
+  // Belt-and-braces in case install couldn't reach one of the routes.
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(SHELL_CACHE)
+        const have = new Set(
+          (await cache.keys()).map((req) => new URL(req.url).pathname),
+        )
+        const missing = SHELL_ROUTES.filter((r) => !have.has(r))
+        await Promise.allSettled(missing.map((r) => cache.add(r)))
+      } catch {
+        // Same fallback as install — runtime SWR will fill in later.
       }
     })(),
   )
@@ -91,7 +116,7 @@ self.addEventListener('activate', (event) => {
 registerRoute(
   ({ url, request }) =>
     url.origin === self.location.origin &&
-    url.pathname === '/login' &&
+    SHELL_ROUTES.some((r) => r === url.pathname) &&
     request.mode === 'navigate',
   new StaleWhileRevalidate({
     cacheName: SHELL_CACHE,
@@ -106,8 +131,11 @@ registerRoute(
         return await fetch(request)
       } catch {
         const cache = await caches.open(SHELL_CACHE)
-        const cached = await cache.match('/login')
-        return cached ?? Response.error()
+        for (const route of SHELL_ROUTES) {
+          const cached = await cache.match(route)
+          if (cached) return cached
+        }
+        return Response.error()
       }
     },
     { allowlist: [/^\/app(\/|$)/] },

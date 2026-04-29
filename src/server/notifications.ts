@@ -1,10 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
+import {
+  markAllNotificationsReadSchema,
+  markNotificationReadSchema,
+} from '#/lib/validators'
 
 // NOTE: This wrapper file must not statically import anything that pulls
 // Prisma or Better Auth. See `./investments.ts` for the rationale.
-
-const idSchema = z.object({ id: z.string().min(1) })
 
 export const listNotificationsFn = createServerFn({ method: 'GET' }).handler(
   async () => {
@@ -23,17 +24,21 @@ export const unreadNotificationCountFn = createServerFn({
 })
 
 export const markNotificationReadFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => idSchema.parse(input))
+  .inputValidator((input: unknown) => markNotificationReadSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, markNotificationReadImpl } =
       await import('./notifications.impl')
-    return markNotificationReadImpl(await requireProfileId(), data.id)
+    return markNotificationReadImpl(await requireProfileId(), data)
   })
 
 export const markAllNotificationsReadFn = createServerFn({
   method: 'POST',
-}).handler(async () => {
-  const { requireProfileId, markAllNotificationsReadImpl } =
-    await import('./notifications.impl')
-  return markAllNotificationsReadImpl(await requireProfileId())
 })
+  .inputValidator((input: unknown) =>
+    markAllNotificationsReadSchema.parse(input ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const { requireProfileId, markAllNotificationsReadImpl } =
+      await import('./notifications.impl')
+    return markAllNotificationsReadImpl(await requireProfileId(), data)
+  })

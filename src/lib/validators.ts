@@ -95,6 +95,9 @@ export const investmentCreateSchema = z.object({
   currentValue: positiveDecimalString,
   dateOfInvestment: isoDateString,
   notes: z.string().trim().max(1000).optional(),
+  // Client-supplied row id so an offline optimistic create lines up with
+  // the server's eventual insert on replay.
+  id: z.string().uuid().optional(),
   ...clientMutationIdField,
 })
 export type InvestmentCreateInput = z.infer<typeof investmentCreateSchema>
@@ -151,6 +154,7 @@ export const dpsCreateSchema = z.object({
   interestType: z.enum(DPS_INTEREST_TYPES),
   startDate: isoDateString,
   notes: z.string().trim().max(1000).optional(),
+  id: z.string().uuid().optional(),
   ...clientMutationIdField,
 })
 export type DpsCreateInput = z.infer<typeof dpsCreateSchema>
@@ -180,6 +184,7 @@ export const savingsCreateSchema = z.object({
   startDate: isoDateString,
   currentValue: nonNegativeDecimalString,
   notes: z.string().trim().max(1000).optional(),
+  id: z.string().uuid().optional(),
   ...clientMutationIdField,
 })
 export type SavingsCreateInput = z.infer<typeof savingsCreateSchema>
@@ -277,3 +282,22 @@ export const markPaymentPaidSchema = z.object({
   ...clientMutationIdField,
 })
 export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
+
+// ----------------------------------------------------------------------------
+// Notifications
+// ----------------------------------------------------------------------------
+
+export const markNotificationReadSchema = z.object({
+  id: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type MarkNotificationReadInput = z.infer<
+  typeof markNotificationReadSchema
+>
+
+export const markAllNotificationsReadSchema = z.object({
+  ...clientMutationIdField,
+})
+export type MarkAllNotificationsReadInput = z.infer<
+  typeof markAllNotificationsReadSchema
+>

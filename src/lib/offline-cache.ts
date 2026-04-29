@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { del } from 'idb-keyval'
+import { resetPrefetchCooldown } from './prefetch-profile-data'
 
 // Must match the `key` passed to createAsyncStoragePersister in
 // src/integrations/tanstack-query/root-provider.tsx. Exported there isn't
@@ -20,6 +21,7 @@ export const CACHE_KEY = 'phinio-query-cache'
 export async function clearOfflineCache(queryClient: QueryClient) {
   queryClient.getMutationCache().clear()
   queryClient.clear()
+  resetPrefetchCooldown(queryClient)
   try {
     await del(CACHE_KEY)
   } catch {

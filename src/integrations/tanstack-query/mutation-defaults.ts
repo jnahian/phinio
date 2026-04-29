@@ -16,6 +16,10 @@ import {
   withdrawFn,
 } from '#/server/investments'
 import { createEmiFn, deleteEmiFn, markPaymentPaidFn } from '#/server/emis'
+import {
+  markAllNotificationsReadFn,
+  markNotificationReadFn,
+} from '#/server/notifications'
 import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import type {
   AddDepositInput,
@@ -25,7 +29,9 @@ import type {
   EmiCreateInput,
   InvestmentCreateInput,
   InvestmentUpdateInput,
+  MarkAllNotificationsReadInput,
   MarkDepositPaidInput,
+  MarkNotificationReadInput,
   MarkPaymentPaidInput,
   SavingsCreateInput,
   SavingsUpdateInput,
@@ -74,6 +80,9 @@ export const mutationKeys = {
   // Profile
   profileUpdateCurrency: ['profile', 'update-currency'] as const,
   profileUpdateName: ['profile', 'update-name'] as const,
+  // Notifications
+  markNotificationRead: ['notifications', 'mark-read'] as const,
+  markAllNotificationsRead: ['notifications', 'mark-all-read'] as const,
 } satisfies Record<string, ReadonlyArray<string>>
 
 /**
@@ -168,6 +177,18 @@ export function registerMutationDefaults(queryClient: QueryClient) {
     ...offlineFirst,
     mutationFn: (input: MarkPaymentPaidInput) =>
       markPaymentPaidFn({ data: input }),
+  })
+
+  // Notifications
+  queryClient.setMutationDefaults(mutationKeys.markNotificationRead, {
+    ...offlineFirst,
+    mutationFn: (input: MarkNotificationReadInput) =>
+      markNotificationReadFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.markAllNotificationsRead, {
+    ...offlineFirst,
+    mutationFn: (input: MarkAllNotificationsReadInput) =>
+      markAllNotificationsReadFn({ data: input }),
   })
 
   // Profile

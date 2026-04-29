@@ -71,7 +71,7 @@ export function NotificationBell() {
             {notifications.some((n) => !n.read) && (
               <button
                 type="button"
-                onClick={() => markAllRead.mutate()}
+                onClick={() => markAllRead.mutate({})}
                 disabled={markAllRead.isPending}
                 className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-primary-fixed-dim hover:bg-primary-container/20 disabled:opacity-50"
               >
@@ -169,7 +169,7 @@ export function NotificationBell() {
                   )
 
                   function handleClick() {
-                    if (!n.read) markRead.mutate(n.id)
+                    if (!n.read) markRead.mutate({ id: n.id })
                     setOpen(false)
                   }
 

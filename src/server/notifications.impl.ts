@@ -1,6 +1,11 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
+import { withIdempotency } from './_idempotency'
+import type {
+  MarkAllNotificationsReadInput,
+  MarkNotificationReadInput,
+} from '#/lib/validators'
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())
@@ -132,18 +137,28 @@ export async function unreadNotificationCountImpl(profileId: string) {
   return { count }
 }
 
-export async function markNotificationReadImpl(profileId: string, id: string) {
-  const result = await prisma.notification.updateMany({
-    where: { id, profileId, readAt: null },
-    data: { readAt: new Date() },
+export async function markNotificationReadImpl(
+  profileId: string,
+  data: MarkNotificationReadInput,
+) {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+    const result = await tx.notification.updateMany({
+      where: { id: data.id, profileId, readAt: null },
+      data: { readAt: new Date() },
+    })
+    return { id: data.id, updated: result.count }
   })
-  return { id, updated: result.count }
 }
 
-export async function markAllNotificationsReadImpl(profileId: string) {
-  const result = await prisma.notification.updateMany({
-    where: { profileId, readAt: null },
-    data: { readAt: new Date() },
+export async function markAllNotificationsReadImpl(
+  profileId: string,
+  data: MarkAllNotificationsReadInput,
+) {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+    const result = await tx.notification.updateMany({
+      where: { profileId, readAt: null },
+      data: { readAt: new Date() },
+    })
+    return { updated: result.count }
   })
-  return { updated: result.count }
 }

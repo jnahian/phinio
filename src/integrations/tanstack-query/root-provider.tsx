@@ -11,7 +11,19 @@ const MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days
 // query changes). Patch releases must NOT invalidate cached financial data.
 const CACHE_SCHEMA_VERSION = 'v1'
 
-export function getContext() {
+/**
+ * Resolves once `persistQueryClient` has finished hydrating the in-memory
+ * cache from IndexedDB. Routes that fall back to cached data on offline
+ * `beforeLoad` MUST await this — otherwise the router can read an empty
+ * cache and redirect to /login despite the user having a valid persisted
+ * session, because the IDB restore hadn't completed yet.
+ */
+export interface RootRouterContext {
+  queryClient: QueryClient
+  persisterReady: Promise<void>
+}
+
+export function getContext(): RootRouterContext {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -29,6 +41,11 @@ export function getContext() {
       },
     },
   })
+
+  // Default to an immediately-resolved promise for SSR and for the failure
+  // path where persistence is unavailable — beforeLoad should not hang in
+  // those cases. Reassigned below if persistence successfully starts.
+  let persisterReady: Promise<void> = Promise.resolve()
 
   if (typeof window !== 'undefined') {
     // Register the mutationFn for every offline-replayable mutation key.
@@ -83,11 +100,17 @@ export function getContext() {
         deserialize: superjson.parse,
       })
 
-      persistQueryClient({
+      const [, restorePromise] = persistQueryClient({
         queryClient,
         persister,
         maxAge: MAX_AGE,
         buster: CACHE_SCHEMA_VERSION,
+      })
+      // Swallow restore failures so awaiters never reject — a failed restore
+      // means we proceed with an empty in-memory cache, which is the same
+      // behaviour as a fresh first visit.
+      persisterReady = restorePromise.catch((err) => {
+        warnOnce('restore', err)
       })
     } catch (err) {
       console.warn(
@@ -99,6 +122,7 @@ export function getContext() {
 
   return {
     queryClient,
+    persisterReady,
   }
 }
 export default function TanstackQueryProvider() {}
