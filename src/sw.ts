@@ -4,7 +4,7 @@
 // appears below.
 
 import { precacheAndRoute } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
+import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
@@ -63,6 +63,55 @@ registerRoute(
       }),
     ],
   }),
+)
+
+// ── Offline navigation shell ────────────────────────────────────────────────
+// /login is prerendered (vite.config.ts) and contains no user data, so it's
+// safe to cache and reuse as the boot shell for offline /app/* navigations.
+// The React app boots, the router resolves the actual URL, and TanStack Query
+// hydrates from IndexedDB.
+
+const SHELL_CACHE = 'phinio-shell-v1'
+
+// Best-effort warm cache on activation so users who never visited /login
+// (e.g. signed up via /signup) still have a shell available offline.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(SHELL_CACHE)
+        await cache.add('/login')
+      } catch {
+        // Network unavailable at activation — SWR below picks it up later.
+      }
+    })(),
+  )
+})
+
+registerRoute(
+  ({ url, request }) =>
+    url.origin === self.location.origin &&
+    url.pathname === '/login' &&
+    request.mode === 'navigate',
+  new StaleWhileRevalidate({
+    cacheName: SHELL_CACHE,
+    plugins: [new CacheableResponsePlugin({ statuses: [200] })],
+  }),
+)
+
+registerRoute(
+  new NavigationRoute(
+    async ({ request }) => {
+      try {
+        return await fetch(request)
+      } catch {
+        const cache = await caches.open(SHELL_CACHE)
+        const cached = await cache.match('/login')
+        return cached ?? Response.error()
+      }
+    },
+    { allowlist: [/^\/app(\/|$)/] },
+  ),
 )
 
 // ── Push ───────────────────────────────────────────────────────────────────
