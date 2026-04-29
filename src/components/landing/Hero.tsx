@@ -92,7 +92,7 @@ export function Hero() {
         {/* Headline */}
         <div className="space-y-1">
           <h1 className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-[-0.03em] text-on-surface">
-            Command your
+            Own your
           </h1>
           <h1
             className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-[-0.03em]"
@@ -110,9 +110,9 @@ export function Hero() {
 
         {/* Subheadline */}
         <p className="body-md text-on-surface-variant max-w-lg leading-relaxed">
-          Lump-sum investments, DPS schemes, savings pots, and EMI
-          amortization — unified in one private, encrypted vault. Push
-          reminders so you never miss a payment.
+          Investments, DPS deposits, savings pots, and EMI schedules —
+          tracked side by side in one encrypted vault. Works offline. Push
+          reminders before every due date.
         </p>
 
         {/* CTA row */}

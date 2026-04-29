@@ -9,7 +9,13 @@ export function Footer() {
     >
       <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
-          <Logo size="xs" />
+          <Link
+            to="/"
+            aria-label="Phinio home"
+            className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          >
+            <Logo size="xs" />
+          </Link>
           <span className="text-on-surface-variant/25 text-xs mx-0.5">—</span>
           <span className="text-xs text-on-surface-variant">
             Your private financial vault.

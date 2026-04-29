@@ -34,8 +34,8 @@ export function FinalCta() {
             Your vault is waiting.
           </h2>
           <p className="body-md text-on-surface-variant max-w-sm mx-auto">
-            Take control of your investments, DPS deposits, savings pots, and
-            EMIs — all in one private, encrypted space.
+            Investments, DPS, savings, and loans — finally in one place that
+            is private, offline-ready, and entirely yours.
           </p>
         </div>
 

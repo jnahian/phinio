@@ -22,44 +22,44 @@ interface Feature {
 const features: Array<Feature> = [
   {
     Icon: ChartLineSvg,
-    title: 'Unified portfolio',
+    title: 'One portfolio, every asset',
     description:
-      'Lump-sum investments, DPS schemes, and flexible savings pots — tracked side by side with automatic return math and per-mode detail views.',
+      'Lump-sum holdings, DPS schemes, and flexible savings pots side by side — with returns, accruals, and balances recalculated as you go.',
     accent: 'primary',
   },
   {
     Icon: CalendarSvg,
-    title: 'EMI amortization',
+    title: 'Amortization, solved',
     description:
-      'Full reducing-balance schedules generated upfront for bank loans and credit-card EMIs. Know every payment, principal / interest split, and exact payoff date.',
+      'Reducing-balance schedules build the moment you log a loan or credit-card EMI. Every installment, principal-versus-interest split, and payoff date locked in upfront.',
     accent: 'secondary',
   },
   {
     Icon: BarChartSvg,
-    title: 'Net worth dashboard',
+    title: 'Net worth at a glance',
     description:
-      'Active investments minus outstanding EMI balances, at a glance. Quick stats, upcoming payments, and an interactive allocation donut.',
+      'Active investments minus outstanding debts, recalculated live. Upcoming payments and an interactive allocation donut on the same screen.',
     accent: 'primary',
   },
   {
     Icon: BellSvg,
-    title: 'Push reminders',
+    title: 'Reminders that travel',
     description:
-      'Browser push notifications for upcoming and overdue EMI and DPS installments — delivered even when Phinio is closed.',
+      'Web-push alerts for upcoming and overdue EMI and DPS installments — delivered even when Phinio is closed and the tab is gone.',
     accent: 'secondary',
   },
   {
     Icon: HistorySvg,
-    title: 'Activity history',
+    title: 'Every move, recorded',
     description:
-      'Every create, edit, and delete is logged with before-and-after diffs. A complete audit trail you can scroll through any time.',
+      'An immutable audit trail of every create, edit, and delete with before-and-after diffs. Scroll back through your financial history any time.',
     accent: 'primary',
   },
   {
     Icon: ShieldSvg,
-    title: 'Privacy first',
+    title: 'Yours alone',
     description:
-      'No third-party integrations, no tracking, no data sharing. Your financial data stays encrypted and entirely within your control.',
+      'No bank linking, no third-party trackers, no data sharing. Sessions are httpOnly, every query is scoped to you — nothing leaks across accounts.',
     accent: 'secondary',
   },
 ]
@@ -78,9 +78,9 @@ export function Features() {
             CAPABILITIES
           </span>
           <h2 className="font-display font-bold text-3xl sm:text-4xl text-on-surface tracking-tight mt-3 leading-snug">
-            Everything to command
+            Everything you need to
             <br />
-            your finances
+            run your finances
           </h2>
         </div>
 

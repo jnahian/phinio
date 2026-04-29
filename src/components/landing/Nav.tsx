@@ -20,7 +20,13 @@ export function Nav() {
       }
     >
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 h-16">
-        <Logo size="md" />
+        <Link
+          to="/"
+          aria-label="Phinio home"
+          className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        >
+          <Logo size="md" />
+        </Link>
         <div className="flex items-center gap-4">
           <Link
             to="/login"

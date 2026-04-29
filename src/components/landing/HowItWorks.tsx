@@ -16,21 +16,21 @@ const steps: Array<Step> = [
     Icon: VaultSvg,
     title: 'Create your vault',
     description:
-      'Sign up in seconds. No credit card, no bank links, no third-party connections.',
+      'Email and password — that is it. No bank linking, no credit card, no setup wizard.',
   },
   {
     num: '02',
     Icon: CalendarSvg,
     title: 'Add your assets',
     description:
-      'Log lump-sum investments, DPS schemes, savings pots, and EMIs. Schedules and amortization tables generate automatically.',
+      'Log investments, DPS deposits, savings pots, and loans. Schedules and amortization tables build themselves.',
   },
   {
     num: '03',
     Icon: BellSvg,
     title: 'Stay ahead',
     description:
-      'Push reminders warn you before due dates. Your dashboard updates live as you mark payments complete.',
+      'Push reminders fire before every due date. Mark a payment paid and the dashboard updates instantly.',
   },
 ]
 
