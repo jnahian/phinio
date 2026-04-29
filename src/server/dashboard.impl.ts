@@ -67,7 +67,8 @@ export async function getDashboardStatsImpl(
         emiAmount: true,
         payments: {
           where: { status: { not: 'paid' } },
-          select: { emiAmount: true },
+          select: { emiAmount: true, remainingBalance: true, status: true },
+          orderBy: { paymentNumber: 'asc' },
         },
       },
     }),
@@ -108,8 +109,14 @@ export async function getDashboardStatsImpl(
   let monthlyEmiOutflow = 0
   for (const emi of activeEmis) {
     monthlyEmiOutflow += Number(emi.emiAmount)
-    for (const p of emi.payments) {
-      remainingEmiBalance += Number(p.emiAmount)
+    // Use the next-unpaid payment's stored `remainingBalance` (the principal
+    // payoff after that payment lands), NOT a sum of remaining emiAmounts —
+    // emiAmounts include interest and would over-state the liability.
+    // Payments are loaded ordered by paymentNumber asc, so the first non-paid
+    // entry is the next unpaid one.
+    const nextUnpaid = emi.payments.find((p) => p.status !== 'paid')
+    if (nextUnpaid) {
+      remainingEmiBalance += Number(nextUnpaid.remainingBalance)
     }
   }
 

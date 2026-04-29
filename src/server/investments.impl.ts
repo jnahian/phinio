@@ -329,8 +329,11 @@ export async function updateInvestmentImpl(
         ? new Date(data.completedAt)
         : null
 
-    const updated = await tx.investment.update({
-      where: { id: data.id },
+    // Scope the write itself by profileId so authorization lives in the
+    // WHERE clause, not in the prior findFirst. updateMany returns a count
+    // — refetch updatedAt for the LWW envelope.
+    const result = await tx.investment.updateMany({
+      where: { id: data.id, profileId },
       data: {
         name: data.name,
         type: data.type,
@@ -342,6 +345,10 @@ export async function updateInvestmentImpl(
         exitValue: nextExitValue,
         completedAt: nextCompletedAt,
       },
+    })
+    if (result.count === 0) throw new Error('Investment not found')
+    const updated = await tx.investment.findFirstOrThrow({
+      where: { id: data.id, profileId },
       select: { id: true, updatedAt: true },
     })
 
@@ -501,9 +508,13 @@ export async function updateDpsInvestmentImpl(
       }
     }
 
-    const updated = await tx.investment.update({
-      where: { id: data.id },
+    const result = await tx.investment.updateMany({
+      where: { id: data.id, profileId, mode: 'scheduled' },
       data: { name: data.name, notes: data.notes },
+    })
+    if (result.count === 0) throw new Error('DPS not found')
+    const updated = await tx.investment.findFirstOrThrow({
+      where: { id: data.id, profileId },
       select: { id: true, updatedAt: true },
     })
 
@@ -723,13 +734,17 @@ export async function updateSavingsInvestmentImpl(
       }
     }
 
-    const updated = await tx.investment.update({
-      where: { id: data.id },
+    const result = await tx.investment.updateMany({
+      where: { id: data.id, profileId },
       data: {
         name: data.name,
         currentValue: data.currentValue,
         notes: data.notes,
       },
+    })
+    if (result.count === 0) throw new Error('Savings pot not found')
+    const updated = await tx.investment.findFirstOrThrow({
+      where: { id: data.id, profileId },
       select: { id: true, updatedAt: true },
     })
 

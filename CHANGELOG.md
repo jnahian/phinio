@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-04-29
+
+Phinio now works offline. Reads survive a reload without a network,
+writes queue locally and replay automatically when you reconnect, and
+new EMIs render their full amortization schedule the instant you tap
+"Create" — even on a flight.
+
+### Added
+
+- **Offline reads.** Dashboards, investment lists, EMI schedules, and
+  activity stay visible across reloads with no connection. Cached data
+  is kept for up to seven days and falls back to in-memory cache if the
+  browser blocks persistent storage (Safari Private Browsing, full
+  disk).
+- **Offline writes.** Tapping Add, Save, Delete, or Mark paid offline
+  no longer fails — the change is queued locally and replays the moment
+  the network returns. A top banner reads "You're offline. Changes will
+  sync when you reconnect." while disconnected, and "Syncing N changes…"
+  while the queue drains. Each queued change carries an idempotency
+  token so a flaky reconnect cannot duplicate writes.
+- **Offline EMI creation with full schedule.** Creating an EMI without
+  a connection renders the entire payment schedule immediately. You can
+  open the EMI's detail page and mark individual payments paid offline;
+  every step queues and replays in order on reconnect.
+- **Optimistic deletes.** Deleting an investment, DPS, savings pot, or
+  EMI removes the row instantly — no waiting on a round-trip. If the
+  eventual sync fails, the row is restored automatically.
+- **"Edit overwritten" reconciliation.** When two devices edit the
+  same investment, the loser now sees a "Your edit was overwritten by
+  a newer change — refreshing the latest" toast and the latest server
+  state, instead of silently clobbering the winner.
+- **Offline app shell.** Cold-loading `/app` without a network now
+  boots from a cached shell and hydrates from local storage instead of
+  showing a connection error.
+
+### Changed
+
+- **EMI remaining balance now reflects principal owed, not principal
+  + remaining interest.** The "Remaining" figure on EMI list rows and
+  the dashboard's "Net worth" calculation previously summed every
+  unpaid installment (which includes interest), over-stating the
+  outstanding liability. Both now use the next-unpaid payment's
+  principal-payoff figure.
+- **Cross-account safety.** Signing out wipes the persisted offline
+  cache, and signing in as a different user on the same device clears
+  any stale data and queued writes from the previous session before
+  resuming.
+
+### Fixed
+
+- Concurrent duplicate submissions of the same change (e.g. a
+  double-tap on a slow Save) no longer error — the second attempt
+  recognizes the first as already-applied and returns the same result.
+- Withdrawal balance checks no longer rely on floating-point math, so
+  exact-value withdrawals close the position correctly instead of
+  leaving fractional residue.
+- Filtered EMI lists no longer briefly show a newly-created EMI in
+  the wrong tab while the offline queue is still pending.
+- Backend errors during route guards no longer mask as "you're
+  offline." A real 500 now surfaces as a route error; only genuine
+  network failures fall back to the cached identity.
+
 ## [1.4.1] - 2026-04-28
 
 ### Changed

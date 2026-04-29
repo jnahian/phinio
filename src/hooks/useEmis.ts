@@ -82,12 +82,11 @@ export function useCreateEmi() {
       const paymentIds = input.paymentIds!
 
       // Compute the schedule the same way the server will. emi-calculator
-      // is pure JS, so this matches byte-for-byte on replay. `totalPayment`
-      // is the Decimal-string sum of every installment — use it directly
-      // for the optimistic `remainingBalance` instead of summing
-      // `Number(p.emiAmount)` on the client (which would violate the
-      // money-as-Decimal rule).
-      const { emiAmount, totalPayment } = calculateEmi({
+      // is pure JS, so this matches byte-for-byte on replay. The server
+      // exposes `remainingBalance` as the next-unpaid payment's stored
+      // remaining-balance (principal payoff after that installment), so we
+      // use `schedule[0].remainingBalance` for the optimistic value.
+      const { emiAmount } = calculateEmi({
         principal: input.principal,
         annualRate: input.interestRate,
         tenureMonths: input.tenureMonths,
@@ -160,10 +159,9 @@ export function useCreateEmi() {
         totalPayments: schedule.length,
         paidCount: 0,
         nextDueDate: schedule[0]?.dueDate ?? null,
-        // `totalPayment` from calculateEmi is the Decimal-string sum of
-        // every installment — exactly what `listEmisImpl` returns for an
-        // unpaid EMI's `remainingBalance`.
-        remainingBalance: totalPayment,
+        // Match server: next-unpaid payment's stored remainingBalance.
+        // For a fresh EMI, that's the first installment's remainingBalance.
+        remainingBalance: schedule[0]?.remainingBalance ?? '0.00',
       }
       for (const [key, value] of previousLists) {
         if (!Array.isArray(value)) continue
