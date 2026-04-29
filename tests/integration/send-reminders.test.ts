@@ -57,9 +57,12 @@ async function seedEmiPaymentDueIn(
       startDate: new Date(),
     },
   })
+  // UTC-aligned dueDate so the test is independent of the host TZ — the
+  // `dueDate` column is `@db.Date`, which the cron queries against
+  // UTC-midnight day boundaries.
   const due = new Date()
-  due.setHours(0, 0, 0, 0)
-  due.setDate(due.getDate() + offsetDays)
+  due.setUTCHours(0, 0, 0, 0)
+  due.setUTCDate(due.getUTCDate() + offsetDays)
   const payment = await prisma.emiPayment.create({
     data: {
       emiId: emi.id,
@@ -117,7 +120,7 @@ describe('cron — dedupe + idempotency', () => {
     expect(secondBody.created).toBe(0)
   })
 
-  it('classifies payments due today as due-soon, not overdue', async () => {
+  it('classifies payments due today as due-today, not overdue', async () => {
     const user = await createTestUser()
     await seedEmiPaymentDueIn(user.profileId, 0)
 
@@ -129,7 +132,29 @@ describe('cron — dedupe + idempotency', () => {
     const row = await prisma.notification.findFirst({
       where: { profileId: user.profileId },
     })
-    expect(row?.type).toBe('emi.payment.due')
+    expect(row?.type).toBe('emi.payment.due_today')
+  })
+
+  it('fires both due-today and overdue notifications across the lifecycle', async () => {
+    const user = await createTestUser()
+    // Seed two payments: one due today, one overdue.
+    await seedEmiPaymentDueIn(user.profileId, 0)
+    await seedEmiPaymentDueIn(user.profileId, -1)
+
+    const res = await handleCron(cronRequest())
+    const body = (await res.json()) as { scanned: number; created: number }
+    expect(body.scanned).toBe(2)
+    expect(body.created).toBe(2)
+
+    const types = (
+      await prisma.notification.findMany({
+        where: { profileId: user.profileId },
+        select: { type: true },
+      })
+    )
+      .map((r) => r.type)
+      .sort()
+    expect(types).toEqual(['emi.payment.due_today', 'emi.payment.overdue'])
   })
 
   it('classifies payments before today as overdue', async () => {

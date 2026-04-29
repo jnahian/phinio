@@ -43,16 +43,28 @@ function verifyBearer(header: string, expected: string): boolean {
   return timingSafeEqual(a, b)
 }
 
+// Day-boundary helpers anchored to UTC midnight, not local. The `dueDate`
+// column is `@db.Date` (no time), and Prisma round-trips DATE values as
+// `Date` instances at UTC midnight of the stored day. Aligning our query
+// bounds to UTC midnight removes the TZ ambiguity that otherwise causes
+// today's payment to leak into the "due soon" range when the server runs
+// in a non-UTC timezone.
 function startOfToday(): Date {
   const d = new Date()
-  d.setHours(0, 0, 0, 0)
+  d.setUTCHours(0, 0, 0, 0)
   return d
 }
 
 function endOfDayPlus(days: number): Date {
   const d = startOfToday()
-  d.setDate(d.getDate() + days)
-  d.setHours(23, 59, 59, 999)
+  d.setUTCDate(d.getUTCDate() + days)
+  d.setUTCHours(23, 59, 59, 999)
+  return d
+}
+
+function startOfDayPlus(days: number): Date {
+  const d = startOfToday()
+  d.setUTCDate(d.getUTCDate() + days)
   return d
 }
 
@@ -72,17 +84,41 @@ export async function handleCron(request: Request): Promise<Response> {
   }
   const pushConfig = maybeConfig
 
-  // Day-boundary windows: "due soon" covers today through end of day +3;
-  // "overdue" is strictly before today (midnight). Avoids race between a
-  // midnight `dueDate` flipping to overdue within hours of the cron firing.
+  // Day-boundary windows. Three distinct buckets per payment lifecycle:
+  //   • "due today" — dueDate is today (gte 00:00, lte 23:59:59.999)
+  //   • "due soon"  — strictly upcoming, +1 through +3 days
+  //   • "overdue"   — strictly before today (midnight)
+  // Each has its own dedupeKey so a payment fires at most one notification
+  // per stage. Splitting today out of "due soon" is what guarantees a
+  // dedicated day-of reminder even when the advance reminder already went
+  // out earlier in the week.
   const todayStart = startOfToday()
+  const todayEnd = endOfDayPlus(0)
+  const dueSoonStart = startOfDayPlus(1)
   const dueSoonEnd = endOfDayPlus(3)
 
-  const [emiDueSoon, emiOverdue, dpsDueSoon, dpsOverdue] = await Promise.all([
+  const [
+    emiDueToday,
+    emiDueSoon,
+    emiOverdue,
+    dpsDueToday,
+    dpsDueSoon,
+    dpsOverdue,
+  ] = await Promise.all([
     prisma.emiPayment.findMany({
       where: {
         status: { not: 'paid' },
-        dueDate: { gte: todayStart, lte: dueSoonEnd },
+        dueDate: { gte: todayStart, lte: todayEnd },
+      },
+      include: {
+        emi: { select: { label: true } },
+        profile: { select: { preferredCurrency: true } },
+      },
+    }),
+    prisma.emiPayment.findMany({
+      where: {
+        status: { not: 'paid' },
+        dueDate: { gte: dueSoonStart, lte: dueSoonEnd },
       },
       include: {
         emi: { select: { label: true } },
@@ -102,7 +138,18 @@ export async function handleCron(request: Request): Promise<Response> {
     prisma.investmentDeposit.findMany({
       where: {
         status: { not: 'paid' },
-        dueDate: { gte: todayStart, lte: dueSoonEnd },
+        dueDate: { gte: todayStart, lte: todayEnd },
+        investment: { mode: 'scheduled' },
+      },
+      include: {
+        investment: { select: { id: true, name: true } },
+        profile: { select: { preferredCurrency: true } },
+      },
+    }),
+    prisma.investmentDeposit.findMany({
+      where: {
+        status: { not: 'paid' },
+        dueDate: { gte: dueSoonStart, lte: dueSoonEnd },
         investment: { mode: 'scheduled' },
       },
       include: {
@@ -134,6 +181,17 @@ export async function handleCron(request: Request): Promise<Response> {
 
   const candidates: Candidate[] = []
 
+  for (const p of emiDueToday) {
+    const currency = p.profile.preferredCurrency as Currency
+    candidates.push({
+      profileId: p.profileId,
+      type: 'emi.payment.due_today',
+      title: 'Payment due today',
+      body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} due today`,
+      link: `/app/emis/${p.emiId}`,
+      dedupeKey: `payment-due-today:${p.id}`,
+    })
+  }
   for (const p of emiDueSoon) {
     const currency = p.profile.preferredCurrency as Currency
     candidates.push({
@@ -154,6 +212,17 @@ export async function handleCron(request: Request): Promise<Response> {
       body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} was due ${fmtDate(p.dueDate)}`,
       link: `/app/emis/${p.emiId}`,
       dedupeKey: `payment-overdue:${p.id}`,
+    })
+  }
+  for (const d of dpsDueToday) {
+    const currency = d.profile.preferredCurrency as Currency
+    candidates.push({
+      profileId: d.profileId,
+      type: 'dps.installment.due_today',
+      title: 'DPS deposit due today',
+      body: `${d.investment.name} — ${formatCurrency(d.amount, currency)} due today`,
+      link: `/app/investments/dps/${d.investmentId}`,
+      dedupeKey: `dps-due-today:${d.id}`,
     })
   }
   for (const d of dpsDueSoon) {
