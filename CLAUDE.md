@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Product context
 
-Phinio is a mobile-first PWA for personal finance — investment portfolio tracking and EMI (loan/credit-card) amortization management. Full requirements live in `Phinio_PRD_v1.md` (schema, screens, routes, business logic, implementation phases). Design system for all UI work is `screens/phinio_modern_noir/DESIGN.md` ("Digital Private Bank" aesthetic — nocturnal palette, no 1px borders for sectioning, tonal surface layering, Manrope for numerics + Inter for body). Static HTML/PNG mockups for each screen sit in `screens/<screen_name>/`.
+Phinio is a mobile-first PWA for personal finance — investment portfolio tracking and EMI (loan/credit-card) amortization management. Full requirements live in `docs/Phinio_PRD_v1.md` (schema, screens, routes, business logic, implementation phases). Design system for all UI work is `screens/phinio_modern_noir/DESIGN.md` ("Digital Private Bank" aesthetic — nocturnal palette, no 1px borders for sectioning, tonal surface layering, Manrope for numerics + Inter for body). Static HTML/PNG mockups for each screen sit in `screens/<screen_name>/`.
 
 ## Commands
 
