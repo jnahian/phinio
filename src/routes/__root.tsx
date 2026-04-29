@@ -15,6 +15,7 @@ import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 import { OfflineBanner } from '#/components/OfflineBanner'
 import { RouteStatus } from '#/components/RouteStatus'
 import { getSessionFn } from '#/server/auth'
+import { authClient } from '#/lib/auth-client'
 import { clearOfflineCache } from '#/lib/offline-cache'
 
 import appCss from '#/styles.css?url'
@@ -92,6 +93,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
+  // Subscribe to client-side auth state so we can replay queued mutations
+  // when the user signs back in WITHOUT a network round-trip (e.g. token
+  // refresh, login while already online). The effect below depends on this.
+  const { data: clientSession } = authClient.useSession()
+  const isAuthenticated = Boolean(clientSession?.user.id)
 
   // Register the Workbox service worker on first client mount.
   // Production-only: dev has devOptions.enabled = false in vite.config.ts,
@@ -154,7 +160,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       cancelled = true
       window.removeEventListener('online', flush)
     }
-  }, [queryClient])
+    // `isAuthenticated` is in deps so signing in while online (no `online`
+    // event fires) still replays the queue.
+  }, [queryClient, isAuthenticated])
 
   return (
     <html lang="en" className="dark">

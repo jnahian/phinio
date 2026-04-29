@@ -4,7 +4,8 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import { get, set, del } from 'idb-keyval'
 import superjson from 'superjson'
 import { CACHE_KEY } from '#/lib/offline-cache'
-import { registerMutationDefaults } from './mutation-defaults'
+import { registerMutationDefaults } from '#/integrations/tanstack-query/mutation-defaults'
+
 const MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days
 // Bump only when the cached query shape changes (renamed keys, structural
 // query changes). Patch releases must NOT invalidate cached financial data.

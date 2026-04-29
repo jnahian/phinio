@@ -15,15 +15,17 @@ import { CloudOff, RefreshCw } from 'lucide-react'
  * waiting on reconnect.
  */
 export function OfflineBanner() {
-  // `window` is reliably undefined during SSR; modern Node exposes a global
-  // `navigator.onLine` that defaults to `false`, which would render an
-  // "offline" banner on every server-rendered page.
-  const [online, setOnline] = useState(() =>
-    typeof window === 'undefined' ? true : navigator.onLine,
-  )
+  // Initialize to `true` on BOTH server and client first render to avoid
+  // a hydration mismatch when the client mounts offline (server renders
+  // nothing; client would otherwise render the offline banner immediately
+  // and React would log a hydration warning). The effect reconciles with
+  // the real `navigator.onLine` after hydration.
+  const [online, setOnline] = useState(true)
   const pendingCount = useIsMutating()
 
   useEffect(() => {
+    // Reconcile with reality after hydration completes.
+    setOnline(navigator.onLine)
     const handleOnline = () => setOnline(true)
     const handleOffline = () => setOnline(false)
     window.addEventListener('online', handleOnline)
