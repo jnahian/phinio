@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-04-29
+
+Day-of payment reminders, notes on every loan and savings vehicle, and
+a refreshed landing page.
+
+### Added
+
+- **Due-today reminder.** A dedicated notification fires on the actual
+  due date for each EMI installment and DPS deposit, distinct from the
+  earlier "due soon" advance reminder. Each payment now produces up to
+  three notifications across its lifecycle — due soon (3–1 days out),
+  due today, and overdue — with no duplicates.
+- **Notes on EMIs.** Add a free-form note when creating an EMI (lender,
+  account number, or any context). The note is editable later from the
+  EMI detail screen along with the label.
+- **Notes editing for DPS and savings.** The DPS and savings detail
+  screens now expose a notes field in their edit panels. Existing notes
+  are shown as a read-only section when not editing.
+
+### Changed
+
+- **Landing page.** Refreshed hero, features, "How it works", and
+  final-CTA copy across the marketing page; sharper, more concrete
+  language. Header and footer logos are now clickable and link to home
+  with a focus ring for keyboard navigation.
+- **Repository docs.** Moved `Phinio_PRD_v1.md`, `OFFLINE_PLAN.md`, and
+  `TASKS.md` into `docs/`, added a deployment walkthrough at
+  `docs/DEPLOYMENT.md`, an MIT `LICENSE`, and a `CONTRIBUTING.md` with
+  the project's per-query authorization, money-handling, and
+  offline-first contribution rules. Not visible inside the app.
+
 ## [1.5.0] - 2026-04-29
 
 Phinio now works offline. Reads survive a reload without a network,
