@@ -250,6 +250,13 @@ export const emiCreateSchema = z.object({
     .min(1, 'Tenure must be at least 1 month')
     .max(600, 'Tenure must be 600 months or less'),
   startDate: isoDateString,
+  // Optional client-supplied IDs so an offline-created EMI keeps the same
+  // identity on both sides of the queue. Without these, the optimistic
+  // detail entry in the cache would have UUIDs that the server doesn't
+  // know about, and a follow-up "mark paid" tap on a generated payment
+  // row would 404 on replay.
+  id: z.string().uuid().optional(),
+  paymentIds: z.array(z.string().uuid()).optional(),
   ...clientMutationIdField,
 })
 export type EmiCreateInput = z.infer<typeof emiCreateSchema>

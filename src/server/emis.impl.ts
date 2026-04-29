@@ -183,9 +183,23 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
     type: data.type,
   })
 
+  // If the client supplied per-payment IDs (offline create flow), they must
+  // match the schedule length 1:1 so cache and server agree on identity.
+  if (
+    data.paymentIds !== undefined &&
+    data.paymentIds.length !== schedule.length
+  ) {
+    throw new Error(
+      `paymentIds length (${data.paymentIds.length}) must match schedule length (${schedule.length})`,
+    )
+  }
+
   return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const created = await tx.emi.create({
       data: {
+        // Use the client-supplied id if present. Prisma's @default(uuid())
+        // fills in for legacy callers that don't include one.
+        ...(data.id ? { id: data.id } : {}),
         profileId,
         label: data.label,
         type: data.type,
@@ -197,7 +211,8 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
       },
     })
     await tx.emiPayment.createMany({
-      data: schedule.map((row) => ({
+      data: schedule.map((row, i) => ({
+        ...(data.paymentIds ? { id: data.paymentIds[i] } : {}),
         emiId: created.id,
         profileId,
         paymentNumber: row.paymentNumber,

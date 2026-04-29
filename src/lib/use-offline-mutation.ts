@@ -20,13 +20,18 @@ export type OfflineMutationVariables = object & { clientMutationId?: string }
  *    and injects it into the variables BEFORE TanStack Query stores them.
  *    Retries and replays use the same id, so the server's
  *    `processed_mutations` table can dedupe.
- * 2. Honours the `mutationKey`-only contract — the actual `mutationFn`
+ * 2. Optionally runs `prepareVariables` to inject other ids the offline
+ *    flow needs (e.g. client-minted `id` for an optimistic create, or a
+ *    pre-generated array of child-row ids for an EMI schedule). Runs
+ *    once per logical mutation in the same spot as the
+ *    `clientMutationId` injection — never inside `mutationFn`.
+ * 3. Honours the `mutationKey`-only contract — the actual `mutationFn`
  *    must already be registered via `queryClient.setMutationDefaults` so
  *    rehydrated mutations on tab reopen can find it.
  *
- * IMPORTANT: do NOT generate the UUID inside `mutationFn` — that runs once
+ * IMPORTANT: do NOT generate UUIDs inside `mutationFn` — that runs once
  * per attempt, not once per logical mutation, and the server would see
- * a different id on each retry. We inject it here, where TanStack Query
+ * a different id on each retry. We inject them here, where TanStack Query
  * persists the variables verbatim.
  */
 export function useOfflineMutation<
@@ -35,17 +40,24 @@ export function useOfflineMutation<
   TVariables extends OfflineMutationVariables,
   TContext = unknown,
 >(
-  options: UseMutationOptions<TData, TError, TVariables, TContext>,
+  options: UseMutationOptions<TData, TError, TVariables, TContext> & {
+    prepareVariables?: (input: TVariables) => TVariables
+  },
 ): UseMutationResult<TData, TError, TVariables, TContext> {
-  const result = useMutation<TData, TError, TVariables, TContext>(options)
+  const { prepareVariables, ...mutationOptions } = options
+  const result = useMutation<TData, TError, TVariables, TContext>(
+    mutationOptions,
+  )
 
   const wrap = useCallback(
-    (variables: TVariables): TVariables =>
-      ({
+    (variables: TVariables): TVariables => {
+      const withId: TVariables = {
         ...variables,
         clientMutationId: variables.clientMutationId ?? crypto.randomUUID(),
-      }) as TVariables,
-    [],
+      } as TVariables
+      return prepareVariables ? prepareVariables(withId) : withId
+    },
+    [prepareVariables],
   )
 
   const mutate = useCallback(
