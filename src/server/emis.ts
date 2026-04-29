@@ -4,6 +4,7 @@ import {
   emiCreateSchema,
   emiIdSchema,
   emiListQuerySchema,
+  emiUpdateSchema,
   markPaymentPaidSchema,
 } from '#/lib/validators'
 
@@ -29,6 +30,13 @@ export const createEmiFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { requireProfileId, createEmiImpl } = await import('./emis.impl')
     return createEmiImpl(await requireProfileId(), data)
+  })
+
+export const updateEmiFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => emiUpdateSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { requireProfileId, updateEmiImpl } = await import('./emis.impl')
+    return updateEmiImpl(await requireProfileId(), data)
   })
 
 export const deleteEmiFn = createServerFn({ method: 'POST' })

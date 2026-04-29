@@ -4,10 +4,11 @@ import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
 import { withIdempotency } from './_idempotency'
-import { logActivity } from './activity-log.impl'
+import { diffFields, fmtText, logActivity } from './activity-log.impl'
 import type {
   EmiCreateInput,
   EmiListQuery,
+  EmiUpdateInput,
   MarkPaymentPaidInput,
   emiIdSchema,
 } from '#/lib/validators'
@@ -45,6 +46,7 @@ export interface SerializedEmi {
   profileId: string
   label: string
   type: string
+  notes: string | null
   principal: string
   interestRate: string
   tenureMonths: number
@@ -60,6 +62,7 @@ function serializeEmi(emi: {
   profileId: string
   label: string
   type: string
+  notes: string | null
   principal: unknown
   interestRate: unknown
   tenureMonths: number
@@ -86,6 +89,7 @@ function serializeEmi(emi: {
     profileId: emi.profileId,
     label: emi.label,
     type: emi.type,
+    notes: emi.notes,
     principal: String(emi.principal),
     interestRate: String(emi.interestRate),
     tenureMonths: emi.tenureMonths,
@@ -211,6 +215,7 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
         tenureMonths: data.tenureMonths,
         emiAmount,
         startDate: new Date(data.startDate),
+        notes: data.notes,
       },
     })
     await tx.emiPayment.createMany({
@@ -240,6 +245,63 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
       type: created.type,
       emiAmount: String(created.emiAmount),
     }
+  })
+}
+
+export async function updateEmiImpl(profileId: string, data: EmiUpdateInput) {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+    const before = await tx.emi.findFirst({
+      where: { id: data.emiId, profileId },
+      select: { id: true, label: true, notes: true, updatedAt: true },
+    })
+    if (!before) throw new Error('EMI not found')
+
+    if (data.expectedUpdatedAt) {
+      const expected = new Date(data.expectedUpdatedAt).getTime()
+      if (before.updatedAt.getTime() !== expected) {
+        return {
+          id: before.id,
+          updatedAt: before.updatedAt,
+          stale: true,
+        } as const
+      }
+    }
+
+    const result = await tx.emi.updateMany({
+      where: { id: data.emiId, profileId },
+      data: { label: data.label, notes: data.notes },
+    })
+    if (result.count === 0) throw new Error('EMI not found')
+    const updated = await tx.emi.findFirstOrThrow({
+      where: { id: data.emiId, profileId },
+      select: { id: true, updatedAt: true },
+    })
+
+    const changes = diffFields(
+      before,
+      { label: data.label, notes: data.notes ?? null },
+      [
+        { key: 'label', label: 'Label', format: fmtText },
+        { key: 'notes', label: 'Notes', format: fmtText },
+      ],
+    )
+
+    if (changes.length > 0) {
+      await logActivity(tx, profileId, {
+        action: 'update',
+        entityType: 'emi',
+        entityId: data.emiId,
+        entityLabel: data.label,
+        summary: `Edited EMI '${data.label}'`,
+        changes,
+      })
+    }
+
+    return {
+      id: updated.id,
+      updatedAt: updated.updatedAt,
+      stale: false,
+    } as const
   })
 }
 

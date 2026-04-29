@@ -5,7 +5,7 @@ import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
-import { TextField } from '#/components/ui/TextField'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
 import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
@@ -50,6 +50,7 @@ function SavingsDetailScreen() {
   // Edit form state
   const [editName, setEditName] = useState('')
   const [editCurrentValue, setEditCurrentValue] = useState('')
+  const [editNotes, setEditNotes] = useState('')
 
   // Deposit form state
   const [depositAmount, setDepositAmount] = useState('')
@@ -132,6 +133,7 @@ function SavingsDetailScreen() {
   function openEdit() {
     setEditName(inv?.name ?? '')
     setEditCurrentValue(inv?.currentValue ?? '0')
+    setEditNotes(inv?.notes ?? '')
     setShowEditForm(true)
   }
 
@@ -141,6 +143,7 @@ function SavingsDetailScreen() {
         id,
         name: editName.trim() || inv?.name || '',
         currentValue: editCurrentValue || '0',
+        notes: editNotes.trim() || undefined,
       })
       setShowEditForm(false)
     } catch {
@@ -376,6 +379,18 @@ function SavingsDetailScreen() {
                 value={editCurrentValue}
                 onChange={(e) => setEditCurrentValue(e.target.value)}
               />
+              <div>
+                <p className="label-sm mb-2 text-on-surface-variant">
+                  Notes (optional)
+                </p>
+                <TextArea
+                  id="edit-notes"
+                  placeholder="Goal, source, or any context"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  maxLength={1000}
+                />
+              </div>
             </div>
             <div className="mt-4 flex gap-3">
               <button

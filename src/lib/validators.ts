@@ -255,6 +255,7 @@ export const emiCreateSchema = z.object({
     .min(1, 'Tenure must be at least 1 month')
     .max(600, 'Tenure must be 600 months or less'),
   startDate: isoDateString,
+  notes: z.string().trim().max(1000).optional(),
   // Optional client-supplied IDs so an offline-created EMI keeps the same
   // identity on both sides of the queue. Without these, the optimistic
   // detail entry in the cache would have UUIDs that the server doesn't
@@ -265,6 +266,15 @@ export const emiCreateSchema = z.object({
   ...clientMutationIdField,
 })
 export type EmiCreateInput = z.infer<typeof emiCreateSchema>
+
+export const emiUpdateSchema = z.object({
+  emiId: z.string().min(1),
+  label: z.string().trim().min(1, 'Label is required').max(120),
+  notes: z.string().trim().max(1000).optional(),
+  ...clientMutationIdField,
+  ...expectedUpdatedAtField,
+})
+export type EmiUpdateInput = z.infer<typeof emiUpdateSchema>
 
 export const emiListQuerySchema = z.object({
   type: z.enum([...EMI_TYPES, 'all']).default('all'),

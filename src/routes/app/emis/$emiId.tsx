@@ -1,11 +1,18 @@
 import { Suspense, lazy, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Check, Trash2 } from 'lucide-react'
+import { Check, Pencil, Trash2 } from 'lucide-react'
+import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
-import { useDeleteEmi, useEmiQuery, useMarkPayment } from '#/hooks/useEmis'
+import {
+  useDeleteEmi,
+  useEmiQuery,
+  useMarkPayment,
+  useUpdateEmi,
+} from '#/hooks/useEmis'
 
 const PrincipalInterestDonut = lazy(
   () => import('#/components/PrincipalInterestDonut'),
@@ -28,9 +35,13 @@ function EmiDetailScreen() {
   useSetTopBarTitle(emi?.label ?? null)
   const markPayment = useMarkPayment(emiId)
   const deleteEmi = useDeleteEmi()
+  const updateEmi = useUpdateEmi()
 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [selectedSegment, setSelectedSegment] = useState<PiSegment | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editLabel, setEditLabel] = useState('')
+  const [editNotes, setEditNotes] = useState('')
 
   if (isLoading || !emi) {
     return (
@@ -71,9 +82,44 @@ function EmiDetailScreen() {
     }
   }
 
+  function openEdit() {
+    if (!emi) return
+    setEditLabel(emi.label)
+    setEditNotes(emi.notes ?? '')
+    setEditing(true)
+  }
+
+  async function handleEditSave() {
+    if (!emi) return
+    try {
+      await updateEmi.mutateAsync({
+        emiId,
+        label: editLabel.trim() || emi.label,
+        notes: editNotes.trim() || undefined,
+      })
+      setEditing(false)
+    } catch {
+      // toast handled in hook
+    }
+  }
+
   return (
     <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
+        <div className="flex items-center justify-between">
+          <p className="body-sm text-on-surface-variant">
+            {emi.type === 'credit_card' ? 'Credit card' : 'Bank loan'} ·{' '}
+            {emi.interestRate}% p.a.
+          </p>
+          <button
+            type="button"
+            aria-label="Edit EMI"
+            onClick={openEdit}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
+          >
+            <Pencil className="h-4 w-4" strokeWidth={1.75} />
+          </button>
+        </div>
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-container to-[#1e3a8a] p-6">
           <div
             aria-hidden
@@ -263,6 +309,59 @@ function EmiDetailScreen() {
             </ul>
           </div>
         </section>
+
+        {emi.notes && !editing && (
+          <section className="rounded-3xl bg-surface-container-low p-5">
+            <p className="label-sm mb-2 text-on-surface-variant">Notes</p>
+            <p className="body-sm whitespace-pre-wrap text-on-surface">
+              {emi.notes}
+            </p>
+          </section>
+        )}
+
+        {editing && (
+          <Card variant="low">
+            <p className="label-sm mb-3 text-on-surface-variant">Edit EMI</p>
+            <div className="space-y-4">
+              <TextField
+                id="edit-label"
+                label="Label"
+                value={editLabel}
+                onChange={(e) => setEditLabel(e.target.value)}
+                autoFocus
+              />
+              <div>
+                <p className="label-sm mb-2 text-on-surface-variant">
+                  Notes (optional)
+                </p>
+                <TextArea
+                  id="edit-notes"
+                  placeholder="Lender, account, or any context"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  maxLength={1000}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleEditSave}
+                disabled={updateEmi.isPending}
+                className="flex-1 rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
+              >
+                {updateEmi.isPending ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </Card>
+        )}
 
         <button
           type="button"

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Building2, CreditCard } from 'lucide-react'
-import { TextField } from '#/components/ui/TextField'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { calculateEmi } from '#/lib/emi-calculator'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
@@ -36,6 +36,7 @@ function AddEmiScreen() {
   const [interestRate, setInterestRate] = useState('')
   const [tenureMonths, setTenureMonths] = useState<string>('')
   const [startDate, setStartDate] = useState(todayIso())
+  const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   // Live preview: compute EMI breakdown whenever principal/rate/tenure are
@@ -70,6 +71,7 @@ function AddEmiScreen() {
       interestRate,
       tenureMonths: Number(tenureMonths),
       startDate,
+      notes: notes.trim() || undefined,
     } satisfies EmiCreateInput)
 
     if (!parsed.success) {
@@ -217,6 +219,17 @@ function AddEmiScreen() {
                 }
               />
             </div>
+          </section>
+
+          <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
+            <p className="label-sm text-on-surface-variant">Notes (optional)</p>
+            <TextArea
+              id="notes"
+              placeholder="Lender, account, or any context"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              maxLength={1000}
+            />
           </section>
         </div>
 

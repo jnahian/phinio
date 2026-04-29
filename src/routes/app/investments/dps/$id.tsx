@@ -5,7 +5,7 @@ import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
-import { TextField } from '#/components/ui/TextField'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
 import {
@@ -36,6 +36,7 @@ function DpsDetailScreen() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
+  const [editNotes, setEditNotes] = useState('')
   const [showClose, setShowClose] = useState(false)
 
   if (isLoading || !inv) {
@@ -79,6 +80,7 @@ function DpsDetailScreen() {
       await updateDps.mutateAsync({
         id,
         name: editName.trim() || inv?.name || '',
+        notes: editNotes.trim() || undefined,
       })
       setEditing(false)
     } catch {
@@ -96,9 +98,10 @@ function DpsDetailScreen() {
           </p>
           <button
             type="button"
-            aria-label="Edit name"
+            aria-label="Edit DPS"
             onClick={() => {
               setEditName(inv.name)
+              setEditNotes(inv.notes ?? '')
               setEditing(true)
             }}
             className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
@@ -282,17 +285,41 @@ function DpsDetailScreen() {
           </div>
         </section>
 
-        {/* Edit name */}
+        {/* Notes display when not editing */}
+        {inv.notes && !editing && (
+          <section className="rounded-3xl bg-surface-container-low p-5">
+            <p className="label-sm mb-2 text-on-surface-variant">Notes</p>
+            <p className="body-sm whitespace-pre-wrap text-on-surface">
+              {inv.notes}
+            </p>
+          </section>
+        )}
+
+        {/* Edit panel */}
         {editing && (
           <Card variant="low">
-            <p className="label-sm mb-3 text-on-surface-variant">Edit name</p>
-            <TextField
-              id="edit-name"
-              label="Scheme name"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              autoFocus
-            />
+            <p className="label-sm mb-3 text-on-surface-variant">Edit DPS</p>
+            <div className="space-y-4">
+              <TextField
+                id="edit-name"
+                label="Scheme name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                autoFocus
+              />
+              <div>
+                <p className="label-sm mb-2 text-on-surface-variant">
+                  Notes (optional)
+                </p>
+                <TextArea
+                  id="edit-notes"
+                  placeholder="Why this scheme, goals, or any context"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  maxLength={1000}
+                />
+              </div>
+            </div>
             <div className="mt-4 flex gap-3">
               <button
                 type="button"

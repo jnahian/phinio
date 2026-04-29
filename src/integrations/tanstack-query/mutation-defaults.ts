@@ -15,7 +15,12 @@ import {
   updateSavingsFn,
   withdrawFn,
 } from '#/server/investments'
-import { createEmiFn, deleteEmiFn, markPaymentPaidFn } from '#/server/emis'
+import {
+  createEmiFn,
+  deleteEmiFn,
+  markPaymentPaidFn,
+  updateEmiFn,
+} from '#/server/emis'
 import {
   markAllNotificationsReadFn,
   markNotificationReadFn,
@@ -27,6 +32,7 @@ import type {
   DpsCreateInput,
   DpsUpdateInput,
   EmiCreateInput,
+  EmiUpdateInput,
   InvestmentCreateInput,
   InvestmentUpdateInput,
   MarkAllNotificationsReadInput,
@@ -75,6 +81,7 @@ export const mutationKeys = {
   withdraw: ['withdrawals', 'create'] as const,
   // EMIs
   emiCreate: ['emis', 'create'] as const,
+  emiUpdate: ['emis', 'update'] as const,
   emiDelete: ['emis', 'delete'] as const,
   markPaymentPaid: ['payments', 'mark-paid'] as const,
   // Profile
@@ -168,6 +175,10 @@ export function registerMutationDefaults(queryClient: QueryClient) {
   queryClient.setMutationDefaults(mutationKeys.emiCreate, {
     ...offlineFirst,
     mutationFn: (input: EmiCreateInput) => createEmiFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.emiUpdate, {
+    ...offlineFirst,
+    mutationFn: (input: EmiUpdateInput) => updateEmiFn({ data: input }),
   })
   queryClient.setMutationDefaults(mutationKeys.emiDelete, {
     ...offlineFirst,

@@ -2,7 +2,11 @@ import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getEmiFn, listEmisFn, upcomingPaymentsFn } from '#/server/emis'
 import type { EmiListFilters } from '#/server/emis'
-import type { EmiCreateInput, MarkPaymentPaidInput } from '#/lib/validators'
+import type {
+  EmiCreateInput,
+  EmiUpdateInput,
+  MarkPaymentPaidInput,
+} from '#/lib/validators'
 import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
@@ -117,6 +121,7 @@ export function useCreateEmi() {
         profileId: '',
         label: input.label,
         type: input.type,
+        notes: input.notes ?? null,
         principal: input.principal,
         interestRate: input.interestRate,
         tenureMonths: input.tenureMonths,
@@ -191,6 +196,26 @@ export function useCreateEmi() {
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
+  })
+}
+
+type EmiUpdateResult = { id: string; updatedAt?: Date; stale?: boolean }
+
+export function useUpdateEmi() {
+  const qc = useQueryClient()
+  return useOfflineMutation<EmiUpdateResult, Error, EmiUpdateInput>({
+    mutationKey: mutationKeys.emiUpdate,
+    onSuccess: (data) => {
+      if (data.stale) {
+        toast.error('Saved elsewhere — refresh to see latest')
+      } else {
+        toast.success('EMI updated')
+      }
+      qc.invalidateQueries({ queryKey: emiKeys.all })
+      qc.invalidateQueries({ queryKey: emiKeys.detail(data.id) })
+      qc.invalidateQueries({ queryKey: ['activity'] })
+    },
+    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 
