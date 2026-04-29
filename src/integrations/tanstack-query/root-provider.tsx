@@ -3,9 +3,8 @@ import { persistQueryClient } from '@tanstack/query-persist-client-core'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { get, set, del } from 'idb-keyval'
 import superjson from 'superjson'
+import { CACHE_KEY } from '#/lib/offline-cache'
 import { registerMutationDefaults } from './mutation-defaults'
-
-const CACHE_KEY = 'phinio-query-cache'
 const MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days
 // Bump only when the cached query shape changes (renamed keys, structural
 // query changes). Patch releases must NOT invalidate cached financial data.
@@ -37,15 +36,43 @@ export function getContext() {
     // resumePausedMutations() silently does nothing.
     registerMutationDefaults(queryClient)
 
+    // Async IDB failures (quota exceeded, Safari Private Browsing
+    // throwing on first write, full disk) happen at runtime inside the
+    // storage callbacks — the outer try/catch only catches setup-time
+    // throws. We guard each callback so a runtime failure logs once and
+    // silently falls back to in-memory cache rather than spamming the
+    // console on every cache write.
+    let persistenceWarned = false
+    const warnOnce = (op: string, err: unknown) => {
+      if (persistenceWarned) return
+      persistenceWarned = true
+      console.warn(`[phinio] offline cache ${op} failed; using memory:`, err)
+    }
     try {
       const persister = createAsyncStoragePersister({
         storage: {
-          getItem: async (key) => (await get<string>(key)) ?? null,
+          getItem: async (key) => {
+            try {
+              return (await get<string>(key)) ?? null
+            } catch (err) {
+              warnOnce('read', err)
+              return null
+            }
+          },
           setItem: async (key, value) => {
-            await set(key, value)
+            try {
+              await set(key, value)
+            } catch (err) {
+              warnOnce('write', err)
+            }
           },
           removeItem: async (key) => {
-            await del(key)
+            try {
+              await del(key)
+            } catch {
+              // No-op — caller is removing; failure means there's
+              // nothing to remove or storage is unavailable.
+            }
           },
         },
         key: CACHE_KEY,

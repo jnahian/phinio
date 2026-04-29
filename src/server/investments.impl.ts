@@ -1,6 +1,7 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
+import { Prisma } from '#/generated/prisma/client'
 import { formatCurrency } from '#/lib/currency'
 import { generateDpsSchedule } from '#/lib/dps-calculator'
 import { withIdempotency } from './_idempotency'
@@ -896,14 +897,22 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
       throw new Error('Investment is not active')
     }
 
-    const amount = Number(data.amount)
-    const currentValue = Number(investment.currentValue)
-    if (amount > currentValue + 0.001) {
+    // Keep money math in Decimal space so we don't accumulate the float
+    // drift that prompted the legacy `+ 0.001` epsilon. Comparisons and
+    // arithmetic happen on `Prisma.Decimal`; we serialize back to a
+    // 2dp string only when handing the value to Prisma.
+    const amount = new Prisma.Decimal(data.amount)
+    const currentValue = new Prisma.Decimal(String(investment.currentValue))
+    if (amount.greaterThan(currentValue)) {
       throw new Error('Withdrawal amount exceeds current value')
     }
 
-    const newCurrentValue = Math.max(0, currentValue - amount)
-    const shouldClose = data.closeInvestment === true || newCurrentValue === 0
+    const newCurrentValueDec = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      currentValue.minus(amount),
+    )
+    const shouldClose =
+      data.closeInvestment === true || newCurrentValueDec.isZero()
 
     const currency = await getProfileCurrency(tx, profileId)
 
@@ -922,11 +931,11 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
         where: { investmentId: data.investmentId },
         _sum: { amount: true },
       })
-      const totalExit = Number(totals._sum.amount ?? 0)
+      const totalExit = new Prisma.Decimal(String(totals._sum.amount ?? '0'))
       await tx.investment.updateMany({
         where: { id: data.investmentId, profileId },
         data: {
-          currentValue: newCurrentValue.toFixed(2),
+          currentValue: newCurrentValueDec.toFixed(2),
           status: 'completed',
           exitValue: totalExit.toFixed(2),
           completedAt: new Date(data.withdrawalDate),
@@ -935,7 +944,7 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
     } else {
       await tx.investment.updateMany({
         where: { id: data.investmentId, profileId },
-        data: { currentValue: newCurrentValue.toFixed(2) },
+        data: { currentValue: newCurrentValueDec.toFixed(2) },
       })
     }
 

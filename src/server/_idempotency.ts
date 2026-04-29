@@ -1,5 +1,6 @@
 import superjson from 'superjson'
 import { prisma } from '#/db'
+import { Prisma } from '#/generated/prisma/client'
 
 /**
  * Type of the first parameter passed to a Prisma `$transaction` callback.
@@ -35,9 +36,52 @@ export async function withIdempotency<T>(
   clientMutationId: string | undefined,
   fn: (tx: Tx) => Promise<T>,
 ): Promise<T> {
-  return prisma.$transaction(async (tx) => {
-    if (clientMutationId) {
-      const existing = await tx.processedMutation.findUnique({
+  const run = () =>
+    prisma.$transaction(async (tx) => {
+      if (clientMutationId) {
+        const existing = await tx.processedMutation.findUnique({
+          where: {
+            profileId_clientMutationId: { profileId, clientMutationId },
+          },
+          select: { resultJson: true },
+        })
+        if (existing && existing.resultJson !== null) {
+          return superjson.parse<T>(existing.resultJson as string)
+        }
+      }
+
+      const result = await fn(tx)
+
+      if (clientMutationId) {
+        await tx.processedMutation.create({
+          data: {
+            profileId,
+            clientMutationId,
+            resultJson: superjson.stringify(result),
+          },
+        })
+      }
+
+      return result
+    })
+
+  try {
+    return await run()
+  } catch (error) {
+    // Concurrent race: two requests with the same `clientMutationId` both
+    // pass the initial `findUnique` check, both call `fn`, both try to
+    // insert the dedupe row. Postgres serializes the unique-index check at
+    // commit time — one tx commits cleanly, the other rolls back with
+    // P2002. Both `fn` invocations ran inside their own tx, so the loser's
+    // mutations were rolled back atomically; only the winner's side
+    // effects persist. We just need to surface the winner's cached result
+    // instead of letting the loser's error escape.
+    if (
+      clientMutationId &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      const existing = await prisma.processedMutation.findUnique({
         where: {
           profileId_clientMutationId: { profileId, clientMutationId },
         },
@@ -47,19 +91,6 @@ export async function withIdempotency<T>(
         return superjson.parse<T>(existing.resultJson as string)
       }
     }
-
-    const result = await fn(tx)
-
-    if (clientMutationId) {
-      await tx.processedMutation.create({
-        data: {
-          profileId,
-          clientMutationId,
-          resultJson: superjson.stringify(result),
-        },
-      })
-    }
-
-    return result
-  })
+    throw error
+  }
 }

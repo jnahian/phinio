@@ -117,16 +117,22 @@ export function useUpdateInvestment() {
 /**
  * Shared rollback shape for optimistic delete mutations across investments,
  * DPS, savings, and EMI lists. We snapshot every list-cache entry under the
- * relevant key prefix before filtering, so rollback restores all of them
- * even if multiple list filters were active.
+ * relevant key prefix before filtering AND the matching detail cache, so
+ * rollback restores all of them even if multiple list filters were active.
+ * Without the detail snapshot, an offline tap on Delete from inside a
+ * detail view would clear the row from lists but the detail page would
+ * still show stale data until replay finishes (or never, if replay errors).
  */
 type DeleteRollbackContext = {
   previousLists: Array<[ReadonlyArray<unknown>, unknown]>
+  detailKey: ReadonlyArray<unknown>
+  previousDetail: unknown
 }
 
 function buildDeleteRollback(
   qc: ReturnType<typeof useQueryClient>,
   listPrefix: ReadonlyArray<string>,
+  detailKey: ReadonlyArray<unknown>,
   predicate: (row: { id: string }) => boolean,
 ): DeleteRollbackContext {
   const entries: Array<[ReadonlyArray<unknown>, unknown]> = qc
@@ -137,7 +143,9 @@ function buildDeleteRollback(
     if (!Array.isArray(value)) continue
     qc.setQueryData(key, value.filter(predicate))
   }
-  return { previousLists: entries }
+  const previousDetail = qc.getQueryData(detailKey)
+  qc.removeQueries({ queryKey: detailKey })
+  return { previousLists: entries, detailKey, previousDetail }
 }
 
 function rollbackDeletes(
@@ -146,6 +154,9 @@ function rollbackDeletes(
 ) {
   for (const [key, value] of ctx.previousLists) {
     qc.setQueryData(key, value)
+  }
+  if (ctx.previousDetail !== undefined) {
+    qc.setQueryData(ctx.detailKey, ctx.previousDetail)
   }
 }
 
@@ -163,6 +174,7 @@ export function useDeleteInvestment() {
       return buildDeleteRollback(
         qc,
         ['investments', 'list'],
+        investmentKeys.detail(input.id),
         (r) => r.id !== input.id,
       )
     },
@@ -280,6 +292,7 @@ export function useDeleteDps() {
       return buildDeleteRollback(
         qc,
         ['investments', 'list'],
+        investmentKeys.detail(input.id),
         (r) => r.id !== input.id,
       )
     },
@@ -384,6 +397,7 @@ export function useDeleteSavings() {
       return buildDeleteRollback(
         qc,
         ['investments', 'list'],
+        investmentKeys.detail(input.id),
         (r) => r.id !== input.id,
       )
     },

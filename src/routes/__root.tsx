@@ -15,6 +15,7 @@ import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 import { OfflineBanner } from '#/components/OfflineBanner'
 import { RouteStatus } from '#/components/RouteStatus'
 import { getSessionFn } from '#/server/auth'
+import { clearOfflineCache } from '#/lib/offline-cache'
 
 import appCss from '#/styles.css?url'
 
@@ -115,13 +116,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     let cancelled = false
     async function flush() {
       if (!navigator.onLine) return
+      let session: Awaited<ReturnType<typeof getSessionFn>>
       try {
-        const session = await getSessionFn()
+        session = await getSessionFn()
         if (cancelled) return
-        if (!session) return
       } catch {
         return // network still flaky; next 'online' event will retry
       }
+
+      // Cross-account safety: if a different user is now signed in than
+      // the one whose data is in the persisted cache, wipe everything
+      // before flushing. Otherwise the previous user's queued mutations
+      // would replay into the new user's account, and stale list data
+      // would surface until the first refetch lands.
+      const cachedSession = queryClient.getQueryData<{
+        user?: { id?: string }
+      }>(['auth', 'session'])
+      const cachedUserId = cachedSession?.user?.id
+      const currentUserId = session ? session.user.id : undefined
+      if (cachedUserId && currentUserId && cachedUserId !== currentUserId) {
+        await clearOfflineCache(queryClient)
+        return
+      }
+
+      if (!session) return
       try {
         await queryClient.resumePausedMutations()
         await queryClient.invalidateQueries()

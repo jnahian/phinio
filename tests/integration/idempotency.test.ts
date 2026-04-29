@@ -93,8 +93,8 @@ describe('withIdempotency', () => {
     expect(replay.paidAt).toBeInstanceOf(Date)
     expect(replay.paidAt.toISOString()).toBe(originalDate.toISOString())
     expect(replay.payments).toHaveLength(1)
-    expect(replay.payments[0]!.dueDate).toBeInstanceOf(Date)
-    expect(replay.payments[0]!.dueDate.toISOString()).toBe(
+    expect(replay.payments[0].dueDate).toBeInstanceOf(Date)
+    expect(replay.payments[0].dueDate.toISOString()).toBe(
       originalDate.toISOString(),
     )
     // First-call result should also still be intact (sanity).
@@ -131,6 +131,62 @@ describe('withIdempotency', () => {
     expect(calls).toBe(2)
     const count = await prisma.processedMutation.count()
     expect(count).toBe(0)
+  })
+
+  it('dedupes concurrent requests with the same clientMutationId', async () => {
+    const user = await createTestUser({ email: 'concurrent@phinio.test' })
+    let invocations = 0
+
+    // Fire both calls in parallel. Both will pass the initial `findUnique`
+    // (no row yet), both will run `fn`, both will try to insert the dedupe
+    // row. Postgres serializes — one wins, the other gets P2002. The
+    // helper catches the conflict and replays the winner's result.
+    const [a, b] = await Promise.all([
+      withIdempotency(user.profileId, 'cm-concurrent', async (tx) => {
+        invocations++
+        await tx.investment.create({
+          data: {
+            profileId: user.profileId,
+            name: `Inv ${invocations}`,
+            type: 'stock',
+            mode: 'lump_sum',
+            investedAmount: '100.00',
+            currentValue: '100.00',
+          },
+        })
+        return { name: `Inv ${invocations}` }
+      }),
+      withIdempotency(user.profileId, 'cm-concurrent', async (tx) => {
+        invocations++
+        await tx.investment.create({
+          data: {
+            profileId: user.profileId,
+            name: `Inv ${invocations}`,
+            type: 'stock',
+            mode: 'lump_sum',
+            investedAmount: '100.00',
+            currentValue: '100.00',
+          },
+        })
+        return { name: `Inv ${invocations}` }
+      }),
+    ])
+
+    // Both callers get the same return value (the winner's result).
+    expect(a).toEqual(b)
+
+    // Only ONE investment row was committed — the loser's tx rolled back
+    // atomically when its dedupe insert hit the unique index.
+    const count = await prisma.investment.count({
+      where: { profileId: user.profileId },
+    })
+    expect(count).toBe(1)
+
+    // Exactly one dedupe row.
+    const dedupeCount = await prisma.processedMutation.count({
+      where: { profileId: user.profileId, clientMutationId: 'cm-concurrent' },
+    })
+    expect(dedupeCount).toBe(1)
   })
 
   it('scopes idempotency by profileId — same id from different profiles both run', async () => {

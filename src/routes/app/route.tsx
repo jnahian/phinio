@@ -56,9 +56,23 @@ export const Route = createFileRoute('/app')({
       // Re-throw redirects from the success path untouched.
       if (err && typeof err === 'object' && 'isRedirect' in err) throw err
 
-      // Network failure (offline) — try the persisted cache. The persister
-      // restores these on boot, so a previously-signed-in user can still see
-      // their app shell while disconnected.
+      // Only fall back to cached identity for genuine offline / transport
+      // failures. A backend 500 should NOT keep /app mounted on stale
+      // cached data — that masks real outages. Heuristic: if we're
+      // definitely offline OR the error looks like a fetch transport
+      // failure (no HTTP status), serve cached. Anything that reached the
+      // server and came back with a status code bubbles up to the route's
+      // errorComponent.
+      const isOffline =
+        typeof navigator !== 'undefined' && navigator.onLine === false
+      const isNetworkError =
+        err instanceof TypeError ||
+        (err instanceof Error &&
+          (err.message.includes('Failed to fetch') ||
+            err.message.includes('NetworkError') ||
+            err.message.includes('Load failed')))
+      if (!isOffline && !isNetworkError) throw err
+
       const cachedSession = queryClient.getQueryData<SessionData>(SESSION_KEY)
       const cachedProfile = queryClient.getQueryData<ProfileData>(PROFILE_KEY)
       const cachedShellUser = queryClient.getQueryData<ShellUser | null>(

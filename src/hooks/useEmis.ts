@@ -82,8 +82,12 @@ export function useCreateEmi() {
       const paymentIds = input.paymentIds!
 
       // Compute the schedule the same way the server will. emi-calculator
-      // is pure JS, so this matches byte-for-byte on replay.
-      const { emiAmount } = calculateEmi({
+      // is pure JS, so this matches byte-for-byte on replay. `totalPayment`
+      // is the Decimal-string sum of every installment — use it directly
+      // for the optimistic `remainingBalance` instead of summing
+      // `Number(p.emiAmount)` on the client (which would violate the
+      // money-as-Decimal rule).
+      const { emiAmount, totalPayment } = calculateEmi({
         principal: input.principal,
         annualRate: input.interestRate,
         tenureMonths: input.tenureMonths,
@@ -137,8 +141,11 @@ export function useCreateEmi() {
       }
       qc.setQueryData<EmiDetailShape>(emiKeys.detail(emiId), detail)
 
-      // Optimistic list rows: prepend the new EMI to every list cache.
-      // The summary fields match the server's `listEmisImpl` shape.
+      // Optimistic list rows: prepend the new EMI to caches whose filter
+      // would actually include it. List query keys are
+      // `['emis', 'list', { type: 'bank_loan' | 'credit_card' | 'all' }]`.
+      // The new row belongs in `'all'` and in lists matching its own type;
+      // filtered views for the other type must NOT show it temporarily.
       const listRow = {
         id: emiId,
         label: input.label,
@@ -153,12 +160,16 @@ export function useCreateEmi() {
         totalPayments: schedule.length,
         paidCount: 0,
         nextDueDate: schedule[0]?.dueDate ?? null,
-        remainingBalance: schedule
-          .reduce((sum, p) => sum + Number(p.emiAmount), 0)
-          .toFixed(2),
+        // `totalPayment` from calculateEmi is the Decimal-string sum of
+        // every installment — exactly what `listEmisImpl` returns for an
+        // unpaid EMI's `remainingBalance`.
+        remainingBalance: totalPayment,
       }
       for (const [key, value] of previousLists) {
         if (!Array.isArray(value)) continue
+        const filter = key[2] as { type?: string } | undefined
+        const filterType = filter?.type ?? 'all'
+        if (filterType !== 'all' && filterType !== input.type) continue
         qc.setQueryData(key, [listRow, ...value])
       }
 

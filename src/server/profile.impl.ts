@@ -100,14 +100,17 @@ export async function updateProfileCurrencyImpl(
     profileId,
     data.clientMutationId,
     async (tx) => {
+      // Scope reads/writes by profileId now that we've derived it. Matches
+      // the per-query authorization convention used elsewhere in
+      // src/server/*.impl.ts.
       const before = await tx.profile.findUnique({
-        where: { userId },
+        where: { id: profileId },
         select: { id: true, fullName: true, preferredCurrency: true },
       })
       if (!before) throw new Error('Profile not found')
 
       const updated = await tx.profile.update({
-        where: { userId },
+        where: { id: profileId },
         data: { preferredCurrency: data.preferredCurrency },
         select: {
           id: true,
@@ -151,17 +154,19 @@ export async function updateProfileNameImpl(
     data.clientMutationId,
     async (tx) => {
       const before = await tx.profile.findUnique({
-        where: { userId },
+        where: { id: profileId },
         select: { id: true, fullName: true },
       })
       if (!before) throw new Error('Profile not found')
 
+      // The User row is keyed by userId — that's the auth boundary, not a
+      // profile concern — so it stays scoped that way.
       await tx.user.update({
         where: { id: userId },
         data: { name: data.fullName },
       })
       const updated = await tx.profile.update({
-        where: { userId },
+        where: { id: profileId },
         data: { fullName: data.fullName },
         select: {
           id: true,
