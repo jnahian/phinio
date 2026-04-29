@@ -4,6 +4,7 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Toaster } from 'sonner'
@@ -12,6 +13,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 import { RouteStatus } from '#/components/RouteStatus'
+import { getSessionFn } from '#/server/auth'
 
 import appCss from '#/styles.css?url'
 
@@ -87,6 +89,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient()
+
   // Register the Workbox service worker on first client mount.
   // Production-only: dev has devOptions.enabled = false in vite.config.ts,
   // but we guard here too so HMR never touches service worker state.
@@ -97,6 +101,41 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         .catch((err) => console.warn('[sw] registration failed', err))
     }
   }, [])
+
+  // Replay any paused mutations once the network returns. We verify the
+  // Better Auth session first — a queued mutation that hits a 401 fails
+  // silently and the user has no idea their edit didn't save. If the
+  // session check throws (still offline), we leave the queue alone and
+  // wait for the next online event. Also runs once on mount in case the
+  // page was reloaded with mutations still paused in IndexedDB.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let cancelled = false
+    async function flush() {
+      if (!navigator.onLine) return
+      try {
+        const session = await getSessionFn()
+        if (cancelled) return
+        if (!session) return
+      } catch {
+        return // network still flaky; next 'online' event will retry
+      }
+      try {
+        await queryClient.resumePausedMutations()
+        await queryClient.invalidateQueries()
+      } catch (err) {
+        console.warn('[phinio] replay failed', err)
+      }
+    }
+
+    void flush()
+    window.addEventListener('online', flush)
+    return () => {
+      cancelled = true
+      window.removeEventListener('online', flush)
+    }
+  }, [queryClient])
 
   return (
     <html lang="en" className="dark">

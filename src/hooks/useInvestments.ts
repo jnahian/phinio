@@ -1,40 +1,21 @@
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  createInvestmentFn,
-  deleteInvestmentFn,
-  getInvestmentFn,
-  listInvestmentsFn,
-  updateInvestmentFn,
-  createDpsFn,
-  updateDpsFn,
-  markDepositPaidFn,
-  createSavingsFn,
-  updateSavingsFn,
-  addDepositFn,
-  removeDepositFn,
-  deleteSavingsFn,
-  withdrawFn,
-  closeDpsFn,
-} from '#/server/investments'
+import { getInvestmentFn, listInvestmentsFn } from '#/server/investments'
 import type { InvestmentListFilters } from '#/server/investments'
 import type {
-  InvestmentCreateInput,
-  InvestmentUpdateInput,
+  AddDepositInput,
+  DpsCloseInput,
   DpsCreateInput,
   DpsUpdateInput,
+  InvestmentCreateInput,
+  InvestmentUpdateInput,
   MarkDepositPaidInput,
   SavingsCreateInput,
   SavingsUpdateInput,
-  AddDepositInput,
   WithdrawalInput,
-  DpsCloseInput,
 } from '#/lib/validators'
+import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
+import { useOfflineMutation } from '#/lib/use-offline-mutation'
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
@@ -72,13 +53,16 @@ export function useInvestmentQuery(id: string) {
 
 // ---------------------------------------------------------------------------
 // Lump-sum mutations
+//
+// Every hook below uses `mutationKey` only; the `mutationFn` lives in
+// `setMutationDefaults` (registerMutationDefaults) so persisted-then-replayed
+// mutations on tab reopen can find it. Don't add a `mutationFn` here.
 // ---------------------------------------------------------------------------
 
 export function useCreateInvestment() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: InvestmentCreateInput) =>
-      createInvestmentFn({ data: input }),
+  return useOfflineMutation<{ id: string }, Error, InvestmentCreateInput>({
+    mutationKey: mutationKeys.investmentCreate,
     onSuccess: () => {
       toast.success('Investment added')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -91,9 +75,8 @@ export function useCreateInvestment() {
 
 export function useUpdateInvestment() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: InvestmentUpdateInput) =>
-      updateInvestmentFn({ data: input }),
+  return useOfflineMutation<{ id: string }, Error, InvestmentUpdateInput>({
+    mutationKey: mutationKeys.investmentUpdate,
     onSuccess: (data) => {
       toast.success('Investment updated')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -107,8 +90,8 @@ export function useUpdateInvestment() {
 
 export function useDeleteInvestment() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => deleteInvestmentFn({ data: { id } }),
+  return useOfflineMutation<unknown, Error, { id: string }>({
+    mutationKey: mutationKeys.investmentDelete,
     onSuccess: () => {
       toast.success('Investment deleted')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -125,8 +108,12 @@ export function useDeleteInvestment() {
 
 export function useCreateDps() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: DpsCreateInput) => createDpsFn({ data: input }),
+  return useOfflineMutation<
+    { id: string; name: string },
+    Error,
+    DpsCreateInput
+  >({
+    mutationKey: mutationKeys.dpsCreate,
     onSuccess: () => {
       toast.success('DPS scheme added')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -139,8 +126,8 @@ export function useCreateDps() {
 
 export function useUpdateDps() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: DpsUpdateInput) => updateDpsFn({ data: input }),
+  return useOfflineMutation<{ id: string }, Error, DpsUpdateInput>({
+    mutationKey: mutationKeys.dpsUpdate,
     onSuccess: (data) => {
       toast.success('DPS updated')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -152,9 +139,13 @@ export function useUpdateDps() {
 
 export function useMarkDepositPaid(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: MarkDepositPaidInput) =>
-      markDepositPaidFn({ data: input }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    MarkDepositPaidInput,
+    { prev: unknown }
+  >({
+    mutationKey: mutationKeys.markDepositPaid,
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: investmentKeys.detail(investmentId) })
       const prev = qc.getQueryData(investmentKeys.detail(investmentId))
@@ -193,8 +184,8 @@ export function useMarkDepositPaid(investmentId: string) {
 
 export function useDeleteDps() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => deleteInvestmentFn({ data: { id } }),
+  return useOfflineMutation<unknown, Error, { id: string }>({
+    mutationKey: mutationKeys.investmentDelete,
     onSuccess: () => {
       toast.success('DPS scheme deleted')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -211,8 +202,12 @@ export function useDeleteDps() {
 
 export function useCreateSavings() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: SavingsCreateInput) => createSavingsFn({ data: input }),
+  return useOfflineMutation<
+    { id: string; name: string },
+    Error,
+    SavingsCreateInput
+  >({
+    mutationKey: mutationKeys.savingsCreate,
     onSuccess: () => {
       toast.success('Savings pot added')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -225,8 +220,8 @@ export function useCreateSavings() {
 
 export function useUpdateSavings() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: SavingsUpdateInput) => updateSavingsFn({ data: input }),
+  return useOfflineMutation<{ id: string }, Error, SavingsUpdateInput>({
+    mutationKey: mutationKeys.savingsUpdate,
     onSuccess: (data) => {
       toast.success('Savings pot updated')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -240,8 +235,8 @@ export function useUpdateSavings() {
 
 export function useAddDeposit(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: AddDepositInput) => addDepositFn({ data: input }),
+  return useOfflineMutation<unknown, Error, AddDepositInput>({
+    mutationKey: mutationKeys.addDeposit,
     onSuccess: () => {
       toast.success('Deposit added')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
@@ -255,8 +250,8 @@ export function useAddDeposit(investmentId: string) {
 
 export function useRemoveDeposit(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (depositId: string) => removeDepositFn({ data: { depositId } }),
+  return useOfflineMutation<unknown, Error, { depositId: string }>({
+    mutationKey: mutationKeys.removeDeposit,
     onSuccess: () => {
       toast.success('Deposit removed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
@@ -270,8 +265,8 @@ export function useRemoveDeposit(investmentId: string) {
 
 export function useDeleteSavings() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => deleteSavingsFn({ data: { id } }),
+  return useOfflineMutation<unknown, Error, { id: string }>({
+    mutationKey: mutationKeys.savingsDelete,
     onSuccess: () => {
       toast.success('Savings pot deleted')
       qc.invalidateQueries({ queryKey: investmentKeys.all })
@@ -288,8 +283,8 @@ export function useDeleteSavings() {
 
 export function useWithdraw(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: WithdrawalInput) => withdrawFn({ data: input }),
+  return useOfflineMutation<{ closed: boolean }, Error, WithdrawalInput>({
+    mutationKey: mutationKeys.withdraw,
     onSuccess: (data) => {
       toast.success(data.closed ? 'Investment closed' : 'Withdrawal recorded')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
@@ -303,8 +298,8 @@ export function useWithdraw(investmentId: string) {
 
 export function useCloseDps(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: DpsCloseInput) => closeDpsFn({ data: input }),
+  return useOfflineMutation<unknown, Error, DpsCloseInput>({
+    mutationKey: mutationKeys.dpsClose,
     onSuccess: () => {
       toast.success('DPS closed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })

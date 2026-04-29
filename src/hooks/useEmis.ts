@@ -1,20 +1,10 @@
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  createEmiFn,
-  deleteEmiFn,
-  getEmiFn,
-  listEmisFn,
-  markPaymentPaidFn,
-  upcomingPaymentsFn,
-} from '#/server/emis'
+import { getEmiFn, listEmisFn, upcomingPaymentsFn } from '#/server/emis'
 import type { EmiListFilters } from '#/server/emis'
 import type { EmiCreateInput, MarkPaymentPaidInput } from '#/lib/validators'
+import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
+import { useOfflineMutation } from '#/lib/use-offline-mutation'
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
@@ -55,8 +45,8 @@ export function useUpcomingPaymentsQuery() {
 
 export function useCreateEmi() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: EmiCreateInput) => createEmiFn({ data: input }),
+  return useOfflineMutation<unknown, Error, EmiCreateInput>({
+    mutationKey: mutationKeys.emiCreate,
     onSuccess: () => {
       toast.success('EMI schedule created')
       qc.invalidateQueries({ queryKey: emiKeys.all })
@@ -70,8 +60,8 @@ export function useCreateEmi() {
 
 export function useDeleteEmi() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (emiId: string) => deleteEmiFn({ data: { emiId } }),
+  return useOfflineMutation<unknown, Error, { emiId: string }>({
+    mutationKey: mutationKeys.emiDelete,
     onSuccess: () => {
       toast.success('EMI deleted')
       qc.invalidateQueries({ queryKey: emiKeys.all })
@@ -94,9 +84,13 @@ export function useMarkPayment(emiId: string) {
 
   type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
 
-  return useMutation({
-    mutationFn: (input: MarkPaymentPaidInput) =>
-      markPaymentPaidFn({ data: input }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    MarkPaymentPaidInput,
+    { previous: EmiDetailShape | undefined }
+  >({
+    mutationKey: mutationKeys.markPaymentPaid,
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: emiKeys.detail(emiId) })
       const previous = qc.getQueryData<EmiDetailShape>(emiKeys.detail(emiId))

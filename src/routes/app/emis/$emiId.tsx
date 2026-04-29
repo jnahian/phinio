@@ -64,7 +64,7 @@ function EmiDetailScreen() {
 
   async function handleDelete() {
     try {
-      await deleteEmi.mutateAsync(emiId)
+      await deleteEmi.mutateAsync({ emiId })
       navigate({ to: '/app/emis' })
     } catch {
       // Keep user on page; error surface can be improved later.

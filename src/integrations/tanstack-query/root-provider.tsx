@@ -3,6 +3,7 @@ import { persistQueryClient } from '@tanstack/query-persist-client-core'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { get, set, del } from 'idb-keyval'
 import superjson from 'superjson'
+import { registerMutationDefaults } from './mutation-defaults'
 
 const CACHE_KEY = 'phinio-query-cache'
 const MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -20,10 +21,22 @@ export function getContext() {
         // governs the actual offline retention window.
         gcTime: 24 * 60 * 60_000,
       },
+      mutations: {
+        // Pause-and-queue offline mutations rather than failing them
+        // immediately. The reconnect handler in __root.tsx calls
+        // resumePausedMutations() once the network is back.
+        networkMode: 'offlineFirst',
+      },
     },
   })
 
   if (typeof window !== 'undefined') {
+    // Register the mutationFn for every offline-replayable mutation key.
+    // This MUST happen before persistQueryClient finishes restoring;
+    // otherwise rehydrated mutations have no function to call and
+    // resumePausedMutations() silently does nothing.
+    registerMutationDefaults(queryClient)
+
     try {
       const persister = createAsyncStoragePersister({
         storage: {

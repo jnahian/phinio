@@ -122,7 +122,7 @@ function SavingsDetailScreen() {
 
   async function handleDelete() {
     try {
-      await deleteSavings.mutateAsync(id)
+      await deleteSavings.mutateAsync({ id })
       navigate({ to: '/app/investments' })
     } catch {
       // handled in hook
@@ -169,7 +169,7 @@ function SavingsDetailScreen() {
 
   async function handleRemoveDeposit(depositId: string) {
     try {
-      await removeDeposit.mutateAsync(depositId)
+      await removeDeposit.mutateAsync({ depositId })
       setConfirmRemoveId(null)
     } catch {
       // handled in hook
