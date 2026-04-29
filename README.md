@@ -263,6 +263,30 @@ The palette is rooted in `#0b1326` (surface). Structural boundaries are defined 
 
 ## Deployment
 
-The app deploys to Vercel. On each deployment, `prisma migrate deploy` runs automatically before the build (configured in `package.json` build script).
+Phinio deploys to Vercel. On each deployment, `prisma migrate deploy` runs automatically before the build (configured in `package.json`).
 
-Set all environment variables listed in `.env.example` in your Vercel project settings. Use the **pooled** Neon URL for `DATABASE_URL` and the **direct** (non-pooled) URL for `DIRECT_URL` — Prisma migrations require a direct connection and will fail against PgBouncer.
+For a full walkthrough — provisioning Neon, configuring Resend, generating VAPID keys, wiring the cron worker, and the production env-var matrix — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+---
+
+## Documentation
+
+- [`docs/Phinio_PRD_v1.md`](docs/Phinio_PRD_v1.md) — Product requirements (schema, screens, routes, business logic, implementation phases)
+- [`docs/OFFLINE_PLAN.md`](docs/OFFLINE_PLAN.md) — Offline-first architecture (mutation queueing, idempotency, prefetch contract)
+- [`docs/TASKS.md`](docs/TASKS.md) — Task breakdown derived from the PRD
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Production deployment guide
+- [`screens/phinio_modern_noir/DESIGN.md`](screens/phinio_modern_noir/DESIGN.md) — Design system ("Digital Private Bank")
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — Contribution workflow and conventions
+- [`CHANGELOG.md`](CHANGELOG.md) — Release notes
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request — it covers branching, commit conventions, and the project-specific rules (per-query authorization, pre-computed schedules, offline-first mutation contract) that aren't enforced by the linter.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
