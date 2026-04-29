@@ -23,7 +23,7 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant/20 bg-surface/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant/20 bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 pt-2">
         {TABS.map((tab) => (
