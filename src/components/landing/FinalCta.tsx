@@ -34,8 +34,8 @@ export function FinalCta() {
             Your vault is waiting.
           </h2>
           <p className="body-md text-on-surface-variant max-w-sm mx-auto">
-            Investments, DPS, savings, and loans — finally in one place that
-            is private, offline-ready, and entirely yours.
+            Investments, DPS, savings, and loans — finally in one place that is
+            private, offline-ready, and entirely yours.
           </p>
         </div>
 

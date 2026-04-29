@@ -80,10 +80,8 @@ export function useMarkNotificationRead() {
       return { list, count }
     },
     onError: (err, _input, ctx) => {
-      if (ctx?.list)
-        qc.setQueryData(notificationKeys.list(), ctx.list)
-      if (ctx?.count)
-        qc.setQueryData(notificationKeys.unreadCount(), ctx.count)
+      if (ctx?.list) qc.setQueryData(notificationKeys.list(), ctx.list)
+      if (ctx?.count) qc.setQueryData(notificationKeys.unreadCount(), ctx.count)
       toast.error(errorMessage(err, 'Could not mark as read'))
     },
     onSettled: () => {
@@ -121,10 +119,8 @@ export function useMarkAllNotificationsRead() {
       return { list, count }
     },
     onError: (err, _input, ctx) => {
-      if (ctx?.list)
-        qc.setQueryData(notificationKeys.list(), ctx.list)
-      if (ctx?.count)
-        qc.setQueryData(notificationKeys.unreadCount(), ctx.count)
+      if (ctx?.list) qc.setQueryData(notificationKeys.list(), ctx.list)
+      if (ctx?.count) qc.setQueryData(notificationKeys.unreadCount(), ctx.count)
       toast.error(errorMessage(err, 'Could not mark all read'))
     },
     onSettled: () => {

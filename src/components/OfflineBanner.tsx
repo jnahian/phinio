@@ -121,7 +121,10 @@ export function OfflineBanner() {
         className="bg-blue-950/40 text-blue-100 border-b border-blue-900/40 px-4 py-2 text-sm flex items-center gap-2 justify-center"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
       >
-        <RefreshCw className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.75} />
+        <RefreshCw
+          className="h-4 w-4 shrink-0 animate-spin"
+          strokeWidth={1.75}
+        />
         <span>
           Syncing {pendingCount} {pendingCount === 1 ? 'change' : 'changes'}…
         </span>

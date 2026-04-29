@@ -297,24 +297,24 @@ body {
 
   @media (prefers-reduced-motion: reduce) {
     :where(
-        button,
-        a,
-        summary,
-        label[for],
-        [role='button'],
-        [role='link'],
-        [role='tab'],
-        [role='menuitem'],
-        [role='option'],
-        [role='switch'],
-        [role='checkbox'],
-        [role='radio'],
-        input[type='button'],
-        input[type='submit'],
-        input[type='reset'],
-        input[type='checkbox'],
-        input[type='radio']
-      ):active {
+      button,
+      a,
+      summary,
+      label[for],
+      [role='button'],
+      [role='link'],
+      [role='tab'],
+      [role='menuitem'],
+      [role='option'],
+      [role='switch'],
+      [role='checkbox'],
+      [role='radio'],
+      input[type='button'],
+      input[type='submit'],
+      input[type='reset'],
+      input[type='checkbox'],
+      input[type='radio']
+    ):active {
       transform: none;
     }
   }

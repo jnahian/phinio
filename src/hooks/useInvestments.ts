@@ -71,7 +71,10 @@ export function useCreateInvestment() {
     { snapshot: ListSnapshot; id: string }
   >({
     mutationKey: mutationKeys.investmentCreate,
-    prepareVariables: (input) => ({ ...input, id: input.id ?? crypto.randomUUID() }),
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+    }),
     onMutate: async (input) => {
       const id = input.id!
       await qc.cancelQueries({ queryKey: investmentKeys.all })
@@ -101,7 +104,12 @@ export function useCreateInvestment() {
       return { snapshot, id }
     },
     onError: (err, _input, ctx) => {
-      if (ctx) rollbackOptimisticCreate(qc, ctx.snapshot, investmentKeys.detail(ctx.id))
+      if (ctx)
+        rollbackOptimisticCreate(
+          qc,
+          ctx.snapshot,
+          investmentKeys.detail(ctx.id),
+        )
       toast.error(errorMessage(err, 'Failed to save'))
     },
     onSuccess: () => {
@@ -286,7 +294,10 @@ export function useCreateDps() {
     { snapshot: ListSnapshot; id: string }
   >({
     mutationKey: mutationKeys.dpsCreate,
-    prepareVariables: (input) => ({ ...input, id: input.id ?? crypto.randomUUID() }),
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+    }),
     onMutate: async (input) => {
       const id = input.id!
       await qc.cancelQueries({ queryKey: investmentKeys.all })
@@ -316,7 +327,12 @@ export function useCreateDps() {
       return { snapshot, id }
     },
     onError: (err, _input, ctx) => {
-      if (ctx) rollbackOptimisticCreate(qc, ctx.snapshot, investmentKeys.detail(ctx.id))
+      if (ctx)
+        rollbackOptimisticCreate(
+          qc,
+          ctx.snapshot,
+          investmentKeys.detail(ctx.id),
+        )
       toast.error(errorMessage(err, 'Failed to save'))
     },
     onSuccess: () => {
@@ -439,7 +455,10 @@ export function useCreateSavings() {
     { snapshot: ListSnapshot; id: string }
   >({
     mutationKey: mutationKeys.savingsCreate,
-    prepareVariables: (input) => ({ ...input, id: input.id ?? crypto.randomUUID() }),
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+    }),
     onMutate: async (input) => {
       const id = input.id!
       await qc.cancelQueries({ queryKey: investmentKeys.all })
@@ -470,7 +489,12 @@ export function useCreateSavings() {
       return { snapshot, id }
     },
     onError: (err, _input, ctx) => {
-      if (ctx) rollbackOptimisticCreate(qc, ctx.snapshot, investmentKeys.detail(ctx.id))
+      if (ctx)
+        rollbackOptimisticCreate(
+          qc,
+          ctx.snapshot,
+          investmentKeys.detail(ctx.id),
+        )
       toast.error(errorMessage(err, 'Failed to save'))
     },
     onSuccess: () => {

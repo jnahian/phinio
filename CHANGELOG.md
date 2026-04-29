@@ -73,12 +73,12 @@ new EMIs render their full amortization schedule the instant you tap
 
 ### Changed
 
-- **EMI remaining balance now reflects principal owed, not principal
-  + remaining interest.** The "Remaining" figure on EMI list rows and
-  the dashboard's "Net worth" calculation previously summed every
-  unpaid installment (which includes interest), over-stating the
-  outstanding liability. Both now use the next-unpaid payment's
-  principal-payoff figure.
+- \*\*EMI remaining balance now reflects principal owed, not principal
+  - remaining interest.\*\* The "Remaining" figure on EMI list rows and
+    the dashboard's "Net worth" calculation previously summed every
+    unpaid installment (which includes interest), over-stating the
+    outstanding liability. Both now use the next-unpaid payment's
+    principal-payoff figure.
 - **Cross-account safety.** Signing out wipes the persisted offline
   cache, and signing in as a different user on the same device clears
   any stale data and queued writes from the previous session before
@@ -138,7 +138,7 @@ quality-of-life touches on the EMI detail page.
   on EMI cards, the detail page's headline, and the dashboard's aggregate
   EMI balance now sum the `emiAmount` of every unpaid installment — i.e. the
   total principal + interest still owed over the remaining term. Previously
-  it showed the schedule's running balance *after* the next payment, which
+  it showed the schedule's running balance _after_ the next payment, which
   was effectively off by one installment's principal.
 - **DPS "interest earned" now tracks what you've actually earned.** Instead
   of showing a fixed projection of total interest over the full tenure, the

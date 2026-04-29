@@ -142,9 +142,7 @@ export async function listEmisImpl(profileId: string, data: EmiListQuery) {
     // Use the next-unpaid payment's stored `remainingBalance` (principal
     // payoff after that payment) rather than summing remaining emiAmounts —
     // emiAmount includes interest, so summing over-states the liability.
-    const remaining = nextUnpaid
-      ? String(nextUnpaid.remainingBalance)
-      : '0.00'
+    const remaining = nextUnpaid ? String(nextUnpaid.remainingBalance) : '0.00'
     return {
       id: emi.id,
       label: emi.label,

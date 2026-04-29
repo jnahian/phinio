@@ -1,10 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import {
-  ArrowRightSvg,
-  ChevronDownSvg,
-  LockSvg,
-  SparkleSvg,
-} from './icons'
+import { ArrowRightSvg, ChevronDownSvg, LockSvg, SparkleSvg } from './icons'
 
 export function Hero() {
   return (
@@ -110,9 +105,9 @@ export function Hero() {
 
         {/* Subheadline */}
         <p className="body-md text-on-surface-variant max-w-lg leading-relaxed">
-          Investments, DPS deposits, savings pots, and EMI schedules —
-          tracked side by side in one encrypted vault. Works offline. Push
-          reminders before every due date.
+          Investments, DPS deposits, savings pots, and EMI schedules — tracked
+          side by side in one encrypted vault. Works offline. Push reminders
+          before every due date.
         </p>
 
         {/* CTA row */}

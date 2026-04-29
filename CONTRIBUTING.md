@@ -52,7 +52,7 @@ We use [gitmoji](https://gitmoji.dev/) prefixes followed by a [Conventional Comm
 ✈️ feat: complete offline-first support for all mutations
 ```
 
-Keep the subject line under ~72 characters. Use the body to explain *why* the change was made when it isn't obvious from the diff.
+Keep the subject line under ~72 characters. Use the body to explain _why_ the change was made when it isn't obvious from the diff.
 
 ## Tests
 

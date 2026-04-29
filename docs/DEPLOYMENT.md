@@ -61,19 +61,19 @@ openssl rand -hex 32              # → CRON_SECRET (guards the cron endpoint)
 
 ### Required environment variables
 
-| Variable                | Value                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------ |
-| `DATABASE_URL`          | Neon **pooled** connection string                                              |
-| `DIRECT_URL`            | Neon **direct** (non-pooled) connection string                                 |
-| `BETTER_AUTH_SECRET`    | Output of `npx -y @better-auth/cli secret`                                     |
-| `BETTER_AUTH_URL`       | Full deployed URL, e.g. `https://phinio.example.com` (no trailing slash)       |
-| `RESEND_API_KEY`        | Resend dashboard → API keys                                                    |
-| `RESEND_FROM`           | Verified sender, e.g. `Phinio <noreply@yourdomain.com>`                        |
-| `VAPID_PUBLIC_KEY`      | From `npx web-push generate-vapid-keys`                                        |
-| `VAPID_PRIVATE_KEY`     | Same — keep server-only                                                        |
-| `VAPID_SUBJECT`         | `mailto:` or `https:` URI registered with the push service                     |
-| `VITE_VAPID_PUBLIC_KEY` | Same value as `VAPID_PUBLIC_KEY` (exposed to the client by Vite)               |
-| `CRON_SECRET`           | Random 32-byte hex; sent as `Authorization: Bearer ...` to the cron endpoint   |
+| Variable                | Value                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `DATABASE_URL`          | Neon **pooled** connection string                                            |
+| `DIRECT_URL`            | Neon **direct** (non-pooled) connection string                               |
+| `BETTER_AUTH_SECRET`    | Output of `npx -y @better-auth/cli secret`                                   |
+| `BETTER_AUTH_URL`       | Full deployed URL, e.g. `https://phinio.example.com` (no trailing slash)     |
+| `RESEND_API_KEY`        | Resend dashboard → API keys                                                  |
+| `RESEND_FROM`           | Verified sender, e.g. `Phinio <noreply@yourdomain.com>`                      |
+| `VAPID_PUBLIC_KEY`      | From `npx web-push generate-vapid-keys`                                      |
+| `VAPID_PRIVATE_KEY`     | Same — keep server-only                                                      |
+| `VAPID_SUBJECT`         | `mailto:` or `https:` URI registered with the push service                   |
+| `VITE_VAPID_PUBLIC_KEY` | Same value as `VAPID_PUBLIC_KEY` (exposed to the client by Vite)             |
+| `CRON_SECRET`           | Random 32-byte hex; sent as `Authorization: Bearer ...` to the cron endpoint |
 
 > **`BETTER_AUTH_URL` matters.** Better Auth embeds this URL verbatim into every email link (verification, password reset). If it's wrong, every link in every email 404s.
 
@@ -127,14 +127,14 @@ Trigger a deploy (push to `main`, or click **Deploy** in Vercel). On success:
 
 ## Troubleshooting
 
-| Symptom                                                        | Likely cause                                                               |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Build fails with `PrismaConfigEnvError`                        | `DATABASE_URL` / `DIRECT_URL` not set in the Vercel environment            |
-| `prisma migrate deploy` fails with a PgBouncer error           | `DIRECT_URL` is pointing at the pooled connection — use the non-pooled URL |
-| Email links go to `localhost:3000` in production               | `BETTER_AUTH_URL` was never updated for the production environment         |
-| Push notifications don't fire                                  | `CRON_SECRET` mismatch between Vercel and the env, or VAPID keys missing   |
-| Client-side `PushManager.subscribe()` errors with invalid key  | `VITE_VAPID_PUBLIC_KEY` not set or doesn't match `VAPID_PUBLIC_KEY`        |
-| Marketing/auth pages show stale copy after a content edit      | They are prerendered at build time — trigger a redeploy                    |
+| Symptom                                                       | Likely cause                                                               |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Build fails with `PrismaConfigEnvError`                       | `DATABASE_URL` / `DIRECT_URL` not set in the Vercel environment            |
+| `prisma migrate deploy` fails with a PgBouncer error          | `DIRECT_URL` is pointing at the pooled connection — use the non-pooled URL |
+| Email links go to `localhost:3000` in production              | `BETTER_AUTH_URL` was never updated for the production environment         |
+| Push notifications don't fire                                 | `CRON_SECRET` mismatch between Vercel and the env, or VAPID keys missing   |
+| Client-side `PushManager.subscribe()` errors with invalid key | `VITE_VAPID_PUBLIC_KEY` not set or doesn't match `VAPID_PUBLIC_KEY`        |
+| Marketing/auth pages show stale copy after a content edit     | They are prerendered at build time — trigger a redeploy                    |
 
 ---
 
