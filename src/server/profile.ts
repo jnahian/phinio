@@ -6,11 +6,13 @@ export type { SerializedProfile }
 
 const updateCurrencySchema = z.object({
   preferredCurrency: z.enum(['BDT', 'USD']),
+  clientMutationId: z.string().uuid().optional(),
 })
 export type UpdateCurrencyInput = z.infer<typeof updateCurrencySchema>
 
 const updateNameSchema = z.object({
   fullName: z.string().trim().min(2, 'Name must be at least 2 characters'),
+  clientMutationId: z.string().uuid().optional(),
 })
 export type UpdateNameInput = z.infer<typeof updateNameSchema>
 
@@ -34,5 +36,5 @@ export const updateProfileNameFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<SerializedProfile> => {
     const { requireUserId, updateProfileNameImpl } =
       await import('./profile.impl')
-    return updateProfileNameImpl(await requireUserId(), data.fullName)
+    return updateProfileNameImpl(await requireUserId(), data)
   })

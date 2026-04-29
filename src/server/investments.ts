@@ -66,7 +66,7 @@ export const deleteInvestmentFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
-    return deleteInvestmentImpl(await requireProfileId(), data.id)
+    return deleteInvestmentImpl(await requireProfileId(), data)
   })
 
 // ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ export const deleteSavingsFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
-    return deleteInvestmentImpl(await requireProfileId(), data.id)
+    return deleteInvestmentImpl(await requireProfileId(), data)
   })
 
 // ---------------------------------------------------------------------------

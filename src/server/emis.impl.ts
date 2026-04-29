@@ -1,13 +1,18 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
+import type { z } from 'zod'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
+import { withIdempotency } from './_idempotency'
 import { logActivity } from './activity-log.impl'
 import type {
   EmiCreateInput,
   EmiListQuery,
   MarkPaymentPaidInput,
+  emiIdSchema,
 } from '#/lib/validators'
+
+type EmiIdInput = z.infer<typeof emiIdSchema>
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())
@@ -178,7 +183,7 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
     type: data.type,
   })
 
-  const emi = await prisma.$transaction(async (tx) => {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const created = await tx.emi.create({
       data: {
         profileId,
@@ -210,25 +215,24 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
       entityLabel: created.label,
       summary: `Created EMI '${created.label}' — ${schedule.length} payments scheduled`,
     })
-    return created
-  })
 
-  return {
-    id: emi.id,
-    label: emi.label,
-    type: emi.type,
-    emiAmount: String(emi.emiAmount),
-  }
+    return {
+      id: created.id,
+      label: created.label,
+      type: created.type,
+      emiAmount: String(created.emiAmount),
+    }
+  })
 }
 
-export async function deleteEmiImpl(profileId: string, emiId: string) {
-  await prisma.$transaction(async (tx) => {
+export async function deleteEmiImpl(profileId: string, data: EmiIdInput) {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const existing = await tx.emi.findFirst({
-      where: { id: emiId, profileId },
+      where: { id: data.emiId, profileId },
       select: { id: true, label: true },
     })
     if (!existing) throw new Error('EMI not found')
-    await tx.emi.deleteMany({ where: { id: emiId, profileId } })
+    await tx.emi.deleteMany({ where: { id: data.emiId, profileId } })
     await logActivity(tx, profileId, {
       action: 'delete',
       entityType: 'emi',
@@ -236,15 +240,15 @@ export async function deleteEmiImpl(profileId: string, emiId: string) {
       entityLabel: existing.label,
       summary: `Deleted EMI '${existing.label}'`,
     })
+    return { id: data.emiId }
   })
-  return { id: emiId }
 }
 
 export async function markPaymentPaidImpl(
   profileId: string,
   data: MarkPaymentPaidInput,
 ) {
-  await prisma.$transaction(async (tx) => {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
     const payment = await tx.emiPayment.findFirst({
       where: { id: data.paymentId, profileId },
       select: {
@@ -269,8 +273,8 @@ export async function markPaymentPaidImpl(
       entityLabel: payment.emi.label,
       summary: `Marked payment #${payment.paymentNumber} of '${payment.emi.label}' as ${verb}`,
     })
+    return { id: data.paymentId, paid: data.paid }
   })
-  return { id: data.paymentId, paid: data.paid }
 }
 
 export async function upcomingPaymentsImpl(profileId: string) {

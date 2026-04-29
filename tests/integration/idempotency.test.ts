@@ -10,23 +10,19 @@ describe('withIdempotency', () => {
   it('runs the work and writes a processed_mutations row when an id is given', async () => {
     const user = await createTestUser()
 
-    const result = await withIdempotency(
-      user.profileId,
-      'cm-1',
-      async (tx) => {
-        await tx.investment.create({
-          data: {
-            profileId: user.profileId,
-            name: 'First buy',
-            type: 'stock',
-            mode: 'lump_sum',
-            investedAmount: '100.00',
-            currentValue: '100.00',
-          },
-        })
-        return { id: 'inv-1', count: 1 }
-      },
-    )
+    const result = await withIdempotency(user.profileId, 'cm-1', async (tx) => {
+      await tx.investment.create({
+        data: {
+          profileId: user.profileId,
+          name: 'First buy',
+          type: 'stock',
+          mode: 'lump_sum',
+          investedAmount: '100.00',
+          currentValue: '100.00',
+        },
+      })
+      return { id: 'inv-1', count: 1 }
+    })
 
     expect(result).toEqual({ id: 'inv-1', count: 1 })
 
