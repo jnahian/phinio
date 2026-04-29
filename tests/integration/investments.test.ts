@@ -104,7 +104,7 @@ describe('lump-sum investments', () => {
     ).rejects.toThrow(/not found/i)
 
     await expect(
-      deleteInvestmentImpl(bob.profileId, aliceInv.id),
+      deleteInvestmentImpl(bob.profileId, { id: aliceInv.id }),
     ).rejects.toThrow(/not found/i)
 
     // Alice's row is untouched
@@ -1024,7 +1024,7 @@ describe('withdrawals', () => {
       amount: '200.00',
       withdrawalDate: '2026-02-01',
     })
-    await deleteInvestmentImpl(user.profileId, created.id)
+    await deleteInvestmentImpl(user.profileId, { id: created.id })
 
     const remaining = await prisma.investmentWithdrawal.count({
       where: { investmentId: created.id },

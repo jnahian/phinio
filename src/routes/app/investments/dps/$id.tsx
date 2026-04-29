@@ -67,7 +67,7 @@ function DpsDetailScreen() {
 
   async function handleDelete() {
     try {
-      await deleteDps.mutateAsync(id)
+      await deleteDps.mutateAsync({ id })
       navigate({ to: '/app/investments' })
     } catch {
       // toast handled in hook

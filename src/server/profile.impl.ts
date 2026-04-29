@@ -2,6 +2,7 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import type { Currency } from '#/lib/currency'
+import { withIdempotency } from './_idempotency'
 import { logActivity } from './activity-log.impl'
 
 export interface SerializedProfile {
@@ -14,6 +15,12 @@ export interface SerializedProfile {
 
 export interface UpdateCurrencyInput {
   preferredCurrency: 'BDT' | 'USD'
+  clientMutationId?: string
+}
+
+export interface UpdateNameInput {
+  fullName: string
+  clientMutationId?: string
 }
 
 async function requireSession() {
@@ -72,87 +79,123 @@ export async function getProfileImpl(
   return serializeProfile(profile)
 }
 
+// Profile mutations are scoped by userId (the auth identity), but the
+// idempotency log is keyed by profileId. Look the profile up first so we
+// can hand a real profileId to withIdempotency.
+async function profileIdForUser(userId: string): Promise<string> {
+  const profile = await prisma.profile.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  if (!profile) throw new Error('Profile not found')
+  return profile.id
+}
+
 export async function updateProfileCurrencyImpl(
   userId: string,
   data: UpdateCurrencyInput,
 ): Promise<SerializedProfile> {
-  const profile = await prisma.$transaction(async (tx) => {
-    const before = await tx.profile.findUnique({
-      where: { userId },
-      select: { id: true, fullName: true, preferredCurrency: true },
-    })
-    if (!before) throw new Error('Profile not found')
-
-    const updated = await tx.profile.update({
-      where: { userId },
-      data: { preferredCurrency: data.preferredCurrency },
-      select: {
-        id: true,
-        userId: true,
-        fullName: true,
-        preferredCurrency: true,
-        createdAt: true,
-      },
-    })
-
-    if (before.preferredCurrency !== data.preferredCurrency) {
-      await logActivity(tx, before.id, {
-        action: 'update',
-        entityType: 'profile',
-        entityId: before.id,
-        entityLabel: before.fullName,
-        summary: `Changed preferred currency to ${data.preferredCurrency}`,
-        changes: [
-          {
-            field: 'Preferred currency',
-            from: before.preferredCurrency,
-            to: data.preferredCurrency,
-          },
-        ],
+  const profileId = await profileIdForUser(userId)
+  const profile = await withIdempotency(
+    profileId,
+    data.clientMutationId,
+    async (tx) => {
+      // Scope reads/writes by profileId now that we've derived it. Matches
+      // the per-query authorization convention used elsewhere in
+      // src/server/*.impl.ts.
+      const before = await tx.profile.findUnique({
+        where: { id: profileId },
+        select: { id: true, fullName: true, preferredCurrency: true },
       })
-    }
+      if (!before) throw new Error('Profile not found')
 
-    return updated
-  })
+      const updated = await tx.profile.update({
+        where: { id: profileId },
+        data: { preferredCurrency: data.preferredCurrency },
+        select: {
+          id: true,
+          userId: true,
+          fullName: true,
+          preferredCurrency: true,
+          createdAt: true,
+        },
+      })
+
+      if (before.preferredCurrency !== data.preferredCurrency) {
+        await logActivity(tx, before.id, {
+          action: 'update',
+          entityType: 'profile',
+          entityId: before.id,
+          entityLabel: before.fullName,
+          summary: `Changed preferred currency to ${data.preferredCurrency}`,
+          changes: [
+            {
+              field: 'Preferred currency',
+              from: before.preferredCurrency,
+              to: data.preferredCurrency,
+            },
+          ],
+        })
+      }
+
+      return updated
+    },
+  )
   return serializeProfile(profile)
 }
 
 export async function updateProfileNameImpl(
   userId: string,
-  fullName: string,
+  data: UpdateNameInput,
 ): Promise<SerializedProfile> {
-  const profile = await prisma.$transaction(async (tx) => {
-    const before = await tx.profile.findUnique({
-      where: { userId },
-      select: { id: true, fullName: true },
-    })
-    if (!before) throw new Error('Profile not found')
-
-    await tx.user.update({ where: { id: userId }, data: { name: fullName } })
-    const updated = await tx.profile.update({
-      where: { userId },
-      data: { fullName },
-      select: {
-        id: true,
-        userId: true,
-        fullName: true,
-        preferredCurrency: true,
-        createdAt: true,
-      },
-    })
-
-    if (before.fullName !== fullName) {
-      await logActivity(tx, before.id, {
-        action: 'update',
-        entityType: 'profile',
-        entityId: before.id,
-        entityLabel: fullName,
-        summary: `Changed display name`,
-        changes: [{ field: 'Full name', from: before.fullName, to: fullName }],
+  const profileId = await profileIdForUser(userId)
+  const profile = await withIdempotency(
+    profileId,
+    data.clientMutationId,
+    async (tx) => {
+      const before = await tx.profile.findUnique({
+        where: { id: profileId },
+        select: { id: true, fullName: true },
       })
-    }
+      if (!before) throw new Error('Profile not found')
 
-    return updated
-  })
+      // The User row is keyed by userId — that's the auth boundary, not a
+      // profile concern — so it stays scoped that way.
+      await tx.user.update({
+        where: { id: userId },
+        data: { name: data.fullName },
+      })
+      const updated = await tx.profile.update({
+        where: { id: profileId },
+        data: { fullName: data.fullName },
+        select: {
+          id: true,
+          userId: true,
+          fullName: true,
+          preferredCurrency: true,
+          createdAt: true,
+        },
+      })
+
+      if (before.fullName !== data.fullName) {
+        await logActivity(tx, before.id, {
+          action: 'update',
+          entityType: 'profile',
+          entityId: before.id,
+          entityLabel: data.fullName,
+          summary: `Changed display name`,
+          changes: [
+            {
+              field: 'Full name',
+              from: before.fullName,
+              to: data.fullName,
+            },
+          ],
+        })
+      }
+
+      return updated
+    },
+  )
   return serializeProfile(profile)
 }

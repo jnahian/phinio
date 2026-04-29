@@ -24,6 +24,7 @@ import { SeedDataModal } from '#/components/SeedDataModal'
 import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
+import { clearOfflineCache } from '#/lib/offline-cache'
 import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import { cleanupProfileDataFn, seedProfileDataFn } from '#/server/dev-data'
 import type { Currency } from '#/lib/currency'
@@ -210,6 +211,11 @@ function ProfileScreen() {
   async function handleSignOut() {
     setIsSigningOut(true)
     await authClient.signOut()
+    // Clear persisted query/mutation cache so the next user (or this user
+    // re-signing in) doesn't see the previous session's cached financial
+    // data, and any paused offline mutations don't replay into the next
+    // account.
+    await clearOfflineCache(qc)
     window.location.href = '/login'
   }
 
@@ -451,7 +457,9 @@ function ProfileScreen() {
                 className="h-5 w-5 text-on-surface-variant"
                 strokeWidth={1.75}
               />
-              <span className="font-display font-semibold">Change password</span>
+              <span className="font-display font-semibold">
+                Change password
+              </span>
             </div>
             <ChevronRight
               className="h-4 w-4 text-on-surface-variant/50"
@@ -663,9 +671,7 @@ function ChangePasswordModal({
           )}
           <button
             type="submit"
-            disabled={
-              isPending || !form.current || !form.next || !form.confirm
-            }
+            disabled={isPending || !form.current || !form.next || !form.confirm}
             className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
           >
             {isPending ? (

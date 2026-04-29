@@ -200,9 +200,9 @@ describe('emis server impls', () => {
       startDate: '2026-01-01',
     })
 
-    await expect(deleteEmiImpl(bob.profileId, aliceEmi.id)).rejects.toThrow(
-      /not found/i,
-    )
+    await expect(
+      deleteEmiImpl(bob.profileId, { emiId: aliceEmi.id }),
+    ).rejects.toThrow(/not found/i)
 
     // Alice's row still exists
     const still = await getEmiImpl(alice.profileId, aliceEmi.id)
@@ -226,7 +226,7 @@ describe('emis server impls', () => {
     })
     expect(before).toBe(6)
 
-    await deleteEmiImpl(user.profileId, created.id)
+    await deleteEmiImpl(user.profileId, { emiId: created.id })
 
     const after = await prisma.emiPayment.count({
       where: { emiId: created.id },

@@ -4,6 +4,7 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Toaster } from 'sonner'
@@ -11,7 +12,10 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
+import { OfflineBanner } from '#/components/OfflineBanner'
 import { RouteStatus } from '#/components/RouteStatus'
+import { getSessionFn } from '#/server/auth'
+import { clearOfflineCache } from '#/lib/offline-cache'
 
 import appCss from '#/styles.css?url'
 
@@ -87,6 +91,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient()
+
   // Register the Workbox service worker on first client mount.
   // Production-only: dev has devOptions.enabled = false in vite.config.ts,
   // but we guard here too so HMR never touches service worker state.
@@ -98,12 +104,65 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Replay any paused mutations once the network returns. We verify the
+  // Better Auth session first — a queued mutation that hits a 401 fails
+  // silently and the user has no idea their edit didn't save. If the
+  // session check throws (still offline), we leave the queue alone and
+  // wait for the next online event. Also runs once on mount in case the
+  // page was reloaded with mutations still paused in IndexedDB.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let cancelled = false
+    async function flush() {
+      if (!navigator.onLine) return
+      let session: Awaited<ReturnType<typeof getSessionFn>>
+      try {
+        session = await getSessionFn()
+        if (cancelled) return
+      } catch {
+        return // network still flaky; next 'online' event will retry
+      }
+
+      // Cross-account safety: if a different user is now signed in than
+      // the one whose data is in the persisted cache, wipe everything
+      // before flushing. Otherwise the previous user's queued mutations
+      // would replay into the new user's account, and stale list data
+      // would surface until the first refetch lands.
+      const cachedSession = queryClient.getQueryData<{
+        user?: { id?: string }
+      }>(['auth', 'session'])
+      const cachedUserId = cachedSession?.user?.id
+      const currentUserId = session ? session.user.id : undefined
+      if (cachedUserId && currentUserId && cachedUserId !== currentUserId) {
+        await clearOfflineCache(queryClient)
+        return
+      }
+
+      if (!session) return
+      try {
+        await queryClient.resumePausedMutations()
+        await queryClient.invalidateQueries()
+      } catch (err) {
+        console.warn('[phinio] replay failed', err)
+      }
+    }
+
+    void flush()
+    window.addEventListener('online', flush)
+    return () => {
+      cancelled = true
+      window.removeEventListener('online', flush)
+    }
+  }, [queryClient])
+
   return (
     <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
       <body className="bg-surface text-on-surface font-sans antialiased">
+        <OfflineBanner />
         {children}
         <Toaster
           position="top-center"

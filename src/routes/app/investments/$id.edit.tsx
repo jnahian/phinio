@@ -135,7 +135,7 @@ function EditInvestmentScreen() {
 
   async function handleDelete() {
     try {
-      await deleteInvestment.mutateAsync(id)
+      await deleteInvestment.mutateAsync({ id })
       navigate({ to: '/app/investments' })
     } catch {
       // handled by useDeleteInvestment onError → toast.error

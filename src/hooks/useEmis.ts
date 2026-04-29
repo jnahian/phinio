@@ -1,20 +1,11 @@
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  createEmiFn,
-  deleteEmiFn,
-  getEmiFn,
-  listEmisFn,
-  markPaymentPaidFn,
-  upcomingPaymentsFn,
-} from '#/server/emis'
+import { getEmiFn, listEmisFn, upcomingPaymentsFn } from '#/server/emis'
 import type { EmiListFilters } from '#/server/emis'
 import type { EmiCreateInput, MarkPaymentPaidInput } from '#/lib/validators'
+import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
+import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
+import { useOfflineMutation } from '#/lib/use-offline-mutation'
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
@@ -53,33 +44,208 @@ export function useUpcomingPaymentsQuery() {
   })
 }
 
+/**
+ * Create an EMI optimistically, including the full payment schedule. The
+ * amortization function in `#/lib/emi-calculator` is isomorphic — it uses
+ * pure JS, no Prisma, no Node-only APIs — so the client can compute the
+ * same schedule the server will compute on replay. Both ends use the same
+ * client-supplied UUIDs for the EMI and every payment row, so the cache
+ * and the eventual server insert agree on row identity. Without that
+ * agreement, a "mark paid" tap on an optimistic payment would 404 if it
+ * lands on the server before this create's idempotency entry, or
+ * targeted a stale UUID after invalidation.
+ */
 export function useCreateEmi() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: EmiCreateInput) => createEmiFn({ data: input }),
+  type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
+  type ListShape = Awaited<ReturnType<typeof listEmisFn>>
+
+  return useOfflineMutation<
+    { id: string; label: string; type: string; emiAmount: string },
+    Error,
+    EmiCreateInput,
+    {
+      emiId: string
+      previousLists: Array<[ReadonlyArray<unknown>, ListShape | undefined]>
+    }
+  >({
+    mutationKey: mutationKeys.emiCreate,
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+      paymentIds:
+        input.paymentIds ??
+        Array.from({ length: input.tenureMonths }, () => crypto.randomUUID()),
+    }),
+    onMutate: async (input) => {
+      const emiId = input.id!
+      const paymentIds = input.paymentIds!
+
+      // Compute the schedule the same way the server will. emi-calculator
+      // is pure JS, so this matches byte-for-byte on replay. `totalPayment`
+      // is the Decimal-string sum of every installment — use it directly
+      // for the optimistic `remainingBalance` instead of summing
+      // `Number(p.emiAmount)` on the client (which would violate the
+      // money-as-Decimal rule).
+      const { emiAmount, totalPayment } = calculateEmi({
+        principal: input.principal,
+        annualRate: input.interestRate,
+        tenureMonths: input.tenureMonths,
+        type: input.type,
+      })
+      const schedule = generateAmortization({
+        principal: input.principal,
+        annualRate: input.interestRate,
+        tenureMonths: input.tenureMonths,
+        startDate: new Date(input.startDate),
+        type: input.type,
+      })
+
+      await qc.cancelQueries({ queryKey: emiKeys.all })
+
+      // Snapshot every list cache entry so onError can roll all of them
+      // back. The list query key includes filters, so there can be more
+      // than one entry depending on which list pages the user has opened.
+      const previousLists: Array<
+        [ReadonlyArray<unknown>, ListShape | undefined]
+      > = qc
+        .getQueriesData<ListShape>({ queryKey: ['emis', 'list'] })
+        .map(([key, value]) => [key, value])
+
+      // Optimistic detail: full EMI + full payment list.
+      const detail: EmiDetailShape = {
+        id: emiId,
+        profileId: '',
+        label: input.label,
+        type: input.type,
+        principal: input.principal,
+        interestRate: input.interestRate,
+        tenureMonths: input.tenureMonths,
+        emiAmount,
+        startDate: new Date(input.startDate),
+        status: 'active',
+        createdAt: new Date(),
+        payments: schedule.map((row, i) => ({
+          id: paymentIds[i],
+          emiId,
+          profileId: '',
+          paymentNumber: row.paymentNumber,
+          dueDate: row.dueDate,
+          emiAmount: row.emiAmount,
+          principalComponent: row.principalComponent,
+          interestComponent: row.interestComponent,
+          remainingBalance: row.remainingBalance,
+          status: 'upcoming',
+          paidAt: null,
+        })),
+      }
+      qc.setQueryData<EmiDetailShape>(emiKeys.detail(emiId), detail)
+
+      // Optimistic list rows: prepend the new EMI to caches whose filter
+      // would actually include it. List query keys are
+      // `['emis', 'list', { type: 'bank_loan' | 'credit_card' | 'all' }]`.
+      // The new row belongs in `'all'` and in lists matching its own type;
+      // filtered views for the other type must NOT show it temporarily.
+      const listRow = {
+        id: emiId,
+        label: input.label,
+        type: input.type,
+        principal: input.principal,
+        interestRate: input.interestRate,
+        tenureMonths: input.tenureMonths,
+        emiAmount,
+        startDate: new Date(input.startDate),
+        status: 'active',
+        createdAt: new Date(),
+        totalPayments: schedule.length,
+        paidCount: 0,
+        nextDueDate: schedule[0]?.dueDate ?? null,
+        // `totalPayment` from calculateEmi is the Decimal-string sum of
+        // every installment — exactly what `listEmisImpl` returns for an
+        // unpaid EMI's `remainingBalance`.
+        remainingBalance: totalPayment,
+      }
+      for (const [key, value] of previousLists) {
+        if (!Array.isArray(value)) continue
+        const filter = key[2] as { type?: string } | undefined
+        const filterType = filter?.type ?? 'all'
+        if (filterType !== 'all' && filterType !== input.type) continue
+        qc.setQueryData(key, [listRow, ...value])
+      }
+
+      return { emiId, previousLists }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) {
+        for (const [key, value] of ctx.previousLists) {
+          qc.setQueryData(key, value)
+        }
+        qc.removeQueries({ queryKey: emiKeys.detail(ctx.emiId) })
+      }
+      toast.error(errorMessage(err, 'Failed to create EMI'))
+    },
     onSuccess: () => {
       toast.success('EMI schedule created')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to create EMI')),
   })
 }
 
 export function useDeleteEmi() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (emiId: string) => deleteEmiFn({ data: { emiId } }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    { emiId: string },
+    {
+      previousLists: Array<[ReadonlyArray<unknown>, unknown]>
+      previousDetail: unknown
+    }
+  >({
+    mutationKey: mutationKeys.emiDelete,
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: emiKeys.all })
+      const previousLists: Array<[ReadonlyArray<unknown>, unknown]> = qc
+        .getQueriesData({ queryKey: ['emis', 'list'] })
+        .map(([key, value]) => [key, value])
+      const previousDetail = qc.getQueryData(emiKeys.detail(input.emiId))
+
+      // Filter the row out of every cached list page.
+      for (const [key, value] of previousLists) {
+        if (!Array.isArray(value)) continue
+        qc.setQueryData(
+          key,
+          value.filter((row: { id: string }) => row.id !== input.emiId),
+        )
+      }
+      qc.removeQueries({ queryKey: emiKeys.detail(input.emiId) })
+      return { previousLists, previousDetail }
+    },
+    onError: (err, input, ctx) => {
+      if (ctx) {
+        for (const [key, value] of ctx.previousLists) {
+          qc.setQueryData(key, value)
+        }
+        if (ctx.previousDetail) {
+          qc.setQueryData(emiKeys.detail(input.emiId), ctx.previousDetail)
+        }
+      }
+      toast.error(errorMessage(err, 'Failed to delete'))
+    },
     onSuccess: () => {
       toast.success('EMI deleted')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
 }
 
@@ -94,9 +260,13 @@ export function useMarkPayment(emiId: string) {
 
   type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
 
-  return useMutation({
-    mutationFn: (input: MarkPaymentPaidInput) =>
-      markPaymentPaidFn({ data: input }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    MarkPaymentPaidInput,
+    { previous: EmiDetailShape | undefined }
+  >({
+    mutationKey: mutationKeys.markPaymentPaid,
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: emiKeys.detail(emiId) })
       const previous = qc.getQueryData<EmiDetailShape>(emiKeys.detail(emiId))

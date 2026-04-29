@@ -35,7 +35,7 @@ export const deleteEmiFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => emiIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, deleteEmiImpl } = await import('./emis.impl')
-    return deleteEmiImpl(await requireProfileId(), data.emiId)
+    return deleteEmiImpl(await requireProfileId(), data)
   })
 
 export const markPaymentPaidFn = createServerFn({ method: 'POST' })
