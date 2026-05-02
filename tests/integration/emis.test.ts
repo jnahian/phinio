@@ -32,6 +32,146 @@ describe('emis server impls', () => {
     expect(count).toBe(12)
   })
 
+  it('createEmiImpl without processingFee produces only the regular schedule', async () => {
+    const user = await createTestUser({ email: 'no-fee@phinio.test' })
+
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Plain loan',
+      type: 'bank_loan',
+      principal: '50000',
+      interestRate: '12',
+      tenureMonths: 6,
+      startDate: '2026-03-01',
+    })
+
+    const payments = await prisma.emiPayment.findMany({
+      where: { emiId: created.id },
+      orderBy: { paymentNumber: 'asc' },
+    })
+    expect(payments).toHaveLength(6)
+    expect(payments[0].paymentNumber).toBe(1)
+    expect(created.processingFee).toBeNull()
+  })
+
+  it('createEmiImpl with processingFee inserts a paid paymentNumber=0 row', async () => {
+    const user = await createTestUser({ email: 'fee@phinio.test' })
+
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Loan with fee',
+      type: 'bank_loan',
+      principal: '100000',
+      interestRate: '12',
+      tenureMonths: 12,
+      startDate: '2026-04-01',
+      processingFee: '2000',
+    })
+
+    expect(created.processingFee).toBe('2000')
+
+    const payments = await prisma.emiPayment.findMany({
+      where: { emiId: created.id },
+      orderBy: { paymentNumber: 'asc' },
+    })
+    expect(payments).toHaveLength(13) // 12 monthly + 1 fee row
+
+    const feeRow = payments[0]
+    expect(feeRow.paymentNumber).toBe(0)
+    expect(feeRow.status).toBe('paid')
+    expect(feeRow.paidAt).toBeInstanceOf(Date)
+    expect(String(feeRow.emiAmount)).toBe('2000')
+    expect(String(feeRow.principalComponent)).toBe('0')
+    expect(String(feeRow.interestComponent)).toBe('0')
+    expect(String(feeRow.remainingBalance)).toBe('100000')
+
+    // Regular schedule remains 1-indexed and unaffected by the fee.
+    expect(payments[1].paymentNumber).toBe(1)
+    expect(payments[12].paymentNumber).toBe(12)
+  })
+
+  it('createEmiImpl ignores zero / empty processingFee', async () => {
+    const user = await createTestUser({ email: 'zero-fee@phinio.test' })
+
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Zero fee',
+      type: 'bank_loan',
+      principal: '50000',
+      interestRate: '10',
+      tenureMonths: 6,
+      startDate: '2026-05-01',
+      processingFee: '0',
+    })
+
+    const payments = await prisma.emiPayment.findMany({
+      where: { emiId: created.id },
+    })
+    expect(payments).toHaveLength(6)
+    expect(payments.find((p) => p.paymentNumber === 0)).toBeUndefined()
+    expect(created.processingFee).toBeNull()
+  })
+
+  it('getEmiImpl exposes processingFee derived from the paymentNumber=0 row', async () => {
+    const user = await createTestUser({ email: 'get-fee@phinio.test' })
+
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Loan',
+      type: 'bank_loan',
+      principal: '80000',
+      interestRate: '11',
+      tenureMonths: 8,
+      startDate: '2026-06-01',
+      processingFee: '1500',
+    })
+
+    const fetched = await getEmiImpl(user.profileId, created.id)
+    expect(fetched.processingFee).toBe('1500')
+    expect(fetched.payments[0].paymentNumber).toBe(0)
+  })
+
+  it('listEmisImpl progress counts ignore the processing-fee row', async () => {
+    const user = await createTestUser({ email: 'list-fee@phinio.test' })
+
+    await createEmiImpl(user.profileId, {
+      label: 'Loan with fee',
+      type: 'bank_loan',
+      principal: '60000',
+      interestRate: '10',
+      tenureMonths: 6,
+      startDate: '2026-07-01',
+      processingFee: '500',
+    })
+
+    const rows = await listEmisImpl(user.profileId, { type: 'all' })
+    expect(rows).toHaveLength(1)
+    // 6 regular months — fee row is excluded, even though it counts as "paid".
+    expect(rows[0].totalPayments).toBe(6)
+    expect(rows[0].paidCount).toBe(0)
+  })
+
+  it('markPaymentPaidImpl rejects toggling the processing-fee row', async () => {
+    const user = await createTestUser({ email: 'fee-toggle@phinio.test' })
+
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Loan',
+      type: 'bank_loan',
+      principal: '40000',
+      interestRate: '10',
+      tenureMonths: 4,
+      startDate: '2026-08-01',
+      processingFee: '300',
+    })
+
+    const feeRow = await prisma.emiPayment.findFirstOrThrow({
+      where: { emiId: created.id, paymentNumber: 0 },
+    })
+
+    await expect(
+      markPaymentPaidImpl(user.profileId, {
+        paymentId: feeRow.id,
+        paid: false,
+      }),
+    ).rejects.toThrow(/processing fee/i)
+  })
+
   it('zero-interest EMI creates all rows with interestComponent "0.00"', async () => {
     const user = await createTestUser()
 
