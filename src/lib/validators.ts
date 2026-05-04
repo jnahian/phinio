@@ -256,9 +256,11 @@ export const emiCreateSchema = z.object({
     .max(600, 'Tenure must be 600 months or less'),
   startDate: isoDateString,
   // One-time processing fee charged at disbursement (separate from interest).
-  // When present, the create flow records it as a paymentNumber=0 EmiPayment
-  // row marked paid; the regular schedule is unaffected.
-  processingFee: positiveDecimalString.optional(),
+  // When present and > 0, the create flow records it as a paymentNumber=0
+  // EmiPayment row marked paid; "0"/"0.00" is treated as "no fee" by the
+  // server, so we accept non-negative values here rather than forcing the
+  // user to clear the field.
+  processingFee: nonNegativeDecimalString.optional(),
   // Optional client-supplied id for the processing-fee EmiPayment row, used
   // by the offline create flow so the optimistic cache and the eventual
   // server insert agree on identity. Only meaningful when `processingFee`

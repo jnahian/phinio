@@ -396,6 +396,12 @@ describe('emiCreateSchema', () => {
     expect(emiCreateSchema.parse(valid).processingFee).toBeUndefined()
   })
 
+  it('accepts processingFee of "0" (treated as no fee by the server)', () => {
+    expect(
+      emiCreateSchema.parse({ ...valid, processingFee: '0' }).processingFee,
+    ).toBe('0')
+  })
+
   it('rejects a negative processingFee', () => {
     expect(
       emiCreateSchema.safeParse({ ...valid, processingFee: '-10' }).success,
