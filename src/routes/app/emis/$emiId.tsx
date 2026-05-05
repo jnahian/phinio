@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Check, Pencil, Trash2 } from 'lucide-react'
+import { CheckCircle2, Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
@@ -9,6 +9,7 @@ import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
 import { isFeePayment, isRegularPayment } from '#/lib/emi-calculator'
 import {
+  useCompleteEmi,
   useDeleteEmi,
   useEmiQuery,
   useMarkPayment,
@@ -37,8 +38,10 @@ function EmiDetailScreen() {
   const markPayment = useMarkPayment(emiId)
   const deleteEmi = useDeleteEmi()
   const updateEmi = useUpdateEmi()
+  const completeEmi = useCompleteEmi()
 
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmComplete, setConfirmComplete] = useState(false)
   const [selectedSegment, setSelectedSegment] = useState<PiSegment | null>(null)
   const [editing, setEditing] = useState(false)
   const [editLabel, setEditLabel] = useState('')
@@ -57,7 +60,9 @@ function EmiDetailScreen() {
   // isn't principal, isn't interest, and isn't part of "X of N months".
   const regularPayments = payments.filter(isRegularPayment)
   const paidCount = regularPayments.filter((p) => p.status === 'paid').length
+  const unpaidCount = regularPayments.length - paidCount
   const remainingMonths = emi.tenureMonths - paidCount
+  const isCompleted = emi.status === 'completed'
   const interestPaid = regularPayments
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + Number(p.interestComponent), 0)
@@ -88,6 +93,15 @@ function EmiDetailScreen() {
     }
   }
 
+  async function handleComplete() {
+    try {
+      await completeEmi.mutateAsync({ emiId })
+      setConfirmComplete(false)
+    } catch {
+      // toast handled in hook
+    }
+  }
+
   function openEdit() {
     if (!emi) return
     setEditLabel(emi.label)
@@ -113,10 +127,18 @@ function EmiDetailScreen() {
     <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
         <div className="flex items-center justify-between">
-          <p className="body-sm text-on-surface-variant">
-            {emi.type === 'credit_card' ? 'Credit card' : 'Bank loan'} ·{' '}
-            {emi.interestRate}% p.a.
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="body-sm text-on-surface-variant">
+              {emi.type === 'credit_card' ? 'Credit card' : 'Bank loan'} ·{' '}
+              {emi.interestRate}% p.a.
+            </p>
+            {isCompleted && (
+              <span className="label-sm inline-flex items-center gap-1 rounded-full bg-secondary/15 px-2 py-0.5 text-secondary normal-case tracking-wide">
+                <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
+                Completed
+              </span>
+            )}
+          </div>
           <button
             type="button"
             aria-label="Edit EMI"
@@ -424,14 +446,26 @@ function EmiDetailScreen() {
           </Card>
         )}
 
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          Delete EMI
-        </button>
+        <div className="flex flex-col items-start gap-1">
+          {!isCompleted && (
+            <button
+              type="button"
+              onClick={() => setConfirmComplete(true)}
+              className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-secondary opacity-80 transition hover:opacity-100"
+            >
+              <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
+              Mark as completed
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+            Delete EMI
+          </button>
+        </div>
       </div>
 
       <ConfirmModal
@@ -443,6 +477,21 @@ function EmiDetailScreen() {
         isPending={deleteEmi.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      <ConfirmModal
+        open={confirmComplete}
+        title="Complete EMI"
+        message={
+          unpaidCount > 0
+            ? `Mark "${emi.label}" as completed? This will mark the remaining ${unpaidCount} installment${unpaidCount === 1 ? '' : 's'} as paid and close the EMI.`
+            : `Mark "${emi.label}" as completed?`
+        }
+        confirmLabel="Complete"
+        pendingLabel="Completing…"
+        isPending={completeEmi.isPending}
+        onConfirm={handleComplete}
+        onCancel={() => setConfirmComplete(false)}
       />
     </main>
   )

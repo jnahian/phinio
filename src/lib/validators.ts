@@ -289,6 +289,7 @@ export type EmiUpdateInput = z.infer<typeof emiUpdateSchema>
 
 export const emiListQuerySchema = z.object({
   type: z.enum([...EMI_TYPES, 'all']).default('all'),
+  status: z.enum(['active', 'completed']).default('active'),
 })
 export type EmiListQuery = z.infer<typeof emiListQuerySchema>
 
@@ -303,6 +304,12 @@ export const markPaymentPaidSchema = z.object({
   ...clientMutationIdField,
 })
 export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
+
+export const emiCompleteSchema = z.object({
+  emiId: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type EmiCompleteInput = z.infer<typeof emiCompleteSchema>
 
 // ----------------------------------------------------------------------------
 // Notifications

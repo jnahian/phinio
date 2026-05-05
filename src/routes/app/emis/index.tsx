@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Building2, CalendarClock, CloudOff, CreditCard } from 'lucide-react'
+import {
+  Building2,
+  CalendarClock,
+  CheckCircle2,
+  CloudOff,
+  CreditCard,
+} from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
@@ -14,6 +20,7 @@ import { emisListQueryOptions, useEmisQuery } from '#/hooks/useEmis'
 import type { EmiType } from '#/lib/validators'
 
 type TypeFilter = EmiType | 'all'
+type StatusFilter = 'active' | 'completed'
 
 const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
   { value: 'all', label: 'All' },
@@ -41,7 +48,7 @@ export const Route = createFileRoute('/app/emis/')({
   staticData: { title: 'EMIs' },
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(
-      emisListQueryOptions({ type: 'all' }),
+      emisListQueryOptions({ type: 'all', status: 'active' }),
     )
   },
   component: EmisListScreen,
@@ -52,12 +59,13 @@ function EmisListScreen() {
   const currency = profile.preferredCurrency
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+  const [status, setStatus] = useState<StatusFilter>('active')
   const {
     data: emis = [],
     isLoading,
     isError,
     refetch,
-  } = useEmisQuery({ type: typeFilter })
+  } = useEmisQuery({ type: typeFilter, status })
 
   const totals = emis.reduce(
     (acc, emi) => {
@@ -72,17 +80,35 @@ function EmisListScreen() {
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
       <Card variant="low" className="mb-6">
         <div className="grid grid-cols-3 gap-3">
-          <SummaryCell label="Active" value={String(emis.length)} />
+          <SummaryCell
+            label={status === 'completed' ? 'Completed' : 'Active'}
+            value={String(emis.length)}
+          />
           <SummaryCell
             label="Monthly"
             value={formatCurrency(totals.monthly.toFixed(2), currency)}
           />
           <SummaryCell
-            label="Remaining"
+            label={status === 'completed' ? 'Paid off' : 'Remaining'}
             value={formatCurrency(totals.remaining.toFixed(2), currency)}
           />
         </div>
       </Card>
+
+      <div className="mb-4 inline-flex gap-1 rounded-full bg-surface-container-low p-1">
+        <StatusTab
+          active={status === 'active'}
+          onClick={() => setStatus('active')}
+        >
+          Active
+        </StatusTab>
+        <StatusTab
+          active={status === 'completed'}
+          onClick={() => setStatus('completed')}
+        >
+          Completed
+        </StatusTab>
+      </div>
 
       <FilterPills
         pills={TYPE_PILLS}
@@ -128,11 +154,19 @@ function EmisListScreen() {
           ))}
         </ul>
       ) : emis.length === 0 ? (
-        <EmptyState
-          icon={<CalendarClock className="h-7 w-7" strokeWidth={1.75} />}
-          title="No EMIs yet"
-          description="Add bank loans or credit card EMIs to auto-generate payment schedules."
-        />
+        status === 'completed' ? (
+          <EmptyState
+            icon={<CheckCircle2 className="h-7 w-7" strokeWidth={1.75} />}
+            title="No completed EMIs"
+            description="EMIs you mark as completed — or that auto-complete when every installment is paid — will appear here."
+          />
+        ) : (
+          <EmptyState
+            icon={<CalendarClock className="h-7 w-7" strokeWidth={1.75} />}
+            title="No EMIs yet"
+            description="Add bank loans or credit card EMIs to auto-generate payment schedules."
+          />
+        )
       ) : (
         <ul className="space-y-3">
           {emis.map((emi) => (
@@ -156,6 +190,31 @@ function SummaryCell({ label, value }: { label: string; value: string }) {
         {value}
       </p>
     </div>
+  )
+}
+
+function StatusTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
+        active
+          ? 'bg-surface-container-highest text-on-surface'
+          : 'text-on-surface-variant hover:text-on-surface',
+      )}
+    >
+      {children}
+    </button>
   )
 }
 
