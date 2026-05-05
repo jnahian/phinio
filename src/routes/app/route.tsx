@@ -8,6 +8,7 @@ import {
 import { CalendarClock, PiggyBank, TrendingUp, Wallet } from 'lucide-react'
 import { BottomTabBar } from '#/components/BottomTabBar'
 import { FABMenu } from '#/components/ui/FABMenu'
+import { PullToRefresh } from '#/components/PullToRefresh'
 import { TopBar } from '#/components/TopBar'
 import { TopBarTitleContext } from '#/lib/top-bar-context'
 import { getSessionFn, getShellUserFn } from '#/server/auth'
@@ -126,6 +127,7 @@ function AppLayout() {
   return (
     <TopBarTitleContext.Provider value={{ title: dynamicTitle, setTitle }}>
       <div className="min-h-dvh bg-surface text-on-surface">
+        <PullToRefresh />
         <div className="mx-auto w-full max-w-xl">
           {shellUser && (
             <TopBar
