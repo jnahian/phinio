@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-05-05
+
+### Added
+
+- **EMI processing fees.** Capture an optional one-time processing fee
+  when creating an EMI. The detail view shows it as a separate
+  "Processing fee" line alongside a "Total cost" figure, and the fee is
+  excluded from progress, remaining balance, and the principal-vs-interest
+  donut so existing aggregations stay accurate.
+
+### Fixed
+
+- Dashboard stats, upcoming payments, and the activity feed now refresh
+  immediately after editing an EMI or DPS — previously these views kept
+  showing stale labels until their cache expired.
+- Top and bottom navigation bars now match the mobile browser's theme
+  color, eliminating the visible seam against the browser URL bar.
+
 ## [1.6.0] - 2026-04-29
 
 Day-of payment reminders, notes on every loan and savings vehicle, and
