@@ -20,19 +20,13 @@ interface GestureState {
   pull: number
 }
 
-function isInsideHorizontalScroller(el: Element | null): boolean {
+function walkAncestors(el: Element | null, fn: (n: Element) => boolean): boolean {
   for (
     let n: Element | null = el;
     n && n !== document.body;
     n = n.parentElement
   ) {
-    const cs = getComputedStyle(n)
-    if (
-      (cs.overflowX === 'auto' || cs.overflowX === 'scroll') &&
-      n.scrollWidth > n.clientWidth
-    ) {
-      return true
-    }
+    if (fn(n)) return true
   }
   return false
 }
@@ -48,8 +42,32 @@ function shouldSkipTarget(target: EventTarget | null): boolean {
   }
   if (target.closest('[role="dialog"], [role="alertdialog"]')) return true
   if (target.closest('[data-no-pull-to-refresh]')) return true
-  if (isInsideHorizontalScroller(target)) return true
-  return false
+
+  return walkAncestors(target, (n) => {
+    const cs = getComputedStyle(n)
+    // Fixed-positioned overlays (modals, FAB sheets, BottomTabBar) — most
+    // app modals don't carry role="dialog" today, so this catches them
+    // structurally instead of relying on author-supplied attributes.
+    if (cs.position === 'fixed') return true
+    // Horizontally-scrollable children (FilterPills, future charts).
+    if (
+      (cs.overflowX === 'auto' || cs.overflowX === 'scroll') &&
+      n.scrollWidth > n.clientWidth
+    ) {
+      return true
+    }
+    // Vertically-scrollable children that the user has already scrolled —
+    // a downward drag here means "scroll inner back up", not "refresh page"
+    // (e.g. EMI amortization list, DPS deposit schedule, NotificationBell).
+    if (
+      (cs.overflowY === 'auto' || cs.overflowY === 'scroll') &&
+      n.scrollHeight > n.clientHeight &&
+      n.scrollTop > 0
+    ) {
+      return true
+    }
+    return false
+  })
 }
 
 export function PullToRefresh({
@@ -74,6 +92,12 @@ export function PullToRefresh({
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // Suppress Android Chrome's native pull-to-refresh and iOS Safari
+    // rubber-banding only while this component is mounted — the unauthenticated
+    // marketing/auth routes don't have us, so they keep native behavior.
+    const prevOverscroll = document.body.style.overscrollBehaviorY
+    document.body.style.overscrollBehaviorY = 'none'
 
     const mql = window.matchMedia('(prefers-reduced-motion: reduce)')
     reducedMotionRef.current = mql.matches
@@ -230,6 +254,7 @@ export function PullToRefresh({
       window.removeEventListener('touchcancel', onTouchCancel)
       mql.removeEventListener('change', onMqlChange)
       unsubscribe()
+      document.body.style.overscrollBehaviorY = prevOverscroll
     }
   }, [router, queryClient, threshold, maxPull, resistance])
 

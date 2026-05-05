@@ -72,7 +72,6 @@ html,
 body,
 #app {
   min-height: 100%;
-  overscroll-behavior-y: none;
 }
 
 body {
