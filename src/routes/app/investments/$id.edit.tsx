@@ -172,7 +172,7 @@ function EditInvestmentScreen() {
           <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3147] to-[#0f1f2d] p-6">
             <div
               aria-hidden
-              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
             />
             <p className="label-sm text-white/70">Current value</p>
             <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">

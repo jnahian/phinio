@@ -485,7 +485,7 @@ function ProfileScreen() {
       {/* ------------------------------------------------------------------ */}
       {/* Developer tools                                                     */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-10">
+      {/* <section className="mb-10">
         <h2 className="label-md mb-3 px-1 text-on-surface-variant">
           Developer tools
         </h2>
@@ -524,7 +524,7 @@ function ProfileScreen() {
             />
           </button>
         </div>
-      </section>
+      </section> */}
 
       <ChangePasswordModal
         open={isChangingPassword}

@@ -113,7 +113,7 @@ function DpsDetailScreen() {
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#14532d] to-[#052e16] p-6">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
           />
           <p className="label-sm text-white/70">Total deposited</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">

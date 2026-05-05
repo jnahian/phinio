@@ -91,7 +91,7 @@ function HomeScreen() {
       <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-primary-container to-[#1e3a8a] p-6">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+          className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"
         />
         <p className="label-sm text-on-primary-container/80">Net worth</p>
         {isLoading || !data ? (
