@@ -194,7 +194,7 @@ function SavingsDetailScreen() {
           </button>
         </div>
         {/* Hero card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3147] to-[#0f1f2d] p-6">
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#164e63] to-[#083344] p-6">
           <div
             aria-hidden
             className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
@@ -208,7 +208,7 @@ function SavingsDetailScreen() {
               className={cn(
                 'body-sm mt-2 font-semibold',
                 returnPercent > 0
-                  ? 'text-[#60a5fa]'
+                  ? 'text-[#67e8f9]'
                   : returnPercent < 0
                     ? 'text-tertiary'
                     : 'text-white/70',

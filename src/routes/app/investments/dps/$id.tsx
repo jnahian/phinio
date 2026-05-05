@@ -110,7 +110,7 @@ function DpsDetailScreen() {
           </button>
         </div>
         {/* Hero card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a4731] to-[#0f2d1f] p-6">
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#14532d] to-[#052e16] p-6">
           <div
             aria-hidden
             className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"

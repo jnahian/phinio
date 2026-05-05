@@ -121,38 +121,47 @@ export interface AllocationRow {
   percent: number
 }
 
-// Keeps donut + legend in sync: both should display the same N slices.
-// Anything past `topN` is rolled into a synthetic `other` slice so totals
-// still add to 100%. If the input already contains an `other`, the tail is
-// merged into it instead of producing a duplicate row.
+// Keeps donut + legend in sync: both should display the same slices. At most
+// `topN` named slices are kept; any tail is merged into a single synthetic
+// `other` slice so totals still add to 100%. If the input already contains
+// an `other` row, the tail is merged into it instead of producing a duplicate.
+//
+// Output is sorted by value descending so a large rolled-up `other` settles
+// in its correct position rather than always trailing the named slices.
+//
+// `rows` is expected to contain non-negative values; the helper does not
+// re-validate them.
 export function collapseAllocationTail(
   rows: ReadonlyArray<AllocationRow>,
   topN: number,
 ): Array<AllocationRow> {
-  const existingOther = rows.find((r) => r.type === 'other')
   const nonOther = rows.filter((r) => r.type !== 'other')
 
-  if (nonOther.length <= topN && !existingOther) {
+  if (nonOther.length <= topN) {
+    // No overflow — preserve the input as-is, including any existing `other`.
     return [...rows]
   }
 
+  const existingOther = rows.find((r) => r.type === 'other')
   const top = nonOther.slice(0, topN)
   const tail = nonOther.slice(topN)
 
-  const tailValue =
+  const mergedValue =
     tail.reduce((s, r) => s + Number(r.value), 0) +
     (existingOther ? Number(existingOther.value) : 0)
-  const tailPercent =
+  const mergedPercent =
     tail.reduce((s, r) => s + r.percent, 0) + (existingOther?.percent ?? 0)
 
-  if (tailValue === 0) return top
+  if (mergedValue === 0) return top
 
-  return [
+  const result: Array<AllocationRow> = [
     ...top,
     {
       type: 'other',
-      value: tailValue.toFixed(2),
-      percent: Math.round(tailPercent * 100) / 100,
+      value: mergedValue.toFixed(2),
+      percent: Math.round(mergedPercent * 100) / 100,
     },
   ]
+  result.sort((a, b) => Number(b.value) - Number(a.value))
+  return result
 }
