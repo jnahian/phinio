@@ -289,6 +289,7 @@ export type EmiUpdateInput = z.infer<typeof emiUpdateSchema>
 
 export const emiListQuerySchema = z.object({
   type: z.enum([...EMI_TYPES, 'all']).default('all'),
+  status: z.enum(['active', 'completed']).default('active'),
 })
 export type EmiListQuery = z.infer<typeof emiListQuerySchema>
 

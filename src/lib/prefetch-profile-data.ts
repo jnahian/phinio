@@ -21,7 +21,10 @@ const INVESTMENT_FILTERS = [
   { status: 'active' as const, type: 'all' as const },
   { status: 'completed' as const, type: 'all' as const },
 ] as const
-const EMI_FILTERS = [{ type: 'all' as const }] as const
+const EMI_FILTERS = [
+  { type: 'all' as const, status: 'active' as const },
+  { type: 'all' as const, status: 'completed' as const },
+] as const
 
 // Coalesce reconnect events: TanStack Query already respects per-query
 // staleTime, but firing 100+ prefetch requests on every focus/online flip

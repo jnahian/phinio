@@ -130,7 +130,7 @@ export async function listEmisImpl(profileId: string, data: EmiListQuery) {
   const emis = await prisma.emi.findMany({
     where: {
       profileId,
-      status: 'active',
+      status: data.status,
       ...(data.type !== 'all' ? { type: data.type } : {}),
     },
     orderBy: { createdAt: 'desc' },

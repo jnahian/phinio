@@ -194,9 +194,9 @@ export function useCreateEmi() {
 
       // Optimistic list rows: prepend the new EMI to caches whose filter
       // would actually include it. List query keys are
-      // `['emis', 'list', { type: 'bank_loan' | 'credit_card' | 'all' }]`.
-      // The new row belongs in `'all'` and in lists matching its own type;
-      // filtered views for the other type must NOT show it temporarily.
+      // `['emis', 'list', { type, status }]`. A freshly-created EMI is
+      // always `status='active'`, so completed-tab caches must not see it;
+      // filtered type views for the other type must also stay clean.
       const listRow = {
         id: emiId,
         label: input.label,
@@ -217,8 +217,10 @@ export function useCreateEmi() {
       }
       for (const [key, value] of previousLists) {
         if (!Array.isArray(value)) continue
-        const filter = key[2] as { type?: string } | undefined
+        const filter = key[2] as { type?: string; status?: string } | undefined
         const filterType = filter?.type ?? 'all'
+        const filterStatus = filter?.status ?? 'active'
+        if (filterStatus !== 'active') continue
         if (filterType !== 'all' && filterType !== input.type) continue
         qc.setQueryData(key, [listRow, ...value])
       }
