@@ -16,6 +16,7 @@ import {
   withdrawFn,
 } from '#/server/investments'
 import {
+  completeEmiFn,
   createEmiFn,
   deleteEmiFn,
   markPaymentPaidFn,
@@ -31,6 +32,7 @@ import type {
   DpsCloseInput,
   DpsCreateInput,
   DpsUpdateInput,
+  EmiCompleteInput,
   EmiCreateInput,
   EmiUpdateInput,
   InvestmentCreateInput,
@@ -82,6 +84,7 @@ export const mutationKeys = {
   // EMIs
   emiCreate: ['emis', 'create'] as const,
   emiUpdate: ['emis', 'update'] as const,
+  emiComplete: ['emis', 'complete'] as const,
   emiDelete: ['emis', 'delete'] as const,
   markPaymentPaid: ['payments', 'mark-paid'] as const,
   // Profile
@@ -179,6 +182,10 @@ export function registerMutationDefaults(queryClient: QueryClient) {
   queryClient.setMutationDefaults(mutationKeys.emiUpdate, {
     ...offlineFirst,
     mutationFn: (input: EmiUpdateInput) => updateEmiFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.emiComplete, {
+    ...offlineFirst,
+    mutationFn: (input: EmiCompleteInput) => completeEmiFn({ data: input }),
   })
   queryClient.setMutationDefaults(mutationKeys.emiDelete, {
     ...offlineFirst,

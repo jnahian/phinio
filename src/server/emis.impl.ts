@@ -12,6 +12,7 @@ import {
 import { withIdempotency } from './_idempotency'
 import { diffFields, fmtText, logActivity } from './activity-log.impl'
 import type {
+  EmiCompleteInput,
   EmiCreateInput,
   EmiListQuery,
   EmiUpdateInput,
@@ -378,7 +379,8 @@ export async function markPaymentPaidImpl(
       select: {
         id: true,
         paymentNumber: true,
-        emi: { select: { label: true } },
+        emiId: true,
+        emi: { select: { label: true, status: true } },
       },
     })
     if (!payment) throw new Error('Payment not found')
@@ -402,7 +404,90 @@ export async function markPaymentPaidImpl(
       entityLabel: payment.emi.label,
       summary: `Marked payment #${payment.paymentNumber} of '${payment.emi.label}' as ${verb}`,
     })
-    return { id: data.paymentId, paid: data.paid }
+
+    // Auto-complete the EMI when the last regular installment is paid, and
+    // flip back to active if a previously-completing payment is unmarked.
+    const remainingUnpaid = await tx.emiPayment.count({
+      where: {
+        emiId: payment.emiId,
+        profileId,
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
+        status: { not: 'paid' },
+      },
+    })
+    const desiredStatus = remainingUnpaid === 0 ? 'completed' : 'active'
+    let autoCompleted = false
+    if (desiredStatus !== payment.emi.status) {
+      await tx.emi.updateMany({
+        where: { id: payment.emiId, profileId },
+        data: { status: desiredStatus },
+      })
+      if (desiredStatus === 'completed') {
+        autoCompleted = true
+        await logActivity(tx, profileId, {
+          action: 'update',
+          entityType: 'emi',
+          entityId: payment.emiId,
+          entityLabel: payment.emi.label,
+          summary: `Completed EMI '${payment.emi.label}' — all installments paid`,
+        })
+      } else {
+        await logActivity(tx, profileId, {
+          action: 'update',
+          entityType: 'emi',
+          entityId: payment.emiId,
+          entityLabel: payment.emi.label,
+          summary: `Reopened EMI '${payment.emi.label}'`,
+        })
+      }
+    }
+
+    return { id: data.paymentId, paid: data.paid, autoCompleted }
+  })
+}
+
+export async function completeEmiImpl(
+  profileId: string,
+  data: EmiCompleteInput,
+) {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+    const emi = await tx.emi.findFirst({
+      where: { id: data.emiId, profileId },
+      select: { id: true, label: true, status: true },
+    })
+    if (!emi) throw new Error('EMI not found')
+    if (emi.status === 'completed') {
+      return { id: emi.id, alreadyCompleted: true }
+    }
+
+    const now = new Date()
+    const result = await tx.emiPayment.updateMany({
+      where: {
+        emiId: emi.id,
+        profileId,
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
+        status: { not: 'paid' },
+      },
+      data: { status: 'paid', paidAt: now },
+    })
+    await tx.emi.updateMany({
+      where: { id: emi.id, profileId },
+      data: { status: 'completed' },
+    })
+
+    const tail =
+      result.count > 0
+        ? `marked ${result.count} remaining installment${result.count === 1 ? '' : 's'} as paid`
+        : 'all installments already paid'
+    await logActivity(tx, profileId, {
+      action: 'update',
+      entityType: 'emi',
+      entityId: emi.id,
+      entityLabel: emi.label,
+      summary: `Completed EMI '${emi.label}' — ${tail}`,
+    })
+
+    return { id: emi.id, alreadyCompleted: false }
   })
 }
 

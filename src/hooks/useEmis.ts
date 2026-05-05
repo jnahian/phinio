@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { getEmiFn, listEmisFn, upcomingPaymentsFn } from '#/server/emis'
 import type { EmiListFilters } from '#/server/emis'
 import type {
+  EmiCompleteInput,
   EmiCreateInput,
   EmiUpdateInput,
   MarkPaymentPaidInput,
@@ -330,9 +331,10 @@ export function useMarkPayment(emiId: string) {
   const qc = useQueryClient()
 
   type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
+  type MarkResult = { id: string; paid: boolean; autoCompleted?: boolean }
 
   return useOfflineMutation<
-    unknown,
+    MarkResult,
     Error,
     MarkPaymentPaidInput,
     { previous: EmiDetailShape | undefined }
@@ -365,8 +367,72 @@ export function useMarkPayment(emiId: string) {
       }
       toast.error(errorMessage(err, 'Failed to update payment'))
     },
+    onSuccess: (data) => {
+      if (data.autoCompleted) {
+        toast.success('All installments paid — EMI completed')
+      }
+    },
     onSettled: () => {
+      qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.detail(emiId) })
+      qc.invalidateQueries({ queryKey: emiKeys.upcoming })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
+    },
+  })
+}
+
+/**
+ * Mark an EMI as completed: flips status to 'completed' and marks any still-
+ * unpaid regular installments as paid. Used when the loan is paid off ahead
+ * of schedule (e.g. a lump-sum prepayment) so the user can close it out
+ * without ticking each remaining row.
+ */
+export function useCompleteEmi() {
+  const qc = useQueryClient()
+  type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
+  type CompleteResult = { id: string; alreadyCompleted: boolean }
+
+  return useOfflineMutation<
+    CompleteResult,
+    Error,
+    EmiCompleteInput,
+    { previous: EmiDetailShape | undefined }
+  >({
+    mutationKey: mutationKeys.emiComplete,
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: emiKeys.detail(input.emiId) })
+      const previous = qc.getQueryData<EmiDetailShape>(
+        emiKeys.detail(input.emiId),
+      )
+      if (previous) {
+        const now = new Date()
+        qc.setQueryData<EmiDetailShape>(emiKeys.detail(input.emiId), {
+          ...previous,
+          status: 'completed',
+          payments: previous.payments.map((p) =>
+            p.status === 'paid'
+              ? p
+              : { ...p, status: 'paid', paidAt: p.paidAt ?? now },
+          ),
+        })
+      }
+      return { previous }
+    },
+    onError: (err, input, context) => {
+      if (context?.previous) {
+        qc.setQueryData(emiKeys.detail(input.emiId), context.previous)
+      }
+      toast.error(errorMessage(err, 'Failed to complete EMI'))
+    },
+    onSuccess: (data) => {
+      if (!data.alreadyCompleted) {
+        toast.success('EMI completed')
+      }
+    },
+    onSettled: (_data, _err, input) => {
+      qc.invalidateQueries({ queryKey: emiKeys.all })
+      qc.invalidateQueries({ queryKey: emiKeys.detail(input.emiId) })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })

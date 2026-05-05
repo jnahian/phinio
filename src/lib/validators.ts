@@ -304,6 +304,12 @@ export const markPaymentPaidSchema = z.object({
 })
 export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
 
+export const emiCompleteSchema = z.object({
+  emiId: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type EmiCompleteInput = z.infer<typeof emiCompleteSchema>
+
 // ----------------------------------------------------------------------------
 // Notifications
 // ----------------------------------------------------------------------------
