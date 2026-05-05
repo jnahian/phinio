@@ -7,6 +7,7 @@ import { TextArea, TextField } from '#/components/ui/TextField'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
+import { isFeePayment, isRegularPayment } from '#/lib/emi-calculator'
 import {
   useDeleteEmi,
   useEmiQuery,
@@ -52,10 +53,9 @@ function EmiDetailScreen() {
   }
 
   const payments = emi.payments
-  // Exclude the processing-fee sentinel row (paymentNumber=0) from any
-  // monthly-schedule aggregation: it isn't principal, isn't interest, and
-  // isn't part of the "X of N months" progress.
-  const regularPayments = payments.filter((p) => p.paymentNumber > 0)
+  // Exclude the sentinel fee row from any monthly-schedule aggregation: it
+  // isn't principal, isn't interest, and isn't part of "X of N months".
+  const regularPayments = payments.filter(isRegularPayment)
   const paidCount = regularPayments.filter((p) => p.status === 'paid').length
   const remainingMonths = emi.tenureMonths - paidCount
   const interestPaid = regularPayments
@@ -243,10 +243,9 @@ function EmiDetailScreen() {
                 const isPaid = payment.status === 'paid'
                 const due = new Date(payment.dueDate)
                 const isOverdue = !isPaid && due < now
-                // The processing-fee sentinel row (paymentNumber=0) renders
-                // as a non-interactive line: no checkbox toggle, no P/I
-                // breakdown, just a labeled amount.
-                if (payment.paymentNumber === 0) {
+                // The sentinel fee row renders as a non-interactive line: no
+                // checkbox toggle, no P/I breakdown, just a labeled amount.
+                if (isFeePayment(payment)) {
                   return (
                     <li key={payment.id}>
                       <div className="flex w-full items-center gap-3 rounded-2xl bg-surface-container-lowest/40 px-3 py-3 text-left text-on-surface-variant">

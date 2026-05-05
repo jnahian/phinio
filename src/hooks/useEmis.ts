@@ -7,7 +7,11 @@ import type {
   EmiUpdateInput,
   MarkPaymentPaidInput,
 } from '#/lib/validators'
-import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
+import {
+  FEE_PAYMENT_NUMBER,
+  calculateEmi,
+  generateAmortization,
+} from '#/lib/emi-calculator'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
 
@@ -88,11 +92,13 @@ export function useCreateEmi() {
         Array.from({ length: input.tenureMonths }, () => crypto.randomUUID()),
       // Pre-allocate an id for the fee row only when one will actually be
       // inserted, so the optimistic cache and the server agree on identity
-      // on replay.
+      // on replay. Drop any stale id when no fee will be inserted (e.g.
+      // user edited the amount back down to 0 before submitting) so the
+      // server doesn't see an unused UUID.
       processingFeeId:
         input.processingFee && Number(input.processingFee) > 0
           ? (input.processingFeeId ?? crypto.randomUUID())
-          : input.processingFeeId,
+          : undefined,
     }),
     onMutate: async (input) => {
       const emiId = input.id!
@@ -157,7 +163,7 @@ export function useCreateEmi() {
                   id: feeId,
                   emiId,
                   profileId: '',
-                  paymentNumber: 0,
+                  paymentNumber: FEE_PAYMENT_NUMBER,
                   dueDate: startDateObj,
                   emiAmount: feeAmount,
                   principalComponent: '0',

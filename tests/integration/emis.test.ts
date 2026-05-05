@@ -147,6 +147,40 @@ describe('emis server impls', () => {
     expect(rows[0].paidCount).toBe(0)
   })
 
+  it('upcomingPaymentsImpl excludes the fee row even if its status drifts off paid', async () => {
+    const user = await createTestUser({ email: 'fee-upcoming@phinio.test' })
+
+    // Start = tomorrow so regular payments would land in the upcoming window.
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    const yyyy = tomorrow.getFullYear()
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0')
+    const dd = String(tomorrow.getDate()).padStart(2, '0')
+    const startDate = `${yyyy}-${mm}-${dd}`
+
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Loan with fee',
+      type: 'bank_loan',
+      principal: '60000',
+      interestRate: '12',
+      tenureMonths: 6,
+      startDate,
+      processingFee: '500',
+    })
+
+    // Force the fee row into a non-paid state to ensure the
+    // `paymentNumber > 0` filter is what excludes it (not just the status
+    // filter). Bypass markPaymentPaidImpl, which guards against this.
+    await prisma.emiPayment.updateMany({
+      where: { emiId: created.id, paymentNumber: 0 },
+      data: { status: 'upcoming', paidAt: null },
+    })
+
+    const rows = await upcomingPaymentsImpl(user.profileId)
+    for (const r of rows) {
+      expect(r.paymentNumber).toBeGreaterThan(0)
+    }
+  })
+
   it('markPaymentPaidImpl rejects toggling the processing-fee row', async () => {
     const user = await createTestUser({ email: 'fee-toggle@phinio.test' })
 

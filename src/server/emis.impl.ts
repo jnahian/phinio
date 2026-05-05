@@ -2,7 +2,13 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import type { z } from 'zod'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
+import {
+  FEE_PAYMENT_NUMBER,
+  calculateEmi,
+  generateAmortization,
+  isFeePayment,
+  isRegularPayment,
+} from '#/lib/emi-calculator'
 import { withIdempotency } from './_idempotency'
 import { diffFields, fmtText, logActivity } from './activity-log.impl'
 import type {
@@ -86,9 +92,9 @@ function serializeEmi(emi: {
     paidAt: Date | null
   }>
 }): SerializedEmi {
-  // The processing fee, when present, is stored as a sentinel paymentNumber=0
-  // row so it doesn't require its own column on the Emi model.
-  const feeRow = emi.payments.find((p) => p.paymentNumber === 0)
+  // The processing fee, when present, is stored as the sentinel fee row
+  // (see `FEE_PAYMENT_NUMBER`) so it doesn't require its own column on Emi.
+  const feeRow = emi.payments.find(isFeePayment)
   return {
     id: emi.id,
     profileId: emi.profileId,
@@ -142,9 +148,9 @@ export async function listEmisImpl(profileId: string, data: EmiListQuery) {
     },
   })
   return emis.map((emi) => {
-    // Exclude the optional paymentNumber=0 processing-fee row from progress
-    // and balance derivation — it isn't part of the regular monthly schedule.
-    const regularPayments = emi.payments.filter((p) => p.paymentNumber > 0)
+    // Exclude the sentinel fee row from progress and balance derivation —
+    // it isn't part of the regular monthly schedule.
+    const regularPayments = emi.payments.filter(isRegularPayment)
     const totalPayments = regularPayments.length
     const paidCount = regularPayments.filter((p) => p.status === 'paid').length
     const nextUnpaid = regularPayments.find((p) => p.status !== 'paid')
@@ -244,7 +250,7 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
                 ...(data.processingFeeId ? { id: data.processingFeeId } : {}),
                 emiId: created.id,
                 profileId,
-                paymentNumber: 0,
+                paymentNumber: FEE_PAYMENT_NUMBER,
                 dueDate: startDate,
                 emiAmount: feeAmount,
                 principalComponent: '0',
@@ -376,9 +382,9 @@ export async function markPaymentPaidImpl(
       },
     })
     if (!payment) throw new Error('Payment not found')
-    // The processing fee row (paymentNumber=0) is settled at disbursement and
-    // shouldn't be toggled by the schedule UI.
-    if (payment.paymentNumber === 0) {
+    // The sentinel fee row is settled at disbursement and shouldn't be
+    // toggled by the schedule UI.
+    if (isFeePayment(payment)) {
       throw new Error('Processing fee cannot be modified')
     }
     await tx.emiPayment.updateMany({
@@ -408,8 +414,9 @@ export async function upcomingPaymentsImpl(profileId: string) {
       profileId,
       status: { not: 'paid' },
       dueDate: { lte: in30Days },
-      // Exclude the processing-fee sentinel row (always pre-paid).
-      paymentNumber: { gt: 0 },
+      // Defensively exclude the sentinel fee row, even though `status` already
+      // filters it out today — the invariant is worth pinning at the query.
+      paymentNumber: { gt: FEE_PAYMENT_NUMBER },
     },
     include: { emi: { select: { id: true, label: true, type: true } } },
     orderBy: { dueDate: 'asc' },
