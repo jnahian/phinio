@@ -3,6 +3,7 @@ import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { withIdempotency } from './_idempotency'
 import type {
+  ClearReadNotificationsInput,
   MarkAllNotificationsReadInput,
   MarkNotificationReadInput,
 } from '#/lib/validators'
@@ -160,5 +161,17 @@ export async function markAllNotificationsReadImpl(
       data: { readAt: new Date() },
     })
     return { updated: result.count }
+  })
+}
+
+export async function clearReadNotificationsImpl(
+  profileId: string,
+  data: ClearReadNotificationsInput,
+) {
+  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+    const result = await tx.notification.deleteMany({
+      where: { profileId, readAt: { not: null } },
+    })
+    return { deleted: result.count }
   })
 }

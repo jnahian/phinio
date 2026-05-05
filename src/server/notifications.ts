@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import {
+  clearReadNotificationsSchema,
   markAllNotificationsReadSchema,
   markNotificationReadSchema,
 } from '#/lib/validators'
@@ -41,4 +42,16 @@ export const markAllNotificationsReadFn = createServerFn({
     const { requireProfileId, markAllNotificationsReadImpl } =
       await import('./notifications.impl')
     return markAllNotificationsReadImpl(await requireProfileId(), data)
+  })
+
+export const clearReadNotificationsFn = createServerFn({
+  method: 'POST',
+})
+  .inputValidator((input: unknown) =>
+    clearReadNotificationsSchema.parse(input ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const { requireProfileId, clearReadNotificationsImpl } =
+      await import('./notifications.impl')
+    return clearReadNotificationsImpl(await requireProfileId(), data)
   })

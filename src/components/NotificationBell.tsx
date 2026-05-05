@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Bell, BellOff, BellRing, Check, CheckCheck } from 'lucide-react'
+import {
+  Bell,
+  BellOff,
+  BellRing,
+  Check,
+  CheckCheck,
+  Trash2,
+} from 'lucide-react'
 import { cn } from '#/lib/cn'
 import {
+  useClearReadNotifications,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotificationsQuery,
@@ -17,6 +25,7 @@ export function NotificationBell() {
   const listQuery = useNotificationsQuery()
   const markRead = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()
+  const clearRead = useClearReadNotifications()
   const push = usePushSubscription()
 
   useEffect(() => {
@@ -68,17 +77,30 @@ export function NotificationBell() {
         >
           <div className="flex items-center justify-between px-4 py-3">
             <h2 className="title-sm text-on-surface">Notifications</h2>
-            {notifications.some((n) => !n.read) && (
-              <button
-                type="button"
-                onClick={() => markAllRead.mutate({})}
-                disabled={markAllRead.isPending}
-                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-primary-fixed-dim hover:bg-primary-container/20 disabled:opacity-50"
-              >
-                <CheckCheck className="h-3.5 w-3.5" />
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-1">
+              {notifications.some((n) => !n.read) && (
+                <button
+                  type="button"
+                  onClick={() => markAllRead.mutate({})}
+                  disabled={markAllRead.isPending}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-primary-fixed-dim hover:bg-primary-container/20 disabled:opacity-50"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  Mark all read
+                </button>
+              )}
+              {notifications.some((n) => n.read) && (
+                <button
+                  type="button"
+                  onClick={() => clearRead.mutate({})}
+                  disabled={clearRead.isPending}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Clear read
+                </button>
+              )}
+            </div>
           </div>
 
           {push.isSupported &&

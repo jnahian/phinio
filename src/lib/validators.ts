@@ -329,3 +329,10 @@ export const markAllNotificationsReadSchema = z.object({
 export type MarkAllNotificationsReadInput = z.infer<
   typeof markAllNotificationsReadSchema
 >
+
+export const clearReadNotificationsSchema = z.object({
+  ...clientMutationIdField,
+})
+export type ClearReadNotificationsInput = z.infer<
+  typeof clearReadNotificationsSchema
+>

@@ -5,6 +5,7 @@ import {
   unreadNotificationCountFn,
 } from '#/server/notifications'
 import type {
+  ClearReadNotificationsInput,
   MarkAllNotificationsReadInput,
   MarkNotificationReadInput,
 } from '#/lib/validators'
@@ -83,6 +84,38 @@ export function useMarkNotificationRead() {
       if (ctx?.list) qc.setQueryData(notificationKeys.list(), ctx.list)
       if (ctx?.count) qc.setQueryData(notificationKeys.unreadCount(), ctx.count)
       toast.error(errorMessage(err, 'Could not mark as read'))
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: notificationKeys.all })
+    },
+  })
+}
+
+export function useClearReadNotifications() {
+  const qc = useQueryClient()
+  return useOfflineMutation<
+    { deleted: number },
+    Error,
+    ClearReadNotificationsInput,
+    { list: NotificationListSnapshot }
+  >({
+    mutationKey: mutationKeys.clearReadNotifications,
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: notificationKeys.all })
+      const list = qc.getQueryData<NotificationListSnapshot>(
+        notificationKeys.list(),
+      )
+      if (list) {
+        qc.setQueryData<NotificationListSnapshot>(
+          notificationKeys.list(),
+          list.filter((n) => !n.read),
+        )
+      }
+      return { list }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx?.list) qc.setQueryData(notificationKeys.list(), ctx.list)
+      toast.error(errorMessage(err, 'Could not clear notifications'))
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: notificationKeys.all })
