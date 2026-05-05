@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   AlertTriangle,
@@ -15,34 +15,14 @@ import { cn } from '#/lib/cn'
 import { formatReturnPercent } from '#/lib/calculations'
 import { formatCurrency } from '#/lib/currency'
 import { dashboardQueryOptions, useDashboardQuery } from '#/hooks/useDashboard'
+import {
+  collapseAllocationTail,
+  getInvestmentTypeMeta,
+} from '#/lib/investment-types'
 
 const AllocationDonut = lazy(() => import('#/components/AllocationDonut'))
 
-const TYPE_LABELS: Record<string, string> = {
-  stock: 'Stocks',
-  mutual_fund: 'Mutual Funds',
-  fd: 'Fixed Deposit',
-  gold: 'Gold',
-  crypto: 'Crypto',
-  sanchayapatra: 'Sanchayapatra',
-  real_estate: 'Real Estate',
-  agro_farm: 'Agro Farm',
-  business: 'Business',
-  other: 'Other',
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  stock: 'bg-primary-container',
-  mutual_fund: 'bg-secondary',
-  fd: 'bg-outline-variant',
-  gold: 'bg-[#ffd46a]',
-  crypto: 'bg-[#c4a8ff]',
-  sanchayapatra: 'bg-[#6ee7a0]',
-  real_estate: 'bg-[#c4a8ff]',
-  agro_farm: 'bg-[#86efac]',
-  business: 'bg-[#fbbf24]',
-  other: 'bg-outline-variant/60',
-}
+const ALLOCATION_TOP_N = 5
 
 export const Route = createFileRoute('/app/')({
   staticData: { title: 'Dashboard' },
@@ -61,6 +41,12 @@ function HomeScreen() {
   const [selectedAllocationType, setSelectedAllocationType] = useState<
     string | null
   >(null)
+
+  const displayedAllocation = useMemo(
+    () =>
+      data ? collapseAllocationTail(data.allocation, ALLOCATION_TOP_N) : [],
+    [data],
+  )
 
   if (isError && !data) {
     return (
@@ -291,7 +277,7 @@ function HomeScreen() {
       )}
 
       {/* Investment allocation */}
-      {!isEmpty && data && data.allocation.length > 0 && (
+      {!isEmpty && data && displayedAllocation.length > 0 && (
         <section className="mt-8">
           <h2 className="label-md mb-3 text-on-surface-variant">Allocation</h2>
           <Card variant="low">
@@ -300,12 +286,13 @@ function HomeScreen() {
                 fallback={<Skeleton className="h-32 w-32 rounded-full" />}
               >
                 <AllocationDonut
-                  data={data.allocation}
+                  data={displayedAllocation}
                   selectedType={selectedAllocationType}
                 />
               </Suspense>
               <ul className="flex-1 space-y-2">
-                {data.allocation.slice(0, 5).map((item) => {
+                {displayedAllocation.map((item) => {
+                  const meta = getInvestmentTypeMeta(item.type)
                   const isSelected = selectedAllocationType === item.type
                   const isDimmed =
                     selectedAllocationType !== null && !isSelected
@@ -327,11 +314,11 @@ function HomeScreen() {
                         <span
                           className={cn(
                             'h-2.5 w-2.5 flex-shrink-0 rounded-full',
-                            TYPE_COLORS[item.type] ?? TYPE_COLORS.other,
+                            meta.swatchClass,
                           )}
                         />
                         <span className="flex-1 truncate text-left text-on-surface-variant">
-                          {TYPE_LABELS[item.type] ?? 'Other'}
+                          {meta.label}
                         </span>
                         <span className="font-display font-semibold text-on-surface">
                           {item.percent}%

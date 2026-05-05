@@ -116,7 +116,7 @@ model Investment {
   profileId        String
   profile          Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
   name             String
-  type             String              // stock | mutual_fund | fd | gold | crypto | dps | savings | other
+  type             String              // stock | mutual_fund | fd | gold | crypto | sanchayapatra | real_estate | agro_farm | business | dps | savings | other
   mode             String              @default("lump_sum") // lump_sum | scheduled | flexible
 
   // lump_sum mode
