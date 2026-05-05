@@ -41,7 +41,7 @@ function shouldSkipTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false
   if (
     target.closest(
-      'input, textarea, select, [contenteditable="true"], [contenteditable=""]',
+      'input, textarea, select, [contenteditable]:not([contenteditable="false"])',
     )
   ) {
     return true
@@ -142,16 +142,16 @@ export function PullToRefresh({
 
       if (e.cancelable) e.preventDefault()
 
-      const pull = Math.min(maxPull, dy / resistance)
+      const pull = Math.max(0, Math.min(maxPull, dy / resistance))
       s.pull = pull
-      const p = Math.min(1, pull / threshold)
+      const p = Math.max(0, Math.min(1, pull / threshold))
       setProgress(p)
 
       const rotation = reducedMotionRef.current ? 0 : pull * 4
       const scale = pull >= threshold && !reducedMotionRef.current ? 1.05 : 1
       setSpinnerStyle(
         pull,
-        Math.min(1, pull / threshold),
+        p,
         null,
         `rotate(${rotation}deg) scale(${scale})`,
       )
