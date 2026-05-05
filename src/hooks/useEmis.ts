@@ -213,6 +213,8 @@ export function useUpdateEmi() {
       }
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.detail(data.id) })
+      qc.invalidateQueries({ queryKey: emiKeys.upcoming })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
