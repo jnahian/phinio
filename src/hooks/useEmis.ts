@@ -7,7 +7,11 @@ import type {
   EmiUpdateInput,
   MarkPaymentPaidInput,
 } from '#/lib/validators'
-import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
+import {
+  FEE_PAYMENT_NUMBER,
+  calculateEmi,
+  generateAmortization,
+} from '#/lib/emi-calculator'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
 
@@ -65,7 +69,13 @@ export function useCreateEmi() {
   type ListShape = Awaited<ReturnType<typeof listEmisFn>>
 
   return useOfflineMutation<
-    { id: string; label: string; type: string; emiAmount: string },
+    {
+      id: string
+      label: string
+      type: string
+      emiAmount: string
+      processingFee: string | null
+    },
     Error,
     EmiCreateInput,
     {
@@ -80,10 +90,24 @@ export function useCreateEmi() {
       paymentIds:
         input.paymentIds ??
         Array.from({ length: input.tenureMonths }, () => crypto.randomUUID()),
+      // Pre-allocate an id for the fee row only when one will actually be
+      // inserted, so the optimistic cache and the server agree on identity
+      // on replay. Drop any stale id when no fee will be inserted (e.g.
+      // user edited the amount back down to 0 before submitting) so the
+      // server doesn't see an unused UUID.
+      processingFeeId:
+        input.processingFee && Number(input.processingFee) > 0
+          ? (input.processingFeeId ?? crypto.randomUUID())
+          : undefined,
     }),
     onMutate: async (input) => {
       const emiId = input.id!
       const paymentIds = input.paymentIds!
+      const feeAmount =
+        input.processingFee && Number(input.processingFee) > 0
+          ? input.processingFee
+          : null
+      const feeId = feeAmount ? input.processingFeeId! : null
 
       // Compute the schedule the same way the server will. emi-calculator
       // is pure JS, so this matches byte-for-byte on replay. The server
@@ -116,6 +140,8 @@ export function useCreateEmi() {
         .map(([key, value]) => [key, value])
 
       // Optimistic detail: full EMI + full payment list.
+      const now = new Date()
+      const startDateObj = new Date(input.startDate)
       const detail: EmiDetailShape = {
         id: emiId,
         profileId: '',
@@ -126,22 +152,42 @@ export function useCreateEmi() {
         interestRate: input.interestRate,
         tenureMonths: input.tenureMonths,
         emiAmount,
-        startDate: new Date(input.startDate),
+        processingFee: feeAmount,
+        startDate: startDateObj,
         status: 'active',
-        createdAt: new Date(),
-        payments: schedule.map((row, i) => ({
-          id: paymentIds[i],
-          emiId,
-          profileId: '',
-          paymentNumber: row.paymentNumber,
-          dueDate: row.dueDate,
-          emiAmount: row.emiAmount,
-          principalComponent: row.principalComponent,
-          interestComponent: row.interestComponent,
-          remainingBalance: row.remainingBalance,
-          status: 'upcoming',
-          paidAt: null,
-        })),
+        createdAt: now,
+        payments: [
+          ...(feeAmount && feeId
+            ? [
+                {
+                  id: feeId,
+                  emiId,
+                  profileId: '',
+                  paymentNumber: FEE_PAYMENT_NUMBER,
+                  dueDate: startDateObj,
+                  emiAmount: feeAmount,
+                  principalComponent: '0',
+                  interestComponent: '0',
+                  remainingBalance: input.principal,
+                  status: 'paid',
+                  paidAt: now,
+                },
+              ]
+            : []),
+          ...schedule.map((row, i) => ({
+            id: paymentIds[i],
+            emiId,
+            profileId: '',
+            paymentNumber: row.paymentNumber,
+            dueDate: row.dueDate,
+            emiAmount: row.emiAmount,
+            principalComponent: row.principalComponent,
+            interestComponent: row.interestComponent,
+            remainingBalance: row.remainingBalance,
+            status: 'upcoming',
+            paidAt: null,
+          })),
+        ],
       }
       qc.setQueryData<EmiDetailShape>(emiKeys.detail(emiId), detail)
 

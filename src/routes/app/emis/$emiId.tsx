@@ -7,6 +7,7 @@ import { TextArea, TextField } from '#/components/ui/TextField'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
+import { isFeePayment, isRegularPayment } from '#/lib/emi-calculator'
 import {
   useDeleteEmi,
   useEmiQuery,
@@ -52,18 +53,21 @@ function EmiDetailScreen() {
   }
 
   const payments = emi.payments
-  const paidCount = payments.filter((p) => p.status === 'paid').length
+  // Exclude the sentinel fee row from any monthly-schedule aggregation: it
+  // isn't principal, isn't interest, and isn't part of "X of N months".
+  const regularPayments = payments.filter(isRegularPayment)
+  const paidCount = regularPayments.filter((p) => p.status === 'paid').length
   const remainingMonths = emi.tenureMonths - paidCount
-  const interestPaid = payments
+  const interestPaid = regularPayments
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + Number(p.interestComponent), 0)
-  const principalPaid = payments
+  const principalPaid = regularPayments
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + Number(p.principalComponent), 0)
-  const remainingBalance = payments
+  const remainingBalance = regularPayments
     .filter((p) => p.status !== 'paid')
     .reduce((sum, p) => sum + Number(p.emiAmount), 0)
-  const totalLifetimePayment = payments.reduce(
+  const totalLifetimePayment = regularPayments.reduce(
     (sum, p) => sum + Number(p.emiAmount),
     0,
   )
@@ -71,6 +75,8 @@ function EmiDetailScreen() {
     0,
     totalLifetimePayment - Number(emi.principal),
   )
+  const processingFee = Number(emi.processingFee ?? 0)
+  const totalCost = Number(emi.principal) + totalInterest + processingFee
   const now = new Date()
 
   async function handleDelete() {
@@ -205,6 +211,26 @@ function EmiDetailScreen() {
               {formatCurrency(totalLifetimePayment.toFixed(2), currency)}
             </p>
           </div>
+          {emi.processingFee && (
+            <>
+              <div className="mt-2 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
+                <p className="label-sm normal-case tracking-wide text-on-surface-variant">
+                  Processing fee
+                </p>
+                <p className="font-display text-sm font-bold text-on-surface">
+                  {formatCurrency(emi.processingFee, currency)}
+                </p>
+              </div>
+              <div className="mt-2 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
+                <p className="label-sm normal-case tracking-wide text-on-surface-variant">
+                  Total cost
+                </p>
+                <p className="font-display text-sm font-bold text-on-surface">
+                  {formatCurrency(totalCost.toFixed(2), currency)}
+                </p>
+              </div>
+            </>
+          )}
         </section>
 
         <section className="rounded-3xl bg-surface-container-low p-4">
@@ -217,6 +243,41 @@ function EmiDetailScreen() {
                 const isPaid = payment.status === 'paid'
                 const due = new Date(payment.dueDate)
                 const isOverdue = !isPaid && due < now
+                // The sentinel fee row renders as a non-interactive line: no
+                // checkbox toggle, no P/I breakdown, just a labeled amount.
+                if (isFeePayment(payment)) {
+                  return (
+                    <li key={payment.id}>
+                      <div className="flex w-full items-center gap-3 rounded-2xl bg-surface-container-lowest/40 px-3 py-3 text-left text-on-surface-variant">
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-secondary bg-secondary text-on-secondary">
+                          <Check className="h-4 w-4" strokeWidth={3} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="body-sm font-semibold">
+                              Processing fee
+                            </span>
+                            <span className="body-sm">
+                              {due.toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-xs text-on-surface-variant/75">
+                            One-time, paid at disbursement
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-display text-sm font-bold">
+                            {formatCurrency(payment.emiAmount, currency)}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  )
+                }
                 return (
                   <li key={payment.id}>
                     <button

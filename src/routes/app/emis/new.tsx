@@ -36,6 +36,7 @@ function AddEmiScreen() {
   const [interestRate, setInterestRate] = useState('')
   const [tenureMonths, setTenureMonths] = useState<string>('')
   const [startDate, setStartDate] = useState(todayIso())
+  const [processingFee, setProcessingFee] = useState('')
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -60,6 +61,18 @@ function AddEmiScreen() {
     }
   }, [principal, interestRate, tenureMonths, type])
 
+  // Total cost = principal + total interest + processing fee. Only meaningful
+  // when the preview is computable; the fee is added on top whether or not
+  // the user provided one.
+  const totalCost = useMemo(() => {
+    if (!preview) return null
+    const fee = Number(processingFee)
+    const feeNum = Number.isFinite(fee) && fee > 0 ? fee : 0
+    return (Number(principal) + Number(preview.totalInterest) + feeNum).toFixed(
+      2,
+    )
+  }, [preview, principal, processingFee])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFieldErrors({})
@@ -71,6 +84,7 @@ function AddEmiScreen() {
       interestRate,
       tenureMonths: Number(tenureMonths),
       startDate,
+      processingFee: processingFee.trim() || undefined,
       notes: notes.trim() || undefined,
     } satisfies EmiCreateInput)
 
@@ -165,6 +179,16 @@ function AddEmiScreen() {
               onChange={(e) => setStartDate(e.target.value)}
               error={fieldErrors.startDate}
             />
+            <TextField
+              id="processingFee"
+              label="Processing fee (optional)"
+              placeholder="0.00"
+              inputMode="decimal"
+              prefix={symbol}
+              value={processingFee}
+              onChange={(e) => setProcessingFee(e.target.value)}
+              error={fieldErrors.processingFee}
+            />
           </section>
 
           <section
@@ -217,6 +241,23 @@ function AddEmiScreen() {
                     ? formatCurrency(preview.totalInterest, currency)
                     : '—'
                 }
+              />
+              <PreviewCell
+                active={Boolean(preview)}
+                label="Processing fee"
+                value={
+                  preview
+                    ? formatCurrency(
+                        Number(processingFee) > 0 ? processingFee : 0,
+                        currency,
+                      )
+                    : '—'
+                }
+              />
+              <PreviewCell
+                active={Boolean(preview && totalCost)}
+                label="Total cost"
+                value={totalCost ? formatCurrency(totalCost, currency) : '—'}
               />
             </div>
           </section>

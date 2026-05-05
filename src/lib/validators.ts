@@ -255,6 +255,17 @@ export const emiCreateSchema = z.object({
     .min(1, 'Tenure must be at least 1 month')
     .max(600, 'Tenure must be 600 months or less'),
   startDate: isoDateString,
+  // One-time processing fee charged at disbursement (separate from interest).
+  // When present and > 0, the create flow records it as a paymentNumber=0
+  // EmiPayment row marked paid; "0"/"0.00" is treated as "no fee" by the
+  // server, so we accept non-negative values here rather than forcing the
+  // user to clear the field.
+  processingFee: nonNegativeDecimalString.optional(),
+  // Optional client-supplied id for the processing-fee EmiPayment row, used
+  // by the offline create flow so the optimistic cache and the eventual
+  // server insert agree on identity. Only meaningful when `processingFee`
+  // is set.
+  processingFeeId: z.string().uuid().optional(),
   notes: z.string().trim().max(1000).optional(),
   // Optional client-supplied IDs so an offline-created EMI keeps the same
   // identity on both sides of the queue. Without these, the optimistic

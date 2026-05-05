@@ -4,6 +4,7 @@ import { prisma } from '#/db'
 import { createNotification } from '#/server/notifications.impl'
 import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
+import { FEE_PAYMENT_NUMBER } from '#/lib/emi-calculator'
 import { buildWebPushConfig, sendWebPush } from '#/server/web-push'
 import type { PushPayload, PushSubscriptionRow } from '#/server/web-push'
 
@@ -109,6 +110,8 @@ export async function handleCron(request: Request): Promise<Response> {
       where: {
         status: { not: 'paid' },
         dueDate: { gte: todayStart, lte: todayEnd },
+        // Defensively exclude the sentinel processing-fee row.
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
       },
       include: {
         emi: { select: { label: true } },
@@ -119,6 +122,7 @@ export async function handleCron(request: Request): Promise<Response> {
       where: {
         status: { not: 'paid' },
         dueDate: { gte: dueSoonStart, lte: dueSoonEnd },
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
       },
       include: {
         emi: { select: { label: true } },
@@ -129,6 +133,7 @@ export async function handleCron(request: Request): Promise<Response> {
       where: {
         status: { not: 'paid' },
         dueDate: { lt: todayStart },
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
       },
       include: {
         emi: { select: { label: true } },

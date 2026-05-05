@@ -386,6 +386,33 @@ describe('emiCreateSchema', () => {
       emiCreateSchema.safeParse({ ...valid, type: 'personal_loan' }).success,
     ).toBe(false)
   })
+
+  it('accepts an optional processingFee', () => {
+    const parsed = emiCreateSchema.parse({ ...valid, processingFee: '500' })
+    expect(parsed.processingFee).toBe('500')
+  })
+
+  it('omits processingFee when not provided', () => {
+    expect(emiCreateSchema.parse(valid).processingFee).toBeUndefined()
+  })
+
+  it('accepts processingFee of "0" (treated as no fee by the server)', () => {
+    expect(
+      emiCreateSchema.parse({ ...valid, processingFee: '0' }).processingFee,
+    ).toBe('0')
+  })
+
+  it('rejects a negative processingFee', () => {
+    expect(
+      emiCreateSchema.safeParse({ ...valid, processingFee: '-10' }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a processingFee with 3+ decimals', () => {
+    expect(
+      emiCreateSchema.safeParse({ ...valid, processingFee: '9.555' }).success,
+    ).toBe(false)
+  })
 })
 
 describe('emiListQuerySchema', () => {

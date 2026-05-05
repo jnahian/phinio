@@ -1,6 +1,7 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
+import { FEE_PAYMENT_NUMBER } from '#/lib/emi-calculator'
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())
@@ -77,6 +78,9 @@ export async function getDashboardStatsImpl(
         profileId,
         status: { not: 'paid' },
         dueDate: { lte: in30Days },
+        // Defensively exclude the sentinel processing-fee row (mirrors
+        // `upcomingPaymentsImpl`).
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
       },
       include: {
         emi: { select: { id: true, label: true, type: true } },
