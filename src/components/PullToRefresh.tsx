@@ -20,7 +20,10 @@ interface GestureState {
   pull: number
 }
 
-function walkAncestors(el: Element | null, fn: (n: Element) => boolean): boolean {
+function walkAncestors(
+  el: Element | null,
+  fn: (n: Element) => boolean,
+): boolean {
   for (
     let n: Element | null = el;
     n && n !== document.body;
@@ -173,18 +176,13 @@ export function PullToRefresh({
 
       const rotation = reducedMotionRef.current ? 0 : pull * 4
       const scale = pull >= threshold && !reducedMotionRef.current ? 1.05 : 1
-      setSpinnerStyle(
-        pull,
-        p,
-        null,
-        `rotate(${rotation}deg) scale(${scale})`,
-      )
+      setSpinnerStyle(pull, p, null, `rotate(${rotation}deg) scale(${scale})`)
 
       const wasReady = phaseRef.current === 'ready'
       const isReady = pull >= threshold
       if (isReady && !wasReady) {
         updatePhase('ready')
-        navigator.vibrate?.(8)
+        if (typeof navigator.vibrate === 'function') navigator.vibrate(8)
       } else if (!isReady && wasReady) {
         updatePhase('pulling')
       }

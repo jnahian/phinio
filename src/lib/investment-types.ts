@@ -109,10 +109,9 @@ export const INVESTMENT_TYPE_META: Record<
 }
 
 export function getInvestmentTypeMeta(type: string): InvestmentTypeMeta {
-  return (
-    INVESTMENT_TYPE_META[type as InvestmentTypeAll] ??
-    INVESTMENT_TYPE_META.other
-  )
+  const lookup: Partial<Record<string, InvestmentTypeMeta>> =
+    INVESTMENT_TYPE_META
+  return lookup[type] ?? INVESTMENT_TYPE_META.other
 }
 
 export interface AllocationRow {

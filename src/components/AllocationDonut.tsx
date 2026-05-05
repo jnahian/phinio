@@ -1,8 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
-import {
-  type AllocationRow,
-  getInvestmentTypeMeta,
-} from '#/lib/investment-types'
+import { getInvestmentTypeMeta } from '#/lib/investment-types'
+import type { AllocationRow } from '#/lib/investment-types'
 
 interface AllocationDonutProps {
   data: ReadonlyArray<AllocationRow>

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  type AllocationRow,
   collapseAllocationTail,
   getInvestmentTypeMeta,
 } from '#/lib/investment-types'
+import type { AllocationRow } from '#/lib/investment-types'
 
 function row(type: string, value: number, percent: number): AllocationRow {
   return { type, value: value.toFixed(2), percent }
