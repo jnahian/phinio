@@ -1,22 +1,21 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
+import {
+  type AllocationRow,
+  getInvestmentTypeMeta,
+} from '#/lib/investment-types'
 
 interface AllocationDonutProps {
-  data: Array<{ type: string; value: string; percent: number }>
+  data: ReadonlyArray<AllocationRow>
   selectedType?: string | null
-}
-
-const COLORS: Record<string, string> = {
-  stock: '#2563eb',
-  mutual_fund: '#4edea3',
-  fd: '#8d90a0',
-  gold: '#ffd46a',
-  crypto: '#c4a8ff',
-  other: '#434655',
 }
 
 /**
  * Compact donut chart for the home-screen investment allocation snapshot.
  * Lazy-loaded so recharts stays out of bundles that don't need it.
+ *
+ * The caller is expected to pass an already-collapsed allocation (top N +
+ * synthetic `other`) so the donut and the accompanying legend show the same
+ * slices. See `collapseAllocationTail` in `lib/investment-types`.
  */
 export default function AllocationDonut({
   data,
@@ -28,7 +27,7 @@ export default function AllocationDonut({
   const chartData = data.map((d) => ({
     name: d.type,
     value: Number(d.value),
-    fill: COLORS[d.type] ?? COLORS.other,
+    fill: getInvestmentTypeMeta(d.type).hex,
   }))
   return (
     <div className="h-32 w-32">

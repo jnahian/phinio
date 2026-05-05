@@ -16,6 +16,10 @@ import {
   useInvestmentsQuery,
 } from '#/hooks/useInvestments'
 import type { InvestmentType } from '#/lib/validators'
+import {
+  INVESTMENT_TYPE_META,
+  getInvestmentTypeMeta,
+} from '#/lib/investment-types'
 
 type TypeFilter = InvestmentType | 'dps' | 'savings' | 'all'
 type StatusFilter = 'active' | 'completed'
@@ -35,36 +39,6 @@ const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
   { value: 'savings', label: 'Savings' },
   { value: 'other', label: 'Other' },
 ]
-
-const TYPE_LABELS: Record<string, string> = {
-  stock: 'Stock',
-  mutual_fund: 'Mutual Fund',
-  fd: 'Fixed Deposit',
-  gold: 'Gold',
-  crypto: 'Crypto',
-  sanchayapatra: 'Sanchayapatra',
-  real_estate: 'Real Estate',
-  agro_farm: 'Agro Farm',
-  business: 'Business',
-  dps: 'DPS',
-  savings: 'Savings',
-  other: 'Other',
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  stock: 'bg-primary-container/20 text-primary-fixed-dim',
-  mutual_fund: 'bg-secondary-container/20 text-secondary',
-  fd: 'bg-surface-container-highest text-on-surface-variant',
-  gold: 'bg-[#a07521]/25 text-[#ffd46a]',
-  crypto: 'bg-[#6a3fc7]/25 text-[#c4a8ff]',
-  sanchayapatra: 'bg-[#1a3a2a]/40 text-[#6ee7a0]',
-  real_estate: 'bg-[#2a1a3a]/40 text-[#c4a8ff]',
-  agro_farm: 'bg-[#1a3a1a]/40 text-[#86efac]',
-  business: 'bg-[#3a2a1a]/40 text-[#fbbf24]',
-  dps: 'bg-[#1a4731]/40 text-[#4ade80]',
-  savings: 'bg-[#1a3147]/40 text-[#60a5fa]',
-  other: 'bg-surface-container-highest text-on-surface-variant',
-}
 
 export const Route = createFileRoute('/app/investments/')({
   staticData: { title: 'Investments' },
@@ -379,10 +353,10 @@ function InvestmentCard({ item, currency }: ListItemProps) {
               <span
                 className={cn(
                   'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
-                  TYPE_COLORS[item.type] ?? TYPE_COLORS.other,
+                  getInvestmentTypeMeta(item.type).chipClass,
                 )}
               >
-                {TYPE_LABELS[item.type] ?? item.type}
+                {getInvestmentTypeMeta(item.type).label}
               </span>
               {formattedDate && (
                 <span className="body-sm text-on-surface-variant/70">
@@ -445,10 +419,10 @@ function DpsCard({ item, currency }: ListItemProps) {
               <span
                 className={cn(
                   'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
-                  TYPE_COLORS.dps,
+                  INVESTMENT_TYPE_META.dps.chipClass,
                 )}
               >
-                DPS
+                {INVESTMENT_TYPE_META.dps.label}
               </span>
               <span className="body-sm text-on-surface-variant/70">
                 {item.paidCount}/{item.tenureMonths} months
@@ -526,10 +500,10 @@ function SavingsCard({ item, currency }: ListItemProps) {
               <span
                 className={cn(
                   'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
-                  TYPE_COLORS.savings,
+                  INVESTMENT_TYPE_META.savings.chipClass,
                 )}
               >
-                Savings
+                {INVESTMENT_TYPE_META.savings.label}
               </span>
               <span className="body-sm text-on-surface-variant/70">
                 {item.paidCount} deposit{item.paidCount !== 1 ? 's' : ''}
