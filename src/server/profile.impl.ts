@@ -2,6 +2,8 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import type { Currency } from '#/lib/currency'
+import { isLocale } from '#/lib/i18n/config'
+import type { Locale } from '#/lib/i18n/config'
 import { withIdempotency } from './_idempotency'
 import { logActivity } from './activity-log.impl'
 
@@ -10,6 +12,7 @@ export interface SerializedProfile {
   userId: string
   fullName: string
   preferredCurrency: Currency
+  preferredLanguage: Locale
   createdAt: Date
 }
 
@@ -20,6 +23,11 @@ export interface UpdateCurrencyInput {
 
 export interface UpdateNameInput {
   fullName: string
+  clientMutationId?: string
+}
+
+export interface UpdateLanguageInput {
+  preferredLanguage: Locale
   clientMutationId?: string
 }
 
@@ -44,11 +52,16 @@ function narrowCurrency(value: string): Currency {
   return value === 'USD' ? 'USD' : 'BDT'
 }
 
+function narrowLocale(value: string): Locale {
+  return isLocale(value) ? value : 'en'
+}
+
 function serializeProfile(row: {
   id: string
   userId: string
   fullName: string
   preferredCurrency: string
+  preferredLanguage: string
   createdAt: Date
 }): SerializedProfile {
   return {
@@ -56,6 +69,7 @@ function serializeProfile(row: {
     userId: row.userId,
     fullName: row.fullName,
     preferredCurrency: narrowCurrency(row.preferredCurrency),
+    preferredLanguage: narrowLocale(row.preferredLanguage),
     createdAt: row.createdAt,
   }
 }
@@ -70,6 +84,7 @@ export async function getProfileImpl(
       userId: true,
       fullName: true,
       preferredCurrency: true,
+      preferredLanguage: true,
       createdAt: true,
     },
   })
@@ -117,6 +132,7 @@ export async function updateProfileCurrencyImpl(
           userId: true,
           fullName: true,
           preferredCurrency: true,
+          preferredLanguage: true,
           createdAt: true,
         },
       })
@@ -133,6 +149,63 @@ export async function updateProfileCurrencyImpl(
               field: 'Preferred currency',
               from: before.preferredCurrency,
               to: data.preferredCurrency,
+            },
+          ],
+        })
+      }
+
+      return updated
+    },
+  )
+  return serializeProfile(profile)
+}
+
+export async function updateProfileLanguageImpl(
+  userId: string,
+  data: UpdateLanguageInput,
+): Promise<SerializedProfile> {
+  const profileId = await profileIdForUser(userId)
+  const profile = await withIdempotency(
+    profileId,
+    data.clientMutationId,
+    async (tx) => {
+      const before = await tx.profile.findUnique({
+        where: { id: profileId },
+        select: { id: true, fullName: true, preferredLanguage: true },
+      })
+      if (!before) throw new Error('Profile not found')
+
+      // Mirror onto the User row so the value stays in sync with what
+      // Better Auth surfaces in session.user (used by getLocaleFn).
+      await tx.user.update({
+        where: { id: userId },
+        data: { preferredLanguage: data.preferredLanguage },
+      })
+      const updated = await tx.profile.update({
+        where: { id: profileId },
+        data: { preferredLanguage: data.preferredLanguage },
+        select: {
+          id: true,
+          userId: true,
+          fullName: true,
+          preferredCurrency: true,
+          preferredLanguage: true,
+          createdAt: true,
+        },
+      })
+
+      if (before.preferredLanguage !== data.preferredLanguage) {
+        await logActivity(tx, before.id, {
+          action: 'update',
+          entityType: 'profile',
+          entityId: before.id,
+          entityLabel: before.fullName,
+          summary: `Changed preferred language to ${data.preferredLanguage}`,
+          changes: [
+            {
+              field: 'Preferred language',
+              from: before.preferredLanguage,
+              to: data.preferredLanguage,
             },
           ],
         })
@@ -173,6 +246,7 @@ export async function updateProfileNameImpl(
           userId: true,
           fullName: true,
           preferredCurrency: true,
+          preferredLanguage: true,
           createdAt: true,
         },
       })

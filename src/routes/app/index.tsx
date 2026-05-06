@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   AlertTriangle,
   CalendarClock,
@@ -13,7 +14,7 @@ import { EmptyState } from '#/components/ui/EmptyState'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatReturnPercent } from '#/lib/calculations'
-import { formatCurrency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { dashboardQueryOptions, useDashboardQuery } from '#/hooks/useDashboard'
 import {
   collapseAllocationTail,
@@ -33,6 +34,8 @@ export const Route = createFileRoute('/app/')({
 })
 
 function HomeScreen() {
+  const { t } = useTranslation('dashboard')
+  const fmt = useFormatter()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const firstName = profile.fullName.split(' ')[0]
@@ -53,15 +56,15 @@ function HomeScreen() {
       <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-12">
         <EmptyState
           icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
-          title="Couldn't load dashboard"
-          description="Check your connection and try again."
+          title={t('errors.loadFailed')}
+          description={t('errors.checkConnection')}
           action={
             <button
               type="button"
               onClick={() => refetch()}
               className="btn-primary"
             >
-              Retry
+              {t('errors.retry')}
             </button>
           }
         />
@@ -81,9 +84,11 @@ function HomeScreen() {
   return (
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-12">
       <header className="mb-6">
-        <p className="label-md text-on-surface-variant">Welcome</p>
+        <p className="label-md text-on-surface-variant">
+          {t('greetingFallback')}
+        </p>
         <h1 className="headline-lg mt-1 text-on-surface">
-          Hi, {firstName} <span aria-hidden>👋</span>
+          {t('greeting', { firstName })} <span aria-hidden>👋</span>
         </h1>
       </header>
 
@@ -93,16 +98,18 @@ function HomeScreen() {
           aria-hidden
           className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"
         />
-        <p className="label-sm text-on-primary-container/80">Net worth</p>
+        <p className="label-sm text-on-primary-container/80">
+          {t('netWorth.label')}
+        </p>
         {isLoading || !data ? (
           <Skeleton className="mt-2 h-10 w-48 bg-white/10" />
         ) : (
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
-            {formatCurrency(data.netWorth, currency)}
+            {fmt.currency(data.netWorth, currency)}
           </p>
         )}
         <p className="body-sm mt-3 text-on-primary-container/75">
-          Assets minus remaining EMI balance.
+          {t('netWorth.hint')}
         </p>
       </section>
 
@@ -114,23 +121,22 @@ function HomeScreen() {
             </div>
             <div className="space-y-2">
               <h2 className="headline-sm text-on-surface">
-                Start tracking your finances
+                {t('empty.title')}
               </h2>
               <p className="body-md text-on-surface-variant">
-                Add your first investment or EMI to see everything come to life
-                — net worth, returns, and upcoming payments in one place.
+                {t('welcomeBlurb')}
               </p>
             </div>
             <div className="flex flex-col gap-2 pt-1">
               <Link to="/app/investments/new" className="btn-primary">
                 <TrendingUp className="h-4 w-4" strokeWidth={2} />
-                Add an investment
+                {t('empty.addInvestment')}
               </Link>
               <Link
                 to="/app/emis/new"
                 className="block w-full rounded-xl border border-outline-variant/30 py-4 text-center font-display font-semibold text-on-surface transition hover:bg-white/5"
               >
-                Add an EMI
+                {t('empty.addEmi')}
               </Link>
             </div>
           </Card>
@@ -144,7 +150,7 @@ function HomeScreen() {
             <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
               <TrendingUp className="h-4 w-4" strokeWidth={1.75} />
               <span className="label-sm normal-case tracking-wide">
-                Invested
+                {t('summary.invested')}
               </span>
             </div>
             {isLoading || !data ? (
@@ -155,7 +161,7 @@ function HomeScreen() {
             ) : (
               <>
                 <p className="font-display text-xl font-bold text-on-surface">
-                  {formatCurrency(data.investmentTotals.current, currency)}
+                  {fmt.currency(data.investmentTotals.current, currency)}
                 </p>
                 <p
                   className={cn(
@@ -169,7 +175,7 @@ function HomeScreen() {
                 >
                   {Number(data.investmentTotals.invested) > 0
                     ? formatReturnPercent(data.investmentTotals.gainLossPercent)
-                    : 'No holdings'}
+                    : t('summary.noHoldings')}
                 </p>
               </>
             )}
@@ -179,7 +185,7 @@ function HomeScreen() {
             <div className="mb-2 flex items-center gap-2 text-on-surface-variant">
               <CalendarClock className="h-4 w-4" strokeWidth={1.75} />
               <span className="label-sm normal-case tracking-wide">
-                Monthly EMI
+                {t('summary.monthlyEmi')}
               </span>
             </div>
             {isLoading || !data ? (
@@ -190,12 +196,12 @@ function HomeScreen() {
             ) : (
               <>
                 <p className="font-display text-xl font-bold text-on-surface">
-                  {formatCurrency(data.monthlyEmiOutflow, currency)}
+                  {fmt.currency(data.monthlyEmiOutflow, currency)}
                 </p>
                 <p className="body-sm mt-0.5 text-on-surface-variant">
                   {Number(data.monthlyEmiOutflow) > 0
-                    ? 'Total outflow'
-                    : 'No EMIs yet'}
+                    ? t('summary.totalOutflow')
+                    : t('summary.noEmis')}
                 </p>
               </>
             )}
@@ -207,7 +213,7 @@ function HomeScreen() {
       {!isEmpty && (
         <section className="mt-8">
           <h2 className="label-md mb-3 text-on-surface-variant">
-            Upcoming payments
+            {t('upcoming.title')}
           </h2>
           {isLoading || !data ? (
             <Card variant="low" className="space-y-3 p-4">
@@ -218,7 +224,7 @@ function HomeScreen() {
           ) : data.upcomingPayments.length === 0 ? (
             <Card variant="low" className="px-5 py-8 text-center">
               <p className="body-md text-on-surface-variant">
-                Nothing due in the next 30 days.
+                {t('upcoming.empty')}
               </p>
             </Card>
           ) : (
@@ -256,12 +262,16 @@ function HomeScreen() {
                             : 'text-on-surface-variant',
                         )}
                       >
-                        {formatRelativeDue(p.daysUntilDue, p.isOverdue)}
+                        {fmt.daysUntilDue(
+                          p.isOverdue
+                            ? -Math.abs(p.daysUntilDue)
+                            : p.daysUntilDue,
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-display text-base font-bold text-on-surface">
-                        {formatCurrency(p.emiAmount, currency)}
+                        {fmt.currency(p.emiAmount, currency)}
                       </p>
                     </div>
                     <ChevronRight
@@ -279,7 +289,9 @@ function HomeScreen() {
       {/* Investment allocation */}
       {!isEmpty && data && displayedAllocation.length > 0 && (
         <section className="mt-8">
-          <h2 className="label-md mb-3 text-on-surface-variant">Allocation</h2>
+          <h2 className="label-md mb-3 text-on-surface-variant">
+            {t('allocation.title')}
+          </h2>
           <Card variant="low">
             <div className="flex items-center gap-4">
               <Suspense
@@ -334,16 +346,4 @@ function HomeScreen() {
       )}
     </main>
   )
-}
-
-function formatRelativeDue(days: number, isOverdue: boolean): string {
-  if (isOverdue) {
-    const abs = Math.abs(days)
-    return abs === 0
-      ? 'Overdue — due today'
-      : `Overdue by ${abs} day${abs === 1 ? '' : 's'}`
-  }
-  if (days === 0) return 'Due today'
-  if (days === 1) return 'Due tomorrow'
-  return `Due in ${days} days`
 }

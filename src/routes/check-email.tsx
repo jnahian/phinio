@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowLeft, Mail, MailCheck } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { ArrowLeft, MailCheck } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/check-email')({
 })
 
 function CheckEmailScreen() {
+  const { t } = useTranslation('auth')
   const { email } = Route.useSearch()
   const [isResending, setIsResending] = useState(false)
 
@@ -28,9 +30,9 @@ function CheckEmailScreen() {
     })
     setIsResending(false)
     if (error) {
-      toast.error(error.message ?? 'Could not resend verification email')
+      toast.error(error.message ?? t('checkEmail.resend'))
     } else {
-      toast.success('Verification email sent again')
+      toast.success(t('checkEmail.resent'))
     }
   }
 
@@ -42,7 +44,7 @@ function CheckEmailScreen() {
           className="mb-6 inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to login
+          {t('checkEmail.backToLogin')}
         </Link>
 
         <Logo size="lg" className="justify-center mx-auto mb-6" />
@@ -54,32 +56,12 @@ function CheckEmailScreen() {
               strokeWidth={1.75}
             />
           </div>
-          <h1 className="headline-lg text-on-surface">Check your email</h1>
+          <h1 className="headline-lg text-on-surface">
+            {t('checkEmail.title')}
+          </h1>
           <p className="body-md mt-3 max-w-xs text-on-surface-variant">
-            We sent a verification link to{' '}
-            {email ? (
-              <span className="font-semibold text-on-surface">{email}</span>
-            ) : (
-              'your email address'
-            )}
-            . Click the link to activate your vault.
+            {t('checkEmail.body', { email: email ?? '' })}
           </p>
-        </div>
-
-        <div className="rounded-2xl bg-surface-container-lowest p-5">
-          <div className="flex items-start gap-3">
-            <Mail
-              className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
-              strokeWidth={1.75}
-            />
-            <div className="flex-1 space-y-1">
-              <p className="body-sm text-on-surface">Didn't get the email?</p>
-              <p className="body-sm text-on-surface-variant/80">
-                Check your spam folder or wait a minute before resending. Links
-                expire after 1 hour.
-              </p>
-            </div>
-          </div>
         </div>
 
         <button
@@ -88,16 +70,15 @@ function CheckEmailScreen() {
           disabled={!email || isResending}
           className="btn-primary mt-6"
         >
-          {isResending ? 'Sending…' : 'Resend verification email'}
+          {isResending ? t('checkEmail.resending') : t('checkEmail.resend')}
         </button>
 
         <p className="body-sm mt-6 text-center text-on-surface-variant">
-          Already verified?{' '}
           <Link
             to="/login"
             className="font-semibold text-primary-fixed-dim hover:underline decoration-primary-container underline-offset-4"
           >
-            Log in
+            {t('checkEmail.backToLogin')}
           </Link>
         </p>
       </div>

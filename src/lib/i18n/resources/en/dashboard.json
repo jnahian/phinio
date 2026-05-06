@@ -1,0 +1,41 @@
+{
+  "greeting": "Hi, {{firstName}}",
+  "greetingFallback": "Welcome",
+  "netWorth": {
+    "label": "Net worth",
+    "hint": "Assets minus remaining EMI balance"
+  },
+  "empty": {
+    "title": "Start tracking your finances",
+    "addInvestment": "Add an investment",
+    "addEmi": "Add an EMI"
+  },
+  "summary": {
+    "invested": "Invested",
+    "currentValue": "Current value",
+    "monthlyEmi": "Monthly EMI",
+    "remainingEmi": "Remaining EMI",
+    "totalOutflow": "Total outflow",
+    "noEmis": "No EMIs yet",
+    "noHoldings": "No holdings"
+  },
+  "errors": {
+    "loadFailed": "Couldn't load dashboard",
+    "checkConnection": "Check your connection and try again.",
+    "retry": "Retry"
+  },
+  "welcomeBlurb": "Add your first investment or EMI to see everything come to life — net worth, returns, and upcoming payments in one place.",
+  "upcoming": {
+    "title": "Upcoming payments",
+    "viewAll": "View all",
+    "empty": "Nothing due in the next 30 days"
+  },
+  "allocation": {
+    "title": "Allocation",
+    "noData": "No investments yet"
+  },
+  "actions": {
+    "addInvestment": "Add investment",
+    "addEmi": "Add EMI"
+  }
+}

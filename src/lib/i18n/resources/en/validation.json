@@ -1,0 +1,13 @@
+{
+  "required": "This field is required",
+  "email": "Enter a valid email address",
+  "passwordMin": "Password must be at least 8 characters",
+  "passwordMatch": "Passwords do not match",
+  "newPasswordMin": "New password must be at least 8 characters",
+  "nameMin": "Name must be at least 2 characters",
+  "amountPositive": "Amount must be greater than 0",
+  "ratePositive": "Rate must be greater than 0",
+  "tenurePositive": "Tenure must be greater than 0",
+  "invalidDate": "Enter a valid date",
+  "invalidNumber": "Enter a valid number"
+}

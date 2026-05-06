@@ -1,0 +1,30 @@
+{
+  "emi": {
+    "dueToday": {
+      "title": "EMI due today",
+      "body": "{{label}} — {{amount}} due today"
+    },
+    "dueSoon": {
+      "title": "EMI due in {{days}} days",
+      "body": "{{label}} — {{amount}} due on {{date}}"
+    },
+    "overdue": {
+      "title": "EMI overdue",
+      "body": "{{label}} — {{amount}} was due on {{date}}"
+    }
+  },
+  "dps": {
+    "dueToday": {
+      "title": "DPS installment due today",
+      "body": "{{label}} — {{amount}} due today"
+    },
+    "dueSoon": {
+      "title": "DPS due in {{days}} days",
+      "body": "{{label}} — {{amount}} due on {{date}}"
+    },
+    "overdue": {
+      "title": "DPS overdue",
+      "body": "{{label}} — {{amount}} was due on {{date}}"
+    }
+  }
+}

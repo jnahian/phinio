@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { CalendarClock, Home, TrendingUp, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '#/lib/cn'
@@ -7,19 +8,20 @@ type TabPath = '/app' | '/app/investments' | '/app/emis' | '/app/profile'
 
 interface Tab {
   to: TabPath
-  label: string
+  labelKey: 'home' | 'investments' | 'emis' | 'profile'
   icon: LucideIcon
   exact?: boolean
 }
 
 const TABS: Tab[] = [
-  { to: '/app', label: 'Home', icon: Home, exact: true },
-  { to: '/app/investments', label: 'Invest', icon: TrendingUp },
-  { to: '/app/emis', label: 'EMIs', icon: CalendarClock },
-  { to: '/app/profile', label: 'Profile', icon: User },
+  { to: '/app', labelKey: 'home', icon: Home, exact: true },
+  { to: '/app/investments', labelKey: 'investments', icon: TrendingUp },
+  { to: '/app/emis', labelKey: 'emis', icon: CalendarClock },
+  { to: '/app/profile', labelKey: 'profile', icon: User },
 ]
 
 export function BottomTabBar() {
+  const { t } = useTranslation('common')
   return (
     <nav
       aria-label="Primary"
@@ -51,7 +53,7 @@ export function BottomTabBar() {
                     />
                   </span>
                   <span className="label-sm normal-case tracking-wide">
-                    {tab.label}
+                    {t(`tabs.${tab.labelKey}`)}
                   </span>
                 </div>
               )}

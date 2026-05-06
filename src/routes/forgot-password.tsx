@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Mail } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 import { authClient } from '#/lib/auth-client'
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/forgot-password')({
 })
 
 function ForgotPasswordScreen() {
+  const { t } = useTranslation('auth')
   const [email, setEmail] = useState('')
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
@@ -35,7 +37,7 @@ function ForgotPasswordScreen() {
     setIsSubmitting(false)
 
     if (error) {
-      setFormError(error.message ?? 'Unable to send reset link.')
+      setFormError(error.message ?? t('forgotPassword.genericError'))
       return
     }
 
@@ -50,15 +52,17 @@ function ForgotPasswordScreen() {
           className="mb-6 inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to login
+          {t('forgotPassword.backToLogin')}
         </Link>
 
         <Logo size="lg" className="justify-center mx-auto mb-6" />
 
         <header className="mb-8">
-          <h1 className="headline-lg text-on-surface">Reset password</h1>
+          <h1 className="headline-lg text-on-surface">
+            {t('forgotPassword.title')}
+          </h1>
           <p className="body-md mt-2 text-on-surface-variant">
-            We'll send a reset link to your inbox.
+            {t('forgotPassword.subtitle')}
           </p>
         </header>
 
@@ -68,10 +72,10 @@ function ForgotPasswordScreen() {
             className="rounded-xl bg-secondary-container/20 px-4 py-5 text-center"
           >
             <p className="body-md text-on-surface">
-              Check your email for a reset link.
+              {t('forgotPassword.successTitle')}
             </p>
             <p className="body-sm mt-1 text-on-surface-variant">
-              If you don't see it, check your spam folder.
+              {t('forgotPassword.successBody', { email })}
             </p>
           </div>
         ) : (
@@ -81,7 +85,7 @@ function ForgotPasswordScreen() {
                 htmlFor="email"
                 className="label-sm px-1 text-on-surface-variant"
               >
-                Email address
+                {t('forgotPassword.emailLabel')}
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-outline">
@@ -119,7 +123,9 @@ function ForgotPasswordScreen() {
               className="btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Sending…' : 'Send reset link'}
+              {isSubmitting
+                ? t('forgotPassword.submitting')
+                : t('forgotPassword.submit')}
             </button>
           </form>
         )}
