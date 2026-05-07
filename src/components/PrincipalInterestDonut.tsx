@@ -24,7 +24,7 @@ export default function PrincipalInterestDonut({
   ]
 
   return (
-    <div className="h-48 w-full">
+    <div className="h-full w-full">
       <ResponsiveContainer
         width="100%"
         height="100%"
@@ -35,8 +35,8 @@ export default function PrincipalInterestDonut({
           <Pie
             data={data}
             dataKey="value"
-            innerRadius={55}
-            outerRadius={85}
+            innerRadius="65%"
+            outerRadius="100%"
             startAngle={90}
             endAngle={450}
             stroke="none"
