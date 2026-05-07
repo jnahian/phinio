@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowRight,
   CalendarClock,
@@ -21,6 +22,7 @@ import { EmptyState } from '#/components/ui/EmptyState'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { formatCurrency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import type { Currency } from '#/lib/currency'
 import {
   activityInfiniteQueryOptions,
@@ -34,7 +36,7 @@ import type {
 } from '#/server/activity-log.impl'
 
 export const Route = createFileRoute('/app/activity/')({
-  staticData: { title: 'Activity', backTo: '/app/profile' },
+  staticData: { title: 'pageTitles.activity', backTo: '/app/profile' },
   loader: ({ context }) => {
     void context.queryClient.prefetchInfiniteQuery(
       activityInfiniteQueryOptions(),
@@ -43,16 +45,13 @@ export const Route = createFileRoute('/app/activity/')({
   component: ActivityScreen,
 })
 
-const ENTITY_META: Record<
-  ActivityEntityType,
-  { label: string; icon: LucideIcon }
-> = {
-  investment: { label: 'Investment', icon: TrendingUp },
-  investment_deposit: { label: 'Deposit', icon: PiggyBank },
-  investment_withdrawal: { label: 'Withdrawal', icon: Wallet },
-  emi: { label: 'EMI', icon: CreditCard },
-  emi_payment: { label: 'EMI payment', icon: CalendarClock },
-  profile: { label: 'Profile', icon: User },
+const ENTITY_META: Record<ActivityEntityType, { icon: LucideIcon }> = {
+  investment: { icon: TrendingUp },
+  investment_deposit: { icon: PiggyBank },
+  investment_withdrawal: { icon: Wallet },
+  emi: { icon: CreditCard },
+  emi_payment: { icon: CalendarClock },
+  profile: { icon: User },
 }
 
 const ACTION_META: Record<
@@ -74,6 +73,8 @@ const ACTION_META: Record<
 }
 
 function ActivityScreen() {
+  const { t } = useTranslation('activity')
+  const { t: tCommon } = useTranslation('common')
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const {
@@ -113,15 +114,15 @@ function ActivityScreen() {
       <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
         <EmptyState
           icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
-          title="Couldn't load activity"
-          description="Check your connection and try again."
+          title={t('errors.loadFailed')}
+          description={t('errors.checkConnection')}
           action={
             <button
               type="button"
               onClick={() => refetch()}
               className="btn-primary"
             >
-              Retry
+              {tCommon('actions.retry')}
             </button>
           }
         />
@@ -156,14 +157,18 @@ function ActivityScreen() {
       <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
         <EmptyState
           icon={<History className="h-7 w-7" strokeWidth={1.75} />}
-          title="No activity yet"
-          description="Every investment, EMI, and profile change you make will show up here."
+          title={t('empty.title')}
+          description={t('empty.description')}
         />
       </main>
     )
   }
 
-  const groups = groupByDay(items)
+  const groups = groupByDay(items, {
+    today: t('today'),
+    yesterday: t('yesterday'),
+    locale: profile.preferredLanguage,
+  })
 
   return (
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
@@ -193,7 +198,7 @@ function ActivityScreen() {
           {isFetchingNextPage && (
             <span
               role="status"
-              aria-label="Loading more activity"
+              aria-label={t('loadingMore')}
               className="h-5 w-5 animate-spin rounded-full border-2 border-on-surface-variant/20 border-t-on-surface-variant"
             />
           )}
@@ -209,6 +214,7 @@ interface ActivityItemCardProps {
 }
 
 function ActivityItemCard({ item, currency }: ActivityItemCardProps) {
+  const { t } = useTranslation('activity')
   const [open, setOpen] = useState(false)
   const changesId = useId()
   const entity = ENTITY_META[item.entityType]
@@ -245,7 +251,7 @@ function ActivityItemCard({ item, currency }: ActivityItemCardProps) {
         <div className="min-w-0 flex-1">
           <p className="body-md text-on-surface">{item.summary}</p>
           <div className="mt-1 flex items-center gap-2 text-xs text-on-surface-variant">
-            <span>{entity.label}</span>
+            <span>{t(`entities.${item.entityType}`)}</span>
             <span>•</span>
             <time dateTime={new Date(item.createdAt).toISOString()}>
               {formatTime(item.createdAt)}
@@ -285,12 +291,18 @@ function ChangeRow({
   change: ActivityChange
   currency: Currency
 }) {
+  const { locale } = useFormatter()
   // Money changes carry the currency that was active when the change was
   // recorded; fall back to the user's current preference for legacy rows.
   const moneyCurrency = change.currency ?? null
   const isMoney = moneyCurrency !== null
-  const from = formatValue(change.from, isMoney, moneyCurrency ?? currency)
-  const to = formatValue(change.to, isMoney, moneyCurrency ?? currency)
+  const from = formatValue(
+    change.from,
+    isMoney,
+    moneyCurrency ?? currency,
+    locale,
+  )
+  const to = formatValue(change.to, isMoney, moneyCurrency ?? currency, locale)
 
   return (
     <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
@@ -314,9 +326,10 @@ function formatValue(
   value: string | null,
   isMoney: boolean,
   currency: Currency,
+  locale: 'en' | 'bn',
 ): string {
   if (value === null) return '—'
-  if (isMoney) return formatCurrency(value, currency)
+  if (isMoney) return formatCurrency(value, currency, { locale })
   return value
 }
 
@@ -330,20 +343,24 @@ interface DayGroup {
   items: Array<ActivityLogItem>
 }
 
-function groupByDay(items: Array<ActivityLogItem>): Array<DayGroup> {
+function groupByDay(
+  items: Array<ActivityLogItem>,
+  labels: { today: string; yesterday: string; locale: 'en' | 'bn' },
+): Array<DayGroup> {
   const today = startOfDay(new Date())
   const yesterday = new Date(today.getTime() - 86_400_000)
   const groups = new Map<string, DayGroup>()
+  const dateLocale = labels.locale === 'bn' ? 'bn-BD' : 'en-GB'
 
   for (const item of items) {
     const d = startOfDay(new Date(item.createdAt))
     const key = d.toISOString().slice(0, 10)
     if (!groups.has(key)) {
       let label: string
-      if (d.getTime() === today.getTime()) label = 'Today'
-      else if (d.getTime() === yesterday.getTime()) label = 'Yesterday'
+      if (d.getTime() === today.getTime()) label = labels.today
+      else if (d.getTime() === yesterday.getTime()) label = labels.yesterday
       else
-        label = d.toLocaleDateString(undefined, {
+        label = d.toLocaleDateString(dateLocale, {
           weekday: 'short',
           month: 'short',
           day: 'numeric',

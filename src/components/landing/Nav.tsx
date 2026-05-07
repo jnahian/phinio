@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Logo } from '#/components/Logo'
 
 export function Nav() {
+  const { t } = useTranslation('landing')
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -22,7 +24,7 @@ export function Nav() {
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 h-16">
         <Link
           to="/"
-          aria-label="Phinio home"
+          aria-label={t('nav.home')}
           className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
         >
           <Logo size="md" />
@@ -32,13 +34,13 @@ export function Nav() {
             to="/login"
             className="hidden sm:block text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150"
           >
-            Sign in
+            {t('nav.signin')}
           </Link>
           <Link
             to="/signup"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-container text-on-primary-container font-display font-semibold text-sm shadow-[0_8px_24px_-6px_rgba(37,99,235,0.45)] hover:shadow-[0_12px_32px_-6px_rgba(37,99,235,0.62)] hover:-translate-y-px transition-all duration-200"
           >
-            Get started
+            {t('nav.getStarted')}
           </Link>
         </div>
       </div>

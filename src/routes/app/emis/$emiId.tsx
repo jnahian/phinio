@@ -1,12 +1,13 @@
 import { Suspense, lazy, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
-import { formatCurrency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { isFeePayment, isRegularPayment } from '#/lib/emi-calculator'
 import {
   useCompleteEmi,
@@ -28,10 +29,13 @@ export const Route = createFileRoute('/app/emis/$emiId')({
 })
 
 function EmiDetailScreen() {
+  const { t } = useTranslation('emis')
+  const { t: tCommon } = useTranslation('common')
   const { emiId } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
+  const fmt = useFormatter()
 
   const { data: emi, isLoading } = useEmiQuery(emiId)
   useSetTopBarTitle(emi?.label ?? null)
@@ -50,7 +54,7 @@ function EmiDetailScreen() {
   if (isLoading || !emi) {
     return (
       <main className="noir-bg flex min-h-dvh items-center justify-center text-on-surface-variant">
-        Loading…
+        {tCommon('actions.loading')}
       </main>
     )
   }
@@ -129,19 +133,21 @@ function EmiDetailScreen() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <p className="body-sm text-on-surface-variant">
-              {emi.type === 'credit_card' ? 'Credit card' : 'Bank loan'} ·{' '}
-              {emi.interestRate}% p.a.
+              {emi.type === 'credit_card'
+                ? t('types.credit_card')
+                : t('types.bank_loan')}{' '}
+              · {emi.interestRate}% p.a.
             </p>
             {isCompleted && (
               <span className="label-sm inline-flex items-center gap-1 rounded-full bg-secondary/15 px-2 py-0.5 text-secondary normal-case tracking-wide">
                 <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-                Completed
+                {t('status.completed')}
               </span>
             )}
           </div>
           <button
             type="button"
-            aria-label="Edit EMI"
+            aria-label={t('detail.edit')}
             onClick={openEdit}
             className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
           >
@@ -154,35 +160,36 @@ function EmiDetailScreen() {
             className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
           />
           <p className="label-sm text-on-primary-container/75">
-            Remaining balance
+            {t('detail.remainingBalance')}
           </p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
-            {formatCurrency(remainingBalance.toFixed(2), currency)}
+            {fmt.currency(remainingBalance.toFixed(2), currency)}
           </p>
           <p className="body-sm mt-2 text-on-primary-container/75">
-            {remainingMonths} of {emi.tenureMonths} months left
+            {fmt.number(remainingMonths)} / {fmt.number(emi.tenureMonths)}{' '}
+            {tCommon('units.months')}
           </p>
         </section>
 
         <section className="grid grid-cols-3 gap-3">
           <StatTile
-            label="Monthly"
-            value={formatCurrency(emi.emiAmount, currency)}
+            label={t('detail.monthly')}
+            value={fmt.currency(emi.emiAmount, currency)}
           />
           <StatTile
-            label="Principal paid"
-            value={formatCurrency(principalPaid.toFixed(2), currency)}
+            label={t('detail.principalPaid')}
+            value={fmt.currency(principalPaid.toFixed(2), currency)}
           />
           <StatTile
-            label="Interest paid"
-            value={formatCurrency(interestPaid.toFixed(2), currency)}
+            label={t('detail.interestPaid')}
+            value={fmt.currency(interestPaid.toFixed(2), currency)}
             accent="tertiary"
           />
         </section>
 
         <section className="rounded-3xl bg-surface-container-low p-6">
           <h2 className="label-md mb-4 text-on-surface-variant">
-            Principal vs interest
+            {t('detail.principalVsInterest')}
           </h2>
           <Suspense
             fallback={
@@ -198,8 +205,8 @@ function EmiDetailScreen() {
           <div className="mt-4 grid grid-cols-2 gap-3">
             <LegendPill
               color="bg-primary-container"
-              label="Principal"
-              value={formatCurrency(emi.principal, currency)}
+              label={t('detail.principal')}
+              value={fmt.currency(emi.principal, currency)}
               selected={selectedSegment === 'Principal'}
               dimmed={
                 selectedSegment !== null && selectedSegment !== 'Principal'
@@ -212,8 +219,8 @@ function EmiDetailScreen() {
             />
             <LegendPill
               color="bg-tertiary-container"
-              label="Interest"
-              value={formatCurrency(totalInterest.toFixed(2), currency)}
+              label={t('detail.interestComponent')}
+              value={fmt.currency(totalInterest.toFixed(2), currency)}
               selected={selectedSegment === 'Interest'}
               dimmed={
                 selectedSegment !== null && selectedSegment !== 'Interest'
@@ -227,28 +234,28 @@ function EmiDetailScreen() {
           </div>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
             <p className="label-sm normal-case tracking-wide text-on-surface-variant">
-              Total
+              {tCommon('labels.total')}
             </p>
             <p className="font-display text-sm font-bold text-on-surface">
-              {formatCurrency(totalLifetimePayment.toFixed(2), currency)}
+              {fmt.currency(totalLifetimePayment.toFixed(2), currency)}
             </p>
           </div>
           {emi.processingFee && (
             <>
               <div className="mt-2 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
                 <p className="label-sm normal-case tracking-wide text-on-surface-variant">
-                  Processing fee
+                  {t('detail.processingFee')}
                 </p>
                 <p className="font-display text-sm font-bold text-on-surface">
-                  {formatCurrency(emi.processingFee, currency)}
+                  {fmt.currency(emi.processingFee, currency)}
                 </p>
               </div>
               <div className="mt-2 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
                 <p className="label-sm normal-case tracking-wide text-on-surface-variant">
-                  Total cost
+                  {t('detail.totalCost')}
                 </p>
                 <p className="font-display text-sm font-bold text-on-surface">
-                  {formatCurrency(totalCost.toFixed(2), currency)}
+                  {fmt.currency(totalCost.toFixed(2), currency)}
                 </p>
               </div>
             </>
@@ -257,7 +264,7 @@ function EmiDetailScreen() {
 
         <section className="rounded-3xl bg-surface-container-low p-4">
           <h2 className="label-md mb-3 px-2 text-on-surface-variant">
-            Amortization schedule
+            {t('detail.amortizationSchedule')}
           </h2>
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             <ul className="space-y-1">
@@ -277,10 +284,10 @@ function EmiDetailScreen() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="body-sm font-semibold">
-                              Processing fee
+                              {t('detail.processingFee')}
                             </span>
                             <span className="body-sm">
-                              {due.toLocaleDateString(undefined, {
+                              {fmt.date(due, {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric',
@@ -288,12 +295,12 @@ function EmiDetailScreen() {
                             </span>
                           </div>
                           <p className="mt-0.5 text-xs text-on-surface-variant/75">
-                            One-time, paid at disbursement
+                            {t('detail.feeOneTime')}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-display text-sm font-bold">
-                            {formatCurrency(payment.emiAmount, currency)}
+                            {fmt.currency(payment.emiAmount, currency)}
                           </p>
                         </div>
                       </div>
@@ -342,7 +349,7 @@ function EmiDetailScreen() {
                             #{payment.paymentNumber}
                           </span>
                           <span className="body-sm">
-                            {due.toLocaleDateString(undefined, {
+                            {fmt.date(due, {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
@@ -350,24 +357,18 @@ function EmiDetailScreen() {
                           </span>
                           {isOverdue && (
                             <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
-                              Overdue
+                              {tCommon('labels.overdue')}
                             </span>
                           )}
                         </div>
                         <div className="mt-0.5 flex gap-3 text-xs text-on-surface-variant/75">
                           <span>
                             P{' '}
-                            {formatCurrency(
-                              payment.principalComponent,
-                              currency,
-                            )}
+                            {fmt.currency(payment.principalComponent, currency)}
                           </span>
                           <span>
                             I{' '}
-                            {formatCurrency(
-                              payment.interestComponent,
-                              currency,
-                            )}
+                            {fmt.currency(payment.interestComponent, currency)}
                           </span>
                         </div>
                       </div>
@@ -378,11 +379,11 @@ function EmiDetailScreen() {
                             isPaid && 'line-through',
                           )}
                         >
-                          {formatCurrency(payment.emiAmount, currency)}
+                          {fmt.currency(payment.emiAmount, currency)}
                         </p>
                         <p className="text-[11px] text-on-surface-variant/75">
-                          bal{' '}
-                          {formatCurrency(payment.remainingBalance, currency)}
+                          {t('detail.balanceAbbr')}{' '}
+                          {fmt.currency(payment.remainingBalance, currency)}
                         </p>
                       </div>
                     </button>
@@ -395,7 +396,9 @@ function EmiDetailScreen() {
 
         {emi.notes && !editing && (
           <section className="rounded-3xl bg-surface-container-low p-5">
-            <p className="label-sm mb-2 text-on-surface-variant">Notes</p>
+            <p className="label-sm mb-2 text-on-surface-variant">
+              {tCommon('labels.notes')}
+            </p>
             <p className="body-sm whitespace-pre-wrap text-on-surface">
               {emi.notes}
             </p>
@@ -404,22 +407,24 @@ function EmiDetailScreen() {
 
         {editing && (
           <Card variant="low">
-            <p className="label-sm mb-3 text-on-surface-variant">Edit EMI</p>
+            <p className="label-sm mb-3 text-on-surface-variant">
+              {t('detail.edit')}
+            </p>
             <div className="space-y-4">
               <TextField
                 id="edit-label"
-                label="Label"
+                label={t('form.labelLabel')}
                 value={editLabel}
                 onChange={(e) => setEditLabel(e.target.value)}
                 autoFocus
               />
               <div>
                 <p className="label-sm mb-2 text-on-surface-variant">
-                  Notes (optional)
+                  {tCommon('labels.notesOptional')}
                 </p>
                 <TextArea
                   id="edit-notes"
-                  placeholder="Lender, account, or any context"
+                  placeholder={t('form.notesPlaceholder')}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   maxLength={1000}
@@ -432,7 +437,7 @@ function EmiDetailScreen() {
                 onClick={() => setEditing(false)}
                 className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
               >
-                Cancel
+                {tCommon('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -440,7 +445,9 @@ function EmiDetailScreen() {
                 disabled={updateEmi.isPending}
                 className="flex-1 rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {updateEmi.isPending ? 'Saving…' : 'Save'}
+                {updateEmi.isPending
+                  ? tCommon('actions.saving')
+                  : tCommon('actions.save')}
               </button>
             </div>
           </Card>
@@ -454,7 +461,7 @@ function EmiDetailScreen() {
               className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-secondary opacity-80 transition hover:opacity-100"
             >
               <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
-              Mark as completed
+              {t('detail.markCompleteAction')}
             </button>
           )}
           <button
@@ -463,17 +470,17 @@ function EmiDetailScreen() {
             className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
           >
             <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-            Delete EMI
+            {t('detail.delete')}
           </button>
         </div>
       </div>
 
       <ConfirmModal
         open={confirmDelete}
-        title="Delete EMI"
-        message={`Delete "${emi.label}" and all its payment rows?`}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
+        title={t('detail.deleteConfirmTitle')}
+        message={t('detail.deleteConfirmBody', { label: emi.label })}
+        confirmLabel={t('detail.deleteConfirm')}
+        pendingLabel={t('detail.deletePending')}
         isPending={deleteEmi.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
@@ -481,14 +488,13 @@ function EmiDetailScreen() {
 
       <ConfirmModal
         open={confirmComplete}
-        title="Complete EMI"
-        message={
-          unpaidCount > 0
-            ? `Mark "${emi.label}" as completed? This will mark the remaining ${unpaidCount} installment${unpaidCount === 1 ? '' : 's'} as paid and close the EMI.`
-            : `Mark "${emi.label}" as completed?`
-        }
-        confirmLabel="Complete"
-        pendingLabel="Completing…"
+        title={t('detail.completeConfirmTitle')}
+        message={t('detail.completeConfirmBody', {
+          label: emi.label,
+          count: unpaidCount,
+        })}
+        confirmLabel={t('detail.completeConfirm')}
+        pendingLabel={t('detail.completePending')}
         isPending={completeEmi.isPending}
         onConfirm={handleComplete}
         onCancel={() => setConfirmComplete(false)}

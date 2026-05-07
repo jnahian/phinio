@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BellSvg, CalendarSvg, VaultSvg } from './icons'
 import type { SvgProps } from './icons'
 import { useInView } from './use-in-view'
@@ -6,35 +7,17 @@ import { useInView } from './use-in-view'
 interface Step {
   num: string
   Icon: (props: SvgProps) => ReactElement
-  title: string
-  description: string
+  key: 'step1' | 'step2' | 'step3'
 }
 
 const steps: Array<Step> = [
-  {
-    num: '01',
-    Icon: VaultSvg,
-    title: 'Create your vault',
-    description:
-      'Email and password — that is it. No bank linking, no credit card, no setup wizard.',
-  },
-  {
-    num: '02',
-    Icon: CalendarSvg,
-    title: 'Add your assets',
-    description:
-      'Log investments, DPS deposits, savings pots, and loans. Schedules and amortization tables build themselves.',
-  },
-  {
-    num: '03',
-    Icon: BellSvg,
-    title: 'Stay ahead',
-    description:
-      'Push reminders fire before every due date. Mark a payment paid and the dashboard updates instantly.',
-  },
+  { num: '01', Icon: VaultSvg, key: 'step1' },
+  { num: '02', Icon: CalendarSvg, key: 'step2' },
+  { num: '03', Icon: BellSvg, key: 'step3' },
 ]
 
 export function HowItWorks() {
+  const { t } = useTranslation('landing')
   const { ref, inView } = useInView()
 
   return (
@@ -45,17 +28,15 @@ export function HowItWorks() {
             className="label-sm text-secondary"
             style={{ letterSpacing: '0.16em' }}
           >
-            HOW IT WORKS
+            {t('howItWorks.label')}
           </span>
           <h2 className="font-display font-bold text-3xl sm:text-4xl text-on-surface tracking-tight mt-3 leading-snug">
-            From sign-up to insight
-            <br />
-            in minutes
+            {t('howItWorks.heading')}
           </h2>
         </div>
 
         <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {steps.map(({ num, Icon, title, description }, i) => (
+          {steps.map(({ num, Icon, key }, i) => (
             <div
               key={num}
               className="flex flex-col items-center text-center gap-5"
@@ -81,10 +62,10 @@ export function HowItWorks() {
 
               <div>
                 <h3 className="font-display font-bold text-lg text-on-surface tracking-tight mb-2">
-                  {title}
+                  {t(`howItWorks.${key}.title`)}
                 </h3>
                 <p className="body-sm text-on-surface-variant leading-relaxed max-w-xs mx-auto">
-                  {description}
+                  {t(`howItWorks.${key}.description`)}
                 </p>
               </div>
             </div>

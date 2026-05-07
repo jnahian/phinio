@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Building2,
   CalendarClock,
@@ -14,38 +15,32 @@ import type { FilterPill } from '#/components/ui/FilterPills'
 import { ProgressBar } from '#/components/ui/ProgressBar'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
-import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { emisListQueryOptions, useEmisQuery } from '#/hooks/useEmis'
 import type { EmiType } from '#/lib/validators'
 
 type TypeFilter = EmiType | 'all'
 type StatusFilter = 'active' | 'completed'
 
-const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
-  { value: 'all', label: 'All' },
-  { value: 'bank_loan', label: 'Bank Loan' },
-  { value: 'credit_card', label: 'Credit Card' },
-]
-
 const TYPE_META: Record<
   EmiType,
-  { label: string; icon: typeof Building2; badgeClass: string }
+  { typeKey: EmiType; icon: typeof Building2; badgeClass: string }
 > = {
   bank_loan: {
-    label: 'Bank Loan',
+    typeKey: 'bank_loan',
     icon: Building2,
     badgeClass: 'bg-primary-container/20 text-primary-fixed-dim',
   },
   credit_card: {
-    label: 'Credit Card',
+    typeKey: 'credit_card',
     icon: CreditCard,
     badgeClass: 'bg-[#6a3fc7]/25 text-[#c4a8ff]',
   },
 }
 
 export const Route = createFileRoute('/app/emis/')({
-  staticData: { title: 'EMIs' },
+  staticData: { title: 'pageTitles.emis' },
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(
       emisListQueryOptions({ type: 'all', status: 'active' }),
@@ -55,8 +50,17 @@ export const Route = createFileRoute('/app/emis/')({
 })
 
 function EmisListScreen() {
+  const { t } = useTranslation('emis')
+  const { t: tCommon } = useTranslation('common')
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
+  const fmt = useFormatter()
+
+  const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
+    { value: 'all', label: t('types.all') },
+    { value: 'bank_loan', label: t('types.bank_loan') },
+    { value: 'credit_card', label: t('types.credit_card') },
+  ]
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
@@ -67,10 +71,14 @@ function EmisListScreen() {
     refetch,
   } = useEmisQuery({ type: typeFilter, status })
 
+  // Accumulate in integer cents so summing many money strings doesn't drift
+  // through float-point error. CLAUDE.md: never coerce money to JS number for
+  // arithmetic — Number(...) here only crosses to int via *100 + round, and
+  // we divide back at the display boundary.
   const totals = emis.reduce(
     (acc, emi) => {
-      acc.monthly += Number(emi.emiAmount)
-      acc.remaining += Number(emi.remainingBalance)
+      acc.monthly += Math.round(Number(emi.emiAmount) * 100)
+      acc.remaining += Math.round(Number(emi.remainingBalance) * 100)
       return acc
     },
     { monthly: 0, remaining: 0 },
@@ -81,16 +89,20 @@ function EmisListScreen() {
       <Card variant="low" className="mb-6">
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell
-            label={status === 'completed' ? 'Completed' : 'Active'}
-            value={String(emis.length)}
+            label={
+              status === 'completed' ? t('list.completed') : t('list.active')
+            }
+            value={fmt.number(emis.length)}
           />
           <SummaryCell
-            label="Monthly"
-            value={formatCurrency(totals.monthly.toFixed(2), currency)}
+            label={t('list.monthly')}
+            value={fmt.currency((totals.monthly / 100).toFixed(2), currency)}
           />
           <SummaryCell
-            label={status === 'completed' ? 'Paid off' : 'Remaining'}
-            value={formatCurrency(totals.remaining.toFixed(2), currency)}
+            label={
+              status === 'completed' ? t('list.paidOff') : t('list.remaining')
+            }
+            value={fmt.currency((totals.remaining / 100).toFixed(2), currency)}
           />
         </div>
       </Card>
@@ -100,13 +112,13 @@ function EmisListScreen() {
           active={status === 'active'}
           onClick={() => setStatus('active')}
         >
-          Active
+          {t('list.active')}
         </StatusTab>
         <StatusTab
           active={status === 'completed'}
           onClick={() => setStatus('completed')}
         >
-          Completed
+          {t('list.completed')}
         </StatusTab>
       </div>
 
@@ -120,15 +132,15 @@ function EmisListScreen() {
       {isError && emis.length === 0 ? (
         <EmptyState
           icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
-          title="Couldn't load EMIs"
-          description="Check your connection and try again."
+          title={t('list.loadFailed')}
+          description={tCommon('states.errorDescription')}
           action={
             <button
               type="button"
               onClick={() => refetch()}
               className="btn-primary"
             >
-              Retry
+              {tCommon('actions.retry')}
             </button>
           }
         />
@@ -157,14 +169,14 @@ function EmisListScreen() {
         status === 'completed' ? (
           <EmptyState
             icon={<CheckCircle2 className="h-7 w-7" strokeWidth={1.75} />}
-            title="No completed EMIs"
-            description="EMIs you mark as completed — or that auto-complete when every installment is paid — will appear here."
+            title={t('list.noCompleted')}
+            description={t('list.noCompletedHint')}
           />
         ) : (
           <EmptyState
             icon={<CalendarClock className="h-7 w-7" strokeWidth={1.75} />}
-            title="No EMIs yet"
-            description="Add bank loans or credit card EMIs to auto-generate payment schedules."
+            title={t('list.empty')}
+            description={t('list.emptyHint')}
           />
         )
       ) : (
@@ -234,6 +246,8 @@ interface EmiCardProps {
 }
 
 function EmiCard({ emi, currency }: EmiCardProps) {
+  const { t } = useTranslation('emis')
+  const fmt = useFormatter()
   const type = emi.type as EmiType
   const meta = TYPE_META[type]
   const Icon = meta.icon
@@ -241,8 +255,7 @@ function EmiCard({ emi, currency }: EmiCardProps) {
     emi.totalPayments > 0 ? (emi.paidCount / emi.totalPayments) * 100 : 0
   const formatDue = (d: Date | string | null): string => {
     if (!d) return '—'
-    const date = new Date(d)
-    return date.toLocaleDateString(undefined, {
+    return fmt.date(d, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -265,7 +278,7 @@ function EmiCard({ emi, currency }: EmiCardProps) {
                 )}
               >
                 <Icon className="h-3 w-3" strokeWidth={1.75} />
-                {meta.label}
+                {t(`types.${meta.typeKey}`)}
               </span>
             </div>
             <h3 className="headline-sm truncate text-on-surface">
@@ -274,9 +287,11 @@ function EmiCard({ emi, currency }: EmiCardProps) {
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(emi.emiAmount, currency)}
+              {fmt.currency(emi.emiAmount, currency)}
             </p>
-            <p className="body-sm text-on-surface-variant">/ month</p>
+            <p className="body-sm text-on-surface-variant">
+              {t('list.perMonth')}
+            </p>
           </div>
         </div>
 
@@ -284,19 +299,20 @@ function EmiCard({ emi, currency }: EmiCardProps) {
           <ProgressBar value={emi.paidCount} max={emi.totalPayments || 1} />
           <div className="flex items-center justify-between text-xs text-on-surface-variant/75">
             <span>
-              {emi.paidCount} / {emi.totalPayments} paid
+              {fmt.number(emi.paidCount)} / {fmt.number(emi.totalPayments)}{' '}
+              {t('list.paid')}
             </span>
-            <span>{Math.round(progress)}%</span>
+            <span>{fmt.number(Math.round(progress))}%</span>
           </div>
         </div>
 
         <div className="mt-3 flex items-center justify-between text-sm">
           <div className="flex items-center gap-1.5 text-on-surface-variant">
             <CalendarClock className="h-3.5 w-3.5" strokeWidth={1.75} />
-            Next {formatDue(emi.nextDueDate)}
+            {t('list.next')} {formatDue(emi.nextDueDate)}
           </div>
           <span className="font-medium text-on-surface-variant">
-            {formatCurrency(emi.remainingBalance, currency)} left
+            {fmt.currency(emi.remainingBalance, currency)} {t('list.left')}
           </span>
         </div>
       </Card>

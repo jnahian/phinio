@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { TextField } from '#/components/ui/TextField'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { getCurrencySymbol } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useCloseDps,
   useInvestmentQuery,
@@ -34,6 +36,8 @@ export function WithdrawModal({
   preselectedInvestmentId,
   onSuccess,
 }: WithdrawModalProps) {
+  const { t } = useTranslation('withdraw')
+  const { t: tCommon } = useTranslation('common')
   const symbol = getCurrencySymbol(currency)
   const { data: items = [], isLoading } = useInvestmentsQuery({
     status: 'active',
@@ -89,12 +93,12 @@ export function WithdrawModal({
           className="rounded-t-3xl rounded-b-none sm:rounded-3xl"
         >
           <div className="mb-4 flex items-center justify-between">
-            <p className="label-sm text-on-surface-variant">Withdraw</p>
+            <p className="label-sm text-on-surface-variant">{t('title')}</p>
             <button
               type="button"
               onClick={onClose}
               className="text-on-surface-variant/60 hover:text-on-surface"
-              aria-label="Close"
+              aria-label={tCommon('actions.close')}
             >
               <X className="h-4 w-4" strokeWidth={1.75} />
             </button>
@@ -126,7 +130,7 @@ export function WithdrawModal({
             <div className="mt-4">
               {detailQuery.isLoading || !detailQuery.data ? (
                 <p className="body-sm text-on-surface-variant">
-                  Loading scheme…
+                  {t('loadingScheme')}
                 </p>
               ) : (
                 <DpsCloseFields
@@ -173,23 +177,32 @@ function InvestmentPicker({
   selectedId: string
   onChange: (id: string) => void
 }) {
+  const { t } = useTranslation('withdraw')
+  const { t: tInvestments } = useTranslation('investments')
   if (isLoading) {
     return (
-      <p className="body-sm text-on-surface-variant">Loading investments…</p>
+      <p className="body-sm text-on-surface-variant">{t('loadingScheme')}</p>
     )
   }
   if (items.length === 0) {
     return (
       <p className="body-sm text-on-surface-variant">
-        No active investments to withdraw from.
+        {tInvestments('list.empty')}
       </p>
     )
+  }
+
+  function pickerLabel(item: PickerItem): string {
+    if (item.mode === 'scheduled') return `${item.name} (${t('dpsClose')})`
+    if (item.mode === 'flexible')
+      return `${item.name} (${tInvestments('types.savings')})`
+    return `${item.name} (${tInvestments(`types.${item.type}`, { defaultValue: item.type })})`
   }
 
   return (
     <label className="block">
       <span className="label-sm mb-1.5 block text-on-surface-variant">
-        Investment
+        {t('investmentLabel')}
       </span>
       <div className="relative">
         <select
@@ -198,7 +211,7 @@ function InvestmentPicker({
           className="w-full appearance-none rounded-xl bg-surface-container-lowest px-4 py-3 pr-10 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
         >
           <option value="" disabled>
-            Select an investment…
+            {t('selectPlaceholder')}
           </option>
           {items.map((item) => (
             <option key={item.id} value={item.id}>
@@ -213,28 +226,6 @@ function InvestmentPicker({
       </div>
     </label>
   )
-}
-
-function pickerLabel(item: PickerItem): string {
-  if (item.mode === 'scheduled') return `${item.name} (DPS — close)`
-  if (item.mode === 'flexible') return `${item.name} (Savings)`
-  return `${item.name} (${labelForType(item.type)})`
-}
-
-function labelForType(type: string): string {
-  const labels: Record<string, string> = {
-    stock: 'Stock',
-    mutual_fund: 'Mutual Fund',
-    fd: 'FD',
-    gold: 'Gold',
-    crypto: 'Crypto',
-    sanchayapatra: 'Sanchayapatra',
-    real_estate: 'Real Estate',
-    agro_farm: 'Agro Farm',
-    business: 'Business',
-    other: 'Other',
-  }
-  return labels[type] ?? type
 }
 
 // ---------------------------------------------------------------------------
@@ -255,6 +246,8 @@ function WithdrawFields({
   onDone: () => void
 }) {
   const withdraw = useWithdraw(investmentId)
+  const fmt = useFormatter()
+  const { t } = useTranslation('withdraw')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayIso())
   const [notes, setNotes] = useState('')
@@ -268,11 +261,11 @@ function WithdrawFields({
     e.preventDefault()
     setError(null)
     if (!amount || amountNum <= 0) {
-      setError('Enter an amount greater than 0')
+      setError(t('errors.amountRequired'))
       return
     }
     if (amountNum > max + 0.001) {
-      setError('Amount exceeds current value')
+      setError(t('errors.amountExceeds'))
       return
     }
     try {
@@ -292,12 +285,12 @@ function WithdrawFields({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="body-sm text-on-surface-variant">
-        Available: {formatCurrency(currentValue, currency)}
+        {t('available')} {fmt.currency(currentValue, currency)}
       </p>
       <div className="grid grid-cols-2 gap-3">
         <TextField
           id="wAmount"
-          label="Amount"
+          label={t('amountLabel')}
           placeholder="0.00"
           inputMode="decimal"
           prefix={symbol}
@@ -308,7 +301,7 @@ function WithdrawFields({
         />
         <TextField
           id="wDate"
-          label="Date"
+          label={t('dateLabel')}
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -316,14 +309,14 @@ function WithdrawFields({
       </div>
       <TextField
         id="wNotes"
-        label="Notes (optional)"
-        placeholder="e.g. partial sale, emergency"
+        label={t('notesLabel')}
+        placeholder={t('notesPlaceholder')}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
       />
       {isFull && (
         <p className="text-xs text-on-surface-variant">
-          Full withdrawal — investment will be marked as closed.
+          {t('fullWithdrawalWarning')}
         </p>
       )}
       <button
@@ -331,7 +324,7 @@ function WithdrawFields({
         disabled={withdraw.isPending}
         className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
       >
-        {withdraw.isPending ? 'Recording…' : 'Confirm withdrawal'}
+        {withdraw.isPending ? t('recording') : t('confirm')}
       </button>
     </form>
   )
@@ -362,6 +355,8 @@ function DpsCloseFields({
   onDone: () => void
 }) {
   const closeDps = useCloseDps(investmentId)
+  const fmt = useFormatter()
+  const { t } = useTranslation('withdraw')
 
   const paidSorted = useMemo(
     () =>
@@ -393,7 +388,7 @@ function DpsCloseFields({
     e.preventDefault()
     setError(null)
     if (!received || Number(received) <= 0) {
-      setError('Enter the amount received')
+      setError(t('errors.dpsAmountRequired'))
       return
     }
     try {
@@ -412,15 +407,15 @@ function DpsCloseFields({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="body-sm text-on-surface-variant">
-        Accrued so far: {formatCurrency(accruedNow, currency)}. Banks often
-        deduct a penalty — enter the amount you actually receive.{' '}
-        {upcomingCount} upcoming installment{upcomingCount !== 1 ? 's' : ''}{' '}
-        will be cancelled.
+        {t('dpsInfo', {
+          value: fmt.currency(accruedNow, currency),
+          count: upcomingCount,
+        })}
       </p>
       <div className="grid grid-cols-2 gap-3">
         <TextField
           id="cReceived"
-          label="Amount received"
+          label={t('amountReceivedLabel')}
           placeholder="0.00"
           inputMode="decimal"
           prefix={symbol}
@@ -431,7 +426,7 @@ function DpsCloseFields({
         />
         <TextField
           id="cDate"
-          label="Closure date"
+          label={t('closureDateLabel')}
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -439,18 +434,18 @@ function DpsCloseFields({
       </div>
       <TextField
         id="cNotes"
-        label="Notes (optional)"
-        placeholder="e.g. emergency, switched bank"
+        label={t('notesLabel')}
+        placeholder={t('dpsNotesPlaceholder')}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
       />
-      <p className="text-xs text-tertiary">This cannot be undone.</p>
+      <p className="text-xs text-tertiary">{t('dpsWarning')}</p>
       <button
         type="submit"
         disabled={closeDps.isPending}
         className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
       >
-        {closeDps.isPending ? 'Closing…' : 'Confirm closure'}
+        {closeDps.isPending ? t('dpsClosing') : t('dpsConfirm')}
       </button>
     </form>
   )

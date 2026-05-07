@@ -1,0 +1,27 @@
+{
+  "title": "Activity",
+  "empty": {
+    "title": "No activity yet",
+    "description": "Every investment, EMI, and profile change you make will show up here."
+  },
+  "errors": {
+    "loadFailed": "Couldn't load activity",
+    "checkConnection": "Check your connection and try again."
+  },
+  "loadingMore": "Loading more activity",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "actions": {
+    "create": "Created",
+    "update": "Updated",
+    "delete": "Deleted"
+  },
+  "entities": {
+    "investment": "Investment",
+    "investment_deposit": "Deposit",
+    "investment_withdrawal": "Withdrawal",
+    "emi": "EMI",
+    "emi_payment": "EMI payment",
+    "profile": "Profile"
+  }
+}

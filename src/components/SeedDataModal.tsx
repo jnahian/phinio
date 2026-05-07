@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Check, X } from 'lucide-react'
 import { cn } from '#/lib/cn'
 import type { SeedCategories } from '#/server/dev-data'
@@ -27,6 +28,8 @@ export function SeedDataModal({
   onConfirm,
   onCancel,
 }: SeedDataModalProps) {
+  const { t } = useTranslation('seedData')
+  const { t: tCommon } = useTranslation('common')
   const [categories, setCategories] =
     useState<SeedCategories>(DEFAULT_CATEGORIES)
   const [wipe, setWipe] = useState(true)
@@ -65,37 +68,37 @@ export function SeedDataModal({
     >
       <div className="w-full max-w-sm rounded-3xl bg-surface-container-high p-6 text-on-surface shadow-[0_20px_60px_-10px_rgba(6,14,32,0.8)]">
         <h2 className="font-display mb-1 text-base font-semibold text-on-surface">
-          Load test data
+          {t('title')}
         </h2>
         <p className="body-sm mb-5 text-on-surface-variant">
-          Populate your profile with realistic demo portfolios and EMIs.
+          {t('description')}
         </p>
 
         <div className="mb-4 space-y-1">
           <CheckboxRow
-            label="Lump-sum investments"
-            hint="Stocks, mutual funds, FDs, gold, crypto"
+            label={t('categories.lumpSum')}
+            hint={t('hints.lumpSum')}
             checked={categories.lumpSum}
             disabled={isPending}
             onToggle={() => toggle('lumpSum')}
           />
           <CheckboxRow
-            label="DPS (scheduled)"
-            hint="Fixed monthly deposit schemes"
+            label={t('categories.dps')}
+            hint={t('hints.dps')}
             checked={categories.dps}
             disabled={isPending}
             onToggle={() => toggle('dps')}
           />
           <CheckboxRow
-            label="Savings pots"
-            hint="Flexible, ad-hoc deposits"
+            label={t('categories.savings')}
+            hint={t('hints.savings')}
             checked={categories.savings}
             disabled={isPending}
             onToggle={() => toggle('savings')}
           />
           <CheckboxRow
-            label="EMIs"
-            hint="Loans and credit-card instalments"
+            label={t('categories.emis')}
+            hint={t('hints.emis')}
             checked={categories.emis}
             disabled={isPending}
             onToggle={() => toggle('emis')}
@@ -104,8 +107,8 @@ export function SeedDataModal({
 
         <div className="mb-6 rounded-xl border border-outline-variant/30 p-3">
           <CheckboxRow
-            label="Wipe existing data first"
-            hint="Recommended — avoids duplicates"
+            label={t('wipeLabel')}
+            hint={t('wipeHint')}
             checked={wipe}
             disabled={isPending}
             onToggle={() => setWipe((w) => !w)}
@@ -120,7 +123,7 @@ export function SeedDataModal({
             disabled={isPending}
             className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5 disabled:opacity-60"
           >
-            Cancel
+            {tCommon('actions.cancel')}
           </button>
           <button
             type="button"
@@ -133,7 +136,7 @@ export function SeedDataModal({
             ) : (
               <Check className="h-4 w-4" strokeWidth={2.5} />
             )}
-            {isPending ? 'Loading…' : 'Load data'}
+            {isPending ? t('submitting') : t('submit')}
           </button>
         </div>
       </div>

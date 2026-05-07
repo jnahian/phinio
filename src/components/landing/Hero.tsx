@@ -1,7 +1,9 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowRightSvg, ChevronDownSvg, LockSvg, SparkleSvg } from './icons'
 
 export function Hero() {
+  const { t } = useTranslation('landing')
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-[calc(6rem+env(safe-area-inset-top))] pb-20 overflow-hidden">
       {/* Drifting ambient orbs */}
@@ -65,7 +67,7 @@ export function Hero() {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-lp-glow-pulse" />
             <span className="text-[10px] font-semibold text-on-surface-variant tracking-widest">
-              ENCRYPTED
+              {t('hero.encrypted')}
             </span>
           </div>
         </div>
@@ -80,14 +82,14 @@ export function Hero() {
             className="label-sm text-primary"
             style={{ letterSpacing: '0.16em' }}
           >
-            DIGITAL PRIVATE VAULT
+            {t('hero.vault')}
           </span>
         </div>
 
         {/* Headline */}
         <div className="space-y-1">
           <h1 className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-[-0.03em] text-on-surface">
-            Own your
+            {t('hero.headline1')}
           </h1>
           <h1
             className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-[-0.03em]"
@@ -99,15 +101,13 @@ export function Hero() {
               backgroundClip: 'text',
             }}
           >
-            financial future
+            {t('hero.headline2')}
           </h1>
         </div>
 
         {/* Subheadline */}
         <p className="body-md text-on-surface-variant max-w-lg leading-relaxed">
-          Investments, DPS deposits, savings pots, and EMI schedules — tracked
-          side by side in one encrypted vault. Works offline. Push reminders
-          before every due date.
+          {t('hero.subheading')}
         </p>
 
         {/* CTA row */}
@@ -116,7 +116,7 @@ export function Hero() {
             to="/signup"
             className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-primary-container text-on-primary-container font-display font-bold text-base shadow-[0_14px_40px_-10px_rgba(37,99,235,0.68)] hover:shadow-[0_20px_50px_-10px_rgba(37,99,235,0.82)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
           >
-            Open your vault
+            {t('hero.cta')}
             <ArrowRightSvg className="w-4 h-4" />
           </Link>
           <Link
@@ -124,14 +124,14 @@ export function Hero() {
             className="inline-flex items-center justify-center px-8 py-4 rounded-xl font-display font-semibold text-base text-on-surface hover:bg-white/5 transition-all duration-200"
             style={{ border: '1px solid rgba(67,70,85,0.28)' }}
           >
-            Sign in
+            {t('hero.signin')}
           </Link>
         </div>
 
         {/* Scroll cue */}
         <div className="mt-6 flex flex-col items-center gap-2 text-on-surface-variant/35 animate-lp-bounce-y">
           <span className="text-[10px] tracking-[0.22em] font-semibold uppercase">
-            Explore
+            {t('hero.explore')}
           </span>
           <ChevronDownSvg className="w-4 h-4" />
         </div>
