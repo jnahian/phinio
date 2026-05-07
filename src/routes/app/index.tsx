@@ -13,7 +13,6 @@ import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
-import { formatReturnPercent } from '#/lib/calculations'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { dashboardQueryOptions, useDashboardQuery } from '#/hooks/useDashboard'
 import {
@@ -35,6 +34,7 @@ export const Route = createFileRoute('/app/')({
 
 function HomeScreen() {
   const { t } = useTranslation('dashboard')
+  const { t: tInv } = useTranslation('investments')
   const fmt = useFormatter()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
@@ -174,7 +174,9 @@ function HomeScreen() {
                   )}
                 >
                   {Number(data.investmentTotals.invested) > 0
-                    ? formatReturnPercent(data.investmentTotals.gainLossPercent)
+                    ? fmt.percent(data.investmentTotals.gainLossPercent, {
+                        showSign: true,
+                      })
                     : t('summary.noHoldings')}
                 </p>
               </>
@@ -308,6 +310,12 @@ function HomeScreen() {
                   const isSelected = selectedAllocationType === item.type
                   const isDimmed =
                     selectedAllocationType !== null && !isSelected
+                  // Fall back to meta.label only if the i18n key is missing —
+                  // covers any future investment type added before its
+                  // translation lands.
+                  const label = tInv(`types.${item.type}`, {
+                    defaultValue: meta.label,
+                  })
                   return (
                     <li key={item.type}>
                       <button
@@ -330,10 +338,10 @@ function HomeScreen() {
                           )}
                         />
                         <span className="flex-1 truncate text-left text-on-surface-variant">
-                          {meta.label}
+                          {label}
                         </span>
                         <span className="font-display font-semibold text-on-surface">
-                          {item.percent}%
+                          {fmt.percent(item.percent)}
                         </span>
                       </button>
                     </li>

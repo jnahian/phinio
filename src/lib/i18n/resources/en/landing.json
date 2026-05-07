@@ -61,13 +61,15 @@
     "signin": "Already have an account?"
   },
   "trust": {
+    "privateValue": "100%",
     "privateLabel": "Private",
     "privateSub": "Zero data sharing, ever",
+    "encryptedValue": "E2E",
     "encryptedLabel": "Encrypted",
     "encryptedSub": "Bank-grade security",
+    "trackingValue": "Live",
     "trackingLabel": "Tracking",
-    "trackingSub": "Real-time net worth",
-    "trackingValue": "Live"
+    "trackingSub": "Real-time net worth"
   },
   "footer": {
     "ariaHome": "Phinio home",

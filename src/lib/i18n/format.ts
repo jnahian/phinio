@@ -14,6 +14,7 @@ export interface Formatter {
     date: Date | string | number,
     opts?: Intl.DateTimeFormatOptions,
   ) => string
+  percent: (value: number, opts?: { showSign?: boolean }) => string
 }
 
 /**
@@ -32,6 +33,17 @@ export function createFormatter(locale: Locale): Formatter {
     date: (date, opts) => {
       const d = date instanceof Date ? date : new Date(date)
       return new Intl.DateTimeFormat(dateTag, opts).format(d)
+    },
+    percent: (value, opts) => {
+      // Render through Intl.NumberFormat (not value.toFixed) so digits switch
+      // to native Bengali numerals in `bn` mode. Sign is prefixed manually so
+      // we control the '+' for positives without depending on signDisplay.
+      const formatted = new Intl.NumberFormat(numberTag, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Math.abs(value))
+      const sign = value < 0 ? '-' : opts?.showSign && value > 0 ? '+' : ''
+      return `${sign}${formatted}%`
     },
   }
 }

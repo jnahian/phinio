@@ -9,7 +9,7 @@ import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
-import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
+import { calculateReturnPercent } from '#/lib/calculations'
 import type { Currency } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
@@ -124,7 +124,11 @@ function InvestmentsListScreen() {
           />
           <SummaryCell
             label={t('list.return')}
-            value={totals.invested > 0 ? formatReturnPercent(totalReturn) : '—'}
+            value={
+              totals.invested > 0
+                ? fmt.percent(totalReturn, { showSign: true })
+                : '—'
+            }
             valueClass={
               totalReturn > 0
                 ? 'text-secondary'
@@ -394,7 +398,7 @@ function InvestmentCard({ item, currency }: ListItemProps) {
                     : 'text-on-surface-variant',
               )}
             >
-              {formatReturnPercent(returnPercent)}
+              {fmt.percent(returnPercent, { showSign: true })}
             </p>
           </div>
         </div>
@@ -549,7 +553,7 @@ function SavingsCard({ item, currency }: ListItemProps) {
                       : 'text-on-surface-variant',
                 )}
               >
-                {formatReturnPercent(returnPercent)}
+                {fmt.percent(returnPercent, { showSign: true })}
               </p>
             )}
           </div>

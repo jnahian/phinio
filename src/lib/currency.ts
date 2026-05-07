@@ -10,12 +10,13 @@ const CURRENCY_SYMBOL: Record<Currency, string> = {
   USD: '$',
 }
 
-// Pick the BCP-47 tag for Intl.NumberFormat. Bangla mode renders native
-// Bengali digits (০-৯) automatically. English mode keeps the per-currency
-// English locale so USD shows "1,234.56" with US grouping and BDT keeps
-// the Indic grouping that Bangladeshi users expect.
+// Pick the BCP-47 tag for Intl.NumberFormat. Bangla mode pins the numbering
+// system to `beng` so digits render as native Bengali numerals (০-৯) on every
+// browser; some ICU builds default `bn-BD` to Latin digits otherwise. English
+// mode keeps the per-currency English locale so USD shows "1,234.56" with US
+// grouping and BDT keeps the Indic grouping Bangladeshi users expect.
 function numberLocale(currency: Currency, locale: Locale): string {
-  if (locale === 'bn') return 'bn-BD'
+  if (locale === 'bn') return 'bn-BD-u-nu-beng'
   return currency === 'USD' ? 'en-US' : 'en-BD'
 }
 

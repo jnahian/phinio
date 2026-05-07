@@ -10,7 +10,7 @@ import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
-import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
+import { calculateReturnPercent } from '#/lib/calculations'
 import {
   useInvestmentQuery,
   useUpdateSavings,
@@ -221,7 +221,8 @@ function SavingsDetailScreen() {
                     : 'text-white/70',
               )}
             >
-              {formatReturnPercent(returnPercent)} {t('savings.returnSuffix')}
+              {fmt.percent(returnPercent, { showSign: true })}{' '}
+              {t('savings.returnSuffix')}
             </p>
           )}
           {isActive && !showDepositForm && (
