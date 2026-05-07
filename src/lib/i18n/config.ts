@@ -10,17 +10,19 @@ export function isLocale(value: unknown): value is Locale {
   )
 }
 
-// BCP-47 tags fed to Intl APIs. Bangla mode uses bn-BD so digits render as
-// native Bengali numerals (০-৯) automatically; English mode uses en-BD for
-// BDT and en-US for USD (currency-specific tag picked at the formatter level).
+// BCP-47 tags fed to Intl APIs. Bangla mode pins the numbering system to
+// `beng` via the `-u-nu-beng` Unicode extension because some browser ICU
+// builds (notably V8/Chrome) default `bn-BD` to Latin digits — only `bn-IN`
+// reliably defaults to native Bengali numerals. The explicit extension keeps
+// digit rendering deterministic across Node, Firefox, and Chrome.
 export const NUMBER_LOCALE: Record<Locale, string> = {
   en: 'en-BD',
-  bn: 'bn-BD',
+  bn: 'bn-BD-u-nu-beng',
 }
 
 export const DATE_LOCALE: Record<Locale, string> = {
   en: 'en-GB',
-  bn: 'bn-BD',
+  bn: 'bn-BD-u-nu-beng',
 }
 
 export const I18N_NAMESPACES = [

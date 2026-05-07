@@ -37,8 +37,3 @@ export function calculateProfitLoss(
   if (!Number.isFinite(i) || !Number.isFinite(c)) return '0.00'
   return (c - i).toFixed(2)
 }
-
-export function formatReturnPercent(value: number): string {
-  const sign = value > 0 ? '+' : ''
-  return `${sign}${value.toFixed(2)}%`
-}
