@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-05-07
+
+The headline change is **Bangla language support** — Phinio now ships a
+fully bilingual UX with native Bengali numerals, the natural fit for its
+BDT-default audience. Alongside that, offline/sync feedback moved out of
+the page flow so saving no longer shifts the layout.
+
+### Added
+
+- **Bangla (বাংলা) language throughout the app.** Every user-visible
+  screen — auth, dashboard, investments, EMIs, DPS, savings, activity,
+  profile, notifications, withdraw flows, and the landing page — is
+  translated. Currency, dates, percentages, counts, and relative times
+  all render with native Bengali digits in Bangla mode (e.g.
+  ৳১,২৩,৪৫৬.৭৮, ৬৮.২১%). Currency codes like BDT/USD stay verbatim as
+  ISO codes.
+- **Language switcher on the landing page.** Unauthenticated visitors
+  can flip between English and Bangla from the landing nav before
+  signing up; the choice persists via cookie. Authenticated users
+  continue to set their preferred language from the profile page, which
+  also saves it to their account.
+
+### Changed
+
+- **Offline and sync state now appear as toasts instead of a top
+  banner.** The errored / offline / syncing indicators overlay the
+  page rather than insert into document flow, so saving no longer
+  pushes content down. The "Syncing…" toast is also debounced so fast
+  online saves don't flash it.
+- **PWA `start_url` is now `/app`.** Launching Phinio from the home
+  screen drops you straight into the app shell instead of the landing
+  page.
+- Removed the background blur effect on landing page decorative
+  elements.
+
+### Fixed
+
+- Currency, percentages, and relative time strings (e.g. "5 minutes
+  ago", "99+" notification badge) that previously rendered with Latin
+  digits in Bangla mode now correctly use Bengali digits across all
+  browsers.
+- Various delete/complete confirmation dialogs that briefly lost their
+  entity name (e.g. "Delete X?") and installment counts after the
+  initial translation pass now interpolate the name and count
+  correctly.
+- Edit/save no longer causes a brief layout shift, even when the sync
+  indicator briefly appears.
+
 ## [1.6.2] - 2026-05-05
 
 ### Added
