@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Bell,
   BellOff,
@@ -9,6 +10,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { cn } from '#/lib/cn'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useClearReadNotifications,
   useMarkAllNotificationsRead,
@@ -19,6 +21,8 @@ import {
 import { usePushSubscription } from '#/hooks/usePushSubscription'
 
 export function NotificationBell() {
+  const { t } = useTranslation('notifications')
+  const fmt = useFormatter()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const unreadQuery = useUnreadNotificationCountQuery()
@@ -54,8 +58,8 @@ export function NotificationBell() {
         type="button"
         aria-label={
           unreadCount > 0
-            ? `Notifications, ${unreadCount} unread`
-            : 'Notifications'
+            ? t('ariaLabelUnread', { count: unreadCount })
+            : t('ariaLabel')
         }
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -64,7 +68,7 @@ export function NotificationBell() {
         <Bell className="h-5 w-5" strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-error px-1 text-[0.65rem] font-semibold text-on-error">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? '99+' : fmt.number(unreadCount)}
           </span>
         )}
       </button>
@@ -72,11 +76,11 @@ export function NotificationBell() {
       {open && (
         <div
           role="dialog"
-          aria-label="Notifications"
+          aria-label={t('ariaLabel')}
           className="absolute right-0 top-12 z-50 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-surface-container-high shadow-2xl ring-1 ring-outline-variant/20"
         >
           <div className="flex items-center justify-between px-4 py-3">
-            <h2 className="title-sm text-on-surface">Notifications</h2>
+            <h2 className="title-sm text-on-surface">{t('title')}</h2>
             <div className="flex items-center gap-1">
               {notifications.some((n) => !n.read) && (
                 <button
@@ -86,7 +90,7 @@ export function NotificationBell() {
                   className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-primary-fixed-dim hover:bg-primary-container/20 disabled:opacity-50"
                 >
                   <CheckCheck className="h-3.5 w-3.5" />
-                  Mark all read
+                  {t('markAllRead')}
                 </button>
               )}
               {notifications.some((n) => n.read) && (
@@ -97,7 +101,7 @@ export function NotificationBell() {
                   className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface disabled:opacity-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Clear read
+                  {t('clearRead')}
                 </button>
               )}
             </div>
@@ -116,9 +120,7 @@ export function NotificationBell() {
                   className="h-4 w-4 flex-shrink-0"
                   strokeWidth={1.75}
                 />
-                <span className="flex-1">
-                  Enable reminders so you don't miss a payment.
-                </span>
+                <span className="flex-1">{t('enableReminders')}</span>
               </button>
             )}
 
@@ -128,24 +130,19 @@ export function NotificationBell() {
                 className="mt-0.5 h-4 w-4 flex-shrink-0"
                 strokeWidth={1.75}
               />
-              <span className="flex-1">
-                Reminders are blocked. Re-enable notifications in your browser
-                settings to turn them on.
-              </span>
+              <span className="flex-1">{t('blocked')}</span>
             </div>
           )}
 
           <div className="max-h-[60vh] overflow-y-auto">
             {listQuery.isLoading ? (
               <div className="px-4 py-10 text-center text-sm text-on-surface-variant">
-                Loading…
+                {t('loading')}
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
                 <BellOff className="h-8 w-8 text-on-surface-variant/50" />
-                <p className="body-sm text-on-surface-variant">
-                  You're all caught up.
-                </p>
+                <p className="body-sm text-on-surface-variant">{t('empty')}</p>
               </div>
             ) : (
               <ul className="divide-y divide-outline-variant/10">
@@ -172,7 +169,7 @@ export function NotificationBell() {
                             {n.title}
                           </p>
                           <time className="flex-shrink-0 text-[0.7rem] text-on-surface-variant/70">
-                            {formatRelative(n.createdAt)}
+                            {formatRelative(n.createdAt, t, fmt.locale)}
                           </time>
                         </div>
                         <p className="mt-0.5 line-clamp-2 text-xs text-on-surface-variant">
@@ -226,15 +223,21 @@ export function NotificationBell() {
   )
 }
 
-function formatRelative(date: Date | string): string {
+type ShortRelativeT = (key: string, options?: { count: number }) => string
+
+function formatRelative(
+  date: Date | string,
+  t: ShortRelativeT,
+  locale: 'en' | 'bn',
+): string {
   const d = typeof date === 'string' ? new Date(date) : date
   const diffMs = Date.now() - d.getTime()
   const min = Math.floor(diffMs / 60_000)
-  if (min < 1) return 'now'
-  if (min < 60) return `${min}m`
+  if (min < 1) return t('shortRelative.now')
+  if (min < 60) return t('shortRelative.minutes', { count: min })
   const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr}h`
+  if (hr < 24) return t('shortRelative.hours', { count: hr })
   const day = Math.floor(hr / 24)
-  if (day < 7) return `${day}d`
-  return d.toLocaleDateString()
+  if (day < 7) return t('shortRelative.days', { count: day })
+  return d.toLocaleDateString(locale === 'bn' ? 'bn-BD' : 'en-GB')
 }

@@ -6,7 +6,7 @@ import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
-import { formatCurrency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { isFeePayment, isRegularPayment } from '#/lib/emi-calculator'
 import {
   useCompleteEmi,
@@ -32,6 +32,7 @@ function EmiDetailScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
+  const fmt = useFormatter()
 
   const { data: emi, isLoading } = useEmiQuery(emiId)
   useSetTopBarTitle(emi?.label ?? null)
@@ -157,7 +158,7 @@ function EmiDetailScreen() {
             Remaining balance
           </p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
-            {formatCurrency(remainingBalance.toFixed(2), currency)}
+            {fmt.currency(remainingBalance.toFixed(2), currency)}
           </p>
           <p className="body-sm mt-2 text-on-primary-container/75">
             {remainingMonths} of {emi.tenureMonths} months left
@@ -167,15 +168,15 @@ function EmiDetailScreen() {
         <section className="grid grid-cols-3 gap-3">
           <StatTile
             label="Monthly"
-            value={formatCurrency(emi.emiAmount, currency)}
+            value={fmt.currency(emi.emiAmount, currency)}
           />
           <StatTile
             label="Principal paid"
-            value={formatCurrency(principalPaid.toFixed(2), currency)}
+            value={fmt.currency(principalPaid.toFixed(2), currency)}
           />
           <StatTile
             label="Interest paid"
-            value={formatCurrency(interestPaid.toFixed(2), currency)}
+            value={fmt.currency(interestPaid.toFixed(2), currency)}
             accent="tertiary"
           />
         </section>
@@ -199,7 +200,7 @@ function EmiDetailScreen() {
             <LegendPill
               color="bg-primary-container"
               label="Principal"
-              value={formatCurrency(emi.principal, currency)}
+              value={fmt.currency(emi.principal, currency)}
               selected={selectedSegment === 'Principal'}
               dimmed={
                 selectedSegment !== null && selectedSegment !== 'Principal'
@@ -213,7 +214,7 @@ function EmiDetailScreen() {
             <LegendPill
               color="bg-tertiary-container"
               label="Interest"
-              value={formatCurrency(totalInterest.toFixed(2), currency)}
+              value={fmt.currency(totalInterest.toFixed(2), currency)}
               selected={selectedSegment === 'Interest'}
               dimmed={
                 selectedSegment !== null && selectedSegment !== 'Interest'
@@ -230,7 +231,7 @@ function EmiDetailScreen() {
               Total
             </p>
             <p className="font-display text-sm font-bold text-on-surface">
-              {formatCurrency(totalLifetimePayment.toFixed(2), currency)}
+              {fmt.currency(totalLifetimePayment.toFixed(2), currency)}
             </p>
           </div>
           {emi.processingFee && (
@@ -240,7 +241,7 @@ function EmiDetailScreen() {
                   Processing fee
                 </p>
                 <p className="font-display text-sm font-bold text-on-surface">
-                  {formatCurrency(emi.processingFee, currency)}
+                  {fmt.currency(emi.processingFee, currency)}
                 </p>
               </div>
               <div className="mt-2 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
@@ -248,7 +249,7 @@ function EmiDetailScreen() {
                   Total cost
                 </p>
                 <p className="font-display text-sm font-bold text-on-surface">
-                  {formatCurrency(totalCost.toFixed(2), currency)}
+                  {fmt.currency(totalCost.toFixed(2), currency)}
                 </p>
               </div>
             </>
@@ -293,7 +294,7 @@ function EmiDetailScreen() {
                         </div>
                         <div className="text-right">
                           <p className="font-display text-sm font-bold">
-                            {formatCurrency(payment.emiAmount, currency)}
+                            {fmt.currency(payment.emiAmount, currency)}
                           </p>
                         </div>
                       </div>
@@ -357,17 +358,11 @@ function EmiDetailScreen() {
                         <div className="mt-0.5 flex gap-3 text-xs text-on-surface-variant/75">
                           <span>
                             P{' '}
-                            {formatCurrency(
-                              payment.principalComponent,
-                              currency,
-                            )}
+                            {fmt.currency(payment.principalComponent, currency)}
                           </span>
                           <span>
                             I{' '}
-                            {formatCurrency(
-                              payment.interestComponent,
-                              currency,
-                            )}
+                            {fmt.currency(payment.interestComponent, currency)}
                           </span>
                         </div>
                       </div>
@@ -378,11 +373,10 @@ function EmiDetailScreen() {
                             isPaid && 'line-through',
                           )}
                         >
-                          {formatCurrency(payment.emiAmount, currency)}
+                          {fmt.currency(payment.emiAmount, currency)}
                         </p>
                         <p className="text-[11px] text-on-surface-variant/75">
-                          bal{' '}
-                          {formatCurrency(payment.remainingBalance, currency)}
+                          bal {fmt.currency(payment.remainingBalance, currency)}
                         </p>
                       </div>
                     </button>

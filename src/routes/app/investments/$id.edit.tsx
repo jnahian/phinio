@@ -18,7 +18,8 @@ import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useDeleteInvestment,
   useInvestmentQuery,
@@ -61,6 +62,7 @@ function toDateInput(value: Date | string | null | undefined): string {
 }
 
 function EditInvestmentScreen() {
+  const fmt = useFormatter()
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
@@ -176,7 +178,7 @@ function EditInvestmentScreen() {
             />
             <p className="label-sm text-white/70">Current value</p>
             <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-              {formatCurrency(investment.currentValue, currency)}
+              {fmt.currency(investment.currentValue, currency)}
             </p>
             {hasReturn && (
               <p
@@ -349,7 +351,7 @@ function EditInvestmentScreen() {
                           )}
                         </div>
                         <p className="font-display text-sm font-bold text-tertiary">
-                          −{formatCurrency(w.amount, currency)}
+                          −{fmt.currency(w.amount, currency)}
                         </p>
                       </div>
                     </li>

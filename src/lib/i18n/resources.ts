@@ -6,6 +6,8 @@ import enEmis from './resources/en/emis.json'
 import enProfile from './resources/en/profile.json'
 import enNotifications from './resources/en/notifications.json'
 import enValidation from './resources/en/validation.json'
+import enActivity from './resources/en/activity.json'
+import enWithdraw from './resources/en/withdraw.json'
 
 import bnCommon from './resources/bn/common.json'
 import bnAuth from './resources/bn/auth.json'
@@ -15,6 +17,8 @@ import bnEmis from './resources/bn/emis.json'
 import bnProfile from './resources/bn/profile.json'
 import bnNotifications from './resources/bn/notifications.json'
 import bnValidation from './resources/bn/validation.json'
+import bnActivity from './resources/bn/activity.json'
+import bnWithdraw from './resources/bn/withdraw.json'
 
 import type { Locale } from './config'
 
@@ -31,6 +35,8 @@ export const resources: Record<
     profile: enProfile,
     notifications: enNotifications,
     validation: enValidation,
+    activity: enActivity,
+    withdraw: enWithdraw,
   },
   bn: {
     common: bnCommon,
@@ -41,5 +47,7 @@ export const resources: Record<
     profile: bnProfile,
     notifications: bnNotifications,
     validation: bnValidation,
+    activity: bnActivity,
+    withdraw: bnWithdraw,
   },
 }

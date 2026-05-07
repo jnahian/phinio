@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowDownLeft, CloudOff, TrendingUp } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { WithdrawModal } from '#/components/WithdrawModal'
@@ -9,39 +10,36 @@ import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
-import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   investmentsListQueryOptions,
   useInvestmentsQuery,
 } from '#/hooks/useInvestments'
 import type { InvestmentType } from '#/lib/validators'
-import {
-  INVESTMENT_TYPE_META,
-  getInvestmentTypeMeta,
-} from '#/lib/investment-types'
+import { INVESTMENT_TYPE_META } from '#/lib/investment-types'
 
 type TypeFilter = InvestmentType | 'dps' | 'savings' | 'all'
 type StatusFilter = 'active' | 'completed'
 
-const TYPE_PILLS: Array<FilterPill<TypeFilter>> = [
-  { value: 'all', label: 'All' },
-  { value: 'stock', label: 'Stocks' },
-  { value: 'mutual_fund', label: 'Mutual Fund' },
-  { value: 'fd', label: 'FD' },
-  { value: 'gold', label: 'Gold' },
-  { value: 'crypto', label: 'Crypto' },
-  { value: 'sanchayapatra', label: 'Sanchayapatra' },
-  { value: 'real_estate', label: 'Real Estate' },
-  { value: 'agro_farm', label: 'Agro Farm' },
-  { value: 'business', label: 'Business' },
-  { value: 'dps', label: 'DPS' },
-  { value: 'savings', label: 'Savings' },
-  { value: 'other', label: 'Other' },
+const TYPE_PILL_KEYS: ReadonlyArray<TypeFilter> = [
+  'all',
+  'stock',
+  'mutual_fund',
+  'fd',
+  'gold',
+  'crypto',
+  'sanchayapatra',
+  'real_estate',
+  'agro_farm',
+  'business',
+  'dps',
+  'savings',
+  'other',
 ]
 
 export const Route = createFileRoute('/app/investments/')({
-  staticData: { title: 'Investments' },
+  staticData: { title: 'pageTitles.investments' },
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(
       investmentsListQueryOptions({ status: 'active', type: 'all' }),
@@ -51,8 +49,16 @@ export const Route = createFileRoute('/app/investments/')({
 })
 
 function InvestmentsListScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
+  const fmt = useFormatter()
+
+  const TYPE_PILLS: Array<FilterPill<TypeFilter>> = TYPE_PILL_KEYS.map((k) => ({
+    value: k,
+    label: t(`types.${k}`),
+  }))
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
@@ -101,15 +107,19 @@ function InvestmentsListScreen() {
       <Card variant="low" className="mb-6">
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell
-            label="Invested"
-            value={formatCurrency(totals.invested.toFixed(2), currency)}
+            label={t('list.totalInvested')}
+            value={fmt.currency(totals.invested.toFixed(2), currency)}
           />
           <SummaryCell
-            label={status === 'completed' ? 'Exited' : 'Current'}
-            value={formatCurrency(totals.current.toFixed(2), currency)}
+            label={
+              status === 'completed'
+                ? t('list.totalExited')
+                : t('list.totalCurrent')
+            }
+            value={fmt.currency(totals.current.toFixed(2), currency)}
           />
           <SummaryCell
-            label="Return"
+            label={t('list.return')}
             value={totals.invested > 0 ? formatReturnPercent(totalReturn) : '—'}
             valueClass={
               totalReturn > 0
@@ -128,13 +138,13 @@ function InvestmentsListScreen() {
             active={status === 'active'}
             onClick={() => setStatus('active')}
           >
-            Active
+            {t('list.active')}
           </StatusTab>
           <StatusTab
             active={status === 'completed'}
             onClick={() => setStatus('completed')}
           >
-            Completed
+            {t('list.completed')}
           </StatusTab>
         </div>
         <button
@@ -143,7 +153,7 @@ function InvestmentsListScreen() {
           className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-semibold text-on-surface-variant transition hover:bg-surface-container hover:text-on-surface"
         >
           <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
-          Withdraw
+          {t('list.withdraw')}
         </button>
       </div>
 
@@ -157,15 +167,15 @@ function InvestmentsListScreen() {
       {isError && totalItems === 0 ? (
         <EmptyState
           icon={<CloudOff className="h-7 w-7" strokeWidth={1.75} />}
-          title="Couldn't load investments"
-          description="Check your connection and try again."
+          title={t('list.loadFailed')}
+          description={tCommon('states.errorDescription')}
           action={
             <button
               type="button"
               onClick={() => refetch()}
               className="btn-primary"
             >
-              Retry
+              {tCommon('actions.retry')}
             </button>
           }
         />
@@ -191,13 +201,9 @@ function InvestmentsListScreen() {
       ) : totalItems === 0 ? (
         <EmptyState
           icon={<TrendingUp className="h-7 w-7" strokeWidth={1.75} />}
-          title={
-            status === 'active' ? 'No investments yet' : 'No completed exits'
-          }
+          title={status === 'active' ? t('list.empty') : t('list.noExits')}
           description={
-            status === 'active'
-              ? 'Track stocks, mutual funds, FDs, DPS schemes, savings pots and more.'
-              : 'Investments you mark as completed will appear here.'
+            status === 'active' ? t('list.emptyHint') : t('list.noExitsHint')
           }
         />
       ) : (
@@ -311,6 +317,8 @@ interface ListItemProps {
 }
 
 function InvestmentCard({ item, currency }: ListItemProps) {
+  const { t } = useTranslation('investments')
+  const fmt = useFormatter()
   const isCompleted = item.status === 'completed'
   const displayValue = isCompleted
     ? (item.exitValue ?? item.currentValue)
@@ -325,14 +333,17 @@ function InvestmentCard({ item, currency }: ListItemProps) {
     item.investedAmount,
     returnNumerator,
   )
-  const date = item.dateOfInvestment ? new Date(item.dateOfInvestment) : null
-  const formattedDate = date
-    ? date.toLocaleDateString(undefined, {
+  const formattedDate = item.dateOfInvestment
+    ? fmt.date(item.dateOfInvestment, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       })
     : null
+  const typeKey = (
+    item.type in INVESTMENT_TYPE_META ? item.type : 'other'
+  ) as keyof typeof INVESTMENT_TYPE_META
+  const meta = INVESTMENT_TYPE_META[typeKey]
 
   return (
     <Link
@@ -353,10 +364,10 @@ function InvestmentCard({ item, currency }: ListItemProps) {
               <span
                 className={cn(
                   'label-sm inline-flex items-center rounded-full px-2 py-0.5 normal-case tracking-wide',
-                  getInvestmentTypeMeta(item.type).chipClass,
+                  meta.chipClass,
                 )}
               >
-                {getInvestmentTypeMeta(item.type).label}
+                {t(`types.${item.type}`)}
               </span>
               {formattedDate && (
                 <span className="body-sm text-on-surface-variant/70">
@@ -367,7 +378,7 @@ function InvestmentCard({ item, currency }: ListItemProps) {
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(displayValue, currency)}
+              {fmt.currency(displayValue, currency)}
             </p>
             <p
               className={cn(
@@ -384,9 +395,9 @@ function InvestmentCard({ item, currency }: ListItemProps) {
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant/70">
-          <span>Invested</span>
+          <span>{t('list.totalInvested')}</span>
           <span className="font-medium text-on-surface-variant">
-            {formatCurrency(item.investedAmount, currency)}
+            {fmt.currency(item.investedAmount, currency)}
           </span>
         </div>
       </Card>
@@ -395,6 +406,9 @@ function InvestmentCard({ item, currency }: ListItemProps) {
 }
 
 function DpsCard({ item, currency }: ListItemProps) {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
+  const fmt = useFormatter()
   const progressPercent =
     item.tenureMonths && item.tenureMonths > 0
       ? (item.paidCount / item.tenureMonths) * 100
@@ -422,20 +436,21 @@ function DpsCard({ item, currency }: ListItemProps) {
                   INVESTMENT_TYPE_META.dps.chipClass,
                 )}
               >
-                {INVESTMENT_TYPE_META.dps.label}
+                {t('types.dps')}
               </span>
               <span className="body-sm text-on-surface-variant/70">
-                {item.paidCount}/{item.tenureMonths} months
+                {fmt.number(item.paidCount)}/
+                {fmt.number(item.tenureMonths ?? 0)} {tCommon('units.months')}
               </span>
             </div>
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(item.investedAmount, currency)}
+              {fmt.currency(item.investedAmount, currency)}
             </p>
             {item.maturityValue && (
               <p className="body-sm font-semibold text-secondary">
-                → {formatCurrency(item.maturityValue, currency)}
+                → {fmt.currency(item.maturityValue, currency)}
               </p>
             )}
           </div>
@@ -450,15 +465,15 @@ function DpsCard({ item, currency }: ListItemProps) {
 
         <div className="mt-2 flex items-center gap-2 text-xs text-on-surface-variant/70">
           <span>
-            {formatCurrency(item.monthlyDeposit ?? '0', currency)}/mo ·{' '}
-            {item.interestRate}% {item.interestType}
+            {fmt.currency(item.monthlyDeposit ?? '0', currency)}
+            {t('list.perMonth')} · {item.interestRate}% {item.interestType}
           </span>
           {item.nextDueDate && (
             <>
               <span>·</span>
               <span>
-                Next:{' '}
-                {new Date(item.nextDueDate).toLocaleDateString(undefined, {
+                {t('list.next')}:{' '}
+                {fmt.date(item.nextDueDate, {
                   month: 'short',
                   day: 'numeric',
                 })}
@@ -472,6 +487,8 @@ function DpsCard({ item, currency }: ListItemProps) {
 }
 
 function SavingsCard({ item, currency }: ListItemProps) {
+  const { t } = useTranslation('investments')
+  const fmt = useFormatter()
   const returnNumerator = (
     Number(item.currentValue) + Number(item.totalWithdrawn)
   ).toFixed(2)
@@ -503,16 +520,16 @@ function SavingsCard({ item, currency }: ListItemProps) {
                   INVESTMENT_TYPE_META.savings.chipClass,
                 )}
               >
-                {INVESTMENT_TYPE_META.savings.label}
+                {t('types.savings')}
               </span>
               <span className="body-sm text-on-surface-variant/70">
-                {item.paidCount} deposit{item.paidCount !== 1 ? 's' : ''}
+                {t('list.deposits', { count: item.paidCount })}
               </span>
             </div>
           </div>
           <div className="text-right">
             <p className="font-display text-lg font-bold text-on-surface">
-              {formatCurrency(item.currentValue, currency)}
+              {fmt.currency(item.currentValue, currency)}
             </p>
             {hasReturn && (
               <p
@@ -532,9 +549,9 @@ function SavingsCard({ item, currency }: ListItemProps) {
         </div>
         {Number(item.investedAmount) > 0 && (
           <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant/70">
-            <span>Deposited</span>
+            <span>{t('list.deposited')}</span>
             <span className="font-medium text-on-surface-variant">
-              {formatCurrency(item.investedAmount, currency)}
+              {fmt.currency(item.investedAmount, currency)}
             </span>
           </div>
         )}

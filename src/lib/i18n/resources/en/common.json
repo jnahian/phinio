@@ -16,7 +16,12 @@
     "saving": "Saving…",
     "saved": "Saved",
     "remove": "Remove",
-    "submit": "Submit"
+    "submit": "Submit",
+    "viewAll": "View all",
+    "yesterday": "Yesterday",
+    "today": "Today",
+    "all": "All",
+    "discard": "Discard"
   },
   "tabs": {
     "home": "Home",
@@ -24,6 +29,25 @@
     "emis": "EMIs",
     "activity": "Activity",
     "profile": "Profile"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "investments": "Investments",
+    "emis": "EMIs",
+    "activity": "Activity",
+    "profile": "Profile",
+    "addInvestment": "Add Investment",
+    "addEmi": "Add EMI",
+    "newDps": "New DPS",
+    "newSavings": "New Savings",
+    "editInvestment": "Edit Investment"
+  },
+  "fab": {
+    "create": "Create",
+    "investment": "Investment",
+    "dps": "DPS Scheme",
+    "savings": "Savings Pot",
+    "emi": "EMI"
   },
   "states": {
     "loading": "Loading…",
@@ -35,7 +59,16 @@
     "tryAgain": "Try again"
   },
   "offline": {
-    "banner": "You're offline. Changes will sync when you're back online."
+    "banner": "You're offline. Changes will sync when you're back online.",
+    "queuedShort": "You're offline. Changes will sync when you reconnect.",
+    "queuedWithCount_one": "You're offline with {{count}} action queued. Reconnect soon to avoid losing it.",
+    "queuedWithCount_other": "You're offline with {{count}} actions queued. Reconnect soon to avoid losing them.",
+    "syncing_one": "Syncing {{count}} change…",
+    "syncing_other": "Syncing {{count}} changes…",
+    "failed_one": "{{count}} action failed to sync.",
+    "failed_other": "{{count}} actions failed to sync.",
+    "retry": "Retry",
+    "discard": "Discard"
   },
   "due": {
     "today": "Due today",
@@ -54,8 +87,18 @@
     "daysAgo_one": "{{count}} day ago",
     "daysAgo_other": "{{count}} days ago"
   },
+  "units": {
+    "months": "months",
+    "perMonth": "/mo",
+    "percent": "%"
+  },
   "currency": {
     "BDT": "BDT",
     "USD": "USD"
+  },
+  "ariaLabels": {
+    "back": "Back",
+    "profile": "Profile",
+    "close": "Close"
   }
 }

@@ -7,7 +7,8 @@ import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
 import {
   useInvestmentQuery,
@@ -33,6 +34,7 @@ function SavingsDetailScreen() {
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
+  const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
   useSetTopBarTitle(inv?.name ?? null)
@@ -201,7 +203,7 @@ function SavingsDetailScreen() {
           />
           <p className="label-sm text-white/70">Current balance</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {formatCurrency(inv.currentValue, currency)}
+            {fmt.currency(inv.currentValue, currency)}
           </p>
           {hasReturn && (
             <p
@@ -244,7 +246,7 @@ function SavingsDetailScreen() {
         <section className="grid grid-cols-2 gap-3">
           <StatTile
             label="Total deposited"
-            value={formatCurrency(inv.investedAmount, currency)}
+            value={fmt.currency(inv.investedAmount, currency)}
           />
           <StatTile label="Deposits" value={String(deposits.length)} />
         </section>
@@ -337,7 +339,7 @@ function SavingsDetailScreen() {
                           )}
                         >
                           {isDeposit ? '+' : '−'}
-                          {formatCurrency(row.amount, currency)}
+                          {fmt.currency(row.amount, currency)}
                         </p>
                         {isDeposit && (
                           <button

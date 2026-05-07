@@ -26,7 +26,7 @@ const AllocationDonut = lazy(() => import('#/components/AllocationDonut'))
 const ALLOCATION_TOP_N = 5
 
 export const Route = createFileRoute('/app/')({
-  staticData: { title: 'Dashboard' },
+  staticData: { title: 'pageTitles.dashboard' },
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(dashboardQueryOptions())
   },

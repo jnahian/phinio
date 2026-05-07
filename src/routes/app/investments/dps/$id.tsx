@@ -7,7 +7,8 @@ import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useInvestmentQuery,
   useMarkDepositPaid,
@@ -26,6 +27,7 @@ function DpsDetailScreen() {
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
+  const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
   useSetTopBarTitle(inv?.name ?? null)
@@ -117,7 +119,7 @@ function DpsDetailScreen() {
           />
           <p className="label-sm text-white/70">Total deposited</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {formatCurrency(inv.investedAmount, currency)}
+            {fmt.currency(inv.investedAmount, currency)}
           </p>
           <p className="body-sm mt-2 text-white/70">
             {paidCount} of {inv.tenureMonths} months paid
@@ -146,16 +148,16 @@ function DpsDetailScreen() {
         <section className="grid grid-cols-3 gap-3">
           <StatTile
             label="Monthly"
-            value={formatCurrency(inv.monthlyDeposit ?? '0', currency)}
+            value={fmt.currency(inv.monthlyDeposit ?? '0', currency)}
           />
           <StatTile
             label="Maturity value"
-            value={formatCurrency(maturityValue, currency)}
+            value={fmt.currency(maturityValue, currency)}
             accent="secondary"
           />
           <StatTile
             label="Interest earned"
-            value={formatCurrency(
+            value={fmt.currency(
               Math.max(0, interestEarned).toFixed(2),
               currency,
             )}
@@ -177,7 +179,7 @@ function DpsDetailScreen() {
               {isClosed ? 'Closed prematurely' : 'Matured'}
             </p>
             <p className="font-display mt-1 text-lg font-bold">
-              Received {formatCurrency(inv.exitValue, currency)} on{' '}
+              Received {fmt.currency(inv.exitValue, currency)} on{' '}
               {new Date(inv.completedAt).toLocaleDateString(undefined, {
                 month: 'short',
                 day: 'numeric',
@@ -274,7 +276,7 @@ function DpsDetailScreen() {
                             isPaid && 'line-through',
                           )}
                         >
-                          {formatCurrency(dep.amount, currency)}
+                          {fmt.currency(dep.amount, currency)}
                         </p>
                       </div>
                     </button>

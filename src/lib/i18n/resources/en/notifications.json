@@ -1,4 +1,20 @@
 {
+  "title": "Notifications",
+  "ariaLabel": "Notifications",
+  "ariaLabelUnread_one": "Notifications, {{count}} unread",
+  "ariaLabelUnread_other": "Notifications, {{count}} unread",
+  "markAllRead": "Mark all read",
+  "clearRead": "Clear read",
+  "enableReminders": "Enable reminders so you don't miss a payment.",
+  "blocked": "Reminders are blocked. Re-enable notifications in your browser settings to turn them on.",
+  "empty": "You're all caught up.",
+  "loading": "Loading…",
+  "shortRelative": {
+    "now": "now",
+    "minutes": "{{count}}m",
+    "hours": "{{count}}h",
+    "days": "{{count}}d"
+  },
   "emi": {
     "dueToday": {
       "title": "EMI due today",

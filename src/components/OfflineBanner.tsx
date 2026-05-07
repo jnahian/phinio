@@ -4,6 +4,7 @@ import {
   useMutationState,
   useQueryClient,
 } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle, CloudOff, RefreshCw } from 'lucide-react'
 
 /**
@@ -28,6 +29,7 @@ import { AlertCircle, CloudOff, RefreshCw } from 'lucide-react'
 const QUEUE_CAP_WARNING = 50
 
 export function OfflineBanner() {
+  const { t } = useTranslation('common')
   const queryClient = useQueryClient()
   // Initialize to `true` on BOTH server and client first render to avoid a
   // hydration mismatch when the client mounts offline. The effect reconciles
@@ -72,23 +74,20 @@ export function OfflineBanner() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
       >
         <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-        <span>
-          {erroredCount} {erroredCount === 1 ? 'action' : 'actions'} failed to
-          sync.
-        </span>
+        <span>{t('offline.failed', { count: erroredCount })}</span>
         <button
           type="button"
           onClick={handleRetry}
           className="underline underline-offset-2 hover:text-white"
         >
-          Retry
+          {t('offline.retry')}
         </button>
         <button
           type="button"
           onClick={handleDiscard}
           className="underline underline-offset-2 hover:text-white"
         >
-          Discard
+          {t('offline.discard')}
         </button>
       </div>
     )
@@ -106,8 +105,8 @@ export function OfflineBanner() {
         <CloudOff className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         <span>
           {overCap
-            ? `You're offline with ${pendingCount} actions queued. Reconnect soon to avoid losing them.`
-            : "You're offline. Changes will sync when you reconnect."}
+            ? t('offline.queuedWithCount', { count: pendingCount })
+            : t('offline.queuedShort')}
         </span>
       </div>
     )
@@ -125,9 +124,7 @@ export function OfflineBanner() {
           className="h-4 w-4 shrink-0 animate-spin"
           strokeWidth={1.75}
         />
-        <span>
-          Syncing {pendingCount} {pendingCount === 1 ? 'change' : 'changes'}…
-        </span>
+        <span>{t('offline.syncing', { count: pendingCount })}</span>
       </div>
     )
   }

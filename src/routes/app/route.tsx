@@ -5,6 +5,7 @@ import {
   redirect,
   useMatches,
 } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { CalendarClock, PiggyBank, TrendingUp, Wallet } from 'lucide-react'
 import { BottomTabBar } from '#/components/BottomTabBar'
 import { FABMenu } from '#/components/ui/FABMenu'
@@ -109,6 +110,7 @@ interface RouteStaticData {
 }
 
 function AppLayout() {
+  const { t } = useTranslation('common')
   const { shellUser, profile } = Route.useRouteContext()
   const matches = useMatches()
 
@@ -118,11 +120,17 @@ function AppLayout() {
   const staticData = deepest?.staticData ?? {}
 
   const hideTabBar = staticData.hideTabBar
-  const staticTitle = staticData.title ?? null
+  // staticData.title carries a translation key (e.g. 'pageTitles.dashboard')
+  // so the TopBar can swap labels at runtime when locale changes.
+  const staticTitleKey = staticData.title ?? null
+  const staticTitle = staticTitleKey ? t(staticTitleKey) : null
   const backTo = staticData.backTo ?? null
 
   const [dynamicTitle, setDynamicTitle] = useState<string | null>(null)
-  const setTitle = useCallback((t: string | null) => setDynamicTitle(t), [])
+  const setTitle = useCallback(
+    (next: string | null) => setDynamicTitle(next),
+    [],
+  )
 
   return (
     <TopBarTitleContext.Provider value={{ title: dynamicTitle, setTitle }}>
@@ -142,26 +150,26 @@ function AppLayout() {
         {!hideTabBar && <BottomTabBar />}
         {!hideTabBar && (
           <FABMenu
-            label="Create"
+            label={t('fab.create')}
             items={[
               {
                 to: '/app/investments/new',
-                label: 'Investment',
+                label: t('fab.investment'),
                 icon: <TrendingUp className="h-5 w-5" strokeWidth={1.75} />,
               },
               {
                 to: '/app/investments/dps/new',
-                label: 'DPS Scheme',
+                label: t('fab.dps'),
                 icon: <PiggyBank className="h-5 w-5" strokeWidth={1.75} />,
               },
               {
                 to: '/app/investments/savings/new',
-                label: 'Savings Pot',
+                label: t('fab.savings'),
                 icon: <Wallet className="h-5 w-5" strokeWidth={1.75} />,
               },
               {
                 to: '/app/emis/new',
-                label: 'EMI',
+                label: t('fab.emi'),
                 icon: <CalendarClock className="h-5 w-5" strokeWidth={1.75} />,
               },
             ]}

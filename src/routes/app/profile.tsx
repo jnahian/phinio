@@ -40,7 +40,7 @@ import type { SeedCategories } from '#/server/dev-data'
 import { usePushSubscription } from '#/hooks/usePushSubscription'
 
 export const Route = createFileRoute('/app/profile')({
-  staticData: { title: 'Profile' },
+  staticData: { title: 'pageTitles.profile' },
   component: ProfileScreen,
 })
 

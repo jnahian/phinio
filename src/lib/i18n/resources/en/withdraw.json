@@ -1,0 +1,30 @@
+{
+  "title": "Withdraw",
+  "loadingScheme": "Loading scheme…",
+  "investmentLabel": "Investment",
+  "selectPlaceholder": "Select an investment…",
+  "available": "Available:",
+  "amountLabel": "Amount",
+  "dateLabel": "Date",
+  "notesLabel": "Notes (optional)",
+  "notesPlaceholder": "e.g. partial sale, emergency",
+  "fullWithdrawalWarning": "Full withdrawal — investment will be marked as closed.",
+  "recording": "Recording…",
+  "confirm": "Confirm withdrawal",
+  "dpsClose": "DPS — close",
+  "dpsInfo_one": "Accrued so far: {{value}}. Banks often deduct a penalty — enter the amount you actually receive. {{count}} upcoming installment will be cancelled.",
+  "dpsInfo_other": "Accrued so far: {{value}}. Banks often deduct a penalty — enter the amount you actually receive. {{count}} upcoming installments will be cancelled.",
+  "dpsNotesPlaceholder": "e.g. emergency, switched bank",
+  "dpsWarning": "This cannot be undone.",
+  "dpsClosing": "Closing…",
+  "dpsConfirm": "Confirm closure",
+  "labels": {
+    "stock": "Stocks",
+    "mutual_fund": "Mutual Fund",
+    "fd": "Fixed Deposit",
+    "gold": "Gold",
+    "crypto": "Crypto",
+    "real_estate": "Real Estate",
+    "other": "Other"
+  }
+}
