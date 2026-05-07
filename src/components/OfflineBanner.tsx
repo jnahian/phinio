@@ -104,20 +104,29 @@ export function OfflineBanner() {
   }, [online, pendingCount, t])
 
   // Syncing — only while online with active mutations. Defer briefly so
-  // normal fast saves don't flash a toast.
+  // normal fast saves don't flash a toast. The timer is keyed on the
+  // boolean `isMutating` (not the count) so fluctuations during replay
+  // don't keep restarting the 600ms delay.
+  const isMutating = online && pendingCount > 0 && erroredCount === 0
+  const [syncingShown, setSyncingShown] = useState(false)
+
   useEffect(() => {
-    if (!online || pendingCount === 0 || erroredCount > 0) {
+    if (!isMutating) {
+      setSyncingShown(false)
       toast.dismiss(TOAST_ID_SYNCING)
       return
     }
-    const id = window.setTimeout(() => {
-      toast.loading(t('offline.syncing', { count: pendingCount }), {
-        id: TOAST_ID_SYNCING,
-        duration: Infinity,
-      })
-    }, 600)
+    const id = window.setTimeout(() => setSyncingShown(true), 600)
     return () => window.clearTimeout(id)
-  }, [online, pendingCount, erroredCount, t])
+  }, [isMutating])
+
+  useEffect(() => {
+    if (!syncingShown) return
+    toast.loading(t('offline.syncing', { count: pendingCount }), {
+      id: TOAST_ID_SYNCING,
+      duration: Infinity,
+    })
+  }, [syncingShown, pendingCount, t])
 
   return null
 }
