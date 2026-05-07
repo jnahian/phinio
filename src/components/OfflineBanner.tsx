@@ -53,6 +53,20 @@ export function OfflineBanner() {
     }
   }, [])
 
+  // Defer the "Syncing…" banner so normal online saves (which finish in a
+  // few hundred ms) don't briefly insert a top banner and shift the whole
+  // page down. The banner is intended for paused-mutation replay after
+  // reconnecting, which takes long enough to clear this threshold.
+  const [showSyncing, setShowSyncing] = useState(false)
+  useEffect(() => {
+    if (pendingCount === 0 || !online) {
+      setShowSyncing(false)
+      return
+    }
+    const id = window.setTimeout(() => setShowSyncing(true), 600)
+    return () => window.clearTimeout(id)
+  }, [pendingCount, online])
+
   // Errored takes precedence so the user always has a retry path. After
   // a successful retry the cache clears these entries and the banner
   // either disappears or falls back to the offline / syncing variants.
@@ -112,7 +126,7 @@ export function OfflineBanner() {
     )
   }
 
-  if (pendingCount > 0) {
+  if (pendingCount > 0 && showSyncing) {
     return (
       <div
         role="status"
