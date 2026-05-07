@@ -5,6 +5,8 @@
   "currency": {
     "title": "Preferred currency",
     "hint": "Used across investments, EMIs, and dashboards.",
+    "bdtName": "Bangladeshi Taka",
+    "usdName": "US Dollar",
     "updated": "Currency set to {{value}}",
     "updateFailed": "Failed to update currency"
   },

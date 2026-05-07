@@ -2,13 +2,13 @@ import { useTranslation } from 'react-i18next'
 import { ActivitySvg, EyeSlashSvg, LockSvg } from './icons'
 import { useInView } from './use-in-view'
 
-// Numeric/literal values stay as data — `tracking` reads from the bundle so
-// it can localize (e.g. "Live" → "লাইভ"); the others ('100%', 'E2E') are
-// universal symbols and stay as-is.
+// All three values come from the bundle so Bangla can localize digits
+// (`100%` → `১০০%`) and labels (`Live` → `লাইভ`). Tech acronyms like `E2E`
+// are kept verbatim across locales — translators decide per-bundle.
 const trustItems = [
-  { Icon: EyeSlashSvg, value: '100%', key: 'private' as const },
-  { Icon: LockSvg, value: 'E2E', key: 'encrypted' as const },
-  { Icon: ActivitySvg, value: null, key: 'tracking' as const },
+  { Icon: EyeSlashSvg, key: 'private' as const },
+  { Icon: LockSvg, key: 'encrypted' as const },
+  { Icon: ActivitySvg, key: 'tracking' as const },
 ]
 
 export function TrustBar() {
@@ -20,7 +20,7 @@ export function TrustBar() {
         ref={ref}
         className="mx-auto max-w-4xl grid grid-cols-1 sm:grid-cols-3 gap-12"
       >
-        {trustItems.map(({ Icon, value, key }, i) => (
+        {trustItems.map(({ Icon, key }, i) => (
           <div
             key={key}
             className="flex flex-col items-center text-center gap-2"
@@ -34,7 +34,7 @@ export function TrustBar() {
               <Icon className="w-5 h-5 text-primary" />
             </div>
             <span className="font-display font-extrabold text-4xl text-on-surface tracking-tight">
-              {value ?? t(`trust.${key}Value`)}
+              {t(`trust.${key}Value`)}
             </span>
             <span className="text-sm font-semibold text-primary">
               {t(`trust.${key}Label`)}

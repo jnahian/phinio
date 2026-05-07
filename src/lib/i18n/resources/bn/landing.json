@@ -61,13 +61,15 @@
     "signin": "ইতিমধ্যে অ্যাকাউন্ট আছে?"
   },
   "trust": {
+    "privateValue": "১০০%",
     "privateLabel": "ব্যক্তিগত",
     "privateSub": "কখনো কোনো ডেটা শেয়ারিং নেই",
+    "encryptedValue": "E2E",
     "encryptedLabel": "এনক্রিপ্টেড",
     "encryptedSub": "ব্যাংক-গ্রেড নিরাপত্তা",
+    "trackingValue": "লাইভ",
     "trackingLabel": "ট্র্যাকিং",
-    "trackingSub": "রিয়েল-টাইম নেট সম্পদ",
-    "trackingValue": "লাইভ"
+    "trackingSub": "রিয়েল-টাইম নেট সম্পদ"
   },
   "footer": {
     "ariaHome": "ফিনিও হোম",

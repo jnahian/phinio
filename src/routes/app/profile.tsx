@@ -429,7 +429,7 @@ function ProfileScreen() {
                 onClick={() => handleCurrencyChange('BDT')}
                 symbol="৳"
                 label="BDT"
-                hint="Bangladeshi Taka"
+                hint={t('currency.bdtName')}
                 disabled={isSavingCurrency}
               />
               <CurrencyOption
@@ -437,7 +437,7 @@ function ProfileScreen() {
                 onClick={() => handleCurrencyChange('USD')}
                 symbol="$"
                 label="USD"
-                hint="US Dollar"
+                hint={t('currency.usdName')}
                 disabled={isSavingCurrency}
               />
             </div>

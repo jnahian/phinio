@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Logo } from '#/components/Logo'
+import { LangSwitcher } from './LangSwitcher'
 
 export function Nav() {
   const { t } = useTranslation('landing')
@@ -29,7 +30,8 @@ export function Nav() {
         >
           <Logo size="md" />
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <LangSwitcher />
           <Link
             to="/login"
             className="hidden sm:block text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-150"
