@@ -24,15 +24,20 @@ function CheckEmailScreen() {
   async function handleResend() {
     if (!email || isResending) return
     setIsResending(true)
-    const { error } = await authClient.sendVerificationEmail({
-      email,
-      callbackURL: '/app',
-    })
-    setIsResending(false)
-    if (error) {
-      toast.error(error.message ?? t('checkEmail.resendFailed'))
-    } else {
-      toast.success(t('checkEmail.resent'))
+    try {
+      const { error } = await authClient.sendVerificationEmail({
+        email,
+        callbackURL: '/app',
+      })
+      if (error) {
+        toast.error(error.message ?? t('checkEmail.resendFailed'))
+      } else {
+        toast.success(t('checkEmail.resent'))
+      }
+    } catch {
+      toast.error(t('checkEmail.resendFailed'))
+    } finally {
+      setIsResending(false)
     }
   }
 

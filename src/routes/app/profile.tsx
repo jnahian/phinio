@@ -484,11 +484,11 @@ function ProfileScreen() {
                 </p>
                 <p className="mt-1 text-xs text-on-surface-variant">
                   {push.permission === 'unsupported'
-                    ? "This browser doesn't support push notifications."
+                    ? t('notifications.unsupported')
                     : push.permission === 'denied'
-                      ? 'Blocked in browser settings. Re-enable there to turn on.'
+                      ? t('notifications.denied')
                       : push.isSubscribed
-                        ? 'You will be notified about upcoming and overdue payments.'
+                        ? t('notifications.subscribed')
                         : t('notifications.hint')}
                 </p>
               </div>
@@ -617,10 +617,7 @@ function ProfileScreen() {
       <ConfirmModal
         open={confirmLogout}
         title={t('danger.signOut')}
-        message={tCommon('signOutMessage', {
-          defaultValue:
-            "Sign out of Phinio? You'll need to log in again next time.",
-        })}
+        message={t('danger.signOutMessage')}
         confirmLabel={t('danger.signOut')}
         pendingLabel={t('danger.signingOut')}
         isPending={isSigningOut}
@@ -637,10 +634,10 @@ function ProfileScreen() {
 
       <ConfirmModal
         open={confirmCleanup}
-        title="Clear all your data?"
-        message="This permanently deletes all your investments, EMIs, deposits, withdrawals, and notifications. Your account and profile are kept — sign-in still works."
-        confirmLabel="Delete everything"
-        pendingLabel="Deleting…"
+        title={t('danger.clearTitle')}
+        message={t('danger.clearMessage')}
+        confirmLabel={t('danger.clearConfirm')}
+        pendingLabel={t('danger.clearing')}
         isPending={isCleaningUp}
         onConfirm={handleCleanup}
         onCancel={() => setConfirmCleanup(false)}

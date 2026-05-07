@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { setResponseHeader } from '@tanstack/react-start/server'
+import { setCookie } from '@tanstack/react-start/server'
 import { z } from 'zod'
 import { LOCALE_COOKIE, SUPPORTED_LOCALES } from '#/lib/i18n/config'
 import type { SerializedProfile } from './profile.impl'
@@ -57,12 +57,14 @@ export const updateProfileLanguageFn = createServerFn({ method: 'POST' })
     // Persist the choice as a cookie too so anonymous SSR (e.g. immediately
     // after sign-out / before the next session loads) still reflects the
     // user's last preference. 1-year expiry, SameSite=Lax, Secure in prod.
-    const isProd = process.env.NODE_ENV === 'production'
-    const maxAge = 60 * 60 * 24 * 365
-    setResponseHeader(
-      'Set-Cookie',
-      `${LOCALE_COOKIE}=${data.preferredLanguage}; Path=/; Max-Age=${maxAge}; SameSite=Lax${isProd ? '; Secure' : ''}`,
-    )
+    // setCookie appends to Set-Cookie (vs. setResponseHeader which replaces),
+    // so we play nicely with Better Auth's own cookies in the same response.
+    setCookie(LOCALE_COOKIE, data.preferredLanguage, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
 
     return profile
   })

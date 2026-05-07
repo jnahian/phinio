@@ -95,7 +95,7 @@ function ForgotPasswordScreen() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="name@company.com"
+                  placeholder={t('forgotPassword.emailPlaceholder')}
                   className="input-carved"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

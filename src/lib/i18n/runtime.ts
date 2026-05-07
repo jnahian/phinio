@@ -20,8 +20,12 @@ export function detectClientLocale(): Locale {
     .map((c) => c.trim())
     .find((c) => c.startsWith(`${LOCALE_COOKIE}=`))
   if (cookie) {
-    const value = decodeURIComponent(cookie.slice(LOCALE_COOKIE.length + 1))
-    if (isLocale(value)) return value
+    try {
+      const value = decodeURIComponent(cookie.slice(LOCALE_COOKIE.length + 1))
+      if (isLocale(value)) return value
+    } catch {
+      // Malformed cookie (e.g. lone `%` byte) — ignore and fall through.
+    }
   }
 
   const fromHtml = document.documentElement.lang

@@ -42,6 +42,9 @@
   "notifications": {
     "title": "Payment reminders",
     "hint": "Get push notifications before EMIs and DPS installments are due.",
+    "unsupported": "This browser doesn't support push notifications.",
+    "denied": "Blocked in browser settings. Re-enable there to turn on.",
+    "subscribed": "You will be notified about upcoming and overdue payments.",
     "enable": "Enable reminders",
     "disable": "Disable reminders",
     "enabled": "Reminders enabled",
@@ -53,13 +56,18 @@
   },
   "danger": {
     "signOut": "Sign out",
+    "signOutMessage": "Sign out of Phinio? You'll need to log in again next time.",
     "signingOut": "Signing out…",
     "clearTestData": "Clear test data",
     "loadTestData": "Load test data",
     "loaded": "Test data loaded",
     "loadFailed": "Failed to load test data",
     "cleared": "Test data cleared",
-    "clearFailed": "Failed to clear data"
+    "clearFailed": "Failed to clear data",
+    "clearTitle": "Clear all your data?",
+    "clearMessage": "This permanently deletes all your investments, EMIs, deposits, withdrawals, and notifications. Your account and profile are kept — sign-in still works.",
+    "clearConfirm": "Delete everything",
+    "clearing": "Deleting…"
   },
   "activityList": {
     "title": "Activity",
