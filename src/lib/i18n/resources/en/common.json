@@ -1,0 +1,61 @@
+{
+  "appName": "Phinio",
+  "tagline": "Your finances, simplified.",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "continue": "Continue",
+    "retry": "Try again",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "remove": "Remove",
+    "submit": "Submit"
+  },
+  "tabs": {
+    "home": "Home",
+    "investments": "Invest",
+    "emis": "EMIs",
+    "activity": "Activity",
+    "profile": "Profile"
+  },
+  "states": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "errorDescription": "An unexpected error occurred. Try again, or head back home.",
+    "notFound": "Page not found",
+    "notFoundDescription": "We couldn't find the page you were looking for.",
+    "backToHome": "Back to home",
+    "tryAgain": "Try again"
+  },
+  "offline": {
+    "banner": "You're offline. Changes will sync when you're back online."
+  },
+  "due": {
+    "today": "Due today",
+    "tomorrow": "Due tomorrow",
+    "inDays_one": "Due in {{count}} day",
+    "inDays_other": "Due in {{count}} days",
+    "overdueDays_one": "Overdue by {{count}} day",
+    "overdueDays_other": "Overdue by {{count}} days"
+  },
+  "relativeTime": {
+    "justNow": "just now",
+    "minutesAgo_one": "{{count}} minute ago",
+    "minutesAgo_other": "{{count}} minutes ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
+  "currency": {
+    "BDT": "BDT",
+    "USD": "USD"
+  }
+}

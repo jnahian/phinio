@@ -1,0 +1,61 @@
+{
+  "appName": "ফিনিও",
+  "tagline": "আপনার অর্থ, সরলীকৃত।",
+  "actions": {
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "delete": "মুছে ফেলুন",
+    "edit": "সম্পাদনা",
+    "add": "যোগ করুন",
+    "back": "ফিরে যান",
+    "continue": "চালিয়ে যান",
+    "retry": "আবার চেষ্টা করুন",
+    "close": "বন্ধ করুন",
+    "confirm": "নিশ্চিত করুন",
+    "loading": "লোড হচ্ছে…",
+    "saving": "সংরক্ষণ হচ্ছে…",
+    "saved": "সংরক্ষিত",
+    "remove": "সরান",
+    "submit": "জমা দিন"
+  },
+  "tabs": {
+    "home": "হোম",
+    "investments": "বিনিয়োগ",
+    "emis": "ইএমআই",
+    "activity": "কার্যকলাপ",
+    "profile": "প্রোফাইল"
+  },
+  "states": {
+    "loading": "লোড হচ্ছে…",
+    "error": "কিছু একটা ভুল হয়েছে",
+    "errorDescription": "অপ্রত্যাশিত একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন বা হোমে ফিরে যান।",
+    "notFound": "পৃষ্ঠা পাওয়া যায়নি",
+    "notFoundDescription": "আপনি যে পৃষ্ঠাটি খুঁজছিলেন সেটি আমরা খুঁজে পাইনি।",
+    "backToHome": "হোমে ফিরে যান",
+    "tryAgain": "আবার চেষ্টা করুন"
+  },
+  "offline": {
+    "banner": "আপনি অফলাইন রয়েছেন। অনলাইনে ফেরার পর পরিবর্তনগুলি সিঙ্ক হবে।"
+  },
+  "due": {
+    "today": "আজ পরিশোধ্য",
+    "tomorrow": "আগামীকাল পরিশোধ্য",
+    "inDays_one": "{{count}} দিনে পরিশোধ্য",
+    "inDays_other": "{{count}} দিনে পরিশোধ্য",
+    "overdueDays_one": "{{count}} দিন বকেয়া",
+    "overdueDays_other": "{{count}} দিন বকেয়া"
+  },
+  "relativeTime": {
+    "justNow": "এইমাত্র",
+    "minutesAgo_one": "{{count}} মিনিট আগে",
+    "minutesAgo_other": "{{count}} মিনিট আগে",
+    "hoursAgo_one": "{{count}} ঘন্টা আগে",
+    "hoursAgo_other": "{{count}} ঘন্টা আগে",
+    "daysAgo_one": "{{count}} দিন আগে",
+    "daysAgo_other": "{{count}} দিন আগে"
+  },
+  "currency": {
+    "BDT": "টাকা",
+    "USD": "ডলার"
+  }
+}

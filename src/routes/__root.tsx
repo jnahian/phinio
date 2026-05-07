@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   HeadContent,
   Scripts,
@@ -8,22 +8,35 @@ import { useQueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Toaster } from 'sonner'
+import { I18nextProvider } from 'react-i18next'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 import { OfflineBanner } from '#/components/OfflineBanner'
 import { RouteStatus } from '#/components/RouteStatus'
-import { getSessionFn } from '#/server/auth'
+import { getSessionFn, getLocaleFn } from '#/server/auth'
 import { authClient } from '#/lib/auth-client'
 import { clearOfflineCache } from '#/lib/offline-cache'
 import { prefetchProfileData } from '#/lib/prefetch-profile-data'
+import { createI18n, getClientI18n } from '#/lib/i18n/instance'
+import { detectClientLocale } from '#/lib/i18n/runtime'
+import type { Locale } from '#/lib/i18n/config'
 
 import appCss from '#/styles.css?url'
 
 import type { RootRouterContext } from '#/integrations/tanstack-query/root-provider'
 
 export const Route = createRootRouteWithContext<RootRouterContext>()({
+  beforeLoad: async (): Promise<{ locale: Locale }> => {
+    // Server-side: call the server fn locally (no RPC). Client-side: read
+    // <html lang> set during SSR (avoids a needless round-trip). Only the
+    // serializable `locale` lives in router context — the i18n instance is
+    // built per-request inside RootDocument (which runs on both sides).
+    const locale: Locale =
+      typeof window === 'undefined' ? await getLocaleFn() : detectClientLocale()
+    return { locale }
+  },
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -90,7 +103,22 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
-  const { persisterReady } = Route.useRouteContext()
+  const { persisterReady, locale } = Route.useRouteContext()
+  // Lazy initializer: server creates a fresh per-request instance; client
+  // reuses a singleton via getClientI18n. Both produce the same translated
+  // markup for the same locale, keeping hydration consistent.
+  const [i18n] = useState(() =>
+    typeof window === 'undefined' ? createI18n(locale) : getClientI18n(locale),
+  )
+  // Keep the (singleton) i18n instance in sync when route context resolves
+  // to a different locale — e.g. after a language switch invalidates the
+  // router. Without this, the I18nextProvider keeps the initial locale and
+  // useTranslation continues to render the old language.
+  useEffect(() => {
+    if (i18n.language !== locale) {
+      void i18n.changeLanguage(locale)
+    }
+  }, [i18n, locale])
   // Subscribe to client-side auth state so we can replay queued mutations
   // when the user signs back in WITHOUT a network round-trip (e.g. token
   // refresh, login while already online). The effect below depends on this.
@@ -191,41 +219,43 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [queryClient, isAuthenticated, persisterReady])
 
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <head>
         <HeadContent />
       </head>
       <body className="bg-surface text-on-surface font-sans antialiased">
-        <OfflineBanner />
-        {children}
-        <Toaster
-          position="top-center"
-          theme="dark"
-          offset="calc(env(safe-area-inset-top) + 16px)"
-          mobileOffset="calc(env(safe-area-inset-top) + 16px)"
-          toastOptions={{
-            style: {
-              background: '#171f33',
-              border: '1px solid rgba(141, 144, 160, 0.14)',
-              color: '#dae2fd',
-              borderRadius: '16px',
-            },
-          }}
-        />
-        {process.env.NODE_ENV !== 'production' && (
-          <TanStackDevtools
-            config={{ position: 'bottom-right' }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
+        <I18nextProvider i18n={i18n}>
+          <OfflineBanner />
+          {children}
+          <Toaster
+            position="top-center"
+            theme="dark"
+            offset="calc(env(safe-area-inset-top) + 16px)"
+            mobileOffset="calc(env(safe-area-inset-top) + 16px)"
+            toastOptions={{
+              style: {
+                background: '#171f33',
+                border: '1px solid rgba(141, 144, 160, 0.14)',
+                color: '#dae2fd',
+                borderRadius: '16px',
               },
-              TanStackQueryDevtools,
-            ]}
+            }}
           />
-        )}
-        <Analytics />
-        <SpeedInsights />
+          {process.env.NODE_ENV !== 'production' && (
+            <TanStackDevtools
+              config={{ position: 'bottom-right' }}
+              plugins={[
+                {
+                  name: 'Tanstack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                TanStackQueryDevtools,
+              ]}
+            />
+          )}
+          <Analytics />
+          <SpeedInsights />
+        </I18nextProvider>
         <Scripts />
       </body>
     </html>

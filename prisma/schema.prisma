@@ -20,6 +20,7 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   preferredCurrency String    @default("BDT")
+  preferredLanguage String    @default("en")
   sessions          Session[]
   accounts          Account[]
   profile           Profile?
@@ -86,6 +87,7 @@ model Profile {
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName           String
   preferredCurrency  String              @default("BDT")
+  preferredLanguage  String              @default("en")
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   investments           Investment[]

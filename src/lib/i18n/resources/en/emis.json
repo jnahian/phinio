@@ -1,0 +1,56 @@
+{
+  "list": {
+    "title": "EMIs",
+    "empty": "No EMIs yet",
+    "emptyHint": "Add a loan or credit card EMI to track repayments",
+    "addCta": "Add EMI",
+    "monthly": "Monthly EMI",
+    "remaining": "Remaining",
+    "outstanding": "Outstanding"
+  },
+  "form": {
+    "newTitle": "New EMI",
+    "labelLabel": "Label",
+    "labelPlaceholder": "e.g. Home loan",
+    "typeLabel": "Type",
+    "principalLabel": "Principal",
+    "interestRateLabel": "Interest rate (%)",
+    "tenureLabel": "Tenure (months)",
+    "startDateLabel": "Start date",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Optional",
+    "submit": "Save EMI",
+    "submitting": "Saving…",
+    "computedEmi": "Computed EMI",
+    "totalInterest": "Total interest",
+    "totalPayable": "Total payable"
+  },
+  "detail": {
+    "schedule": "Schedule",
+    "principalComponent": "Principal",
+    "interestComponent": "Interest",
+    "remainingBalance": "Remaining balance",
+    "paymentNumber": "#",
+    "dueDate": "Due date",
+    "amount": "Amount",
+    "status": "Status",
+    "markPaid": "Mark paid",
+    "marking": "Marking…",
+    "delete": "Delete EMI",
+    "deleteConfirmTitle": "Delete this EMI?",
+    "deleteConfirmBody": "This permanently removes the EMI and its payment history."
+  },
+  "status": {
+    "active": "Active",
+    "completed": "Completed",
+    "closed": "Closed",
+    "paid": "Paid",
+    "upcoming": "Upcoming"
+  },
+  "toasts": {
+    "created": "EMI added",
+    "updated": "EMI updated",
+    "deleted": "EMI deleted",
+    "markedPaid": "Payment marked paid"
+  }
+}

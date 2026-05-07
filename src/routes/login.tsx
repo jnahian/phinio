@@ -5,6 +5,7 @@ import {
   redirect,
   useNavigate,
 } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 import { authClient } from '#/lib/auth-client'
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/login')({
 })
 
 function LoginScreen() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -65,7 +67,7 @@ function LoginScreen() {
         })
         return
       }
-      setFormError(error.message ?? 'Login failed. Please try again.')
+      setFormError(error.message ?? t('login.genericError'))
       return
     }
 
@@ -77,16 +79,16 @@ function LoginScreen() {
       <div className="glass w-full max-w-md rounded-3xl border border-white/5 p-8 shadow-2xl sm:p-10">
         <Logo size="lg" className="justify-center mx-auto mb-8" />
         <header className="mb-8">
-          <h1 className="headline-lg text-on-surface">Welcome back</h1>
+          <h1 className="headline-lg text-on-surface">{t('login.title')}</h1>
           <p className="body-md mt-2 text-on-surface-variant">
-            Access your digital vault
+            {t('login.subtitle')}
           </p>
         </header>
 
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <Field
             id="email"
-            label="Email address"
+            label={t('login.emailLabel')}
             icon={<Mail className="h-5 w-5" />}
             error={fieldErrors.email}
           >
@@ -94,7 +96,7 @@ function LoginScreen() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="name@company.com"
+              placeholder={t('login.emailPlaceholder')}
               className="input-carved"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -104,13 +106,13 @@ function LoginScreen() {
 
           <Field
             id="password"
-            label="Password"
+            label={t('login.passwordLabel')}
             trailing={
               <Link
                 to="/forgot-password"
                 className="body-sm font-medium text-primary-fixed-dim hover:text-primary"
               >
-                Forgot?
+                {t('login.forgot')}
               </Link>
             }
             icon={<Lock className="h-5 w-5" />}
@@ -130,7 +132,9 @@ function LoginScreen() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-outline transition-colors hover:text-on-surface"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={
+                showPassword ? t('login.hidePassword') : t('login.showPassword')
+              }
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -150,18 +154,18 @@ function LoginScreen() {
           )}
 
           <button type="submit" className="btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Login to Vault'}
+            {isSubmitting ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
 
         <footer className="mt-8 text-center">
           <p className="body-sm text-on-surface-variant">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link
               to="/signup"
               className="font-semibold text-primary-fixed-dim hover:underline decoration-primary-container underline-offset-4"
             >
-              Create vault
+              {t('login.createVault')}
             </Link>
           </p>
         </footer>

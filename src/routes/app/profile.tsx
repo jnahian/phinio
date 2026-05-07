@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   BellRing,
   Camera,
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   History,
   KeyRound,
+  Languages,
   LogOut,
   Mail,
   Pencil,
@@ -25,9 +27,15 @@ import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
 import { clearOfflineCache } from '#/lib/offline-cache'
-import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
+import {
+  updateProfileCurrencyFn,
+  updateProfileLanguageFn,
+  updateProfileNameFn,
+} from '#/server/profile'
 import { cleanupProfileDataFn, seedProfileDataFn } from '#/server/dev-data'
 import type { Currency } from '#/lib/currency'
+import { LOCALE_LABEL } from '#/lib/i18n/config'
+import type { Locale } from '#/lib/i18n/config'
 import type { SeedCategories } from '#/server/dev-data'
 import { usePushSubscription } from '#/hooks/usePushSubscription'
 
@@ -37,12 +45,16 @@ export const Route = createFileRoute('/app/profile')({
 })
 
 function ProfileScreen() {
+  const { t, i18n } = useTranslation('profile')
+  const { t: tCommon } = useTranslation('common')
   const router = useRouter()
   const qc = useQueryClient()
   const { user, profile, shellUser } = Route.useRouteContext()
 
   const [currency, setCurrency] = useState<Currency>(profile.preferredCurrency)
   const [isSavingCurrency, setIsSavingCurrency] = useState(false)
+  const [language, setLanguage] = useState<Locale>(profile.preferredLanguage)
+  const [isSavingLanguage, setIsSavingLanguage] = useState(false)
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(profile.fullName)
@@ -85,14 +97,38 @@ function ProfileScreen() {
       await updateProfileCurrencyFn({ data: { preferredCurrency: next } })
       await router.invalidate()
       qc.invalidateQueries({ queryKey: ['activity'] })
-      toast.success(`Currency set to ${next}`)
+      toast.success(t('currency.updated', { value: next }))
     } catch (err) {
       setCurrency(previous)
       toast.error(
-        err instanceof Error ? err.message : 'Failed to update currency',
+        err instanceof Error ? err.message : t('currency.updateFailed'),
       )
     } finally {
       setIsSavingCurrency(false)
+    }
+  }
+
+  async function handleLanguageChange(next: Locale) {
+    if (next === language || isSavingLanguage) return
+    const previous = language
+    setLanguage(next)
+    // Optimistic UI flip — the rest of the app re-renders in the new locale
+    // immediately, before the server round-trip lands.
+    void i18n.changeLanguage(next)
+    setIsSavingLanguage(true)
+    try {
+      await updateProfileLanguageFn({ data: { preferredLanguage: next } })
+      await router.invalidate()
+      qc.invalidateQueries({ queryKey: ['activity'] })
+      toast.success(t('language.updated', { value: LOCALE_LABEL[next] }))
+    } catch (err) {
+      setLanguage(previous)
+      void i18n.changeLanguage(previous)
+      toast.error(
+        err instanceof Error ? err.message : t('language.updateFailed'),
+      )
+    } finally {
+      setIsSavingLanguage(false)
     }
   }
 
@@ -123,9 +159,9 @@ function ProfileScreen() {
       await router.invalidate()
       qc.invalidateQueries({ queryKey: ['activity'] })
       setIsEditingName(false)
-      toast.success('Name updated')
+      toast.success(t('name.updated'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update name')
+      toast.error(err instanceof Error ? err.message : t('name.updateFailed'))
     } finally {
       setIsSavingName(false)
     }
@@ -147,9 +183,9 @@ function ProfileScreen() {
       await authClient.updateUser({ image: dataUrl })
       setAvatarUrl(dataUrl)
       await router.invalidate()
-      toast.success('Photo updated')
+      toast.success(t('photo.uploaded'))
     } catch {
-      toast.error('Failed to update photo')
+      toast.error(t('photo.updateFailed'))
     } finally {
       setIsUploadingPhoto(false)
     }
@@ -175,11 +211,19 @@ function ProfileScreen() {
     e.preventDefault()
     setPwError('')
     if (pwForm.next.length < 8) {
-      setPwError('New password must be at least 8 characters')
+      setPwError(
+        tCommon('validation.newPasswordMin', {
+          defaultValue: 'New password must be at least 8 characters',
+        }),
+      )
       return
     }
     if (pwForm.next !== pwForm.confirm) {
-      setPwError('Passwords do not match')
+      setPwError(
+        tCommon('validation.passwordMatch', {
+          defaultValue: 'Passwords do not match',
+        }),
+      )
       return
     }
     setIsSavingPassword(true)
@@ -194,7 +238,7 @@ function ProfileScreen() {
         return
       }
       closeChangePassword()
-      toast.success('Password changed')
+      toast.success(t('password.updated'))
     } catch (err) {
       setPwError(
         err instanceof Error ? err.message : 'Failed to change password',
@@ -232,9 +276,9 @@ function ProfileScreen() {
       await seedProfileDataFn({ data: input })
       await router.invalidate()
       setSeedModalOpen(false)
-      toast.success('Test data loaded')
+      toast.success(t('danger.loaded'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load data')
+      toast.error(err instanceof Error ? err.message : t('danger.loadFailed'))
     } finally {
       setIsSeeding(false)
     }
@@ -246,9 +290,9 @@ function ProfileScreen() {
       await cleanupProfileDataFn()
       await router.invalidate()
       setConfirmCleanup(false)
-      toast.success('All your app data was cleared')
+      toast.success(t('danger.cleared'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to clear data')
+      toast.error(err instanceof Error ? err.message : t('danger.clearFailed'))
     } finally {
       setIsCleaningUp(false)
     }
@@ -297,7 +341,7 @@ function ProfileScreen() {
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingPhoto}
             className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant shadow-md transition hover:bg-surface-container disabled:opacity-50"
-            aria-label="Change profile photo"
+            aria-label={t('photo.change')}
           >
             <Camera className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
@@ -333,7 +377,7 @@ function ProfileScreen() {
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-outline-variant/30 py-2.5 text-sm text-on-surface-variant transition hover:bg-white/5 disabled:opacity-50"
               >
                 <X className="h-4 w-4" strokeWidth={2} />
-                Cancel
+                {tCommon('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -346,7 +390,7 @@ function ProfileScreen() {
                 ) : (
                   <Check className="h-4 w-4" strokeWidth={2.5} />
                 )}
-                Save
+                {tCommon('actions.save')}
               </button>
             </div>
           </div>
@@ -357,7 +401,7 @@ function ProfileScreen() {
               type="button"
               onClick={startEditingName}
               className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
-              aria-label="Edit name"
+              aria-label={tCommon('actions.edit')}
             >
               <Pencil className="h-4 w-4" strokeWidth={1.75} />
             </button>
@@ -375,7 +419,7 @@ function ProfileScreen() {
       {/* ------------------------------------------------------------------ */}
       <section className="mb-8">
         <h2 className="label-md mb-3 px-1 text-on-surface-variant">
-          Preferences
+          {t('preferences')}
         </h2>
         <div className="space-y-3">
           <Card variant="low" className="p-2">
@@ -400,20 +444,52 @@ function ProfileScreen() {
           </Card>
           <Card variant="low" className="p-4">
             <div className="flex items-start gap-3">
+              <Languages
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <div className="flex-1">
+                <p className="body-sm text-on-surface">{t('language.title')}</p>
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  {t('language.hint')}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <LanguageOption
+                    active={language === 'en'}
+                    onClick={() => handleLanguageChange('en')}
+                    label="English"
+                    sublabel="EN"
+                    disabled={isSavingLanguage}
+                  />
+                  <LanguageOption
+                    active={language === 'bn'}
+                    onClick={() => handleLanguageChange('bn')}
+                    label="বাংলা"
+                    sublabel="BN"
+                    disabled={isSavingLanguage}
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card variant="low" className="p-4">
+            <div className="flex items-start gap-3">
               <BellRing
                 className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
                 strokeWidth={1.75}
               />
               <div className="flex-1">
-                <p className="body-sm text-on-surface">Payment reminders</p>
+                <p className="body-sm text-on-surface">
+                  {t('notifications.title')}
+                </p>
                 <p className="mt-1 text-xs text-on-surface-variant">
                   {push.permission === 'unsupported'
-                    ? "This browser doesn't support push notifications."
+                    ? t('notifications.unsupported')
                     : push.permission === 'denied'
-                      ? 'Blocked in browser settings. Re-enable there to turn on.'
+                      ? t('notifications.denied')
                       : push.isSubscribed
-                        ? 'You will be notified about upcoming and overdue payments.'
-                        : 'Get notified about upcoming and overdue payments.'}
+                        ? t('notifications.subscribed')
+                        : t('notifications.hint')}
                 </p>
               </div>
               <PushToggle push={push} />
@@ -426,7 +502,9 @@ function ProfileScreen() {
       {/* Account                                                             */}
       {/* ------------------------------------------------------------------ */}
       <section className="mb-8">
-        <h2 className="label-md mb-3 px-1 text-on-surface-variant">Account</h2>
+        <h2 className="label-md mb-3 px-1 text-on-surface-variant">
+          {t('account')}
+        </h2>
         <div className="space-y-2">
           <Link
             to="/app/activity"
@@ -438,7 +516,7 @@ function ProfileScreen() {
                 strokeWidth={1.75}
               />
               <span className="font-display font-semibold">
-                Activity history
+                {t('activity.title')}
               </span>
             </div>
             <ChevronRight
@@ -458,7 +536,7 @@ function ProfileScreen() {
                 strokeWidth={1.75}
               />
               <span className="font-display font-semibold">
-                Change password
+                {t('password.title')}
               </span>
             </div>
             <ChevronRight
@@ -475,7 +553,7 @@ function ProfileScreen() {
             <div className="flex items-center gap-3">
               <LogOut className="h-5 w-5 text-error" strokeWidth={1.75} />
               <span className="font-display font-semibold text-error">
-                Sign out
+                {t('danger.signOut')}
               </span>
             </div>
           </button>
@@ -538,10 +616,10 @@ function ProfileScreen() {
 
       <ConfirmModal
         open={confirmLogout}
-        title="Sign out"
-        message="Sign out of Phinio? You'll need to log in again next time."
-        confirmLabel="Sign out"
-        pendingLabel="Signing out…"
+        title={t('danger.signOut')}
+        message={t('danger.signOutMessage')}
+        confirmLabel={t('danger.signOut')}
+        pendingLabel={t('danger.signingOut')}
         isPending={isSigningOut}
         onConfirm={handleSignOut}
         onCancel={() => setConfirmLogout(false)}
@@ -556,10 +634,10 @@ function ProfileScreen() {
 
       <ConfirmModal
         open={confirmCleanup}
-        title="Clear all your data?"
-        message="This permanently deletes all your investments, EMIs, deposits, withdrawals, and notifications. Your account and profile are kept — sign-in still works."
-        confirmLabel="Delete everything"
-        pendingLabel="Deleting…"
+        title={t('danger.clearTitle')}
+        message={t('danger.clearMessage')}
+        confirmLabel={t('danger.clearConfirm')}
+        pendingLabel={t('danger.clearing')}
         isPending={isCleaningUp}
         onConfirm={handleCleanup}
         onCancel={() => setConfirmCleanup(false)}
@@ -599,6 +677,8 @@ function ChangePasswordModal({
   onSubmit: (e: React.FormEvent) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation('profile')
+  const { t: tCommon } = useTranslation('common')
   useEffect(() => {
     if (!open) return
     function onKeyDown(e: KeyboardEvent) {
@@ -620,14 +700,14 @@ function ChangePasswordModal({
       <div className="w-full max-w-sm rounded-3xl bg-surface-container-high p-6 text-on-surface shadow-[0_20px_60px_-10px_rgba(6,14,32,0.8)]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-base font-semibold text-on-surface">
-            Change password
+            {t('password.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             disabled={isPending}
             className="rounded-lg p-1 text-on-surface-variant/70 transition hover:bg-white/5 hover:text-on-surface disabled:opacity-50"
-            aria-label="Close"
+            aria-label={tCommon('actions.close')}
           >
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
@@ -636,7 +716,7 @@ function ChangePasswordModal({
           <TextField
             id="pw-current"
             type="password"
-            placeholder="Current password"
+            placeholder={t('password.currentLabel')}
             value={form.current}
             onChange={(e) =>
               setForm((f) => ({ ...f, current: e.target.value }))
@@ -647,7 +727,7 @@ function ChangePasswordModal({
           <TextField
             id="pw-new"
             type="password"
-            placeholder="New password"
+            placeholder={t('password.newLabel')}
             value={form.next}
             onChange={(e) => setForm((f) => ({ ...f, next: e.target.value }))}
             disabled={isPending}
@@ -656,7 +736,7 @@ function ChangePasswordModal({
           <TextField
             id="pw-confirm"
             type="password"
-            placeholder="Confirm new password"
+            placeholder={t('password.confirmLabel')}
             value={form.confirm}
             onChange={(e) =>
               setForm((f) => ({ ...f, confirm: e.target.value }))
@@ -679,7 +759,7 @@ function ChangePasswordModal({
             ) : (
               <Check className="h-4 w-4" strokeWidth={2.5} />
             )}
-            {isPending ? 'Saving…' : 'Update password'}
+            {isPending ? t('password.submitting') : t('password.submit')}
           </button>
         </form>
       </div>
@@ -718,6 +798,45 @@ function PushToggle({
           on ? 'left-[1.375rem]' : 'left-0.5',
         )}
       />
+    </button>
+  )
+}
+
+function LanguageOption({
+  active,
+  onClick,
+  label,
+  sublabel,
+  disabled,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  sublabel: string
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      className={cn(
+        'flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition disabled:opacity-60',
+        active
+          ? 'bg-primary-container text-on-primary-container'
+          : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container',
+      )}
+    >
+      <span className="font-display text-sm font-bold">{label}</span>
+      <span
+        className={cn(
+          'label-sm text-xs',
+          active ? 'text-on-primary-container/70' : 'text-on-surface-variant',
+        )}
+      >
+        {sublabel}
+      </span>
     </button>
   )
 }

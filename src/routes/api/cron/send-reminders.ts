@@ -2,11 +2,16 @@ import { timingSafeEqual } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import { prisma } from '#/db'
 import { createNotification } from '#/server/notifications.impl'
-import { formatCurrency } from '#/lib/currency'
 import type { Currency } from '#/lib/currency'
 import { FEE_PAYMENT_NUMBER } from '#/lib/emi-calculator'
 import { buildWebPushConfig, sendWebPush } from '#/server/web-push'
 import type { PushPayload, PushSubscriptionRow } from '#/server/web-push'
+import { createI18n } from '#/lib/i18n/instance'
+import { createFormatter } from '#/lib/i18n/format'
+import type { Formatter } from '#/lib/i18n/format'
+import { isLocale } from '#/lib/i18n/config'
+import type { Locale } from '#/lib/i18n/config'
+import type { i18n as I18nInstance } from 'i18next'
 
 /**
  * Protected cron endpoint. Scans upcoming + overdue EMI payments and DPS
@@ -23,15 +28,31 @@ export const Route = createFileRoute('/api/cron/send-reminders')({
   },
 })
 
-// Stable, server-locale-independent date format for notification bodies.
-const dateFmt = new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
+// Per-locale i18n + formatter cache. The cron runs many recipients per
+// invocation, so the lazy cache keeps us from rebuilding instances per row.
+const i18nByLocale = new Map<Locale, I18nInstance>()
+const formatterByLocale = new Map<Locale, Formatter>()
 
-function fmtDate(d: Date): string {
-  return dateFmt.format(d)
+function getI18n(locale: Locale): I18nInstance {
+  let inst = i18nByLocale.get(locale)
+  if (!inst) {
+    inst = createI18n(locale)
+    i18nByLocale.set(locale, inst)
+  }
+  return inst
+}
+
+function getFormatter(locale: Locale): Formatter {
+  let fmt = formatterByLocale.get(locale)
+  if (!fmt) {
+    fmt = createFormatter(locale)
+    formatterByLocale.set(locale, fmt)
+  }
+  return fmt
+}
+
+function localeOf(value: string | null | undefined): Locale {
+  return isLocale(value) ? value : 'en'
 }
 
 function verifyBearer(header: string, expected: string): boolean {
@@ -115,7 +136,9 @@ export async function handleCron(request: Request): Promise<Response> {
       },
       include: {
         emi: { select: { label: true } },
-        profile: { select: { preferredCurrency: true } },
+        profile: {
+          select: { preferredCurrency: true, preferredLanguage: true },
+        },
       },
     }),
     prisma.emiPayment.findMany({
@@ -126,7 +149,9 @@ export async function handleCron(request: Request): Promise<Response> {
       },
       include: {
         emi: { select: { label: true } },
-        profile: { select: { preferredCurrency: true } },
+        profile: {
+          select: { preferredCurrency: true, preferredLanguage: true },
+        },
       },
     }),
     prisma.emiPayment.findMany({
@@ -137,7 +162,9 @@ export async function handleCron(request: Request): Promise<Response> {
       },
       include: {
         emi: { select: { label: true } },
-        profile: { select: { preferredCurrency: true } },
+        profile: {
+          select: { preferredCurrency: true, preferredLanguage: true },
+        },
       },
     }),
     prisma.investmentDeposit.findMany({
@@ -148,7 +175,9 @@ export async function handleCron(request: Request): Promise<Response> {
       },
       include: {
         investment: { select: { id: true, name: true } },
-        profile: { select: { preferredCurrency: true } },
+        profile: {
+          select: { preferredCurrency: true, preferredLanguage: true },
+        },
       },
     }),
     prisma.investmentDeposit.findMany({
@@ -159,7 +188,9 @@ export async function handleCron(request: Request): Promise<Response> {
       },
       include: {
         investment: { select: { id: true, name: true } },
-        profile: { select: { preferredCurrency: true } },
+        profile: {
+          select: { preferredCurrency: true, preferredLanguage: true },
+        },
       },
     }),
     prisma.investmentDeposit.findMany({
@@ -170,7 +201,9 @@ export async function handleCron(request: Request): Promise<Response> {
       },
       include: {
         investment: { select: { id: true, name: true } },
-        profile: { select: { preferredCurrency: true } },
+        profile: {
+          select: { preferredCurrency: true, preferredLanguage: true },
+        },
       },
     }),
   ])
@@ -186,68 +219,133 @@ export async function handleCron(request: Request): Promise<Response> {
 
   const candidates: Candidate[] = []
 
+  // Compute days-between for "due soon" so the title can include the count
+  // ("Due in 2 days") without a separate query.
+  function daysFromToday(target: Date): number {
+    const dayMs = 24 * 60 * 60 * 1000
+    const a = startOfToday().getTime()
+    const b = target.getTime()
+    return Math.max(0, Math.round((b - a) / dayMs))
+  }
+
   for (const p of emiDueToday) {
     const currency = p.profile.preferredCurrency as Currency
+    const locale = localeOf(p.profile.preferredLanguage)
+    const t = getI18n(locale).getFixedT(null, 'notifications')
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: p.profileId,
       type: 'emi.payment.due_today',
-      title: 'Payment due today',
-      body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} due today`,
+      title: t('emi.dueToday.title'),
+      body: t('emi.dueToday.body', {
+        label: p.emi.label,
+        amount: fmt.currency(p.emiAmount, currency),
+      }),
       link: `/app/emis/${p.emiId}`,
       dedupeKey: `payment-due-today:${p.id}`,
     })
   }
   for (const p of emiDueSoon) {
     const currency = p.profile.preferredCurrency as Currency
+    const locale = localeOf(p.profile.preferredLanguage)
+    const t = getI18n(locale).getFixedT(null, 'notifications')
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: p.profileId,
       type: 'emi.payment.due',
-      title: 'Payment due soon',
-      body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} due ${fmtDate(p.dueDate)}`,
+      title: t('emi.dueSoon.title', { days: daysFromToday(p.dueDate) }),
+      body: t('emi.dueSoon.body', {
+        label: p.emi.label,
+        amount: fmt.currency(p.emiAmount, currency),
+        date: fmt.date(p.dueDate, {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+      }),
       link: `/app/emis/${p.emiId}`,
       dedupeKey: `payment-due:${p.id}`,
     })
   }
   for (const p of emiOverdue) {
     const currency = p.profile.preferredCurrency as Currency
+    const locale = localeOf(p.profile.preferredLanguage)
+    const t = getI18n(locale).getFixedT(null, 'notifications')
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: p.profileId,
       type: 'emi.payment.overdue',
-      title: 'Payment overdue',
-      body: `${p.emi.label} — ${formatCurrency(p.emiAmount, currency)} was due ${fmtDate(p.dueDate)}`,
+      title: t('emi.overdue.title'),
+      body: t('emi.overdue.body', {
+        label: p.emi.label,
+        amount: fmt.currency(p.emiAmount, currency),
+        date: fmt.date(p.dueDate, {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+      }),
       link: `/app/emis/${p.emiId}`,
       dedupeKey: `payment-overdue:${p.id}`,
     })
   }
   for (const d of dpsDueToday) {
     const currency = d.profile.preferredCurrency as Currency
+    const locale = localeOf(d.profile.preferredLanguage)
+    const t = getI18n(locale).getFixedT(null, 'notifications')
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.due_today',
-      title: 'DPS deposit due today',
-      body: `${d.investment.name} — ${formatCurrency(d.amount, currency)} due today`,
+      title: t('dps.dueToday.title'),
+      body: t('dps.dueToday.body', {
+        label: d.investment.name,
+        amount: fmt.currency(d.amount, currency),
+      }),
       link: `/app/investments/dps/${d.investmentId}`,
       dedupeKey: `dps-due-today:${d.id}`,
     })
   }
   for (const d of dpsDueSoon) {
     const currency = d.profile.preferredCurrency as Currency
+    const locale = localeOf(d.profile.preferredLanguage)
+    const t = getI18n(locale).getFixedT(null, 'notifications')
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.due',
-      title: 'DPS deposit due soon',
-      body: `${d.investment.name} — ${formatCurrency(d.amount, currency)} due ${fmtDate(d.dueDate!)}`,
+      title: t('dps.dueSoon.title', { days: daysFromToday(d.dueDate!) }),
+      body: t('dps.dueSoon.body', {
+        label: d.investment.name,
+        amount: fmt.currency(d.amount, currency),
+        date: fmt.date(d.dueDate!, {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+      }),
       link: `/app/investments/dps/${d.investmentId}`,
       dedupeKey: `dps-due:${d.id}`,
     })
   }
   for (const d of dpsOverdue) {
     const currency = d.profile.preferredCurrency as Currency
+    const locale = localeOf(d.profile.preferredLanguage)
+    const t = getI18n(locale).getFixedT(null, 'notifications')
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.overdue',
-      title: 'DPS deposit overdue',
-      body: `${d.investment.name} — ${formatCurrency(d.amount, currency)} was due ${fmtDate(d.dueDate!)}`,
+      title: t('dps.overdue.title'),
+      body: t('dps.overdue.body', {
+        label: d.investment.name,
+        amount: fmt.currency(d.amount, currency),
+        date: fmt.date(d.dueDate!, {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+      }),
       link: `/app/investments/dps/${d.investmentId}`,
       dedupeKey: `dps-overdue:${d.id}`,
     })

@@ -1,0 +1,56 @@
+{
+  "list": {
+    "title": "ইএমআই",
+    "empty": "এখনো কোনো ইএমআই নেই",
+    "emptyHint": "পরিশোধ ট্র্যাক করতে একটি ঋণ বা ক্রেডিট কার্ড ইএমআই যোগ করুন",
+    "addCta": "ইএমআই যোগ করুন",
+    "monthly": "মাসিক ইএমআই",
+    "remaining": "অবশিষ্ট",
+    "outstanding": "বকেয়া"
+  },
+  "form": {
+    "newTitle": "নতুন ইএমআই",
+    "labelLabel": "লেবেল",
+    "labelPlaceholder": "যেমন: হোম লোন",
+    "typeLabel": "প্রকার",
+    "principalLabel": "মূল",
+    "interestRateLabel": "সুদের হার (%)",
+    "tenureLabel": "মেয়াদ (মাস)",
+    "startDateLabel": "শুরুর তারিখ",
+    "notesLabel": "নোট",
+    "notesPlaceholder": "ঐচ্ছিক",
+    "submit": "ইএমআই সংরক্ষণ করুন",
+    "submitting": "সংরক্ষণ হচ্ছে…",
+    "computedEmi": "গণনাকৃত ইএমআই",
+    "totalInterest": "মোট সুদ",
+    "totalPayable": "মোট পরিশোধ্য"
+  },
+  "detail": {
+    "schedule": "সময়সূচি",
+    "principalComponent": "মূল",
+    "interestComponent": "সুদ",
+    "remainingBalance": "অবশিষ্ট ব্যালেন্স",
+    "paymentNumber": "#",
+    "dueDate": "পরিশোধের তারিখ",
+    "amount": "পরিমাণ",
+    "status": "স্থিতি",
+    "markPaid": "পরিশোধিত হিসাবে চিহ্নিত করুন",
+    "marking": "চিহ্নিত হচ্ছে…",
+    "delete": "ইএমআই মুছে ফেলুন",
+    "deleteConfirmTitle": "এই ইএমআই মুছে ফেলবেন?",
+    "deleteConfirmBody": "এটি স্থায়ীভাবে ইএমআই ও তার পেমেন্ট ইতিহাস মুছে ফেলবে।"
+  },
+  "status": {
+    "active": "সক্রিয়",
+    "completed": "সম্পন্ন",
+    "closed": "বন্ধ",
+    "paid": "পরিশোধিত",
+    "upcoming": "আসন্ন"
+  },
+  "toasts": {
+    "created": "ইএমআই যোগ হয়েছে",
+    "updated": "ইএমআই আপডেট হয়েছে",
+    "deleted": "ইএমআই মুছে ফেলা হয়েছে",
+    "markedPaid": "পেমেন্ট পরিশোধিত হিসাবে চিহ্নিত হয়েছে"
+  }
+}

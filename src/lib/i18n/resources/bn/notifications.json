@@ -1,0 +1,30 @@
+{
+  "emi": {
+    "dueToday": {
+      "title": "ইএমআই আজ পরিশোধ্য",
+      "body": "{{label}} — {{amount}} আজ পরিশোধ্য"
+    },
+    "dueSoon": {
+      "title": "ইএমআই {{days}} দিনে পরিশোধ্য",
+      "body": "{{label}} — {{amount}} {{date}}-এ পরিশোধ্য"
+    },
+    "overdue": {
+      "title": "ইএমআই বকেয়া",
+      "body": "{{label}} — {{amount}} {{date}}-এ পরিশোধ্য ছিল"
+    }
+  },
+  "dps": {
+    "dueToday": {
+      "title": "ডিপিএস কিস্তি আজ পরিশোধ্য",
+      "body": "{{label}} — {{amount}} আজ পরিশোধ্য"
+    },
+    "dueSoon": {
+      "title": "ডিপিএস {{days}} দিনে পরিশোধ্য",
+      "body": "{{label}} — {{amount}} {{date}}-এ পরিশোধ্য"
+    },
+    "overdue": {
+      "title": "ডিপিএস বকেয়া",
+      "body": "{{label}} — {{amount}} {{date}}-এ পরিশোধ্য ছিল"
+    }
+  }
+}
