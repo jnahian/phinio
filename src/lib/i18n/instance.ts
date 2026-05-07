@@ -13,12 +13,18 @@ import { resources } from './resources'
  */
 export function createI18n(locale: Locale = DEFAULT_LOCALE): I18nInstance {
   const i18n = i18next.createInstance()
+  // initAsync: false makes init() complete synchronously when resources are
+  // already in-memory (which they are — see resources.ts). Without it the
+  // first SSR render could hit `t()` before init resolves and emit raw
+  // translation keys, breaking hydration. (i18next 26 renamed the older
+  // `initImmediate` option to `initAsync`.)
   void i18n.use(initReactI18next).init({
     lng: locale,
     fallbackLng: DEFAULT_LOCALE,
     ns: I18N_NAMESPACES as unknown as string[],
     defaultNS: 'common',
     resources,
+    initAsync: false,
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
     returnNull: false,

@@ -110,6 +110,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const [i18n] = useState(() =>
     typeof window === 'undefined' ? createI18n(locale) : getClientI18n(locale),
   )
+  // Keep the (singleton) i18n instance in sync when route context resolves
+  // to a different locale — e.g. after a language switch invalidates the
+  // router. Without this, the I18nextProvider keeps the initial locale and
+  // useTranslation continues to render the old language.
+  useEffect(() => {
+    if (i18n.language !== locale) {
+      void i18n.changeLanguage(locale)
+    }
+  }, [i18n, locale])
   // Subscribe to client-side auth state so we can replay queued mutations
   // when the user signs back in WITHOUT a network round-trip (e.g. token
   // refresh, login while already online). The effect below depends on this.

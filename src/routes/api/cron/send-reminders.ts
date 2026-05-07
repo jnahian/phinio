@@ -8,6 +8,7 @@ import { buildWebPushConfig, sendWebPush } from '#/server/web-push'
 import type { PushPayload, PushSubscriptionRow } from '#/server/web-push'
 import { createI18n } from '#/lib/i18n/instance'
 import { createFormatter } from '#/lib/i18n/format'
+import type { Formatter } from '#/lib/i18n/format'
 import { isLocale } from '#/lib/i18n/config'
 import type { Locale } from '#/lib/i18n/config'
 import type { i18n as I18nInstance } from 'i18next'
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/api/cron/send-reminders')({
 // Per-locale i18n + formatter cache. The cron runs many recipients per
 // invocation, so the lazy cache keeps us from rebuilding instances per row.
 const i18nByLocale = new Map<Locale, I18nInstance>()
+const formatterByLocale = new Map<Locale, Formatter>()
 
 function getI18n(locale: Locale): I18nInstance {
   let inst = i18nByLocale.get(locale)
@@ -38,6 +40,15 @@ function getI18n(locale: Locale): I18nInstance {
     i18nByLocale.set(locale, inst)
   }
   return inst
+}
+
+function getFormatter(locale: Locale): Formatter {
+  let fmt = formatterByLocale.get(locale)
+  if (!fmt) {
+    fmt = createFormatter(locale)
+    formatterByLocale.set(locale, fmt)
+  }
+  return fmt
 }
 
 function localeOf(value: string | null | undefined): Locale {
@@ -221,7 +232,7 @@ export async function handleCron(request: Request): Promise<Response> {
     const currency = p.profile.preferredCurrency as Currency
     const locale = localeOf(p.profile.preferredLanguage)
     const t = getI18n(locale).getFixedT(null, 'notifications')
-    const fmt = createFormatter(locale)
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: p.profileId,
       type: 'emi.payment.due_today',
@@ -238,7 +249,7 @@ export async function handleCron(request: Request): Promise<Response> {
     const currency = p.profile.preferredCurrency as Currency
     const locale = localeOf(p.profile.preferredLanguage)
     const t = getI18n(locale).getFixedT(null, 'notifications')
-    const fmt = createFormatter(locale)
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: p.profileId,
       type: 'emi.payment.due',
@@ -260,7 +271,7 @@ export async function handleCron(request: Request): Promise<Response> {
     const currency = p.profile.preferredCurrency as Currency
     const locale = localeOf(p.profile.preferredLanguage)
     const t = getI18n(locale).getFixedT(null, 'notifications')
-    const fmt = createFormatter(locale)
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: p.profileId,
       type: 'emi.payment.overdue',
@@ -282,7 +293,7 @@ export async function handleCron(request: Request): Promise<Response> {
     const currency = d.profile.preferredCurrency as Currency
     const locale = localeOf(d.profile.preferredLanguage)
     const t = getI18n(locale).getFixedT(null, 'notifications')
-    const fmt = createFormatter(locale)
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.due_today',
@@ -299,7 +310,7 @@ export async function handleCron(request: Request): Promise<Response> {
     const currency = d.profile.preferredCurrency as Currency
     const locale = localeOf(d.profile.preferredLanguage)
     const t = getI18n(locale).getFixedT(null, 'notifications')
-    const fmt = createFormatter(locale)
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.due',
@@ -321,7 +332,7 @@ export async function handleCron(request: Request): Promise<Response> {
     const currency = d.profile.preferredCurrency as Currency
     const locale = localeOf(d.profile.preferredLanguage)
     const t = getI18n(locale).getFixedT(null, 'notifications')
-    const fmt = createFormatter(locale)
+    const fmt = getFormatter(locale)
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.overdue',

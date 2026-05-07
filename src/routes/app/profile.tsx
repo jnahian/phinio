@@ -101,7 +101,7 @@ function ProfileScreen() {
     } catch (err) {
       setCurrency(previous)
       toast.error(
-        err instanceof Error ? err.message : 'Failed to update currency',
+        err instanceof Error ? err.message : t('currency.updateFailed'),
       )
     } finally {
       setIsSavingCurrency(false)
@@ -125,7 +125,7 @@ function ProfileScreen() {
       setLanguage(previous)
       void i18n.changeLanguage(previous)
       toast.error(
-        err instanceof Error ? err.message : 'Failed to update language',
+        err instanceof Error ? err.message : t('language.updateFailed'),
       )
     } finally {
       setIsSavingLanguage(false)
@@ -161,7 +161,7 @@ function ProfileScreen() {
       setIsEditingName(false)
       toast.success(t('name.updated'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update name')
+      toast.error(err instanceof Error ? err.message : t('name.updateFailed'))
     } finally {
       setIsSavingName(false)
     }
@@ -185,7 +185,7 @@ function ProfileScreen() {
       await router.invalidate()
       toast.success(t('photo.uploaded'))
     } catch {
-      toast.error('Failed to update photo')
+      toast.error(t('photo.updateFailed'))
     } finally {
       setIsUploadingPhoto(false)
     }

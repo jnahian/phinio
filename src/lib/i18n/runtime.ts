@@ -10,9 +10,11 @@ import type { Locale } from './config'
 export function detectClientLocale(): Locale {
   if (typeof document === 'undefined') return DEFAULT_LOCALE
 
-  const fromHtml = document.documentElement.lang
-  if (isLocale(fromHtml)) return fromHtml
-
+  // Cookie comes first to match the server-side precedence in
+  // detect.server.ts. Otherwise after a language switch the freshly-set
+  // cookie is shadowed by the still-stale `<html lang>` from the previous
+  // SSR render, and beforeLoad keeps re-resolving the old locale until
+  // a full page reload.
   const cookie = document.cookie
     .split(';')
     .map((c) => c.trim())
@@ -21,6 +23,9 @@ export function detectClientLocale(): Locale {
     const value = decodeURIComponent(cookie.slice(LOCALE_COOKIE.length + 1))
     if (isLocale(value)) return value
   }
+
+  const fromHtml = document.documentElement.lang
+  if (isLocale(fromHtml)) return fromHtml
 
   return DEFAULT_LOCALE
 }

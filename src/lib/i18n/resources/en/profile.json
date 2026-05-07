@@ -5,18 +5,21 @@
   "currency": {
     "title": "Preferred currency",
     "hint": "Used across investments, EMIs, and dashboards.",
-    "updated": "Currency set to {{value}}"
+    "updated": "Currency set to {{value}}",
+    "updateFailed": "Failed to update currency"
   },
   "language": {
     "title": "Language",
     "hint": "Switch the app between English and Bangla.",
-    "updated": "Language set to {{value}}"
+    "updated": "Language set to {{value}}",
+    "updateFailed": "Failed to update language"
   },
   "name": {
     "title": "Display name",
     "label": "Full name",
     "submit": "Update name",
-    "updated": "Name updated"
+    "updated": "Name updated",
+    "updateFailed": "Failed to update name"
   },
   "photo": {
     "change": "Change profile photo",
@@ -24,7 +27,8 @@
     "removeBody": "Your initial avatar will be shown instead.",
     "remove": "Remove",
     "uploaded": "Photo updated",
-    "removed": "Photo removed"
+    "removed": "Photo removed",
+    "updateFailed": "Failed to update photo"
   },
   "password": {
     "title": "Change password",

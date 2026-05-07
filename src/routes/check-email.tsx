@@ -30,7 +30,7 @@ function CheckEmailScreen() {
     })
     setIsResending(false)
     if (error) {
-      toast.error(error.message ?? t('checkEmail.resend'))
+      toast.error(error.message ?? t('checkEmail.resendFailed'))
     } else {
       toast.success(t('checkEmail.resent'))
     }
@@ -72,15 +72,6 @@ function CheckEmailScreen() {
         >
           {isResending ? t('checkEmail.resending') : t('checkEmail.resend')}
         </button>
-
-        <p className="body-sm mt-6 text-center text-on-surface-variant">
-          <Link
-            to="/login"
-            className="font-semibold text-primary-fixed-dim hover:underline decoration-primary-container underline-offset-4"
-          >
-            {t('checkEmail.backToLogin')}
-          </Link>
-        </p>
       </div>
     </main>
   )
