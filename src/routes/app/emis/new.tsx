@@ -259,7 +259,12 @@ function AddEmiScreen() {
                 value={
                   preview
                     ? fmt.currency(
-                        Number(processingFee) > 0 ? processingFee : 0,
+                        // String-safe positivity check: a fee like '0.00',
+                        // '', or undefined renders as '0.00'; any other
+                        // non-empty string passes through to fmt.currency.
+                        processingFee && /[1-9]/.test(processingFee)
+                          ? processingFee
+                          : '0',
                         currency,
                       )
                     : '—'

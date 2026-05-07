@@ -196,7 +196,7 @@ function EditInvestmentScreen() {
                 )}
               >
                 {returnPct > 0 ? '+' : ''}
-                {fmt.number(returnPct)}% {t('list.return').toLowerCase()}
+                {fmt.number(returnPct)}% {t('list.returnSuffix')}
               </p>
             )}
             {investment.status === 'active' && (
@@ -284,7 +284,7 @@ function EditInvestmentScreen() {
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
             <div className="flex items-center justify-between">
               <p className="label-sm text-on-surface-variant">
-                {t('list.active') /* status header */}
+                {t('form.section.status')}
               </p>
               <div className="inline-flex gap-1 rounded-full bg-surface-container-lowest p-1">
                 <StatusTab
@@ -399,7 +399,7 @@ function EditInvestmentScreen() {
       <ConfirmModal
         open={confirmDelete}
         title={t('form.deleteConfirmTitle')}
-        message={t('form.deleteConfirmBody')}
+        message={t('form.deleteConfirmBody', { name: investment.name })}
         confirmLabel={t('form.deleteConfirm')}
         pendingLabel={t('form.deletePending')}
         isPending={deleteInvestment.isPending}

@@ -11,9 +11,9 @@
   "loading": "Loading…",
   "shortRelative": {
     "now": "now",
-    "minutes": "{{count}}m",
-    "hours": "{{count}}h",
-    "days": "{{count}}d"
+    "minutes": "{{value}}m",
+    "hours": "{{value}}h",
+    "days": "{{value}}d"
   },
   "emi": {
     "dueToday": {

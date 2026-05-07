@@ -1,10 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Logo } from '#/components/Logo'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 
 export function Footer() {
   const { t } = useTranslation('landing')
-  const year = new Date().getFullYear().toString()
+  const fmt = useFormatter()
+  // Format the year through Intl so Bangla mode renders Bengali numerals
+  // (২০২৬) instead of falling back to Latin digits via toString().
+  const year = fmt.number(new Date().getFullYear(), { useGrouping: false })
   return (
     <footer
       className="py-10 px-6"

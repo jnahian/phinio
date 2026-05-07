@@ -20,7 +20,8 @@
     "loadFailed": "বিনিয়োগ লোড করা যায়নি",
     "deposits_one": "{{count}}টি জমা",
     "deposits_other": "{{count}}টি জমা",
-    "next": "পরবর্তী"
+    "next": "পরবর্তী",
+    "returnSuffix": "রিটার্ন"
   },
   "types": {
     "all": "সব",
@@ -43,6 +44,7 @@
     "section": {
       "details": "সম্পদ বিবরণ",
       "category": "শ্রেণী",
+      "status": "স্থিতি",
       "notes": "নোট (ঐচ্ছিক)"
     },
     "typeLabel": "প্রকার",
@@ -57,7 +59,7 @@
     "submitting": "সংরক্ষণ হচ্ছে…",
     "delete": "বিনিয়োগ মুছে ফেলুন",
     "deleteConfirmTitle": "এই বিনিয়োগ মুছে ফেলবেন?",
-    "deleteConfirmBody": "এটি স্থায়ীভাবে সম্পদ ও তার ইতিহাস মুছে ফেলবে।",
+    "deleteConfirmBody": "\"{{name}}\" ও তার ইতিহাস মুছে ফেলবেন? এটি ফিরিয়ে নেওয়া যাবে না।",
     "deleteConfirm": "মুছে ফেলুন",
     "deletePending": "মুছে ফেলা হচ্ছে…",
     "withdraw": "প্রত্যাহার",
@@ -106,7 +108,7 @@
     "perMonth": "/মাস",
     "next": "পরবর্তী",
     "deleteConfirmTitle": "এই ডিপিএস স্কিম মুছে ফেলবেন?",
-    "deleteConfirmBody": "এটি স্থায়ীভাবে স্কিম ও সব কিস্তি মুছে ফেলবে।",
+    "deleteConfirmBody": "\"{{name}}\" ও এর সব কিস্তি মুছে ফেলবেন? এটি ফিরিয়ে নেওয়া যাবে না।",
     "deleteConfirm": "মুছে ফেলুন",
     "deletePending": "মুছে ফেলা হচ্ছে…",
     "delete": "স্কিম মুছে ফেলুন",
@@ -152,7 +154,7 @@
     "totalDeposited": "মোট জমা",
     "currentValue": "বর্তমান মূল্য",
     "deleteConfirmTitle": "এই সঞ্চয় পট মুছে ফেলবেন?",
-    "deleteConfirmBody": "এটি স্থায়ীভাবে সঞ্চয় অ্যাকাউন্ট ও সব জমা মুছে ফেলবে।",
+    "deleteConfirmBody": "\"{{name}}\" ও এর সব জমার ইতিহাস মুছে ফেলবেন? এটি ফিরিয়ে নেওয়া যাবে না।",
     "deleteConfirm": "মুছে ফেলুন",
     "deletePending": "মুছে ফেলা হচ্ছে…",
     "delete": "পট মুছে ফেলুন",

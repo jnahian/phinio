@@ -444,7 +444,7 @@ function SavingsDetailScreen() {
       <ConfirmModal
         open={confirmDelete}
         title={t('savings.deleteConfirmTitle')}
-        message={t('savings.deleteConfirmBody')}
+        message={t('savings.deleteConfirmBody', { name: inv.name })}
         confirmLabel={t('savings.deleteConfirm')}
         pendingLabel={t('savings.deletePending')}
         isPending={deleteSavings.isPending}

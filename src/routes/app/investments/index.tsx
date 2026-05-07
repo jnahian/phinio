@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArrowDownLeft, CloudOff, TrendingUp } from 'lucide-react'
@@ -55,10 +55,14 @@ function InvestmentsListScreen() {
   const currency = profile.preferredCurrency
   const fmt = useFormatter()
 
-  const TYPE_PILLS: Array<FilterPill<TypeFilter>> = TYPE_PILL_KEYS.map((k) => ({
-    value: k,
-    label: t(`types.${k}`),
-  }))
+  const TYPE_PILLS: Array<FilterPill<TypeFilter>> = useMemo(
+    () =>
+      TYPE_PILL_KEYS.map((k) => ({
+        value: k,
+        label: t(`types.${k}`),
+      })),
+    [t],
+  )
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('active')
@@ -82,25 +86,25 @@ function InvestmentsListScreen() {
   //   completed → exitValue alone  (the realized total at close — for
   //               withdrawal-closure exitValue already equals totalWithdrawn,
   //               so adding it again would double-count)
+  // Accumulate in integer cents to avoid float drift across many money strings
+  // (CLAUDE.md rule). Convert back to a fixed-2 string at the boundary.
   const totals = items.reduce(
     (acc, item) => {
-      acc.invested += Number(item.investedAmount)
+      acc.invested += Math.round(Number(item.investedAmount) * 100)
       acc.current +=
         status === 'completed'
-          ? Number(item.exitValue ?? item.currentValue)
-          : Number(item.currentValue) + Number(item.totalWithdrawn)
+          ? Math.round(Number(item.exitValue ?? item.currentValue) * 100)
+          : Math.round(Number(item.currentValue) * 100) +
+            Math.round(Number(item.totalWithdrawn) * 100)
       return acc
     },
     { invested: 0, current: 0 },
   )
 
+  const investedStr = (totals.invested / 100).toFixed(2)
+  const currentStr = (totals.current / 100).toFixed(2)
   const totalReturn =
-    totals.invested > 0
-      ? calculateReturnPercent(
-          totals.invested.toFixed(2),
-          totals.current.toFixed(2),
-        )
-      : 0
+    totals.invested > 0 ? calculateReturnPercent(investedStr, currentStr) : 0
 
   return (
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
@@ -108,7 +112,7 @@ function InvestmentsListScreen() {
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell
             label={t('list.totalInvested')}
-            value={fmt.currency(totals.invested.toFixed(2), currency)}
+            value={fmt.currency(investedStr, currency)}
           />
           <SummaryCell
             label={
@@ -116,7 +120,7 @@ function InvestmentsListScreen() {
                 ? t('list.totalExited')
                 : t('list.totalCurrent')
             }
-            value={fmt.currency(totals.current.toFixed(2), currency)}
+            value={fmt.currency(currentStr, currency)}
           />
           <SummaryCell
             label={t('list.return')}
@@ -367,7 +371,7 @@ function InvestmentCard({ item, currency }: ListItemProps) {
                   meta.chipClass,
                 )}
               >
-                {t(`types.${item.type}`)}
+                {t(`types.${typeKey}`)}
               </span>
               {formattedDate && (
                 <span className="body-sm text-on-surface-variant/70">
@@ -466,7 +470,10 @@ function DpsCard({ item, currency }: ListItemProps) {
         <div className="mt-2 flex items-center gap-2 text-xs text-on-surface-variant/70">
           <span>
             {fmt.currency(item.monthlyDeposit ?? '0', currency)}
-            {t('list.perMonth')} · {item.interestRate}% {item.interestType}
+            {t('list.perMonth')} · {fmt.number(Number(item.interestRate ?? 0))}%{' '}
+            {item.interestType === 'compound'
+              ? t('dps.interestCompound')
+              : t('dps.interestSimple')}
           </span>
           {item.nextDueDate && (
             <>

@@ -130,7 +130,7 @@ export function WithdrawModal({
             <div className="mt-4">
               {detailQuery.isLoading || !detailQuery.data ? (
                 <p className="body-sm text-on-surface-variant">
-                  Loading scheme…
+                  {t('loadingScheme')}
                 </p>
               ) : (
                 <DpsCloseFields
@@ -415,7 +415,7 @@ function DpsCloseFields({
       <div className="grid grid-cols-2 gap-3">
         <TextField
           id="cReceived"
-          label={t('amountLabel')}
+          label={t('amountReceivedLabel')}
           placeholder="0.00"
           inputMode="decimal"
           prefix={symbol}
@@ -426,7 +426,7 @@ function DpsCloseFields({
         />
         <TextField
           id="cDate"
-          label={t('dateLabel')}
+          label={t('closureDateLabel')}
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}

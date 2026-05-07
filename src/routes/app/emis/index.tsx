@@ -71,10 +71,14 @@ function EmisListScreen() {
     refetch,
   } = useEmisQuery({ type: typeFilter, status })
 
+  // Accumulate in integer cents so summing many money strings doesn't drift
+  // through float-point error. CLAUDE.md: never coerce money to JS number for
+  // arithmetic — Number(...) here only crosses to int via *100 + round, and
+  // we divide back at the display boundary.
   const totals = emis.reduce(
     (acc, emi) => {
-      acc.monthly += Number(emi.emiAmount)
-      acc.remaining += Number(emi.remainingBalance)
+      acc.monthly += Math.round(Number(emi.emiAmount) * 100)
+      acc.remaining += Math.round(Number(emi.remainingBalance) * 100)
       return acc
     },
     { monthly: 0, remaining: 0 },
@@ -92,13 +96,13 @@ function EmisListScreen() {
           />
           <SummaryCell
             label={t('list.monthly')}
-            value={fmt.currency(totals.monthly.toFixed(2), currency)}
+            value={fmt.currency((totals.monthly / 100).toFixed(2), currency)}
           />
           <SummaryCell
             label={
               status === 'completed' ? t('list.paidOff') : t('list.remaining')
             }
-            value={fmt.currency(totals.remaining.toFixed(2), currency)}
+            value={fmt.currency((totals.remaining / 100).toFixed(2), currency)}
           />
         </div>
       </Card>

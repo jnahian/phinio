@@ -64,6 +64,7 @@ function EmiDetailScreen() {
   // isn't principal, isn't interest, and isn't part of "X of N months".
   const regularPayments = payments.filter(isRegularPayment)
   const paidCount = regularPayments.filter((p) => p.status === 'paid').length
+  const unpaidCount = regularPayments.length - paidCount
   const remainingMonths = emi.tenureMonths - paidCount
   const isCompleted = emi.status === 'completed'
   const interestPaid = regularPayments
@@ -477,7 +478,7 @@ function EmiDetailScreen() {
       <ConfirmModal
         open={confirmDelete}
         title={t('detail.deleteConfirmTitle')}
-        message={t('detail.deleteConfirmBody')}
+        message={t('detail.deleteConfirmBody', { label: emi.label })}
         confirmLabel={t('detail.deleteConfirm')}
         pendingLabel={t('detail.deletePending')}
         isPending={deleteEmi.isPending}
@@ -488,7 +489,10 @@ function EmiDetailScreen() {
       <ConfirmModal
         open={confirmComplete}
         title={t('detail.completeConfirmTitle')}
-        message={t('detail.completeConfirmBody')}
+        message={t('detail.completeConfirmBody', {
+          label: emi.label,
+          count: unpaidCount,
+        })}
         confirmLabel={t('detail.completeConfirm')}
         pendingLabel={t('detail.completePending')}
         isPending={completeEmi.isPending}

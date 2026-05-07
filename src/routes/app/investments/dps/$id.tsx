@@ -8,7 +8,6 @@ import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useInvestmentQuery,
@@ -29,8 +28,6 @@ function DpsDetailScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  // symbol no longer needed once we've migrated to fmt.currency throughout
-  void getCurrencySymbol
   const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
@@ -367,7 +364,7 @@ function DpsDetailScreen() {
       <ConfirmModal
         open={confirmDelete}
         title={t('dps.deleteConfirmTitle')}
-        message={t('dps.deleteConfirmBody')}
+        message={t('dps.deleteConfirmBody', { name: inv.name })}
         confirmLabel={t('dps.deleteConfirm')}
         pendingLabel={t('dps.deletePending')}
         isPending={deleteDps.isPending}

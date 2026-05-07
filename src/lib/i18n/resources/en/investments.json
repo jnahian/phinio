@@ -20,7 +20,8 @@
     "loadFailed": "Couldn't load investments",
     "deposits_one": "{{count}} deposit",
     "deposits_other": "{{count}} deposits",
-    "next": "Next"
+    "next": "Next",
+    "returnSuffix": "return"
   },
   "types": {
     "all": "All",
@@ -43,6 +44,7 @@
     "section": {
       "details": "Asset details",
       "category": "Category",
+      "status": "Status",
       "notes": "Notes (optional)"
     },
     "typeLabel": "Type",
@@ -57,7 +59,7 @@
     "submitting": "Saving…",
     "delete": "Delete investment",
     "deleteConfirmTitle": "Delete this investment?",
-    "deleteConfirmBody": "This permanently removes the asset and its history.",
+    "deleteConfirmBody": "Delete \"{{name}}\" and its history? This can't be undone.",
     "deleteConfirm": "Delete",
     "deletePending": "Deleting…",
     "withdraw": "Withdraw",
@@ -106,7 +108,7 @@
     "perMonth": "/mo",
     "next": "Next",
     "deleteConfirmTitle": "Delete this DPS scheme?",
-    "deleteConfirmBody": "This permanently removes the scheme and all installments.",
+    "deleteConfirmBody": "Delete \"{{name}}\" and all its installment rows? This can't be undone.",
     "deleteConfirm": "Delete",
     "deletePending": "Deleting…",
     "delete": "Delete scheme",
@@ -152,7 +154,7 @@
     "totalDeposited": "Total deposited",
     "currentValue": "Current value",
     "deleteConfirmTitle": "Delete this savings pot?",
-    "deleteConfirmBody": "This permanently removes the savings account and all deposits.",
+    "deleteConfirmBody": "Delete \"{{name}}\" and all its deposit history? This can't be undone.",
     "deleteConfirm": "Delete",
     "deletePending": "Deleting…",
     "delete": "Delete pot",

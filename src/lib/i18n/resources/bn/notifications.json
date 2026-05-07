@@ -11,9 +11,9 @@
   "loading": "লোড হচ্ছে…",
   "shortRelative": {
     "now": "এখন",
-    "minutes": "{{count}}মি",
-    "hours": "{{count}}ঘ",
-    "days": "{{count}}দি"
+    "minutes": "{{value}}মি",
+    "hours": "{{value}}ঘ",
+    "days": "{{value}}দি"
   },
   "emi": {
     "dueToday": {

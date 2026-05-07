@@ -68,7 +68,7 @@ export function NotificationBell() {
         <Bell className="h-5 w-5" strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-error px-1 text-[0.65rem] font-semibold text-on-error">
-            {unreadCount > 99 ? '99+' : fmt.number(unreadCount)}
+            {unreadCount > 99 ? `${fmt.number(99)}+` : fmt.number(unreadCount)}
           </span>
         )}
       </button>
@@ -169,7 +169,7 @@ export function NotificationBell() {
                             {n.title}
                           </p>
                           <time className="flex-shrink-0 text-[0.7rem] text-on-surface-variant/70">
-                            {formatRelative(n.createdAt, t, fmt.locale)}
+                            {formatRelative(n.createdAt, t, fmt)}
                           </time>
                         </div>
                         <p className="mt-0.5 line-clamp-2 text-xs text-on-surface-variant">
@@ -223,21 +223,21 @@ export function NotificationBell() {
   )
 }
 
-type ShortRelativeT = (key: string, options?: { count: number }) => string
+type ShortRelativeT = (key: string, options?: { value: string }) => string
 
 function formatRelative(
   date: Date | string,
   t: ShortRelativeT,
-  locale: 'en' | 'bn',
+  fmt: ReturnType<typeof useFormatter>,
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date
   const diffMs = Date.now() - d.getTime()
   const min = Math.floor(diffMs / 60_000)
   if (min < 1) return t('shortRelative.now')
-  if (min < 60) return t('shortRelative.minutes', { count: min })
+  if (min < 60) return t('shortRelative.minutes', { value: fmt.number(min) })
   const hr = Math.floor(min / 60)
-  if (hr < 24) return t('shortRelative.hours', { count: hr })
+  if (hr < 24) return t('shortRelative.hours', { value: fmt.number(hr) })
   const day = Math.floor(hr / 24)
-  if (day < 7) return t('shortRelative.days', { count: day })
-  return d.toLocaleDateString(locale === 'bn' ? 'bn-BD' : 'en-GB')
+  if (day < 7) return t('shortRelative.days', { value: fmt.number(day) })
+  return fmt.date(d, { month: 'short', day: 'numeric', year: 'numeric' })
 }

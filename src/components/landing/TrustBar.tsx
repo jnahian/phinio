@@ -2,11 +2,14 @@ import { useTranslation } from 'react-i18next'
 import { ActivitySvg, EyeSlashSvg, LockSvg } from './icons'
 import { useInView } from './use-in-view'
 
+// Numeric/literal values stay as data — `tracking` reads from the bundle so
+// it can localize (e.g. "Live" → "লাইভ"); the others ('100%', 'E2E') are
+// universal symbols and stay as-is.
 const trustItems = [
-  { Icon: EyeSlashSvg, value: '100%', key: 'private' },
-  { Icon: LockSvg, value: 'E2E', key: 'encrypted' },
-  { Icon: ActivitySvg, value: 'Live', key: 'tracking' },
-] as const
+  { Icon: EyeSlashSvg, value: '100%', key: 'private' as const },
+  { Icon: LockSvg, value: 'E2E', key: 'encrypted' as const },
+  { Icon: ActivitySvg, value: null, key: 'tracking' as const },
+]
 
 export function TrustBar() {
   const { t } = useTranslation('landing')
@@ -31,7 +34,7 @@ export function TrustBar() {
               <Icon className="w-5 h-5 text-primary" />
             </div>
             <span className="font-display font-extrabold text-4xl text-on-surface tracking-tight">
-              {value}
+              {value ?? t(`trust.${key}Value`)}
             </span>
             <span className="text-sm font-semibold text-primary">
               {t(`trust.${key}Label`)}
