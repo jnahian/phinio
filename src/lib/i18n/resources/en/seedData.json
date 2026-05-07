@@ -1,0 +1,20 @@
+{
+  "title": "Load test data",
+  "description": "Populate your profile with realistic demo portfolios and EMIs.",
+  "categories": {
+    "lumpSum": "Lump-sum investments",
+    "dps": "DPS (scheduled)",
+    "savings": "Savings pots",
+    "emis": "EMIs"
+  },
+  "hints": {
+    "lumpSum": "Stocks, mutual funds, FDs, gold, crypto",
+    "dps": "Fixed monthly deposit schemes",
+    "savings": "Flexible, ad-hoc deposits",
+    "emis": "Loans and credit-card instalments"
+  },
+  "wipeLabel": "Wipe existing data first",
+  "wipeHint": "Recommended — avoids duplicates",
+  "submit": "Load data",
+  "submitting": "Loading…"
+}

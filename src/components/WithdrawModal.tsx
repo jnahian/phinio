@@ -261,11 +261,11 @@ function WithdrawFields({
     e.preventDefault()
     setError(null)
     if (!amount || amountNum <= 0) {
-      setError('Enter an amount greater than 0')
+      setError(t('errors.amountRequired'))
       return
     }
     if (amountNum > max + 0.001) {
-      setError('Amount exceeds current value')
+      setError(t('errors.amountExceeds'))
       return
     }
     try {
@@ -388,7 +388,7 @@ function DpsCloseFields({
     e.preventDefault()
     setError(null)
     if (!received || Number(received) <= 0) {
-      setError('Enter the amount received')
+      setError(t('errors.dpsAmountRequired'))
       return
     }
     try {

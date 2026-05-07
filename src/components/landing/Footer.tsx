@@ -1,7 +1,10 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Logo } from '#/components/Logo'
 
 export function Footer() {
+  const { t } = useTranslation('landing')
+  const year = new Date().getFullYear().toString()
   return (
     <footer
       className="py-10 px-6"
@@ -11,14 +14,14 @@ export function Footer() {
         <div className="flex items-center gap-2.5">
           <Link
             to="/"
-            aria-label="Phinio home"
+            aria-label={t('footer.ariaHome')}
             className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Logo size="xs" />
           </Link>
           <span className="text-on-surface-variant/25 text-xs mx-0.5">—</span>
           <span className="text-xs text-on-surface-variant">
-            Your private financial vault.
+            {t('footer.tagline')}
           </span>
         </div>
         <div className="flex items-center gap-5">
@@ -26,10 +29,10 @@ export function Footer() {
             to="/changelog"
             className="text-xs text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            Changelog
+            {t('footer.changelog')}
           </Link>
           <p className="text-xs text-on-surface-variant/45">
-            © {new Date().getFullYear()} Phinio
+            {t('footer.copyright', { year })}
           </p>
         </div>
       </div>

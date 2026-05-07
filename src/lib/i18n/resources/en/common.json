@@ -3,6 +3,7 @@
   "tagline": "Your finances, simplified.",
   "actions": {
     "save": "Save",
+    "saveChanges": "Save changes",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -21,7 +22,21 @@
     "yesterday": "Yesterday",
     "today": "Today",
     "all": "All",
-    "discard": "Discard"
+    "discard": "Discard",
+    "creating": "Creating…",
+    "adding": "Adding…",
+    "deleting": "Deleting…",
+    "removing": "Removing…"
+  },
+  "labels": {
+    "amount": "Amount",
+    "date": "Date",
+    "name": "Name",
+    "notes": "Notes",
+    "notesOptional": "Notes (optional)",
+    "startDate": "Start date",
+    "total": "Total",
+    "overdue": "Overdue"
   },
   "tabs": {
     "home": "Home",
@@ -38,9 +53,12 @@
     "profile": "Profile",
     "addInvestment": "Add Investment",
     "addEmi": "Add EMI",
+    "addDps": "Add DPS Scheme",
+    "addSavings": "Add Savings Pot",
     "newDps": "New DPS",
     "newSavings": "New Savings",
-    "editInvestment": "Edit Investment"
+    "editInvestment": "Edit Investment",
+    "changelog": "Changelog"
   },
   "fab": {
     "create": "Create",

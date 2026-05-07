@@ -18,6 +18,11 @@
   "dpsWarning": "এটি ফিরিয়ে নেওয়া যাবে না।",
   "dpsClosing": "বন্ধ হচ্ছে…",
   "dpsConfirm": "বন্ধ নিশ্চিত করুন",
+  "errors": {
+    "amountRequired": "০-এর বেশি একটি পরিমাণ লিখুন",
+    "amountExceeds": "পরিমাণ বর্তমান মূল্যের চেয়ে বেশি",
+    "dpsAmountRequired": "প্রাপ্ত পরিমাণ লিখুন"
+  },
   "labels": {
     "stock": "স্টক",
     "mutual_fund": "মিউচুয়াল ফান্ড",

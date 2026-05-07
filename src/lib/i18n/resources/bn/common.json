@@ -3,6 +3,7 @@
   "tagline": "আপনার অর্থ, সরলীকৃত।",
   "actions": {
     "save": "সংরক্ষণ",
+    "saveChanges": "পরিবর্তন সংরক্ষণ",
     "cancel": "বাতিল",
     "delete": "মুছে ফেলুন",
     "edit": "সম্পাদনা",
@@ -21,7 +22,21 @@
     "yesterday": "গতকাল",
     "today": "আজ",
     "all": "সব",
-    "discard": "বাতিল করুন"
+    "discard": "বাতিল করুন",
+    "creating": "তৈরি হচ্ছে…",
+    "adding": "যোগ হচ্ছে…",
+    "deleting": "মুছে ফেলা হচ্ছে…",
+    "removing": "সরানো হচ্ছে…"
+  },
+  "labels": {
+    "amount": "পরিমাণ",
+    "date": "তারিখ",
+    "name": "নাম",
+    "notes": "নোট",
+    "notesOptional": "নোট (ঐচ্ছিক)",
+    "startDate": "শুরুর তারিখ",
+    "total": "মোট",
+    "overdue": "বকেয়া"
   },
   "tabs": {
     "home": "হোম",
@@ -38,9 +53,12 @@
     "profile": "প্রোফাইল",
     "addInvestment": "বিনিয়োগ যোগ করুন",
     "addEmi": "ইএমআই যোগ করুন",
+    "addDps": "ডিপিএস স্কিম যোগ করুন",
+    "addSavings": "সঞ্চয় পট যোগ করুন",
     "newDps": "নতুন ডিপিএস",
     "newSavings": "নতুন সঞ্চয়",
-    "editInvestment": "বিনিয়োগ সম্পাদনা"
+    "editInvestment": "বিনিয়োগ সম্পাদনা",
+    "changelog": "চেঞ্জলগ"
   },
   "fab": {
     "create": "তৈরি করুন",

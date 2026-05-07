@@ -1,28 +1,15 @@
+import { useTranslation } from 'react-i18next'
 import { ActivitySvg, EyeSlashSvg, LockSvg } from './icons'
 import { useInView } from './use-in-view'
 
 const trustItems = [
-  {
-    Icon: EyeSlashSvg,
-    value: '100%',
-    label: 'Private',
-    sub: 'Zero data sharing, ever',
-  },
-  {
-    Icon: LockSvg,
-    value: 'E2E',
-    label: 'Encrypted',
-    sub: 'Bank-grade security',
-  },
-  {
-    Icon: ActivitySvg,
-    value: 'Live',
-    label: 'Tracking',
-    sub: 'Real-time net worth',
-  },
-]
+  { Icon: EyeSlashSvg, value: '100%', key: 'private' },
+  { Icon: LockSvg, value: 'E2E', key: 'encrypted' },
+  { Icon: ActivitySvg, value: 'Live', key: 'tracking' },
+] as const
 
 export function TrustBar() {
+  const { t } = useTranslation('landing')
   const { ref, inView } = useInView()
   return (
     <section className="py-16 px-6 bg-surface-container-low">
@@ -30,9 +17,9 @@ export function TrustBar() {
         ref={ref}
         className="mx-auto max-w-4xl grid grid-cols-1 sm:grid-cols-3 gap-12"
       >
-        {trustItems.map(({ Icon, value, label, sub }, i) => (
+        {trustItems.map(({ Icon, value, key }, i) => (
           <div
-            key={label}
+            key={key}
             className="flex flex-col items-center text-center gap-2"
             style={{
               opacity: inView ? 1 : 0,
@@ -46,8 +33,12 @@ export function TrustBar() {
             <span className="font-display font-extrabold text-4xl text-on-surface tracking-tight">
               {value}
             </span>
-            <span className="text-sm font-semibold text-primary">{label}</span>
-            <span className="text-xs text-on-surface-variant">{sub}</span>
+            <span className="text-sm font-semibold text-primary">
+              {t(`trust.${key}Label`)}
+            </span>
+            <span className="text-xs text-on-surface-variant">
+              {t(`trust.${key}Sub`)}
+            </span>
           </div>
         ))}
       </div>

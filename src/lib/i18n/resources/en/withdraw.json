@@ -18,6 +18,11 @@
   "dpsWarning": "This cannot be undone.",
   "dpsClosing": "Closing…",
   "dpsConfirm": "Confirm closure",
+  "errors": {
+    "amountRequired": "Enter an amount greater than 0",
+    "amountExceeds": "Amount exceeds current value",
+    "dpsAmountRequired": "Enter the amount received"
+  },
   "labels": {
     "stock": "Stocks",
     "mutual_fund": "Mutual Fund",

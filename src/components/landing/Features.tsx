@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   BarChartSvg,
   BellSvg,
@@ -14,57 +15,21 @@ type Accent = 'primary' | 'secondary'
 
 interface Feature {
   Icon: (props: SvgProps) => ReactElement
-  title: string
-  description: string
+  key: string
   accent: Accent
 }
 
 const features: Array<Feature> = [
-  {
-    Icon: ChartLineSvg,
-    title: 'One portfolio, every asset',
-    description:
-      'Lump-sum holdings, DPS schemes, and flexible savings pots side by side — with returns, accruals, and balances recalculated as you go.',
-    accent: 'primary',
-  },
-  {
-    Icon: CalendarSvg,
-    title: 'Amortization, solved',
-    description:
-      'Reducing-balance schedules build the moment you log a loan or credit-card EMI. Every installment, principal-versus-interest split, and payoff date locked in upfront.',
-    accent: 'secondary',
-  },
-  {
-    Icon: BarChartSvg,
-    title: 'Net worth at a glance',
-    description:
-      'Active investments minus outstanding debts, recalculated live. Upcoming payments and an interactive allocation donut on the same screen.',
-    accent: 'primary',
-  },
-  {
-    Icon: BellSvg,
-    title: 'Reminders that travel',
-    description:
-      'Web-push alerts for upcoming and overdue EMI and DPS installments — delivered even when Phinio is closed and the tab is gone.',
-    accent: 'secondary',
-  },
-  {
-    Icon: HistorySvg,
-    title: 'Every move, recorded',
-    description:
-      'An immutable audit trail of every create, edit, and delete with before-and-after diffs. Scroll back through your financial history any time.',
-    accent: 'primary',
-  },
-  {
-    Icon: ShieldSvg,
-    title: 'Yours alone',
-    description:
-      'No bank linking, no third-party trackers, no data sharing. Sessions are httpOnly, every query is scoped to you — nothing leaks across accounts.',
-    accent: 'secondary',
-  },
+  { Icon: ChartLineSvg, key: 'portfolio', accent: 'primary' },
+  { Icon: CalendarSvg, key: 'amortization', accent: 'secondary' },
+  { Icon: BarChartSvg, key: 'networth', accent: 'primary' },
+  { Icon: BellSvg, key: 'reminders', accent: 'secondary' },
+  { Icon: HistorySvg, key: 'audit', accent: 'primary' },
+  { Icon: ShieldSvg, key: 'privacy', accent: 'secondary' },
 ]
 
 export function Features() {
+  const { t } = useTranslation('landing')
   const { ref, inView } = useInView()
 
   return (
@@ -75,12 +40,10 @@ export function Features() {
             className="label-sm text-primary"
             style={{ letterSpacing: '0.16em' }}
           >
-            CAPABILITIES
+            {t('features.label')}
           </span>
           <h2 className="font-display font-bold text-3xl sm:text-4xl text-on-surface tracking-tight mt-3 leading-snug">
-            Everything you need to
-            <br />
-            run your finances
+            {t('features.heading')}
           </h2>
         </div>
 
@@ -88,11 +51,11 @@ export function Features() {
           ref={ref}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
         >
-          {features.map(({ Icon, title, description, accent }, i) => {
+          {features.map(({ Icon, key, accent }, i) => {
             const isPrimary = accent === 'primary'
             return (
               <div
-                key={title}
+                key={key}
                 style={{
                   opacity: inView ? 1 : 0,
                   transform: inView ? 'translateY(0)' : 'translateY(28px)',
@@ -121,10 +84,10 @@ export function Features() {
                   </div>
 
                   <h3 className="font-display font-bold text-lg text-on-surface tracking-tight mb-2">
-                    {title}
+                    {t(`features.${key}.title`)}
                   </h3>
                   <p className="body-sm text-on-surface-variant leading-relaxed">
-                    {description}
+                    {t(`features.${key}.description`)}
                   </p>
                 </div>
               </div>

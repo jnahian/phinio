@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowDownLeft, Check, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
@@ -22,11 +23,14 @@ export const Route = createFileRoute('/app/investments/dps/$id')({
 })
 
 function DpsDetailScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
+  // symbol no longer needed once we've migrated to fmt.currency throughout
+  void getCurrencySymbol
   const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
@@ -44,7 +48,7 @@ function DpsDetailScreen() {
   if (isLoading || !inv) {
     return (
       <main className="noir-bg flex min-h-dvh items-center justify-center text-on-surface-variant">
-        Loading…
+        {tCommon('actions.loading')}
       </main>
     )
   }
@@ -95,12 +99,15 @@ function DpsDetailScreen() {
       <div className="space-y-6 px-5 pt-4">
         <div className="flex items-center justify-between">
           <p className="body-sm text-on-surface-variant">
-            DPS · {inv.interestType === 'compound' ? 'Compound' : 'Simple'}{' '}
-            interest · {inv.interestRate}% p.a.
+            {t('types.dps')} ·{' '}
+            {inv.interestType === 'compound'
+              ? t('dps.interestCompound')
+              : t('dps.interestSimple')}{' '}
+            {t('dps.interestSuffix')} · {inv.interestRate}% p.a.
           </p>
           <button
             type="button"
-            aria-label="Edit DPS"
+            aria-label={t('dps.ariaEdit')}
             onClick={() => {
               setEditName(inv.name)
               setEditNotes(inv.notes ?? '')
@@ -117,12 +124,15 @@ function DpsDetailScreen() {
             aria-hidden
             className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
           />
-          <p className="label-sm text-white/70">Total deposited</p>
+          <p className="label-sm text-white/70">{t('dps.totalDeposited')}</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
             {fmt.currency(inv.investedAmount, currency)}
           </p>
           <p className="body-sm mt-2 text-white/70">
-            {paidCount} of {inv.tenureMonths} months paid
+            {t('dps.monthsPaid', {
+              paid: fmt.number(paidCount),
+              total: fmt.number(inv.tenureMonths ?? 0),
+            })}
           </p>
           <div className="mt-4 h-1.5 rounded-full bg-white/10">
             <div
@@ -139,7 +149,7 @@ function DpsDetailScreen() {
               className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
             >
               <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-              Close prematurely
+              {t('dps.closePremature')}
             </button>
           )}
         </section>
@@ -147,16 +157,16 @@ function DpsDetailScreen() {
         {/* Stats */}
         <section className="grid grid-cols-3 gap-3">
           <StatTile
-            label="Monthly"
+            label={t('dps.monthlyDeposit')}
             value={fmt.currency(inv.monthlyDeposit ?? '0', currency)}
           />
           <StatTile
-            label="Maturity value"
+            label={t('dps.maturityValue')}
             value={fmt.currency(maturityValue, currency)}
             accent="secondary"
           />
           <StatTile
-            label="Interest earned"
+            label={t('dps.interestEarned')}
             value={fmt.currency(
               Math.max(0, interestEarned).toFixed(2),
               currency,
@@ -176,11 +186,12 @@ function DpsDetailScreen() {
             )}
           >
             <p className="label-sm text-on-surface-variant">
-              {isClosed ? 'Closed prematurely' : 'Matured'}
+              {isClosed ? t('dps.closedPrematurely') : t('dps.matured')}
             </p>
             <p className="font-display mt-1 text-lg font-bold">
-              Received {fmt.currency(inv.exitValue, currency)} on{' '}
-              {new Date(inv.completedAt).toLocaleDateString(undefined, {
+              {t('dps.received')} {fmt.currency(inv.exitValue, currency)}{' '}
+              {t('dps.on')}{' '}
+              {fmt.date(inv.completedAt, {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric',
@@ -192,7 +203,7 @@ function DpsDetailScreen() {
         {/* Installment schedule */}
         <section className="rounded-3xl bg-surface-container-low p-4">
           <h2 className="label-md mb-3 px-2 text-on-surface-variant">
-            Deposit schedule
+            {t('dps.depositSchedule')}
           </h2>
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             <ul className="space-y-1">
@@ -243,7 +254,7 @@ function DpsDetailScreen() {
                           </span>
                           {due && (
                             <span className="body-sm">
-                              {due.toLocaleDateString(undefined, {
+                              {fmt.date(due, {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric',
@@ -252,20 +263,14 @@ function DpsDetailScreen() {
                           )}
                           {isOverdue && (
                             <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
-                              Overdue
+                              {tCommon('labels.overdue')}
                             </span>
                           )}
                         </div>
                         {dep.accruedValue && (
                           <p className="mt-0.5 text-xs text-on-surface-variant/75">
-                            Balance after: {symbol}
-                            {Number(dep.accruedValue).toLocaleString(
-                              undefined,
-                              {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              },
-                            )}
+                            {t('dps.balanceAfter')}{' '}
+                            {fmt.currency(dep.accruedValue, currency)}
                           </p>
                         )}
                       </div>
@@ -290,7 +295,9 @@ function DpsDetailScreen() {
         {/* Notes display when not editing */}
         {inv.notes && !editing && (
           <section className="rounded-3xl bg-surface-container-low p-5">
-            <p className="label-sm mb-2 text-on-surface-variant">Notes</p>
+            <p className="label-sm mb-2 text-on-surface-variant">
+              {tCommon('labels.notes')}
+            </p>
             <p className="body-sm whitespace-pre-wrap text-on-surface">
               {inv.notes}
             </p>
@@ -300,22 +307,24 @@ function DpsDetailScreen() {
         {/* Edit panel */}
         {editing && (
           <Card variant="low">
-            <p className="label-sm mb-3 text-on-surface-variant">Edit DPS</p>
+            <p className="label-sm mb-3 text-on-surface-variant">
+              {t('dps.edit')}
+            </p>
             <div className="space-y-4">
               <TextField
                 id="edit-name"
-                label="Scheme name"
+                label={t('form.nameLabel')}
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 autoFocus
               />
               <div>
                 <p className="label-sm mb-2 text-on-surface-variant">
-                  Notes (optional)
+                  {tCommon('labels.notesOptional')}
                 </p>
                 <TextArea
                   id="edit-notes"
-                  placeholder="Why this scheme, goals, or any context"
+                  placeholder={t('dps.notesPlaceholder')}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   maxLength={1000}
@@ -328,7 +337,7 @@ function DpsDetailScreen() {
                 onClick={() => setEditing(false)}
                 className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
               >
-                Cancel
+                {tCommon('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -336,7 +345,9 @@ function DpsDetailScreen() {
                 disabled={updateDps.isPending}
                 className="flex-1 rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {updateDps.isPending ? 'Saving…' : 'Save'}
+                {updateDps.isPending
+                  ? tCommon('actions.saving')
+                  : tCommon('actions.save')}
               </button>
             </div>
           </Card>
@@ -349,16 +360,16 @@ function DpsDetailScreen() {
           className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
         >
           <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          Delete scheme
+          {t('dps.delete')}
         </button>
       </div>
 
       <ConfirmModal
         open={confirmDelete}
-        title="Delete scheme"
-        message={`Delete "${inv.name}" and all its installment rows?`}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
+        title={t('dps.deleteConfirmTitle')}
+        message={t('dps.deleteConfirmBody')}
+        confirmLabel={t('dps.deleteConfirm')}
+        pendingLabel={t('dps.deletePending')}
         isPending={deleteDps.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}

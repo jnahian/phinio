@@ -1,0 +1,86 @@
+{
+  "hero": {
+    "encrypted": "ENCRYPTED",
+    "vault": "DIGITAL PRIVATE VAULT",
+    "headline1": "Own your",
+    "headline2": "financial future",
+    "subheading": "Investments, DPS deposits, savings pots, and EMI schedules — tracked side by side in one encrypted vault. Works offline. Push reminders before every due date.",
+    "cta": "Open your vault",
+    "signin": "Sign in",
+    "explore": "Explore"
+  },
+  "features": {
+    "label": "CAPABILITIES",
+    "heading": "Everything you need to run your finances",
+    "portfolio": {
+      "title": "One portfolio, every asset",
+      "description": "Lump-sum holdings, DPS schemes, and flexible savings pots side by side — no more spreadsheets."
+    },
+    "amortization": {
+      "title": "Amortization, solved",
+      "description": "Reducing-balance schedules build the moment you log a loan or credit-card EMI."
+    },
+    "networth": {
+      "title": "Net worth at a glance",
+      "description": "Active investments minus outstanding debts — updated as you mark payments paid."
+    },
+    "reminders": {
+      "title": "Reminders that travel",
+      "description": "Web-push alerts for upcoming and overdue installments across every device you use."
+    },
+    "audit": {
+      "title": "Every move, recorded",
+      "description": "An immutable audit trail of every create, update, and delete you make."
+    },
+    "privacy": {
+      "title": "Yours alone",
+      "description": "No bank linking, no third-party trackers — just your data, encrypted."
+    }
+  },
+  "howItWorks": {
+    "label": "HOW IT WORKS",
+    "heading": "From sign-up to insight in minutes",
+    "step1": {
+      "title": "Create your vault",
+      "description": "Email and password — that is it. No bank linking, no credit card, no setup wizard."
+    },
+    "step2": {
+      "title": "Add your assets",
+      "description": "Log investments, DPS deposits, savings pots, and loans. Schedules and amortization tables build themselves."
+    },
+    "step3": {
+      "title": "Stay ahead",
+      "description": "Push reminders fire before every due date. Mark a payment paid and the dashboard updates instantly."
+    }
+  },
+  "finalCta": {
+    "label": "GET STARTED TODAY",
+    "heading": "Your vault is waiting.",
+    "subheading": "Investments, DPS, savings, and loans — finally in one place that is private, offline-ready, and entirely yours.",
+    "cta": "Create free account",
+    "signin": "Already have an account?"
+  },
+  "trust": {
+    "privateLabel": "Private",
+    "privateSub": "Zero data sharing, ever",
+    "encryptedLabel": "Encrypted",
+    "encryptedSub": "Bank-grade security",
+    "trackingLabel": "Tracking",
+    "trackingSub": "Real-time net worth"
+  },
+  "footer": {
+    "ariaHome": "Phinio home",
+    "tagline": "Your private financial vault.",
+    "changelog": "Changelog",
+    "copyright": "© {{year}} Phinio"
+  },
+  "nav": {
+    "home": "Phinio home",
+    "signin": "Sign in",
+    "getStarted": "Get started"
+  },
+  "changelog": {
+    "label": "RELEASE NOTES",
+    "title": "Changelog"
+  }
+}

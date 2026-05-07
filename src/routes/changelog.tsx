@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import changelogSource from '../../CHANGELOG.md?raw'
 import { Footer } from '#/components/landing/Footer'
 import { Nav } from '#/components/landing/Nav'
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/changelog')({
 })
 
 function ChangelogScreen() {
+  const { t } = useTranslation('landing')
   const { intro, releases } = parseChangelog(changelogSource)
 
   return (
@@ -28,10 +30,10 @@ function ChangelogScreen() {
               className="label-sm text-primary"
               style={{ letterSpacing: '0.16em' }}
             >
-              RELEASE NOTES
+              {t('changelog.label')}
             </span>
             <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-[-0.03em] text-on-surface mt-3 leading-[1.05]">
-              Changelog
+              {t('changelog.title')}
             </h1>
             {intro.length > 0 && (
               <p className="body-md text-on-surface-variant max-w-xl mx-auto mt-5 leading-relaxed">
