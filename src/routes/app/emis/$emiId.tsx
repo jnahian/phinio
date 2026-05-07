@@ -191,46 +191,50 @@ function EmiDetailScreen() {
           <h2 className="label-md mb-4 text-on-surface-variant">
             {t('detail.principalVsInterest')}
           </h2>
-          <Suspense
-            fallback={
-              <div className="h-48 animate-pulse rounded-2xl bg-surface-container-lowest" />
-            }
-          >
-            <PrincipalInterestDonut
-              principal={Number(emi.principal)}
-              interest={totalInterest}
-              selectedSegment={selectedSegment}
-            />
-          </Suspense>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <LegendPill
-              color="bg-primary-container"
-              label={t('detail.principal')}
-              value={fmt.currency(emi.principal, currency)}
-              selected={selectedSegment === 'Principal'}
-              dimmed={
-                selectedSegment !== null && selectedSegment !== 'Principal'
-              }
-              onClick={() =>
-                setSelectedSegment((prev) =>
-                  prev === 'Principal' ? null : 'Principal',
-                )
-              }
-            />
-            <LegendPill
-              color="bg-tertiary-container"
-              label={t('detail.interestComponent')}
-              value={fmt.currency(totalInterest.toFixed(2), currency)}
-              selected={selectedSegment === 'Interest'}
-              dimmed={
-                selectedSegment !== null && selectedSegment !== 'Interest'
-              }
-              onClick={() =>
-                setSelectedSegment((prev) =>
-                  prev === 'Interest' ? null : 'Interest',
-                )
-              }
-            />
+          <div className="grid grid-cols-[7rem_1fr] items-center gap-4">
+            <div className="h-28 w-28">
+              <Suspense
+                fallback={
+                  <div className="h-28 w-28 animate-pulse rounded-full bg-surface-container-lowest" />
+                }
+              >
+                <PrincipalInterestDonut
+                  principal={Number(emi.principal)}
+                  interest={totalInterest}
+                  selectedSegment={selectedSegment}
+                />
+              </Suspense>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <LegendPill
+                color="bg-primary-container"
+                label={t('detail.principal')}
+                value={fmt.currency(emi.principal, currency)}
+                selected={selectedSegment === 'Principal'}
+                dimmed={
+                  selectedSegment !== null && selectedSegment !== 'Principal'
+                }
+                onClick={() =>
+                  setSelectedSegment((prev) =>
+                    prev === 'Principal' ? null : 'Principal',
+                  )
+                }
+              />
+              <LegendPill
+                color="bg-tertiary-container"
+                label={t('detail.interestComponent')}
+                value={fmt.currency(totalInterest.toFixed(2), currency)}
+                selected={selectedSegment === 'Interest'}
+                dimmed={
+                  selectedSegment !== null && selectedSegment !== 'Interest'
+                }
+                onClick={() =>
+                  setSelectedSegment((prev) =>
+                    prev === 'Interest' ? null : 'Interest',
+                  )
+                }
+              />
+            </div>
           </div>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-container-lowest px-3 py-2">
             <p className="label-sm normal-case tracking-wide text-on-surface-variant">
