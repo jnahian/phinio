@@ -212,6 +212,71 @@ function HomeScreen() {
         </section>
       )}
 
+      {/* Investment allocation */}
+      {!isEmpty && data && displayedAllocation.length > 0 && (
+        <section className="mt-8">
+          <h2 className="label-md mb-3 text-on-surface-variant">
+            {t('allocation.title')}
+          </h2>
+          <Card variant="low">
+            <div className="flex items-center gap-4">
+              <Suspense
+                fallback={<Skeleton className="h-32 w-32 rounded-full" />}
+              >
+                <AllocationDonut
+                  data={displayedAllocation}
+                  selectedType={selectedAllocationType}
+                />
+              </Suspense>
+              <ul className="flex-1 space-y-2">
+                {displayedAllocation.map((item) => {
+                  const meta = getInvestmentTypeMeta(item.type)
+                  const isSelected = selectedAllocationType === item.type
+                  const isDimmed =
+                    selectedAllocationType !== null && !isSelected
+                  // Fall back to meta.label only if the i18n key is missing —
+                  // covers any future investment type added before its
+                  // translation lands.
+                  const label = tInv(`types.${item.type}`, {
+                    defaultValue: meta.label,
+                  })
+                  return (
+                    <li key={item.type}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedAllocationType((prev) =>
+                            prev === item.type ? null : item.type,
+                          )
+                        }
+                        aria-pressed={isSelected}
+                        className={cn(
+                          'flex w-full items-center gap-2 rounded-md text-sm transition-opacity',
+                          isDimmed && 'opacity-40',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'h-2.5 w-2.5 flex-shrink-0 rounded-full',
+                            meta.swatchClass,
+                          )}
+                        />
+                        <span className="flex-1 truncate text-left text-on-surface-variant">
+                          {label}
+                        </span>
+                        <span className="font-display font-semibold text-on-surface">
+                          {fmt.percent(item.percent)}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </Card>
+        </section>
+      )}
+
       {/* Upcoming payments */}
       {!isEmpty && (
         <section className="mt-8">
@@ -300,71 +365,6 @@ function HomeScreen() {
               })}
             </ul>
           )}
-        </section>
-      )}
-
-      {/* Investment allocation */}
-      {!isEmpty && data && displayedAllocation.length > 0 && (
-        <section className="mt-8">
-          <h2 className="label-md mb-3 text-on-surface-variant">
-            {t('allocation.title')}
-          </h2>
-          <Card variant="low">
-            <div className="flex items-center gap-4">
-              <Suspense
-                fallback={<Skeleton className="h-32 w-32 rounded-full" />}
-              >
-                <AllocationDonut
-                  data={displayedAllocation}
-                  selectedType={selectedAllocationType}
-                />
-              </Suspense>
-              <ul className="flex-1 space-y-2">
-                {displayedAllocation.map((item) => {
-                  const meta = getInvestmentTypeMeta(item.type)
-                  const isSelected = selectedAllocationType === item.type
-                  const isDimmed =
-                    selectedAllocationType !== null && !isSelected
-                  // Fall back to meta.label only if the i18n key is missing —
-                  // covers any future investment type added before its
-                  // translation lands.
-                  const label = tInv(`types.${item.type}`, {
-                    defaultValue: meta.label,
-                  })
-                  return (
-                    <li key={item.type}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedAllocationType((prev) =>
-                            prev === item.type ? null : item.type,
-                          )
-                        }
-                        aria-pressed={isSelected}
-                        className={cn(
-                          'flex w-full items-center gap-2 rounded-md text-sm transition-opacity',
-                          isDimmed && 'opacity-40',
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'h-2.5 w-2.5 flex-shrink-0 rounded-full',
-                            meta.swatchClass,
-                          )}
-                        />
-                        <span className="flex-1 truncate text-left text-on-surface-variant">
-                          {label}
-                        </span>
-                        <span className="font-display font-semibold text-on-surface">
-                          {fmt.percent(item.percent)}
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          </Card>
         </section>
       )}
     </main>
