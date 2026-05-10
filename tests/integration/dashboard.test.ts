@@ -422,6 +422,24 @@ describe('getDashboardStatsImpl', () => {
     expect(stats.upcomingPayments[0].investmentId).toBeNull()
   })
 
+  it('does not mark a payment due today as overdue', async () => {
+    const user = await createTestUser()
+    const emi = await insertEmi(user.profileId, { emiAmount: '100.00' })
+    await insertPayment(user.profileId, emi.id, {
+      paymentNumber: 1,
+      dueDate: daysFromNow(0),
+      emiAmount: '100.00',
+      remainingBalance: '900.00',
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.upcomingPayments).toHaveLength(1)
+    const [p] = stats.upcomingPayments
+    expect(p.isOverdue).toBe(false)
+    expect(p.daysUntilDue).toBe(0)
+  })
+
   it('marks past-due unpaid payments as isOverdue with non-positive daysUntilDue', async () => {
     const user = await createTestUser()
     const emi = await insertEmi(user.profileId, { emiAmount: '100.00' })

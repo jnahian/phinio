@@ -302,11 +302,11 @@ function HomeScreen() {
                   p.kind === 'emi'
                     ? ({
                         to: '/app/emis/$emiId',
-                        params: { emiId: p.emiId! },
+                        params: { emiId: p.emiId },
                       } as const)
                     : ({
                         to: '/app/investments/dps/$id',
-                        params: { id: p.investmentId! },
+                        params: { id: p.investmentId },
                       } as const)
                 const Icon = p.isOverdue
                   ? AlertTriangle

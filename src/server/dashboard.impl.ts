@@ -15,12 +15,8 @@ export async function requireProfileId(): Promise<string> {
   return profile.id
 }
 
-export interface UpcomingPaymentItem {
+interface UpcomingPaymentBase {
   id: string
-  kind: 'emi' | 'deposit'
-  // Navigation target — exactly one is non-null based on `kind`.
-  emiId: string | null
-  investmentId: string | null
   label: string
   type: string
   amount: string
@@ -31,6 +27,18 @@ export interface UpcomingPaymentItem {
   // installmentNumber for deposits). Null when the source row has none.
   sequenceNumber: number | null
 }
+
+export type UpcomingPaymentItem =
+  | (UpcomingPaymentBase & {
+      kind: 'emi'
+      emiId: string
+      investmentId: null
+    })
+  | (UpcomingPaymentBase & {
+      kind: 'deposit'
+      emiId: null
+      investmentId: string
+    })
 
 export interface DashboardStats {
   netWorth: string
@@ -159,8 +167,16 @@ export async function getDashboardStatsImpl(
     }))
     .sort((a, b) => Number(b.value) - Number(a.value))
 
+  // dueDate is `@db.Date` (UTC midnight); compare day-to-day so a same-day
+  // due item isn't flagged overdue once the wall clock passes UTC midnight,
+  // and so daysUntilDue is a clean integer instead of a rounded fraction.
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const utcDayStart = (d: Date): number =>
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  const nowDay = utcDayStart(now)
   const daysUntil = (target: Date): number =>
-    Math.round((target.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+    Math.floor((utcDayStart(target) - nowDay) / DAY_MS)
+  const isOverdue = (target: Date): boolean => utcDayStart(target) < nowDay
 
   const upcomingEmiItems: UpcomingPaymentItem[] = upcomingEmiRows.map((p) => ({
     id: p.id,
@@ -171,7 +187,7 @@ export async function getDashboardStatsImpl(
     type: p.emi.type,
     amount: String(p.emiAmount),
     dueDate: p.dueDate,
-    isOverdue: p.dueDate < now,
+    isOverdue: isOverdue(p.dueDate),
     daysUntilDue: daysUntil(p.dueDate),
     sequenceNumber: p.paymentNumber,
   }))
@@ -187,7 +203,7 @@ export async function getDashboardStatsImpl(
       type: d.investment.type,
       amount: String(d.amount),
       dueDate: d.dueDate,
-      isOverdue: d.dueDate < now,
+      isOverdue: isOverdue(d.dueDate),
       daysUntilDue: daysUntil(d.dueDate),
       sequenceNumber: d.installmentNumber,
     }))
