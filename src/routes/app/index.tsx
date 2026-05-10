@@ -6,6 +6,7 @@ import {
   CalendarClock,
   ChevronRight,
   CloudOff,
+  PiggyBank,
   Sparkles,
   TrendingUp,
 } from 'lucide-react'
@@ -211,83 +212,6 @@ function HomeScreen() {
         </section>
       )}
 
-      {/* Upcoming payments */}
-      {!isEmpty && (
-        <section className="mt-8">
-          <h2 className="label-md mb-3 text-on-surface-variant">
-            {t('upcoming.title')}
-          </h2>
-          {isLoading || !data ? (
-            <Card variant="low" className="space-y-3 p-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-2/3" />
-            </Card>
-          ) : data.upcomingPayments.length === 0 ? (
-            <Card variant="low" className="px-5 py-8 text-center">
-              <p className="body-md text-on-surface-variant">
-                {t('upcoming.empty')}
-              </p>
-            </Card>
-          ) : (
-            <ul className="space-y-2">
-              {data.upcomingPayments.map((p) => (
-                <li key={p.id}>
-                  <Link
-                    to="/app/emis/$emiId"
-                    params={{ emiId: p.emiId }}
-                    className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-4 transition-colors hover:bg-surface-container"
-                  >
-                    <span
-                      className={cn(
-                        'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
-                        p.isOverdue
-                          ? 'bg-tertiary-container/20 text-tertiary-fixed-dim'
-                          : 'bg-primary-container/20 text-primary-fixed-dim',
-                      )}
-                    >
-                      {p.isOverdue ? (
-                        <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
-                      ) : (
-                        <CalendarClock className="h-5 w-5" strokeWidth={1.75} />
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="headline-sm truncate text-base text-on-surface">
-                        {p.emiLabel}
-                      </p>
-                      <p
-                        className={cn(
-                          'body-sm',
-                          p.isOverdue
-                            ? 'text-tertiary'
-                            : 'text-on-surface-variant',
-                        )}
-                      >
-                        {fmt.daysUntilDue(
-                          p.isOverdue
-                            ? -Math.abs(p.daysUntilDue)
-                            : p.daysUntilDue,
-                        )}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-display text-base font-bold text-on-surface">
-                        {fmt.currency(p.emiAmount, currency)}
-                      </p>
-                    </div>
-                    <ChevronRight
-                      className="h-4 w-4 text-on-surface-variant/60"
-                      strokeWidth={1.75}
-                    />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
       {/* Investment allocation */}
       {!isEmpty && data && displayedAllocation.length > 0 && (
         <section className="mt-8">
@@ -350,6 +274,97 @@ function HomeScreen() {
               </ul>
             </div>
           </Card>
+        </section>
+      )}
+
+      {/* Upcoming payments */}
+      {!isEmpty && (
+        <section className="mt-8">
+          <h2 className="label-md mb-3 text-on-surface-variant">
+            {t('upcoming.title')}
+          </h2>
+          {isLoading || !data ? (
+            <Card variant="low" className="space-y-3 p-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-2/3" />
+            </Card>
+          ) : data.upcomingPayments.length === 0 ? (
+            <Card variant="low" className="px-5 py-8 text-center">
+              <p className="body-md text-on-surface-variant">
+                {t('upcoming.empty')}
+              </p>
+            </Card>
+          ) : (
+            <ul className="space-y-2">
+              {data.upcomingPayments.map((p) => {
+                const linkProps =
+                  p.kind === 'emi'
+                    ? ({
+                        to: '/app/emis/$emiId',
+                        params: { emiId: p.emiId },
+                      } as const)
+                    : ({
+                        to: '/app/investments/dps/$id',
+                        params: { id: p.investmentId },
+                      } as const)
+                const Icon = p.isOverdue
+                  ? AlertTriangle
+                  : p.kind === 'deposit'
+                    ? PiggyBank
+                    : CalendarClock
+                return (
+                  <li key={p.id}>
+                    <Link
+                      {...linkProps}
+                      className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-4 transition-colors hover:bg-surface-container"
+                    >
+                      <span
+                        className={cn(
+                          'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
+                          p.isOverdue
+                            ? 'bg-tertiary-container/20 text-tertiary-fixed-dim'
+                            : p.kind === 'deposit'
+                              ? 'bg-secondary-container/20 text-secondary-fixed-dim'
+                              : 'bg-primary-container/20 text-primary-fixed-dim',
+                        )}
+                      >
+                        <Icon className="h-5 w-5" strokeWidth={1.75} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="headline-sm truncate text-base text-on-surface">
+                          {p.label}
+                        </p>
+                        <p
+                          className={cn(
+                            'body-sm',
+                            p.isOverdue
+                              ? 'text-tertiary'
+                              : 'text-on-surface-variant',
+                          )}
+                        >
+                          {fmt.daysUntilDue(
+                            p.isOverdue
+                              ? -Math.abs(p.daysUntilDue)
+                              : p.daysUntilDue,
+                          )}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-display text-base font-bold text-on-surface">
+                          {fmt.currency(p.amount, currency)}
+                        </p>
+                      </div>
+                      <ChevronRight
+                        className="h-4 w-4 text-on-surface-variant/60"
+                        strokeWidth={1.75}
+                      />
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
       )}
     </main>
