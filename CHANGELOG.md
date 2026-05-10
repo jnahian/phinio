@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-05-10
+
+### Added
+
+- **Overdue section on EMI, DPS, and Savings detail pages.** Unpaid
+  past-due payments now surface in a dedicated section above the
+  amortization or deposit schedule so late items are visible at a
+  glance.
+- **Upcoming DPS deposits on the Home dashboard.** Scheduled investment
+  deposits appear alongside EMI payments in the Upcoming rail, sorted
+  by due date, each linking to the relevant DPS or EMI detail page.
+
+### Changed
+
+- **Consolidated action menu on detail pages.** The inline edit pencil
+  and bottom edit/complete/delete buttons on EMI, DPS, and Savings
+  detail pages have been replaced by a single dropdown menu in the top
+  right. Escape closes the menu and returns focus to the trigger.
+- **Home layout** — the allocation chart now sits above the upcoming
+  payments list.
+- **EMI principal-vs-interest donut** is now placed beside its legend
+  for a tighter layout.
+
+### Fixed
+
+- **Same-day due dates no longer flip to overdue at UTC midnight.** The
+  Home upcoming list compares date-only due dates by day rather than
+  timestamp, so items due today stay "due today" regardless of the
+  user's wall-clock time relative to UTC.
+
 ## [1.7.0] - 2026-05-07
 
 The headline change is **Bangla language support** — Phinio now ships a
