@@ -25,9 +25,16 @@ export function ActionMenu({
 }: ActionMenuProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return
+    function close() {
+      setOpen(false)
+      // Return focus to the trigger so keyboard users don't end up on a
+      // removed menu item.
+      triggerRef.current?.focus()
+    }
     function onPointerDown(e: PointerEvent) {
       if (
         containerRef.current &&
@@ -37,7 +44,7 @@ export function ActionMenu({
       }
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') close()
     }
     window.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('keydown', onKeyDown)
@@ -50,9 +57,9 @@ export function ActionMenu({
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-label={ariaLabel}
-        aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
@@ -61,7 +68,6 @@ export function ActionMenu({
       </button>
       {open && (
         <div
-          role="menu"
           className={cn(
             'absolute z-30 mt-1 min-w-[12rem] overflow-hidden rounded-2xl border border-outline-variant/20 bg-surface-container-high p-1 shadow-xl',
             align === 'right' ? 'right-0' : 'left-0',
@@ -71,7 +77,6 @@ export function ActionMenu({
             <button
               key={item.key}
               type="button"
-              role="menuitem"
               disabled={item.disabled}
               onClick={() => {
                 setOpen(false)
