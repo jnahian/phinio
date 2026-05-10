@@ -1,7 +1,15 @@
 import { Suspense, lazy, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, Check, Pencil, Trash2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Check,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
+import { ActionMenu } from '#/components/ui/ActionMenu'
+import type { ActionMenuItem } from '#/components/ui/ActionMenu'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
@@ -87,6 +95,9 @@ function EmiDetailScreen() {
   const processingFee = Number(emi.processingFee ?? 0)
   const totalCost = Number(emi.principal) + totalInterest + processingFee
   const now = new Date()
+  const overduePayments = regularPayments.filter(
+    (p) => p.status !== 'paid' && new Date(p.dueDate) < now,
+  )
 
   async function handleDelete() {
     try {
@@ -127,6 +138,88 @@ function EmiDetailScreen() {
     }
   }
 
+  function renderRegularRow(payment: (typeof regularPayments)[number]) {
+    const isPaid = payment.status === 'paid'
+    const due = new Date(payment.dueDate)
+    const isOverdue = !isPaid && due < now
+    return (
+      <li key={payment.id}>
+        <button
+          type="button"
+          onClick={() =>
+            markPayment.mutate({
+              paymentId: payment.id,
+              paid: !isPaid,
+            })
+          }
+          className={cn(
+            'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition',
+            isPaid
+              ? 'bg-transparent text-on-surface-variant/60'
+              : isOverdue
+                ? 'bg-tertiary-container/15 text-on-surface'
+                : 'hover:bg-surface-container-lowest text-on-surface',
+          )}
+        >
+          <span
+            className={cn(
+              'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
+              isPaid
+                ? 'border-secondary bg-secondary text-on-secondary'
+                : 'border-outline-variant/50 bg-transparent',
+            )}
+          >
+            {isPaid && <Check className="h-4 w-4" strokeWidth={3} />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'body-sm font-semibold',
+                  isPaid && 'line-through',
+                )}
+              >
+                #{payment.paymentNumber}
+              </span>
+              <span className="body-sm">
+                {fmt.date(due, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+              {isOverdue && (
+                <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
+                  {tCommon('labels.overdue')}
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 flex gap-3 text-xs text-on-surface-variant/75">
+              <span>
+                P {fmt.currency(payment.principalComponent, currency)}
+              </span>
+              <span>I {fmt.currency(payment.interestComponent, currency)}</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p
+              className={cn(
+                'font-display text-sm font-bold',
+                isPaid && 'line-through',
+              )}
+            >
+              {fmt.currency(payment.emiAmount, currency)}
+            </p>
+            <p className="text-[11px] text-on-surface-variant/75">
+              {t('detail.balanceAbbr')}{' '}
+              {fmt.currency(payment.remainingBalance, currency)}
+            </p>
+          </div>
+        </button>
+      </li>
+    )
+  }
+
   return (
     <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
@@ -145,14 +238,36 @@ function EmiDetailScreen() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            aria-label={t('detail.edit')}
-            onClick={openEdit}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
-          >
-            <Pencil className="h-4 w-4" strokeWidth={1.75} />
-          </button>
+          <ActionMenu
+            ariaLabel={tCommon('ariaLabels.moreActions')}
+            items={(() => {
+              const items: Array<ActionMenuItem> = [
+                {
+                  key: 'edit',
+                  label: t('detail.edit'),
+                  icon: <Pencil className="h-4 w-4" strokeWidth={1.75} />,
+                  onSelect: openEdit,
+                },
+              ]
+              if (!isCompleted) {
+                items.push({
+                  key: 'complete',
+                  label: t('detail.markCompleteAction'),
+                  icon: <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />,
+                  variant: 'success',
+                  onSelect: () => setConfirmComplete(true),
+                })
+              }
+              items.push({
+                key: 'delete',
+                label: t('detail.delete'),
+                icon: <Trash2 className="h-4 w-4" strokeWidth={1.75} />,
+                variant: 'danger',
+                onSelect: () => setConfirmDelete(true),
+              })
+              return items
+            })()}
+          />
         </div>
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-container to-[#1e3a8a] p-6">
           <div
@@ -266,6 +381,18 @@ function EmiDetailScreen() {
           )}
         </section>
 
+        {overduePayments.length > 0 && (
+          <section className="rounded-3xl border border-tertiary/30 bg-tertiary-container/10 p-4">
+            <h2 className="label-md mb-3 flex items-center gap-2 px-2 text-tertiary">
+              <AlertTriangle className="h-4 w-4" strokeWidth={2} />
+              {tCommon('labels.overdue')} ({fmt.number(overduePayments.length)})
+            </h2>
+            <ul className="space-y-1">
+              {overduePayments.map((payment) => renderRegularRow(payment))}
+            </ul>
+          </section>
+        )}
+
         <section className="rounded-3xl bg-surface-container-low p-4">
           <h2 className="label-md mb-3 px-2 text-on-surface-variant">
             {t('detail.amortizationSchedule')}
@@ -273,12 +400,10 @@ function EmiDetailScreen() {
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             <ul className="space-y-1">
               {payments.map((payment) => {
-                const isPaid = payment.status === 'paid'
-                const due = new Date(payment.dueDate)
-                const isOverdue = !isPaid && due < now
                 // The sentinel fee row renders as a non-interactive line: no
                 // checkbox toggle, no P/I breakdown, just a labeled amount.
                 if (isFeePayment(payment)) {
+                  const due = new Date(payment.dueDate)
                   return (
                     <li key={payment.id}>
                       <div className="flex w-full items-center gap-3 rounded-2xl bg-surface-container-lowest/40 px-3 py-3 text-left text-on-surface-variant">
@@ -311,88 +436,7 @@ function EmiDetailScreen() {
                     </li>
                   )
                 }
-                return (
-                  <li key={payment.id}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        markPayment.mutate({
-                          paymentId: payment.id,
-                          paid: !isPaid,
-                        })
-                      }
-                      className={cn(
-                        'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition',
-                        isPaid
-                          ? 'bg-transparent text-on-surface-variant/60'
-                          : isOverdue
-                            ? 'bg-tertiary-container/15 text-on-surface'
-                            : 'hover:bg-surface-container-lowest text-on-surface',
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
-                          isPaid
-                            ? 'border-secondary bg-secondary text-on-secondary'
-                            : 'border-outline-variant/50 bg-transparent',
-                        )}
-                      >
-                        {isPaid && (
-                          <Check className="h-4 w-4" strokeWidth={3} />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              'body-sm font-semibold',
-                              isPaid && 'line-through',
-                            )}
-                          >
-                            #{payment.paymentNumber}
-                          </span>
-                          <span className="body-sm">
-                            {fmt.date(due, {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
-                          {isOverdue && (
-                            <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
-                              {tCommon('labels.overdue')}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-0.5 flex gap-3 text-xs text-on-surface-variant/75">
-                          <span>
-                            P{' '}
-                            {fmt.currency(payment.principalComponent, currency)}
-                          </span>
-                          <span>
-                            I{' '}
-                            {fmt.currency(payment.interestComponent, currency)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn(
-                            'font-display text-sm font-bold',
-                            isPaid && 'line-through',
-                          )}
-                        >
-                          {fmt.currency(payment.emiAmount, currency)}
-                        </p>
-                        <p className="text-[11px] text-on-surface-variant/75">
-                          {t('detail.balanceAbbr')}{' '}
-                          {fmt.currency(payment.remainingBalance, currency)}
-                        </p>
-                      </div>
-                    </button>
-                  </li>
-                )
+                return renderRegularRow(payment)
               })}
             </ul>
           </div>
@@ -456,27 +500,6 @@ function EmiDetailScreen() {
             </div>
           </Card>
         )}
-
-        <div className="flex flex-col items-start gap-1">
-          {!isCompleted && (
-            <button
-              type="button"
-              onClick={() => setConfirmComplete(true)}
-              className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-secondary opacity-80 transition hover:opacity-100"
-            >
-              <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
-              {t('detail.markCompleteAction')}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-            {t('detail.delete')}
-          </button>
-        </div>
       </div>
 
       <ConfirmModal

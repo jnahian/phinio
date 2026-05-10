@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ArrowDownLeft, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDownLeft, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ActionMenu } from '#/components/ui/ActionMenu'
+import type { ActionMenuItem } from '#/components/ui/ActionMenu'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
@@ -191,14 +193,26 @@ function SavingsDetailScreen() {
           <p className="body-sm text-on-surface-variant">
             {t('savings.savingsPot')}
           </p>
-          <button
-            type="button"
-            aria-label={t('savings.ariaEdit')}
-            onClick={openEdit}
-            className="rounded-xl px-3 py-1.5 text-sm font-semibold text-on-surface-variant hover:bg-white/5"
-          >
-            {tCommon('actions.edit')}
-          </button>
+          <ActionMenu
+            ariaLabel={tCommon('ariaLabels.moreActions')}
+            items={
+              [
+                {
+                  key: 'edit',
+                  label: t('savings.edit'),
+                  icon: <Pencil className="h-4 w-4" strokeWidth={1.75} />,
+                  onSelect: openEdit,
+                },
+                {
+                  key: 'delete',
+                  label: t('savings.delete'),
+                  icon: <Trash2 className="h-4 w-4" strokeWidth={1.75} />,
+                  variant: 'danger',
+                  onSelect: () => setConfirmDelete(true),
+                },
+              ] satisfies Array<ActionMenuItem>
+            }
+          />
         </div>
         {/* Hero card */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#164e63] to-[#083344] p-6">
@@ -430,16 +444,6 @@ function SavingsDetailScreen() {
             </div>
           </Card>
         )}
-
-        {/* Delete */}
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          {t('savings.delete')}
-        </button>
       </div>
 
       <ConfirmModal
