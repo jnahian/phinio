@@ -117,6 +117,7 @@
   "ariaLabels": {
     "back": "ফিরে যান",
     "profile": "প্রোফাইল",
-    "close": "বন্ধ করুন"
+    "close": "বন্ধ করুন",
+    "moreActions": "আরও অপশন"
   }
 }

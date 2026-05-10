@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ArrowDownLeft, Check, Pencil, Trash2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowDownLeft,
+  Check,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
+import { ActionMenu } from '#/components/ui/ActionMenu'
+import type { ActionMenuItem } from '#/components/ui/ActionMenu'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
@@ -57,6 +65,10 @@ function DpsDetailScreen() {
   const isMatured = inv.status === 'matured'
   const isActive = inv.status === 'active'
   const now = new Date()
+  const overdueDeposits = deposits.filter(
+    (d) =>
+      d.status !== 'paid' && d.dueDate !== null && new Date(d.dueDate) < now,
+  )
 
   let contiguousPaid = 0
   for (const d of deposits) {
@@ -91,6 +103,86 @@ function DpsDetailScreen() {
     }
   }
 
+  function renderDepositRow(dep: (typeof deposits)[number]) {
+    const isPaid = dep.status === 'paid'
+    const due = dep.dueDate ? new Date(dep.dueDate) : null
+    const isOverdue = !isPaid && due !== null && due < now
+    return (
+      <li key={dep.id}>
+        <button
+          type="button"
+          onClick={() =>
+            markDeposit.mutate({
+              depositId: dep.id,
+              paid: !isPaid,
+            })
+          }
+          className={cn(
+            'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition',
+            isPaid
+              ? 'bg-transparent text-on-surface-variant/60'
+              : isOverdue
+                ? 'bg-tertiary-container/15 text-on-surface'
+                : 'hover:bg-surface-container-lowest text-on-surface',
+          )}
+        >
+          <span
+            className={cn(
+              'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
+              isPaid
+                ? 'border-secondary bg-secondary text-on-secondary'
+                : 'border-outline-variant/50 bg-transparent',
+            )}
+          >
+            {isPaid && <Check className="h-4 w-4" strokeWidth={3} />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'body-sm font-semibold',
+                  isPaid && 'line-through',
+                )}
+              >
+                #{dep.installmentNumber}
+              </span>
+              {due && (
+                <span className="body-sm">
+                  {fmt.date(due, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+              )}
+              {isOverdue && (
+                <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
+                  {tCommon('labels.overdue')}
+                </span>
+              )}
+            </div>
+            {dep.accruedValue && (
+              <p className="mt-0.5 text-xs text-on-surface-variant/75">
+                {t('dps.balanceAfter')}{' '}
+                {fmt.currency(dep.accruedValue, currency)}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <p
+              className={cn(
+                'font-display text-sm font-bold',
+                isPaid && 'line-through',
+              )}
+            >
+              {fmt.currency(dep.amount, currency)}
+            </p>
+          </div>
+        </button>
+      </li>
+    )
+  }
+
   return (
     <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
@@ -102,18 +194,31 @@ function DpsDetailScreen() {
               : t('dps.interestSimple')}{' '}
             {t('dps.interestSuffix')} · {inv.interestRate}% p.a.
           </p>
-          <button
-            type="button"
-            aria-label={t('dps.ariaEdit')}
-            onClick={() => {
-              setEditName(inv.name)
-              setEditNotes(inv.notes ?? '')
-              setEditing(true)
-            }}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
-          >
-            <Pencil className="h-4 w-4" strokeWidth={1.75} />
-          </button>
+          <ActionMenu
+            ariaLabel={tCommon('ariaLabels.moreActions')}
+            items={(() => {
+              const items: Array<ActionMenuItem> = [
+                {
+                  key: 'edit',
+                  label: t('dps.edit'),
+                  icon: <Pencil className="h-4 w-4" strokeWidth={1.75} />,
+                  onSelect: () => {
+                    setEditName(inv.name)
+                    setEditNotes(inv.notes ?? '')
+                    setEditing(true)
+                  },
+                },
+              ]
+              items.push({
+                key: 'delete',
+                label: t('dps.delete'),
+                icon: <Trash2 className="h-4 w-4" strokeWidth={1.75} />,
+                variant: 'danger',
+                onSelect: () => setConfirmDelete(true),
+              })
+              return items
+            })()}
+          />
         </div>
         {/* Hero card */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#14532d] to-[#052e16] p-6">
@@ -197,6 +302,19 @@ function DpsDetailScreen() {
           </section>
         )}
 
+        {/* Overdue */}
+        {overdueDeposits.length > 0 && (
+          <section className="rounded-3xl border border-tertiary/30 bg-tertiary-container/10 p-4">
+            <h2 className="label-md mb-3 flex items-center gap-2 px-2 text-tertiary">
+              <AlertTriangle className="h-4 w-4" strokeWidth={2} />
+              {tCommon('labels.overdue')} ({fmt.number(overdueDeposits.length)})
+            </h2>
+            <ul className="space-y-1">
+              {overdueDeposits.map((dep) => renderDepositRow(dep))}
+            </ul>
+          </section>
+        )}
+
         {/* Installment schedule */}
         <section className="rounded-3xl bg-surface-container-low p-4">
           <h2 className="label-md mb-3 px-2 text-on-surface-variant">
@@ -204,87 +322,7 @@ function DpsDetailScreen() {
           </h2>
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             <ul className="space-y-1">
-              {deposits.map((dep) => {
-                const isPaid = dep.status === 'paid'
-                const due = dep.dueDate ? new Date(dep.dueDate) : null
-                const isOverdue = !isPaid && due !== null && due < now
-                return (
-                  <li key={dep.id}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        markDeposit.mutate({
-                          depositId: dep.id,
-                          paid: !isPaid,
-                        })
-                      }
-                      className={cn(
-                        'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition',
-                        isPaid
-                          ? 'bg-transparent text-on-surface-variant/60'
-                          : isOverdue
-                            ? 'bg-tertiary-container/15 text-on-surface'
-                            : 'hover:bg-surface-container-lowest text-on-surface',
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
-                          isPaid
-                            ? 'border-secondary bg-secondary text-on-secondary'
-                            : 'border-outline-variant/50 bg-transparent',
-                        )}
-                      >
-                        {isPaid && (
-                          <Check className="h-4 w-4" strokeWidth={3} />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              'body-sm font-semibold',
-                              isPaid && 'line-through',
-                            )}
-                          >
-                            #{dep.installmentNumber}
-                          </span>
-                          {due && (
-                            <span className="body-sm">
-                              {fmt.date(due, {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
-                            </span>
-                          )}
-                          {isOverdue && (
-                            <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
-                              {tCommon('labels.overdue')}
-                            </span>
-                          )}
-                        </div>
-                        {dep.accruedValue && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant/75">
-                            {t('dps.balanceAfter')}{' '}
-                            {fmt.currency(dep.accruedValue, currency)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn(
-                            'font-display text-sm font-bold',
-                            isPaid && 'line-through',
-                          )}
-                        >
-                          {fmt.currency(dep.amount, currency)}
-                        </p>
-                      </div>
-                    </button>
-                  </li>
-                )
-              })}
+              {deposits.map((dep) => renderDepositRow(dep))}
             </ul>
           </div>
         </section>
@@ -349,16 +387,6 @@ function DpsDetailScreen() {
             </div>
           </Card>
         )}
-
-        {/* Delete */}
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          {t('dps.delete')}
-        </button>
       </div>
 
       <ConfirmModal
