@@ -15,6 +15,23 @@ export async function requireProfileId(): Promise<string> {
   return profile.id
 }
 
+export interface UpcomingPaymentItem {
+  id: string
+  kind: 'emi' | 'deposit'
+  // Navigation target — exactly one is non-null based on `kind`.
+  emiId: string | null
+  investmentId: string | null
+  label: string
+  type: string
+  amount: string
+  dueDate: Date
+  isOverdue: boolean
+  daysUntilDue: number
+  // Sequence number within the parent schedule (paymentNumber for EMIs,
+  // installmentNumber for deposits). Null when the source row has none.
+  sequenceNumber: number | null
+}
+
 export interface DashboardStats {
   netWorth: string
   investmentTotals: {
@@ -23,17 +40,7 @@ export interface DashboardStats {
     gainLossPercent: number
   }
   monthlyEmiOutflow: string
-  upcomingPayments: Array<{
-    id: string
-    emiId: string
-    emiLabel: string
-    emiType: string
-    paymentNumber: number
-    dueDate: Date
-    emiAmount: string
-    isOverdue: boolean
-    daysUntilDue: number
-  }>
+  upcomingPayments: Array<UpcomingPaymentItem>
   allocation: Array<{
     type: string
     value: string
@@ -47,48 +54,62 @@ export async function getDashboardStatsImpl(
   const now = new Date()
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-  const [activeInvestments, activeEmis, upcomingRows] = await Promise.all([
-    // All active investments — investedAmount + currentValue already synced for
-    // scheduled/flexible modes, so no deposit join needed here. Withdrawals
-    // restore realized gains to the ROI numerator without inflating the
-    // currentValue / allocation totals (withdrawn money is no longer held).
-    prisma.investment.findMany({
-      where: { profileId, status: 'active' },
-      select: {
-        type: true,
-        investedAmount: true,
-        currentValue: true,
-        withdrawals: { select: { amount: true } },
-      },
-    }),
-    prisma.emi.findMany({
-      where: { profileId, status: 'active' },
-      select: {
-        id: true,
-        emiAmount: true,
-        payments: {
-          where: { status: { not: 'paid' } },
-          select: { emiAmount: true, remainingBalance: true, status: true },
-          orderBy: { paymentNumber: 'asc' },
+  const [activeInvestments, activeEmis, upcomingEmiRows, upcomingDepositRows] =
+    await Promise.all([
+      // All active investments — investedAmount + currentValue already synced for
+      // scheduled/flexible modes, so no deposit join needed here. Withdrawals
+      // restore realized gains to the ROI numerator without inflating the
+      // currentValue / allocation totals (withdrawn money is no longer held).
+      prisma.investment.findMany({
+        where: { profileId, status: 'active' },
+        select: {
+          type: true,
+          investedAmount: true,
+          currentValue: true,
+          withdrawals: { select: { amount: true } },
         },
-      },
-    }),
-    prisma.emiPayment.findMany({
-      where: {
-        profileId,
-        status: { not: 'paid' },
-        dueDate: { lte: in30Days },
-        // Defensively exclude the sentinel processing-fee row (mirrors
-        // `upcomingPaymentsImpl`).
-        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
-      },
-      include: {
-        emi: { select: { id: true, label: true, type: true } },
-      },
-      orderBy: { dueDate: 'asc' },
-      take: 5,
-    }),
-  ])
+      }),
+      prisma.emi.findMany({
+        where: { profileId, status: 'active' },
+        select: {
+          id: true,
+          emiAmount: true,
+          payments: {
+            where: { status: { not: 'paid' } },
+            select: { emiAmount: true, remainingBalance: true, status: true },
+            orderBy: { paymentNumber: 'asc' },
+          },
+        },
+      }),
+      prisma.emiPayment.findMany({
+        where: {
+          profileId,
+          status: { not: 'paid' },
+          dueDate: { lte: in30Days },
+          // Defensively exclude the sentinel processing-fee row (mirrors
+          // `upcomingPaymentsImpl`).
+          paymentNumber: { gt: FEE_PAYMENT_NUMBER },
+        },
+        include: {
+          emi: { select: { id: true, label: true, type: true } },
+        },
+        orderBy: { dueDate: 'asc' },
+        take: 5,
+      }),
+      prisma.investmentDeposit.findMany({
+        where: {
+          profileId,
+          status: { not: 'paid' },
+          dueDate: { not: null, lte: in30Days },
+          investment: { mode: 'scheduled', status: 'active' },
+        },
+        include: {
+          investment: { select: { id: true, name: true, type: true } },
+        },
+        orderBy: { dueDate: 'asc' },
+        take: 5,
+      }),
+    ])
 
   let invested = 0
   let current = 0
@@ -138,22 +159,42 @@ export async function getDashboardStatsImpl(
     }))
     .sort((a, b) => Number(b.value) - Number(a.value))
 
-  const upcomingPayments = upcomingRows.map((p) => {
-    const days = Math.round(
-      (p.dueDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
-    )
-    return {
-      id: p.id,
-      emiId: p.emiId,
-      emiLabel: p.emi.label,
-      emiType: p.emi.type,
-      paymentNumber: p.paymentNumber,
-      dueDate: p.dueDate,
-      emiAmount: String(p.emiAmount),
-      isOverdue: p.dueDate < now,
-      daysUntilDue: days,
-    }
-  })
+  const daysUntil = (target: Date): number =>
+    Math.round((target.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+
+  const upcomingEmiItems: UpcomingPaymentItem[] = upcomingEmiRows.map((p) => ({
+    id: p.id,
+    kind: 'emi',
+    emiId: p.emiId,
+    investmentId: null,
+    label: p.emi.label,
+    type: p.emi.type,
+    amount: String(p.emiAmount),
+    dueDate: p.dueDate,
+    isOverdue: p.dueDate < now,
+    daysUntilDue: daysUntil(p.dueDate),
+    sequenceNumber: p.paymentNumber,
+  }))
+
+  const upcomingDepositItems: UpcomingPaymentItem[] = upcomingDepositRows
+    .filter((d): d is typeof d & { dueDate: Date } => d.dueDate !== null)
+    .map((d) => ({
+      id: d.id,
+      kind: 'deposit',
+      emiId: null,
+      investmentId: d.investment.id,
+      label: d.investment.name,
+      type: d.investment.type,
+      amount: String(d.amount),
+      dueDate: d.dueDate,
+      isOverdue: d.dueDate < now,
+      daysUntilDue: daysUntil(d.dueDate),
+      sequenceNumber: d.installmentNumber,
+    }))
+
+  const upcomingPayments = [...upcomingEmiItems, ...upcomingDepositItems]
+    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+    .slice(0, 5)
 
   return {
     netWorth: netWorth.toFixed(2),
