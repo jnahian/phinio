@@ -11,7 +11,7 @@ import {
   fmtText,
   getProfileCurrency,
   logActivity,
-} from './activity-log.impl'
+} from '@phinio/trpc/activity-log'
 import type { z } from 'zod'
 import type {
   AddDepositInput,

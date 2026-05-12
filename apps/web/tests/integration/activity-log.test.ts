@@ -6,7 +6,7 @@ import {
   fmtText,
   listActivityImpl,
   logActivity,
-} from '#/server/activity-log.impl'
+} from '@phinio/trpc/activity-log'
 import {
   createDpsInvestmentImpl,
   createInvestmentImpl,
@@ -141,7 +141,7 @@ describe('activity log roundtrip', () => {
       summary: "Created investment 'Apple'",
     })
 
-    const result = await listActivityImpl(user.profileId, {})
+    const result = await listActivityImpl(prisma, user.profileId, {})
     expect(result.items).toHaveLength(1)
     expect(result.items[0]).toMatchObject({
       action: 'create',
@@ -173,7 +173,7 @@ describe('activity log roundtrip', () => {
       summary: 'bob',
     })
 
-    const aliceRows = await listActivityImpl(alice.profileId, {})
+    const aliceRows = await listActivityImpl(prisma, alice.profileId, {})
     expect(aliceRows.items).toHaveLength(1)
     expect(aliceRows.items[0].summary).toBe('alice')
   })
@@ -191,17 +191,17 @@ describe('activity log roundtrip', () => {
       })
     }
 
-    const first = await listActivityImpl(user.profileId, { limit: 2 })
+    const first = await listActivityImpl(prisma, user.profileId, { limit: 2 })
     expect(first.items).toHaveLength(2)
     expect(first.nextCursor).not.toBeNull()
 
-    const second = await listActivityImpl(user.profileId, {
+    const second = await listActivityImpl(prisma, user.profileId, {
       limit: 2,
       cursor: first.nextCursor,
     })
     expect(second.items).toHaveLength(2)
 
-    const third = await listActivityImpl(user.profileId, {
+    const third = await listActivityImpl(prisma, user.profileId, {
       limit: 2,
       cursor: second.nextCursor,
     })
@@ -237,7 +237,7 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
       status: 'active',
     })
 
-    const { items } = await listActivityImpl(user.profileId, {})
+    const { items } = await listActivityImpl(prisma, user.profileId, {})
     // Most recent first — update row leads.
     const updateRow = items.find((r) => r.action === 'update')
     expect(updateRow).toBeTruthy()
@@ -274,7 +274,7 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
       status: 'active',
     })
 
-    const { items } = await listActivityImpl(user.profileId, {})
+    const { items } = await listActivityImpl(prisma, user.profileId, {})
     // Only the create log should exist — the no-op update must not emit a row.
     expect(items.filter((r) => r.action === 'update')).toHaveLength(0)
     expect(items.filter((r) => r.action === 'create')).toHaveLength(1)
@@ -322,7 +322,7 @@ describe('markDepositPaidImpl DPS status transitions', () => {
     inv = await prisma.investment.findUniqueOrThrow({ where: { id: dps.id } })
     expect(inv.status).toBe('active')
 
-    const { items } = await listActivityImpl(user.profileId, {})
+    const { items } = await listActivityImpl(prisma, user.profileId, {})
     expect(items.some((r) => r.summary.includes('reactivated'))).toBe(true)
   })
 })

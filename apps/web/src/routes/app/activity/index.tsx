@@ -33,7 +33,7 @@ import type {
   ActivityEntityType,
   ActivityAction,
   ActivityLogItem,
-} from '#/server/activity-log.impl'
+} from '@phinio/trpc/activity-log'
 
 export const Route = createFileRoute('/app/activity/')({
   staticData: { title: 'pageTitles.activity', backTo: '/app/profile' },

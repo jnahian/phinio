@@ -10,7 +10,7 @@ import {
   isRegularPayment,
 } from '@phinio/calc'
 import { withIdempotency } from '@phinio/trpc/idempotency'
-import { diffFields, fmtText, logActivity } from './activity-log.impl'
+import { diffFields, fmtText, logActivity } from '@phinio/trpc/activity-log'
 import type {
   EmiCompleteInput,
   EmiCreateInput,

@@ -1,10 +1,10 @@
-import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod'
-import { auth } from '#/lib/auth'
-import { prisma } from '#/db'
 import { Prisma } from '@phinio/db'
 import type { PrismaClient } from '@phinio/db'
-import type { Currency } from '#/lib/currency'
+
+// Mirrors apps/web/src/lib/currency.ts — kept as a local alias so the package
+// has no dependency on the web app.
+export type Currency = 'BDT' | 'USD'
 
 // Either the root client or a $transaction tx client — both expose
 // `.activityLog.create`, which is all we need here.
@@ -189,6 +189,7 @@ function parseChanges(raw: unknown): Array<ActivityChange> | null {
 }
 
 export async function listActivityImpl(
+  prisma: Pick<PrismaClient, 'activityLog'>,
   profileId: string,
   data: ActivityListQuery,
 ): Promise<ActivityListResult> {
@@ -216,17 +217,4 @@ export async function listActivityImpl(
     })),
     nextCursor: hasMore ? page[page.length - 1].id : null,
   }
-}
-
-// Shared session → profileId, mirrors the helper in other .impl files.
-export async function requireProfileId(): Promise<string> {
-  const headers = new Headers(getRequestHeaders())
-  const session = await auth.api.getSession({ headers })
-  if (!session) throw new Error('Unauthorized')
-  const profile = await prisma.profile.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true },
-  })
-  if (!profile) throw new Error('Profile not found')
-  return profile.id
 }

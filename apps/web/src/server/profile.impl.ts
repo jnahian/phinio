@@ -5,7 +5,7 @@ import type { Currency } from '#/lib/currency'
 import { isLocale } from '#/lib/i18n/config'
 import type { Locale } from '#/lib/i18n/config'
 import { withIdempotency } from '@phinio/trpc/idempotency'
-import { logActivity } from './activity-log.impl'
+import { logActivity } from '@phinio/trpc/activity-log'
 
 export interface SerializedProfile {
   id: string
