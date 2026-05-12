@@ -2,8 +2,8 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { Prisma } from '#/generated/prisma/client'
-import type { PrismaClient } from '#/generated/prisma/client'
+import { Prisma } from '@phinio/db'
+import type { PrismaClient } from '@phinio/db'
 import type { Currency } from '#/lib/currency'
 
 // Either the root client or a $transaction tx client — both expose

@@ -4,7 +4,7 @@
  * `cleanup-user.ts`) and by the in-app dev-data server functions.
  */
 
-import type { PrismaClient } from '../generated/prisma/client.js'
+import type { PrismaClient } from '@phinio/db'
 import { generateAmortization, calculateEmi } from './emi-calculator.js'
 import { generateDpsSchedule } from './dps-calculator.js'
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from './generated/prisma/client.js'
+import { PrismaClient } from '@phinio/db'
 
 import { PrismaPg } from '@prisma/adapter-pg'
 

@@ -1,7 +1,7 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { Prisma } from '#/generated/prisma/client'
+import { Prisma } from '@phinio/db'
 import { formatCurrency } from '#/lib/currency'
 import { generateDpsSchedule } from '#/lib/dps-calculator'
 import { withIdempotency } from './_idempotency'

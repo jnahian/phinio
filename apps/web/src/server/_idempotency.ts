@@ -1,6 +1,6 @@
 import superjson from 'superjson'
 import { prisma } from '#/db'
-import { Prisma } from '#/generated/prisma/client'
+import { Prisma } from '@phinio/db'
 
 /**
  * Type of the first parameter passed to a Prisma `$transaction` callback.
