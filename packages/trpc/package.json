@@ -13,7 +13,7 @@
   "scripts": {
     "build": "echo 'no build for @phinio/trpc'",
     "build:local": "echo 'no build for @phinio/trpc'",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@phinio/calc": "workspace:*",
