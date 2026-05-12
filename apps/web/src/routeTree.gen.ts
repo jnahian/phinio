@@ -24,6 +24,7 @@ import { Route as AppActivityIndexRouteImport } from './routes/app/activity/inde
 import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
 import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
 import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
+import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiCronSendRemindersRouteImport } from './routes/api/cron/send-reminders'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
@@ -107,6 +108,11 @@ const AppEmisEmiIdRoute = AppEmisEmiIdRouteImport.update({
   path: '/emis/$emiId',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
+  id: '/api/trpc/$',
+  path: '/api/trpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronSendRemindersRoute = ApiCronSendRemindersRouteImport.update({
   id: '/api/cron/send-reminders',
   path: '/api/cron/send-reminders',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/auth/$'
     | '/api/cron/send-reminders'
+    | '/api/trpc/$'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/api/auth/$'
     | '/api/cron/send-reminders'
+    | '/api/trpc/$'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/auth/$'
     | '/api/cron/send-reminders'
+    | '/api/trpc/$'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCronSendRemindersRoute: typeof ApiCronSendRemindersRoute
+  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisEmiIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/api/trpc/$': {
+      id: '/api/trpc/$'
+      path: '/api/trpc/$'
+      fullPath: '/api/trpc/$'
+      preLoaderRoute: typeof ApiTrpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/send-reminders': {
       id: '/api/cron/send-reminders'
       path: '/api/cron/send-reminders'
@@ -507,6 +527,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCronSendRemindersRoute: ApiCronSendRemindersRoute,
+  ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
