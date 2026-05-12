@@ -113,7 +113,7 @@ export function useCreateFoo() {
 - Always mint `clientMutationId` (and `id` for creates) on the client. Never let the server generate IDs for offline-eligible mutations.
 - `onMutate` writes to the cache _before_ the network call — UI updates instantly.
 - `onError` rolls back from the snapshot in `ctx`.
-- `mutationKey` must be **registered** with `setMutationDefaults` in `src/lib/use-offline-mutation.ts` so paused mutations survive page reload.
+- `mutationKey` must be **registered** in `src/integrations/tanstack-query/mutation-defaults.ts` (via `registerMutationDefaults`, invoked from `root-provider.tsx`) so paused mutations rehydrate with a `mutationFn` and survive page reload. The typed wrapper `useOfflineMutation` in `src/lib/use-offline-mutation.ts` enforces the `clientMutationId` shape but is not the registry.
 
 ---
 
@@ -128,7 +128,7 @@ export function useCreateFoo() {
 | Replay           | n/a                           | Server sees same `clientMutationId` → no-op or first-time-execute |
 | Result           | `onSuccess` invalidates       | `onSuccess` invalidates after replay                              |
 
-The `online` event handler lives in `src/routes/__root.tsx` (or the offline-cache hook). It also re-checks the Better Auth session before flushing — a 401 on replay is a silent failure otherwise.
+The `online` event handler lives in `src/routes/__root.tsx`'s `RootDocument` effect. It awaits `persisterReady`, verifies the Better Auth session, wipes the cache on a cross-account mismatch (cached vs. current `user.id`), then calls `resumePausedMutations()` + `invalidateQueries()` + `prefetchProfileData()`. The session check runs first because a 401 on replay would otherwise be silent.
 
 ---
 
@@ -175,7 +175,9 @@ Activity log writes are **server-only**. Don't optimistically prepend client-sid
    - Insert a `Notification` row with a `dedupeKey` (e.g. `emi_payment:{id}:upcoming`) — the unique constraint prevents double-sending.
 3. **Display:** `useNotifications` queries the feed for the bell icon.
 
-VAPID keys: `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` in `.env.local`.
+Push payload text is rendered through a per-locale i18n + currency/date formatter (cached by `Locale` in `send-reminders.ts`) keyed off `Profile.preferredLanguage`.
+
+Required env: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (mailto/URL identifying the sender), and `CRON_SECRET` (Bearer token validated via `timingSafeEqual` in the cron handler). All read from `.env.local`.
 
 ---
 

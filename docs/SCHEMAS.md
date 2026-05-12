@@ -2,7 +2,7 @@
 
 Reference for Phinio's data model. Authoritative source: `prisma/schema.prisma`. This doc explains the **shape** and **invariants** that aren't obvious from the schema alone.
 
-For business behavior see `docs/Phinio_PRD_v1.md` §4. For Zod input validators see `src/lib/validators.ts`.
+For business behavior see `Phinio_PRD_v1.md` §4. For Zod input validators see `src/lib/validators.ts`.
 
 ---
 
@@ -25,7 +25,7 @@ For business behavior see `docs/Phinio_PRD_v1.md` §4. For Zod input validators 
 | `Account`      | `account`      | Better Auth credentials (password hash) and OAuth tokens.         |
 | `Verification` | `verification` | Email verification + password reset tokens.                       |
 
-These are regenerated in place via `npx @better-auth/cli@latest generate` if `additionalFields` or plugins change. **Don't hand-edit them** beyond `additionalFields` like `preferredCurrency`.
+These are regenerated in place via `npx @better-auth/cli@latest generate` if `additionalFields` or plugins change. **Don't hand-edit them** beyond `additionalFields` like `preferredCurrency` and `preferredLanguage`.
 
 ---
 
@@ -33,7 +33,7 @@ These are regenerated in place via `npx @better-auth/cli@latest generate` if `ad
 
 ### `Profile` → `profiles`
 
-One per `User` (`userId @unique`). Carries `fullName`, `preferredCurrency` (BDT | USD), and is the **authorization root** — every other domain row joins back through `profileId`.
+One per `User` (`userId @unique`). Carries `fullName`, `preferredCurrency` (BDT | USD), `preferredLanguage` (`en` | `bn` — see `src/lib/i18n/config.ts`), and is the **authorization root** — every other domain row joins back through `profileId`. `preferredLanguage` is what the reminders cron uses to localize push payloads.
 
 ### `Investment` → `investments`
 
@@ -66,7 +66,7 @@ Withdrawals from any investment mode. Reduces effective `currentValue` for repor
 
 ### `Emi` → `emis`
 
-A loan or credit-card amortization. `principal`, `interestRate`, `tenureMonths`, `emiAmount` (computed via PRD §9.2), `startDate`, `status` (`active | completed | closed`).
+A loan or credit-card amortization. `label`, `type` (free-form: `credit_card | personal_loan | ...`), `principal`, `interestRate`, `tenureMonths`, `emiAmount` (computed via PRD §9.2), `startDate`, `status` (`active | completed | closed`).
 
 Schedule lives in `EmiPayment` and is **fully generated at create time** — never compute on read.
 
@@ -84,7 +84,7 @@ Indexes: `(emiId, paymentNumber)`, `(profileId, status, dueDate)`.
 
 ### `Notification` → `notifications`
 
-App-level toasts and the bell-icon feed. `dedupeKey` + `@@unique([profileId, dedupeKey])` prevents duplicate reminders for the same payment / event. `readAt` null = unread.
+App-level toasts and the bell-icon feed. `dedupeKey` + `@@unique([profileId, dedupeKey])` prevents duplicate reminders for the same payment / event. `readAt` null = unread. Index `(profileId, readAt, createdAt)` powers the bell-icon feed query.
 
 ### `ActivityLog` → `activity_log`
 
@@ -97,7 +97,7 @@ User-facing audit feed. **One row per user-initiated mutation**, written from in
 
 ### `PushSubscription` → `push_subscriptions`
 
-Web Push endpoints. `endpoint` is globally unique; `p256dh` + `auth` are the VAPID keys. Cron job in `src/routes/api/cron/` reads these and dispatches reminders.
+Web Push endpoints. `endpoint` is globally unique; `p256dh` + `auth` are the subscriber's public key and auth secret (the server-side VAPID keys live in env — see `src/server/web-push.ts`). Cron job at `src/routes/api/cron/send-reminders.ts` reads these and dispatches reminders.
 
 ### `ProcessedMutation` → `processed_mutations`
 

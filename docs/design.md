@@ -40,6 +40,7 @@ surface (#0b1326)            ← page base
 - Display/headlines: **Manrope** — `display-lg` to `headline-sm` for totals & section titles.
 - Body/UI: **Inter** — `body-md` for lists, `label-sm` for metadata in `on_surface_variant`.
 - Hierarchy: emphasize the **what** (number) with `headline-lg`; de-emphasize the **how** (category) with `label-md`.
+- **Hind Siliguri** is loaded as a fallback in both `--font-sans` and `--font-display` stacks for Bengali content (the app ships en/bn via i18n). See `src/styles.css`.
 
 ## Don'ts
 
@@ -52,7 +53,7 @@ surface (#0b1326)            ← page base
 
 Cross-reference three sources in this order:
 
-1. **PRD** (`docs/Phinio_PRD_v1.md`) — behavior and data shape.
+1. **PRD** (`Phinio_PRD_v1.md`) — behavior and data shape.
 2. **Mockup** (`screens/<name>/code.html` + `*.png`) — layout & markup reference.
 3. **DESIGN.md** (`screens/phinio_modern_noir/DESIGN.md`) — visual tokens.
 

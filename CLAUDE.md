@@ -10,10 +10,10 @@ Phinio is a mobile-first PWA for personal finance — investment portfolio track
 
 | Doc                                    | When to read                                                                 |
 | -------------------------------------- | ---------------------------------------------------------------------------- |
-| `ARCHITECTURE.md`                      | High-level system design — layers, RPC pattern, cross-cutting concerns.      |
-| `SCHEMAS.md`                           | Data model invariants beyond what `prisma/schema.prisma` shows.              |
-| `WORKFLOWS.md`                         | Canonical recipes — server fns, mutations, EMI creation, activity log, cron. |
-| `design.md`                            | Design-system cheat sheet (Modern Noir tokens & rules).                      |
+| `docs/ARCHITECTURE.md`                 | High-level system design — layers, RPC pattern, cross-cutting concerns.      |
+| `docs/SCHEMAS.md`                      | Data model invariants beyond what `prisma/schema.prisma` shows.              |
+| `docs/WORKFLOWS.md`                    | Canonical recipes — server fns, mutations, EMI creation, activity log, cron. |
+| `docs/design.md`                       | Design-system cheat sheet (Modern Noir tokens & rules).                      |
 | `screens/phinio_modern_noir/DESIGN.md` | Full design system — authoritative source for visual tokens.                 |
 | `docs/Phinio_PRD_v1.md`                | Behavior, business logic, implementation phases.                             |
 | `docs/OFFLINE_PLAN.md`                 | Offline-first strategy phases and decisions.                                 |
