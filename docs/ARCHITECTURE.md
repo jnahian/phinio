@@ -3,7 +3,7 @@
 High-level system design for Phinio. For deeper specs, see:
 
 - **Product behavior:** `Phinio_PRD_v1.md`
-- **Database:** `SCHEMAS.md` (and `prisma/schema.prisma`)
+- **Database:** `SCHEMAS.md` (and `packages/db/prisma/schema.prisma`)
 - **Execution patterns:** `WORKFLOWS.md`
 - **Offline strategy:** `OFFLINE_PLAN.md`
 
@@ -12,6 +12,14 @@ High-level system design for Phinio. For deeper specs, see:
 ## 1. System overview
 
 Phinio is a single-user, mobile-first PWA. One user → one `Profile` → many `Investment`/`Emi` records. There is no multi-tenant or sharing layer. The architecture optimizes for: (a) installable PWA on iOS/Android, (b) offline-first reads and writes, (c) a single Postgres source of truth.
+
+The repository is a pnpm + Turborepo monorepo. The web app lives at
+`apps/web/`. Shared libraries (`@phinio/db`, `@phinio/validators`,
+`@phinio/calc`, `@phinio/design-tokens`) live under `packages/` and are
+consumed via the `workspace:*` protocol. A second app (`apps/mobile/`)
+lands in Phase 3 of the native-app rollout. Turbo's task graph wires
+dependent builds (Prisma client generation, design-tokens CSS) so they
+run in the correct order without manual orchestration.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -70,11 +78,12 @@ This split is mandatory — a static import of `./*.impl` from `*.ts` will pollu
 
 ### Database — Prisma 7 + pg adapter
 
-- Custom output: `src/generated/prisma/`. `src/db.ts` imports `PrismaClient` from `./generated/prisma/client.js` — **not** `@prisma/client`.
+- Schema lives at `packages/db/prisma/schema.prisma`. Generated client is emitted to `packages/db/src/generated/` (gitignored — produced by the `postinstall` hook, so a fresh clone has working types immediately after `pnpm install`).
+- `apps/web/src/db.ts` imports `PrismaClient` from `@phinio/db` — **not** `@prisma/client` or a relative path.
 - Connection: `DATABASE_URL` (pooled) + `DIRECT_URL` (migrations) via Neon.
 - Memoized on `globalThis.__prisma` in dev to survive HMR.
-- After editing `schema.prisma`, run `npm run db:generate` before types resolve.
-- All `db:*` npm scripts are wrapped in `dotenv -e .env.local` — invoke them via npm, never `npx prisma` directly.
+- After editing `schema.prisma`, run `pnpm db:generate` before types resolve.
+- All `db:*` scripts under `packages/db` are wrapped in `dotenv -e ../../.env.local` — invoke them via pnpm workspace scripts, never `npx prisma` directly.
 
 ### PWA — `src/sw.ts` + `vite-plugin-pwa`
 
@@ -127,7 +136,7 @@ Per-request i18next instance built in `__root.tsx` from a `locale` in router con
 
 - **Vercel** with Nitro preset. Build-time prerender for public marketing pages; SSR for `/app/*`.
 - **Cron** under `src/routes/api/cron/send-reminders.ts` — Vercel cron GET endpoint, Bearer-token gated by `CRON_SECRET` (timing-safe compare). Scans upcoming/overdue `EmiPayment` + `InvestmentDeposit` rows, inserts `Notification` rows (idempotent via `dedupeKey`), and dispatches Web Push. A `ProcessedMutation` TTL cleanup is referenced in `schema.prisma` but not yet implemented — track as TODO.
-- **Env gotcha:** `BETTER_AUTH_URL` is embedded verbatim into every email link. Dev `:3000` works; `npm run preview` on `:4173` requires temporarily setting `BETTER_AUTH_URL=http://localhost:4173`.
+- **Env gotcha:** `BETTER_AUTH_URL` is embedded verbatim into every email link. Dev `:3000` works; `pnpm preview` on `:4173` requires temporarily setting `BETTER_AUTH_URL=http://localhost:4173`.
 
 ---
 

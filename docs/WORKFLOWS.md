@@ -22,7 +22,7 @@ Component
 
 - The wrapper file (`*.ts`) **never statically imports** `*.impl.ts`, Prisma, or Better Auth. Always `await import('./foo.impl')` inside the handler.
 - Every Prisma query includes `profileId` in `where`. No exceptions.
-- Validators live in `src/lib/validators.ts` and are imported by both wrapper and impl.
+- Validators live in `@phinio/validators` and are imported by both wrapper and impl.
 
 ---
 
@@ -40,19 +40,19 @@ export async function createFooImpl(profileId: string, input: FooCreateInput) {
         profileId,
         ...rest,
       },
-    })
+    });
 
     // 2. Activity log — same transaction, after the primary write.
     await logActivity(tx, profileId, {
-      action: 'create',
-      entityType: 'foo',
+      action: "create",
+      entityType: "foo",
       entityId: row.id,
       entityLabel: row.name, // denormalized — survives deletion
       summary: fmtText(`Added ${row.name}`),
-    })
+    });
 
-    return row
-  })
+    return row;
+  });
 }
 ```
 
@@ -73,7 +73,7 @@ Every `use*` mutation in `src/hooks/` follows this shape (model after `useMarkPa
 
 ```ts
 export function useCreateFoo() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationKey: fooKeys.create,
     mutationFn: (input) =>
@@ -84,27 +84,27 @@ export function useCreateFoo() {
           clientMutationId: crypto.randomUUID(), // idempotency key
         },
       }),
-    networkMode: 'offlineFirst', // queue while offline
+    networkMode: "offlineFirst", // queue while offline
 
     onMutate: async (input) => {
-      await qc.cancelQueries({ queryKey: fooKeys.list() })
-      const previous = qc.getQueryData(fooKeys.list())
+      await qc.cancelQueries({ queryKey: fooKeys.list() });
+      const previous = qc.getQueryData(fooKeys.list());
       qc.setQueryData(fooKeys.list(), (old) => [
         optimisticRow(input),
         ...(old ?? []),
-      ])
-      return { previous }
+      ]);
+      return { previous };
     },
 
     onError: (_err, _input, ctx) => {
-      qc.setQueryData(fooKeys.list(), ctx?.previous)
-      toast.error('Failed to save — try again')
+      qc.setQueryData(fooKeys.list(), ctx?.previous);
+      toast.error("Failed to save — try again");
     },
 
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: fooKeys.list() })
+      qc.invalidateQueries({ queryKey: fooKeys.list() });
     },
-  })
+  });
 }
 ```
 
@@ -194,14 +194,14 @@ Required env: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (mailto/U
 ## 9. Database changes
 
 ```bash
-# 1. Edit prisma/schema.prisma
-npm run db:generate    # regenerate client to src/generated/prisma/
-npm run db:migrate     # creates a migration in prisma/migrations + applies it
+# 1. Edit packages/db/prisma/schema.prisma
+pnpm db:generate    # regenerates client into packages/db/src/generated/
+pnpm db:migrate     # creates a migration in packages/db/prisma/migrations + applies it
 # OR for rapid dev iteration:
-npm run db:push        # push schema without a migration
+pnpm db:push        # push schema without a migration
 ```
 
-All `db:*` scripts are wrapped in `dotenv -e .env.local`. Don't run `npx prisma` directly — it won't pick up `DATABASE_URL`.
+All `db:*` scripts under `packages/db` are wrapped in `dotenv -e ../../.env.local`. Don't run `npx prisma` directly — it won't pick up `DATABASE_URL`.
 
 When adding offline-eligible models, also add `updatedAt @updatedAt` for LWW reconciliation.
 
@@ -210,9 +210,9 @@ When adding offline-eligible models, also add `updatedAt @updatedAt` for LWW rec
 ## 10. Pre-commit checklist
 
 ```bash
-npm run check          # prettier --write + eslint --fix
-npm run test           # vitest run-once
-npm run build:local    # full build with .env.local — catches type errors
+pnpm check          # prettier --write + eslint --fix
+pnpm test           # vitest across the workspace via turbo
+pnpm build:local    # full build with .env.local — catches type errors
 ```
 
-`npm run build` (without `:local`) fails without `DATABASE_URL` — always use `build:local` for a local sanity check.
+`pnpm build` (without `:local`) chains in `prisma migrate deploy` which needs a reachable DB — always use `build:local` for a local sanity check.

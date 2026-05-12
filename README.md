@@ -4,6 +4,23 @@
 
 ---
 
+## Monorepo layout
+
+This repository is a pnpm + Turborepo workspace.
+
+- `apps/web/` — the TanStack Start PWA
+- `packages/db/` — Prisma schema, migrations, and generated client (`@phinio/db`)
+- `packages/validators/` — shared Zod validators (`@phinio/validators`)
+- `packages/calc/` — pure-math helpers for EMI / DPS / dashboard aggregations (`@phinio/calc`)
+- `packages/design-tokens/` — Modern Noir token source + CSS generator (`@phinio/design-tokens`)
+
+`apps/mobile/` (React Native) is planned for a later phase — see
+`docs/superpowers/specs/2026-05-12-rn-mobile-app-design.md`.
+
+Install with `pnpm install` (auto-runs `prisma generate`). Then `pnpm dev` to start.
+
+---
+
 ## Features
 
 ### Investment Portfolio
@@ -80,6 +97,7 @@ Three investment modes under one unified schema:
 ### Prerequisites
 
 - Node.js 20+
+- pnpm 9+
 - A PostgreSQL database (Neon recommended — free tier works)
 - A [Resend](https://resend.com) account with a verified sender domain
 - A [Vercel](https://vercel.com) project (for production; optional for local dev)
@@ -87,7 +105,7 @@ Three investment modes under one unified schema:
 ### 1. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Set up environment variables
@@ -112,21 +130,21 @@ cp .env.example .env.local
 | `VITE_VAPID_PUBLIC_KEY` | Same value as `VAPID_PUBLIC_KEY`, exposed to the client so `PushManager.subscribe()` can use it |
 | `CRON_SECRET`           | Guards `/api/cron/send-reminders` — generate with `openssl rand -hex 32`                        |
 
-> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim in every email link (verification, password reset). In dev it must be `http://localhost:3000`; in preview (`npm run preview:local`, port 4173) temporarily set it to `http://localhost:4173` or links will 404.
+> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim in every email link (verification, password reset). In dev it must be `http://localhost:3000`; in preview (`pnpm preview:local`, port 4173) temporarily set it to `http://localhost:4173` or links will 404.
 
 ### 3. Run database migrations and generate the Prisma client
 
 ```bash
-npm run db:migrate   # creates tables via prisma migrate dev
-npm run db:generate  # generates the typed client to src/generated/prisma/
+pnpm db:migrate   # creates tables via prisma migrate dev
+pnpm db:generate  # generates the typed client to packages/db/src/generated/
 ```
 
-> All `db:*` scripts are wrapped in `dotenv -e .env.local` — never run `npx prisma` directly or it won't pick up `DATABASE_URL`.
+> All `db:*` scripts are wrapped in `dotenv -e ../../.env.local` — never run `npx prisma` directly or it won't pick up `DATABASE_URL`. Note: `pnpm install` already runs `db:generate` via postinstall, so on a fresh clone you only need `db:migrate`.
 
 ### 4. Start the development server
 
 ```bash
-npm run dev          # Vite dev server on http://localhost:3000
+pnpm dev          # all apps in dev mode (turbo); web app on http://localhost:3000
 ```
 
 ---
@@ -134,75 +152,82 @@ npm run dev          # Vite dev server on http://localhost:3000
 ## Scripts
 
 ```bash
-npm run dev             # Development server on :3000
-npm run build           # Production build for Vercel (expects host-provided env)
-npm run build:local     # Same build chain wrapped in dotenv -e .env.local for local testing
-npm run preview         # Preview the production build on :4173 (expects host-provided env)
-npm run preview:local   # dotenv-wrapped preview for local testing
+pnpm dev                          # All apps in dev mode (turbo); web on :3000
+pnpm --filter @phinio/web dev     # Just the web app on :3000
+pnpm build                        # Production build via turbo (expects host-provided env)
+pnpm build:local                  # Same build chain wrapped in dotenv -e .env.local for local testing
+pnpm preview                      # Preview the production build on :4173 (expects host-provided env)
+pnpm preview:local                # dotenv-wrapped preview for local testing
 
-npm run test            # Vitest (run once)
-npm run lint            # ESLint (TanStack config)
-npm run format          # Prettier --check
-npm run check           # prettier --write + eslint --fix (run before committing)
+pnpm test                         # Vitest across the workspace via turbo
+pnpm lint                         # ESLint across the workspace
+pnpm check                        # prettier --write + eslint --fix (run before committing)
 
-npm run db:generate     # prisma generate → src/generated/prisma/
-npm run db:push         # Push schema changes without a migration file (dev only)
-npm run db:migrate      # prisma migrate dev (creates and applies a migration)
-npm run db:studio       # Open Prisma Studio in the browser
-npm run db:seed         # Run the seed script
+pnpm db:generate                  # prisma generate → packages/db/src/generated/
+pnpm db:push                      # Push schema changes without a migration file (dev only)
+pnpm db:migrate                   # prisma migrate dev (creates and applies a migration)
+pnpm db:studio                    # Open Prisma Studio in the browser
+pnpm db:seed                      # Run the seed script
 ```
 
-> `build` and `preview` assume `DATABASE_URL` (and the other vars) come from the hosting platform — they will fail locally with `PrismaConfigEnvError`. Use `build:local` / `preview:local` for local prod-style testing; those wrap the chain with `dotenv -e .env.local`.
+> `pnpm build` and `pnpm preview` assume `DATABASE_URL` (and the other vars) come from the hosting platform — they will fail locally with `PrismaConfigEnvError`. Use `build:local` / `preview:local` for local prod-style testing; those wrap the chain with `dotenv -e .env.local`.
 
 ---
 
 ## Project Structure
 
 ```
-src/
-├── routes/
-│   ├── __root.tsx          # HTML shell, head tags, Toaster, Analytics, SW registration
-│   ├── index.tsx           # Landing page (prerendered)
-│   ├── login.tsx           # /login (prerendered)
-│   ├── signup.tsx          # /signup (prerendered)
-│   ├── check-email.tsx     # Post-signup email verification prompt (prerendered)
-│   ├── forgot-password.tsx # /forgot-password (prerendered)
-│   ├── api/
-│   │   ├── auth/$.ts       # Better Auth catch-all handler
-│   │   └── cron/send-reminders.ts  # Scheduled push-notification worker
-│   └── app/
-│       ├── route.tsx       # Auth guard + app shell layout (TopBar + BottomTabBar + FAB)
-│       ├── index.tsx       # /app — unified dashboard (loader-prefetched)
-│       ├── profile.tsx     # /app/profile — settings
-│       ├── activity/
-│       │   └── index.tsx   # /app/activity — infinite-scroll audit log
-│       ├── investments/
-│       │   ├── index.tsx   # Portfolio list (loader-prefetched)
-│       │   ├── new.tsx     # Add lump-sum investment
-│       │   ├── $id.edit.tsx
-│       │   ├── dps/
-│       │   │   ├── new.tsx
-│       │   │   └── $id.tsx
-│       │   └── savings/
-│       │       ├── new.tsx
-│       │       └── $id.tsx
-│       └── emis/
-│           ├── index.tsx   # EMI overview (loader-prefetched)
-│           ├── new.tsx     # Add EMI
-│           └── $emiId.tsx  # Amortization schedule detail
-├── lib/
-│   ├── auth.ts             # Better Auth server config
-│   └── auth-client.ts      # Better Auth client hooks
-├── server/
-│   └── auth.ts             # getSessionFn() server function
-├── db.ts                   # PrismaClient singleton (memoised on globalThis in dev)
-├── generated/
-│   └── prisma/             # Auto-generated Prisma client — do not edit
-└── styles.css              # Tailwind v4 @theme tokens + global utilities
+apps/
+└── web/                    # TanStack Start PWA
+    └── src/
+        ├── routes/
+        │   ├── __root.tsx          # HTML shell, head tags, Toaster, Analytics, SW registration
+        │   ├── index.tsx           # Landing page (prerendered)
+        │   ├── login.tsx           # /login (prerendered)
+        │   ├── signup.tsx          # /signup (prerendered)
+        │   ├── check-email.tsx     # Post-signup email verification prompt (prerendered)
+        │   ├── forgot-password.tsx # /forgot-password (prerendered)
+        │   ├── api/
+        │   │   ├── auth/$.ts       # Better Auth catch-all handler
+        │   │   └── cron/send-reminders.ts  # Scheduled push-notification worker
+        │   └── app/
+        │       ├── route.tsx       # Auth guard + app shell layout (TopBar + BottomTabBar + FAB)
+        │       ├── index.tsx       # /app — unified dashboard (loader-prefetched)
+        │       ├── profile.tsx     # /app/profile — settings
+        │       ├── activity/
+        │       │   └── index.tsx   # /app/activity — infinite-scroll audit log
+        │       ├── investments/
+        │       │   ├── index.tsx   # Portfolio list (loader-prefetched)
+        │       │   ├── new.tsx     # Add lump-sum investment
+        │       │   ├── $id.edit.tsx
+        │       │   ├── dps/
+        │       │   │   ├── new.tsx
+        │       │   │   └── $id.tsx
+        │       │   └── savings/
+        │       │       ├── new.tsx
+        │       │       └── $id.tsx
+        │       └── emis/
+        │           ├── index.tsx   # EMI overview (loader-prefetched)
+        │           ├── new.tsx     # Add EMI
+        │           └── $emiId.tsx  # Amortization schedule detail
+        ├── lib/
+        │   ├── auth.ts             # Better Auth server config
+        │   └── auth-client.ts      # Better Auth client hooks
+        ├── server/
+        │   └── auth.ts             # getSessionFn() server function
+        ├── db.ts                   # PrismaClient singleton (imports from @phinio/db)
+        └── styles.css              # Tailwind v4 @theme tokens + global utilities
 
-prisma/
-├── schema.prisma           # Source of truth for DB schema
-└── migrations/             # Migration history
+packages/
+├── db/
+│   ├── prisma/
+│   │   ├── schema.prisma   # Source of truth for DB schema
+│   │   └── migrations/     # Migration history
+│   └── src/
+│       └── generated/      # Auto-generated Prisma client — do not edit (gitignored)
+├── validators/             # Shared Zod validators (@phinio/validators)
+├── calc/                   # EMI / DPS / dashboard math helpers (@phinio/calc)
+└── design-tokens/          # Modern Noir token source + CSS generator (@phinio/design-tokens)
 
 screens/
 ├── phinio_modern_noir/
@@ -238,12 +263,12 @@ Client component
 ### Key Conventions
 
 - **Authorization is per-query, not per-route.** Every server function that touches user data derives `profileId` from the Better Auth session and includes it in the Prisma `where` clause.
-- **Prisma client is imported from `src/generated/prisma/client.js`**, not from `@prisma/client`. The `output` field in `schema.prisma` points there. After editing the schema, run `npm run db:generate` before the types resolve.
-- **Route tree is code-generated** to `src/routeTree.gen.ts` — never edit it. Add route files under `src/routes/` and the TanStack Router plugin regenerates it automatically.
-- **Tailwind v4 — no `tailwind.config.js`.** All design tokens live under `@theme` in `src/styles.css`. The app is dark-only; `<html>` has a permanent `className="dark"`.
+- **Prisma client is imported from `@phinio/db`**, not from `@prisma/client` or a relative path. The generated output lives at `packages/db/src/generated/` (gitignored). After editing the schema, run `pnpm db:generate` before the types resolve.
+- **Route tree is code-generated** to `apps/web/src/routeTree.gen.ts` — never edit it. Add route files under `apps/web/src/routes/` and the TanStack Router plugin regenerates it automatically.
+- **Tailwind v4 — no `tailwind.config.js`.** All design tokens live under `@theme` in `apps/web/src/styles.css`. The app is dark-only; `<html>` has a permanent `className="dark"`.
 - **Money fields are `Decimal(15,2)` in Prisma.** Handle them as strings or `Decimal` objects — never coerce to JS `number` for arithmetic.
 - **EMI amortization and DPS schedules are pre-computed on creation.** All `EmiPayment` and `InvestmentDeposit` rows are generated upfront using the standard reducing-balance / DPS accrual formulas (see PRD §8). Do not compute schedules at read time.
-- **Path aliases:** `#/*` and `@/*` both resolve to `src/*`. Existing code uses the `#/` style; follow that.
+- **Path aliases:** `#/*` and `@/*` resolve to `apps/web/src/*` within the web app. For shared packages use `@phinio/...` workspace names — never relative paths crossing package boundaries.
 - **Hooks expose shared `queryOptions` factories** so route loaders and `useQuery` use the same keys / fetchers. Tab routes call `queryClient.ensureQueryData(factory())` in their `loader` — combined with `defaultPreload: 'intent'` this warms the cache before the user taps.
 - **Public marketing / auth pages are prerendered** via Nitro (`vite.config.ts`), not server-rendered per request. Copy changes there require a redeploy to appear.
 
