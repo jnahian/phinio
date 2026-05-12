@@ -1,0 +1,20 @@
+{
+  "name": "@phinio/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.json": "./src/tokens.json",
+    "./tokens.css": "./dist/tokens.css"
+  },
+  "scripts": {
+    "build": "tsx src/build-css.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "vitest": "^3.0.5"
+  }
+}

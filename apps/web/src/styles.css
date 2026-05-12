@@ -4,62 +4,11 @@
 
 /* ----------------------------------------------------------------------------
  * Modern Noir — "Digital Private Bank" design tokens
+ * Source of truth: packages/design-tokens/src/tokens.json
  * See screens/phinio_modern_noir/DESIGN.md
  * -------------------------------------------------------------------------- */
 
-@theme {
-  --font-sans: 'Inter', 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
-  --font-display:
-    'Manrope', 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
-
-  /* Surface hierarchy (layered "frosted glass" sheets) */
-  --color-surface: #0b1326;
-  --color-surface-dim: #0b1326;
-  --color-surface-bright: #31394d;
-  --color-surface-container-lowest: #060e20;
-  --color-surface-container-low: #131b2e;
-  --color-surface-container: #171f33;
-  --color-surface-container-high: #222a3d;
-  --color-surface-container-highest: #2d3449;
-  --color-surface-variant: #2d3449;
-
-  /* On-surface text */
-  --color-on-surface: #dae2fd;
-  --color-on-surface-variant: #c3c6d7;
-  --color-on-background: #dae2fd;
-  --color-outline: #8d90a0;
-  --color-outline-variant: #434655;
-
-  /* Primary (brand blue) */
-  --color-primary: #b4c5ff;
-  --color-primary-container: #2563eb;
-  --color-on-primary: #002a78;
-  --color-on-primary-container: #eeefff;
-  --color-primary-fixed: #dbe1ff;
-  --color-primary-fixed-dim: #b4c5ff;
-
-  /* Secondary (gain / mint) */
-  --color-secondary: #4edea3;
-  --color-secondary-container: #00a572;
-  --color-on-secondary: #003824;
-  --color-on-secondary-container: #00311f;
-  --color-secondary-fixed: #6ffbbe;
-  --color-secondary-fixed-dim: #4edea3;
-
-  /* Tertiary (loss / alert red) */
-  --color-tertiary: #ffb3ad;
-  --color-tertiary-container: #cf2c30;
-  --color-on-tertiary: #68000a;
-  --color-on-tertiary-container: #ffecea;
-  --color-tertiary-fixed: #ffdad7;
-  --color-tertiary-fixed-dim: #ffb3ad;
-
-  /* Error */
-  --color-error: #ffb4ab;
-  --color-error-container: #93000a;
-  --color-on-error: #690005;
-  --color-on-error-container: #ffdad6;
-}
+@import '@phinio/design-tokens/tokens.css';
 
 :root {
   color-scheme: dark;

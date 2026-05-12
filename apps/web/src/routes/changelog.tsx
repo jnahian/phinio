@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import changelogSource from '../../CHANGELOG.md?raw'
+import changelogSource from '../../../../CHANGELOG.md?raw'
 import { Footer } from '#/components/landing/Footer'
 import { Nav } from '#/components/landing/Nav'
 

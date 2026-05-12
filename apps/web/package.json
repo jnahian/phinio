@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "prisma migrate deploy --schema=../../packages/db/prisma/schema.prisma && prisma generate --schema=../../packages/db/prisma/schema.prisma && vite build && node scripts/copy-sw-to-vercel.mjs",
-    "build:local": "dotenv -e ../../.env.local -- vite build",
+    "build:local": "pnpm --filter @phinio/design-tokens run build && dotenv -e ../../.env.local -- vite build",
     "preview": "vite preview",
     "preview:local": "dotenv -e ../../.env.local -- vite preview",
     "test": "vitest run",
@@ -24,6 +24,7 @@
     "@opentelemetry/api": "^1.9.1",
     "@phinio/calc": "workspace:^",
     "@phinio/db": "workspace:*",
+    "@phinio/design-tokens": "workspace:^",
     "@phinio/validators": "workspace:^",
     "@prisma/adapter-pg": "^7.4.2",
     "@tailwindcss/vite": "^4.1.18",
