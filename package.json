@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "pnpm --filter @phinio/db run db:generate",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "build:local": "turbo run build:local",
