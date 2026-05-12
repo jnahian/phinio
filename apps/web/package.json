@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
+    "@phinio/calc": "workspace:^",
     "@phinio/db": "workspace:*",
     "@phinio/validators": "workspace:^",
     "@prisma/adapter-pg": "^7.4.2",
