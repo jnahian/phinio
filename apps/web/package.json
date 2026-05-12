@@ -23,6 +23,7 @@
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
     "@phinio/db": "workspace:*",
+    "@phinio/validators": "workspace:^",
     "@prisma/adapter-pg": "^7.4.2",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/query-async-storage-persister": "^5.100.6",
