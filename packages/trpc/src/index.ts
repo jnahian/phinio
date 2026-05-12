@@ -1,2 +1,2 @@
-// Real exports land in Task 3+. This stub lets pnpm wire the package.
-export {}
+export { appRouter, type AppRouter } from './router.js'
+export type { AppContext } from './context.js'
