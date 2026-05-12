@@ -1,5 +1,5 @@
 import superjson from 'superjson'
-import { prisma } from '#/db'
+import type { PrismaClient } from '@phinio/db'
 import { Prisma } from '@phinio/db'
 
 /**
@@ -8,7 +8,7 @@ import { Prisma } from '@phinio/db'
  * directly so we don't depend on whether that name is publicly exported in
  * the version of Prisma in use.
  */
-export type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+export type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0]
 
 /**
  * Run a mutation idempotently. If `clientMutationId` is provided and the
@@ -32,6 +32,7 @@ export type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
  * transaction; only the dedupe step is skipped.
  */
 export async function withIdempotency<T>(
+  prisma: PrismaClient,
   profileId: string,
   clientMutationId: string | undefined,
   fn: (tx: Tx) => Promise<T>,

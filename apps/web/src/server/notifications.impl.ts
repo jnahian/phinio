@@ -1,7 +1,7 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { withIdempotency } from './_idempotency'
+import { withIdempotency } from '@phinio/trpc/idempotency'
 import type {
   ClearReadNotificationsInput,
   MarkAllNotificationsReadInput,
@@ -142,7 +142,7 @@ export async function markNotificationReadImpl(
   profileId: string,
   data: MarkNotificationReadInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const result = await tx.notification.updateMany({
       where: { id: data.id, profileId, readAt: null },
       data: { readAt: new Date() },
@@ -155,7 +155,7 @@ export async function markAllNotificationsReadImpl(
   profileId: string,
   data: MarkAllNotificationsReadInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const result = await tx.notification.updateMany({
       where: { profileId, readAt: null },
       data: { readAt: new Date() },
@@ -168,7 +168,7 @@ export async function clearReadNotificationsImpl(
   profileId: string,
   data: ClearReadNotificationsInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const result = await tx.notification.deleteMany({
       where: { profileId, readAt: { not: null } },
     })

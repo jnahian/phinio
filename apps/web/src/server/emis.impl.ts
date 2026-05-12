@@ -9,7 +9,7 @@ import {
   isFeePayment,
   isRegularPayment,
 } from '@phinio/calc'
-import { withIdempotency } from './_idempotency'
+import { withIdempotency } from '@phinio/trpc/idempotency'
 import { diffFields, fmtText, logActivity } from './activity-log.impl'
 import type {
   EmiCompleteInput,
@@ -222,7 +222,7 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
       ? data.processingFee
       : null
 
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const created = await tx.emi.create({
       data: {
         // Use the client-supplied id if present. Prisma's @default(uuid())
@@ -294,7 +294,7 @@ export async function createEmiImpl(profileId: string, data: EmiCreateInput) {
 }
 
 export async function updateEmiImpl(profileId: string, data: EmiUpdateInput) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const before = await tx.emi.findFirst({
       where: { id: data.emiId, profileId },
       select: { id: true, label: true, notes: true, updatedAt: true },
@@ -351,7 +351,7 @@ export async function updateEmiImpl(profileId: string, data: EmiUpdateInput) {
 }
 
 export async function deleteEmiImpl(profileId: string, data: EmiIdInput) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const existing = await tx.emi.findFirst({
       where: { id: data.emiId, profileId },
       select: { id: true, label: true },
@@ -373,7 +373,7 @@ export async function markPaymentPaidImpl(
   profileId: string,
   data: MarkPaymentPaidInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const payment = await tx.emiPayment.findFirst({
       where: { id: data.paymentId, profileId },
       select: {
@@ -450,7 +450,7 @@ export async function completeEmiImpl(
   profileId: string,
   data: EmiCompleteInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const emi = await tx.emi.findFirst({
       where: { id: data.emiId, profileId },
       select: { id: true, label: true, status: true },

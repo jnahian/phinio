@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { withIdempotency } from '#/server/_idempotency'
+import { withIdempotency } from '@phinio/trpc/idempotency'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
 beforeEach(async () => {
@@ -10,7 +10,7 @@ describe('withIdempotency', () => {
   it('runs the work and writes a processed_mutations row when an id is given', async () => {
     const user = await createTestUser()
 
-    const result = await withIdempotency(user.profileId, 'cm-1', async (tx) => {
+    const result = await withIdempotency(prisma, user.profileId, 'cm-1', async (tx) => {
       await tx.investment.create({
         data: {
           profileId: user.profileId,
@@ -47,12 +47,12 @@ describe('withIdempotency', () => {
     const user = await createTestUser()
     let calls = 0
 
-    const result1 = await withIdempotency(user.profileId, 'cm-2', async () => {
+    const result1 = await withIdempotency(prisma, user.profileId, 'cm-2', async () => {
       calls++
       return { id: 'inv-2' }
     })
 
-    const result2 = await withIdempotency(user.profileId, 'cm-2', async () => {
+    const result2 = await withIdempotency(prisma, user.profileId, 'cm-2', async () => {
       calls++
       return { id: 'should-not-be-returned' }
     })
@@ -72,6 +72,7 @@ describe('withIdempotency', () => {
     }
 
     const first = await withIdempotency<Shape>(
+      prisma,
       user.profileId,
       'cm-3',
       async () => ({
@@ -82,6 +83,7 @@ describe('withIdempotency', () => {
     )
 
     const replay = await withIdempotency<Shape>(
+      prisma,
       user.profileId,
       'cm-3',
       async () => {
@@ -104,10 +106,10 @@ describe('withIdempotency', () => {
   it('treats different clientMutationIds independently', async () => {
     const user = await createTestUser()
 
-    const a = await withIdempotency(user.profileId, 'cm-a', async () => ({
+    const a = await withIdempotency(prisma, user.profileId, 'cm-a', async () => ({
       label: 'A',
     }))
-    const b = await withIdempotency(user.profileId, 'cm-b', async () => ({
+    const b = await withIdempotency(prisma, user.profileId, 'cm-b', async () => ({
       label: 'B',
     }))
 
@@ -119,11 +121,11 @@ describe('withIdempotency', () => {
     const user = await createTestUser()
     let calls = 0
 
-    await withIdempotency(user.profileId, undefined, async () => {
+    await withIdempotency(prisma, user.profileId, undefined, async () => {
       calls++
       return { id: '1' }
     })
-    await withIdempotency(user.profileId, undefined, async () => {
+    await withIdempotency(prisma, user.profileId, undefined, async () => {
       calls++
       return { id: '2' }
     })
@@ -142,7 +144,7 @@ describe('withIdempotency', () => {
     // row. Postgres serializes — one wins, the other gets P2002. The
     // helper catches the conflict and replays the winner's result.
     const [a, b] = await Promise.all([
-      withIdempotency(user.profileId, 'cm-concurrent', async (tx) => {
+      withIdempotency(prisma, user.profileId, 'cm-concurrent', async (tx) => {
         invocations++
         await tx.investment.create({
           data: {
@@ -156,7 +158,7 @@ describe('withIdempotency', () => {
         })
         return { name: `Inv ${invocations}` }
       }),
-      withIdempotency(user.profileId, 'cm-concurrent', async (tx) => {
+      withIdempotency(prisma, user.profileId, 'cm-concurrent', async (tx) => {
         invocations++
         await tx.investment.create({
           data: {
@@ -194,11 +196,11 @@ describe('withIdempotency', () => {
     const b = await createTestUser({ email: 'b-idem@phinio.test' })
     let calls = 0
 
-    await withIdempotency(a.profileId, 'shared-cm', async () => {
+    await withIdempotency(prisma, a.profileId, 'shared-cm', async () => {
       calls++
       return { who: 'a' }
     })
-    const second = await withIdempotency(b.profileId, 'shared-cm', async () => {
+    const second = await withIdempotency(prisma, b.profileId, 'shared-cm', async () => {
       calls++
       return { who: 'b' }
     })

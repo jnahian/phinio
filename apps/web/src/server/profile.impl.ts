@@ -4,7 +4,7 @@ import { prisma } from '#/db'
 import type { Currency } from '#/lib/currency'
 import { isLocale } from '#/lib/i18n/config'
 import type { Locale } from '#/lib/i18n/config'
-import { withIdempotency } from './_idempotency'
+import { withIdempotency } from '@phinio/trpc/idempotency'
 import { logActivity } from './activity-log.impl'
 
 export interface SerializedProfile {
@@ -112,6 +112,7 @@ export async function updateProfileCurrencyImpl(
 ): Promise<SerializedProfile> {
   const profileId = await profileIdForUser(userId)
   const profile = await withIdempotency(
+    prisma,
     profileId,
     data.clientMutationId,
     async (tx) => {
@@ -166,6 +167,7 @@ export async function updateProfileLanguageImpl(
 ): Promise<SerializedProfile> {
   const profileId = await profileIdForUser(userId)
   const profile = await withIdempotency(
+    prisma,
     profileId,
     data.clientMutationId,
     async (tx) => {
@@ -223,6 +225,7 @@ export async function updateProfileNameImpl(
 ): Promise<SerializedProfile> {
   const profileId = await profileIdForUser(userId)
   const profile = await withIdempotency(
+    prisma,
     profileId,
     data.clientMutationId,
     async (tx) => {

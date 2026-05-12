@@ -4,7 +4,7 @@ import { prisma } from '#/db'
 import { Prisma } from '@phinio/db'
 import { formatCurrency } from '#/lib/currency'
 import { generateDpsSchedule } from '@phinio/calc'
-import { withIdempotency } from './_idempotency'
+import { withIdempotency } from '@phinio/trpc/idempotency'
 import {
   diffFields,
   fmtDate,
@@ -272,7 +272,7 @@ export async function createInvestmentImpl(
   profileId: string,
   data: InvestmentCreateInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const created = await tx.investment.create({
       data: {
         ...(data.id ? { id: data.id } : {}),
@@ -301,7 +301,7 @@ export async function updateInvestmentImpl(
   profileId: string,
   data: InvestmentUpdateInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const before = await tx.investment.findFirst({
       where: { id: data.id, profileId },
     })
@@ -408,7 +408,7 @@ export async function deleteInvestmentImpl(
   profileId: string,
   data: InvestmentIdInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const existing = await tx.investment.findFirst({
       where: { id: data.id, profileId },
       select: { id: true, name: true, mode: true },
@@ -448,7 +448,7 @@ export async function createDpsInvestmentImpl(
     startDate: new Date(data.startDate),
   })
 
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const inv = await tx.investment.create({
       data: {
         ...(data.id ? { id: data.id } : {}),
@@ -492,7 +492,7 @@ export async function updateDpsInvestmentImpl(
   profileId: string,
   data: DpsUpdateInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const before = await tx.investment.findFirst({
       where: { id: data.id, profileId, mode: 'scheduled' },
       select: { id: true, name: true, notes: true, updatedAt: true },
@@ -556,7 +556,7 @@ export async function markDepositPaidImpl(
   profileId: string,
   data: MarkDepositPaidInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const deposit = await tx.investmentDeposit.findFirst({
       where: { id: data.depositId, profileId },
       select: {
@@ -667,7 +667,7 @@ export async function createSavingsInvestmentImpl(
 ) {
   const initialAmount = Number(data.currentValue)
 
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const created = await tx.investment.create({
       data: {
         ...(data.id ? { id: data.id } : {}),
@@ -712,7 +712,7 @@ export async function updateSavingsInvestmentImpl(
   profileId: string,
   data: SavingsUpdateInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const before = await tx.investment.findFirst({
       where: { id: data.id, profileId, mode: 'flexible' },
       select: {
@@ -787,7 +787,7 @@ export async function updateSavingsInvestmentImpl(
 export async function addDepositImpl(profileId: string, data: AddDepositInput) {
   const depositAmount = Number(data.amount)
 
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const investment = await tx.investment.findFirst({
       where: { id: data.investmentId, profileId, mode: 'flexible' },
       select: {
@@ -837,7 +837,7 @@ export async function removeDepositImpl(
   profileId: string,
   data: RemoveDepositInput,
 ) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const deposit = await tx.investmentDeposit.findFirst({
       where: { id: data.depositId, profileId },
       select: {
@@ -896,7 +896,7 @@ export async function removeDepositImpl(
 // ---------------------------------------------------------------------------
 
 export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const investment = await tx.investment.findFirst({
       where: { id: data.investmentId, profileId },
       select: {
@@ -987,7 +987,7 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
 // ---------------------------------------------------------------------------
 
 export async function closeDpsImpl(profileId: string, data: DpsCloseInput) {
-  return withIdempotency(profileId, data.clientMutationId, async (tx) => {
+  return withIdempotency(prisma, profileId, data.clientMutationId, async (tx) => {
     const investment = await tx.investment.findFirst({
       where: { id: data.investmentId, profileId, mode: 'scheduled' },
       select: { id: true, name: true, status: true },
