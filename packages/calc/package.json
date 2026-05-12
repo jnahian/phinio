@@ -11,6 +11,8 @@
     "./calculations": "./src/calculations.ts"
   },
   "scripts": {
+    "build": "echo 'no build for @phinio/calc'",
+    "build:local": "echo 'no build for @phinio/calc'",
     "test": "vitest run"
   },
   "devDependencies": {

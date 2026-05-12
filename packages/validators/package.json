@@ -7,6 +7,11 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "build": "echo 'no build for @phinio/validators'",
+    "build:local": "echo 'no build for @phinio/validators'",
+    "test": "echo 'no tests in @phinio/validators'"
+  },
   "dependencies": {
     "zod": "^4.3.6"
   }

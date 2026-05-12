@@ -54,7 +54,7 @@ export function useOfflineMutation<
       const withId: TVariables = {
         ...variables,
         clientMutationId: variables.clientMutationId ?? crypto.randomUUID(),
-      } as TVariables
+      }
       return prepareVariables ? prepareVariables(withId) : withId
     },
     [prepareVariables],

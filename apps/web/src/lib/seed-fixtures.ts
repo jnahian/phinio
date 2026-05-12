@@ -5,8 +5,7 @@
  */
 
 import type { PrismaClient } from '@phinio/db'
-import { generateAmortization, calculateEmi } from '@phinio/calc'
-import { generateDpsSchedule } from '@phinio/calc'
+import { generateAmortization, calculateEmi, generateDpsSchedule } from '@phinio/calc'
 
 function d(iso: string): Date {
   return new Date(iso)

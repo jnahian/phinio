@@ -21,7 +21,7 @@ export function createI18n(locale: Locale = DEFAULT_LOCALE): I18nInstance {
   void i18n.use(initReactI18next).init({
     lng: locale,
     fallbackLng: DEFAULT_LOCALE,
-    ns: I18N_NAMESPACES as unknown as string[],
+    ns: I18N_NAMESPACES,
     defaultNS: 'common',
     resources,
     initAsync: false,

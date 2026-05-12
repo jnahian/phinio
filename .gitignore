@@ -15,3 +15,6 @@ todos.json
 # Prisma-generated client
 src/generated/
 .vercel
+
+# Turborepo cache
+.turbo/
