@@ -1,14 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  completeEmiImpl,
-  createEmiImpl,
-  deleteEmiImpl,
-  getEmiImpl,
-  listEmisImpl,
-  markPaymentPaidImpl,
-  upcomingPaymentsImpl,
-} from '#/server/emis.impl'
+import { appRouter, type AppContext } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
+
+function callerFor(profileId: string) {
+  const ctx: AppContext = { prisma, profileId, locale: 'en' }
+  return appRouter.createCaller(ctx)
+}
 
 beforeEach(async () => {
   await resetDb()
@@ -18,7 +15,7 @@ describe('emis server impls', () => {
   it('createEmiImpl generates the full amortization schedule up front', async () => {
     const user = await createTestUser()
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Car loan',
       type: 'bank_loan',
       principal: '100000',
@@ -36,7 +33,7 @@ describe('emis server impls', () => {
   it('createEmiImpl without processingFee produces only the regular schedule', async () => {
     const user = await createTestUser({ email: 'no-fee@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Plain loan',
       type: 'bank_loan',
       principal: '50000',
@@ -57,7 +54,7 @@ describe('emis server impls', () => {
   it('createEmiImpl with processingFee inserts a paid paymentNumber=0 row', async () => {
     const user = await createTestUser({ email: 'fee@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Loan with fee',
       type: 'bank_loan',
       principal: '100000',
@@ -92,7 +89,7 @@ describe('emis server impls', () => {
   it('createEmiImpl ignores zero / empty processingFee', async () => {
     const user = await createTestUser({ email: 'zero-fee@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Zero fee',
       type: 'bank_loan',
       principal: '50000',
@@ -113,7 +110,7 @@ describe('emis server impls', () => {
   it('getEmiImpl exposes processingFee derived from the paymentNumber=0 row', async () => {
     const user = await createTestUser({ email: 'get-fee@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Loan',
       type: 'bank_loan',
       principal: '80000',
@@ -123,7 +120,7 @@ describe('emis server impls', () => {
       processingFee: '1500',
     })
 
-    const fetched = await getEmiImpl(user.profileId, created.id)
+    const fetched = await callerFor(user.profileId).emis.get({ emiId: created.id })
     expect(fetched.processingFee).toBe('1500')
     expect(fetched.payments[0].paymentNumber).toBe(0)
   })
@@ -131,7 +128,7 @@ describe('emis server impls', () => {
   it('listEmisImpl progress counts ignore the processing-fee row', async () => {
     const user = await createTestUser({ email: 'list-fee@phinio.test' })
 
-    await createEmiImpl(user.profileId, {
+    await callerFor(user.profileId).emis.create({
       label: 'Loan with fee',
       type: 'bank_loan',
       principal: '60000',
@@ -141,7 +138,7 @@ describe('emis server impls', () => {
       processingFee: '500',
     })
 
-    const rows = await listEmisImpl(user.profileId, {
+    const rows = await callerFor(user.profileId).emis.list({
       type: 'all',
       status: 'active',
     })
@@ -161,7 +158,7 @@ describe('emis server impls', () => {
     const dd = String(tomorrow.getDate()).padStart(2, '0')
     const startDate = `${yyyy}-${mm}-${dd}`
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Loan with fee',
       type: 'bank_loan',
       principal: '60000',
@@ -179,7 +176,7 @@ describe('emis server impls', () => {
       data: { status: 'upcoming', paidAt: null },
     })
 
-    const rows = await upcomingPaymentsImpl(user.profileId)
+    const rows = await callerFor(user.profileId).emis.upcomingPayments()
     for (const r of rows) {
       expect(r.paymentNumber).toBeGreaterThan(0)
     }
@@ -188,7 +185,7 @@ describe('emis server impls', () => {
   it('markPaymentPaidImpl rejects toggling the processing-fee row', async () => {
     const user = await createTestUser({ email: 'fee-toggle@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Loan',
       type: 'bank_loan',
       principal: '40000',
@@ -203,7 +200,7 @@ describe('emis server impls', () => {
     })
 
     await expect(
-      markPaymentPaidImpl(user.profileId, {
+      callerFor(user.profileId).emis.markPaymentPaid({
         paymentId: feeRow.id,
         paid: false,
       }),
@@ -213,7 +210,7 @@ describe('emis server impls', () => {
   it('zero-interest EMI creates all rows with interestComponent "0.00"', async () => {
     const user = await createTestUser()
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Zero interest plan',
       type: 'credit_card',
       principal: '12000',
@@ -238,7 +235,7 @@ describe('emis server impls', () => {
     const alice = await createTestUser({ email: 'alice1@phinio.test' })
     const bob = await createTestUser({ email: 'bob1@phinio.test' })
 
-    await createEmiImpl(alice.profileId, {
+    await callerFor(alice.profileId).emis.create({
       label: 'Alice loan',
       type: 'bank_loan',
       principal: '50000',
@@ -246,7 +243,7 @@ describe('emis server impls', () => {
       tenureMonths: 6,
       startDate: '2026-01-01',
     })
-    await createEmiImpl(bob.profileId, {
+    await callerFor(bob.profileId).emis.create({
       label: 'Bob card',
       type: 'credit_card',
       principal: '20000',
@@ -255,14 +252,14 @@ describe('emis server impls', () => {
       startDate: '2026-01-01',
     })
 
-    const aliceRows = await listEmisImpl(alice.profileId, {
+    const aliceRows = await callerFor(alice.profileId).emis.list({
       type: 'all',
       status: 'active',
     })
     expect(aliceRows).toHaveLength(1)
     expect(aliceRows[0].label).toBe('Alice loan')
 
-    const bobRows = await listEmisImpl(bob.profileId, {
+    const bobRows = await callerFor(bob.profileId).emis.list({
       type: 'all',
       status: 'active',
     })
@@ -273,7 +270,7 @@ describe('emis server impls', () => {
   it('listEmisImpl filters by type', async () => {
     const user = await createTestUser({ email: 'filter@phinio.test' })
 
-    await createEmiImpl(user.profileId, {
+    await callerFor(user.profileId).emis.create({
       label: 'Home loan',
       type: 'bank_loan',
       principal: '500000',
@@ -281,7 +278,7 @@ describe('emis server impls', () => {
       tenureMonths: 24,
       startDate: '2026-01-01',
     })
-    await createEmiImpl(user.profileId, {
+    await callerFor(user.profileId).emis.create({
       label: 'Visa card',
       type: 'credit_card',
       principal: '15000',
@@ -290,21 +287,21 @@ describe('emis server impls', () => {
       startDate: '2026-01-01',
     })
 
-    const loans = await listEmisImpl(user.profileId, {
+    const loans = await callerFor(user.profileId).emis.list({
       type: 'bank_loan',
       status: 'active',
     })
     expect(loans).toHaveLength(1)
     expect(loans[0].label).toBe('Home loan')
 
-    const cards = await listEmisImpl(user.profileId, {
+    const cards = await callerFor(user.profileId).emis.list({
       type: 'credit_card',
       status: 'active',
     })
     expect(cards).toHaveLength(1)
     expect(cards[0].label).toBe('Visa card')
 
-    const all = await listEmisImpl(user.profileId, {
+    const all = await callerFor(user.profileId).emis.list({
       type: 'all',
       status: 'active',
     })
@@ -314,7 +311,7 @@ describe('emis server impls', () => {
   it('listEmisImpl filters by status — completed EMIs only show on the completed tab', async () => {
     const user = await createTestUser({ email: 'list-status@phinio.test' })
 
-    const ongoing = await createEmiImpl(user.profileId, {
+    const ongoing = await callerFor(user.profileId).emis.create({
       label: 'Ongoing loan',
       type: 'bank_loan',
       principal: '60000',
@@ -322,7 +319,7 @@ describe('emis server impls', () => {
       tenureMonths: 6,
       startDate: '2026-01-01',
     })
-    const finished = await createEmiImpl(user.profileId, {
+    const finished = await callerFor(user.profileId).emis.create({
       label: 'Finished loan',
       type: 'bank_loan',
       principal: '20000',
@@ -330,15 +327,15 @@ describe('emis server impls', () => {
       tenureMonths: 2,
       startDate: '2026-01-01',
     })
-    await completeEmiImpl(user.profileId, { emiId: finished.id })
+    await callerFor(user.profileId).emis.complete({ emiId: finished.id })
 
-    const active = await listEmisImpl(user.profileId, {
+    const active = await callerFor(user.profileId).emis.list({
       type: 'all',
       status: 'active',
     })
     expect(active.map((e) => e.id)).toEqual([ongoing.id])
 
-    const completed = await listEmisImpl(user.profileId, {
+    const completed = await callerFor(user.profileId).emis.list({
       type: 'all',
       status: 'completed',
     })
@@ -348,7 +345,7 @@ describe('emis server impls', () => {
   it('listEmisImpl computes totalPayments / paidCount / nextDueDate / remainingBalance from payments', async () => {
     const user = await createTestUser({ email: 'derived@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Short loan',
       type: 'bank_loan',
       principal: '30000',
@@ -363,12 +360,12 @@ describe('emis server impls', () => {
     })
     expect(payments).toHaveLength(3)
 
-    await markPaymentPaidImpl(user.profileId, {
+    await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: payments[0].id,
       paid: true,
     })
 
-    const rows = await listEmisImpl(user.profileId, {
+    const rows = await callerFor(user.profileId).emis.list({
       type: 'all',
       status: 'active',
     })
@@ -383,7 +380,7 @@ describe('emis server impls', () => {
   it('getEmiImpl returns the full payments array sorted by paymentNumber', async () => {
     const user = await createTestUser({ email: 'get@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Six month loan',
       type: 'bank_loan',
       principal: '60000',
@@ -392,7 +389,7 @@ describe('emis server impls', () => {
       startDate: '2026-02-01',
     })
 
-    const fetched = await getEmiImpl(user.profileId, created.id)
+    const fetched = await callerFor(user.profileId).emis.get({ emiId: created.id })
     expect(fetched.payments).toHaveLength(6)
     for (let i = 0; i < 6; i++) {
       expect(fetched.payments[i].paymentNumber).toBe(i + 1)
@@ -403,7 +400,7 @@ describe('emis server impls', () => {
     const alice = await createTestUser({ email: 'alice2@phinio.test' })
     const bob = await createTestUser({ email: 'bob2@phinio.test' })
 
-    const aliceEmi = await createEmiImpl(alice.profileId, {
+    const aliceEmi = await callerFor(alice.profileId).emis.create({
       label: 'Alice private loan',
       type: 'bank_loan',
       principal: '25000',
@@ -412,7 +409,7 @@ describe('emis server impls', () => {
       startDate: '2026-01-01',
     })
 
-    await expect(getEmiImpl(bob.profileId, aliceEmi.id)).rejects.toThrow(
+    await expect(callerFor(bob.profileId).emis.get({ emiId: aliceEmi.id })).rejects.toThrow(
       /not found/i,
     )
   })
@@ -421,7 +418,7 @@ describe('emis server impls', () => {
     const alice = await createTestUser({ email: 'alice3@phinio.test' })
     const bob = await createTestUser({ email: 'bob3@phinio.test' })
 
-    const aliceEmi = await createEmiImpl(alice.profileId, {
+    const aliceEmi = await callerFor(alice.profileId).emis.create({
       label: 'Alice loan 2',
       type: 'bank_loan',
       principal: '10000',
@@ -431,18 +428,18 @@ describe('emis server impls', () => {
     })
 
     await expect(
-      deleteEmiImpl(bob.profileId, { emiId: aliceEmi.id }),
+      callerFor(bob.profileId).emis.delete({ emiId: aliceEmi.id }),
     ).rejects.toThrow(/not found/i)
 
     // Alice's row still exists
-    const still = await getEmiImpl(alice.profileId, aliceEmi.id)
+    const still = await callerFor(alice.profileId).emis.get({ emiId: aliceEmi.id })
     expect(still.label).toBe('Alice loan 2')
   })
 
   it('deleteEmiImpl cascades to the payments', async () => {
     const user = await createTestUser({ email: 'cascade@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'To be deleted',
       type: 'bank_loan',
       principal: '60000',
@@ -456,7 +453,7 @@ describe('emis server impls', () => {
     })
     expect(before).toBe(6)
 
-    await deleteEmiImpl(user.profileId, { emiId: created.id })
+    await callerFor(user.profileId).emis.delete({ emiId: created.id })
 
     const after = await prisma.emiPayment.count({
       where: { emiId: created.id },
@@ -469,7 +466,7 @@ describe('emis server impls', () => {
   it('markPaymentPaidImpl sets status to paid and records paidAt', async () => {
     const user = await createTestUser({ email: 'markpaid@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Mark paid loan',
       type: 'bank_loan',
       principal: '30000',
@@ -482,7 +479,7 @@ describe('emis server impls', () => {
       where: { emiId: created.id, paymentNumber: 1 },
     })
 
-    await markPaymentPaidImpl(user.profileId, {
+    await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: payment.id,
       paid: true,
     })
@@ -497,7 +494,7 @@ describe('emis server impls', () => {
   it('markPaymentPaidImpl toggles back to upcoming and clears paidAt', async () => {
     const user = await createTestUser({ email: 'toggle@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Toggle loan',
       type: 'bank_loan',
       principal: '30000',
@@ -509,11 +506,11 @@ describe('emis server impls', () => {
       where: { emiId: created.id, paymentNumber: 1 },
     })
 
-    await markPaymentPaidImpl(user.profileId, {
+    await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: payment.id,
       paid: true,
     })
-    await markPaymentPaidImpl(user.profileId, {
+    await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: payment.id,
       paid: false,
     })
@@ -529,7 +526,7 @@ describe('emis server impls', () => {
     const alice = await createTestUser({ email: 'alice4@phinio.test' })
     const bob = await createTestUser({ email: 'bob4@phinio.test' })
 
-    const aliceEmi = await createEmiImpl(alice.profileId, {
+    const aliceEmi = await callerFor(alice.profileId).emis.create({
       label: 'Alice private',
       type: 'bank_loan',
       principal: '30000',
@@ -543,7 +540,7 @@ describe('emis server impls', () => {
     const originalStatus = alicePayment.status
 
     await expect(
-      markPaymentPaidImpl(bob.profileId, {
+      callerFor(bob.profileId).emis.markPaymentPaid({
         paymentId: alicePayment.id,
         paid: true,
       }),
@@ -559,7 +556,7 @@ describe('emis server impls', () => {
   it('markPaymentPaidImpl auto-completes the EMI when the last installment is paid', async () => {
     const user = await createTestUser({ email: 'auto-complete@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Short loan',
       type: 'bank_loan',
       principal: '20000',
@@ -573,7 +570,7 @@ describe('emis server impls', () => {
       orderBy: { paymentNumber: 'asc' },
     })
 
-    const first = await markPaymentPaidImpl(user.profileId, {
+    const first = await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: payments[0].id,
       paid: true,
     })
@@ -583,7 +580,7 @@ describe('emis server impls', () => {
     })
     expect(reloadedEmi.status).toBe('active')
 
-    const second = await markPaymentPaidImpl(user.profileId, {
+    const second = await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: payments[1].id,
       paid: true,
     })
@@ -597,7 +594,7 @@ describe('emis server impls', () => {
   it('markPaymentPaidImpl reopens a completed EMI when a paid installment is unmarked', async () => {
     const user = await createTestUser({ email: 'reopen@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Reopen loan',
       type: 'bank_loan',
       principal: '20000',
@@ -606,13 +603,13 @@ describe('emis server impls', () => {
       startDate: '2026-01-01',
     })
 
-    await completeEmiImpl(user.profileId, { emiId: created.id })
+    await callerFor(user.profileId).emis.complete({ emiId: created.id })
 
     const lastPayment = await prisma.emiPayment.findFirstOrThrow({
       where: { emiId: created.id, paymentNumber: 2 },
     })
 
-    await markPaymentPaidImpl(user.profileId, {
+    await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: lastPayment.id,
       paid: false,
     })
@@ -626,7 +623,7 @@ describe('emis server impls', () => {
   it('completeEmiImpl marks remaining installments paid and sets status to completed', async () => {
     const user = await createTestUser({ email: 'complete-emi@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Prepay loan',
       type: 'bank_loan',
       principal: '60000',
@@ -638,12 +635,12 @@ describe('emis server impls', () => {
     const firstPayment = await prisma.emiPayment.findFirstOrThrow({
       where: { emiId: created.id, paymentNumber: 1 },
     })
-    await markPaymentPaidImpl(user.profileId, {
+    await callerFor(user.profileId).emis.markPaymentPaid({
       paymentId: firstPayment.id,
       paid: true,
     })
 
-    const result = await completeEmiImpl(user.profileId, { emiId: created.id })
+    const result = await callerFor(user.profileId).emis.complete({ emiId: created.id })
     expect(result.alreadyCompleted).toBe(false)
 
     const emi = await prisma.emi.findUniqueOrThrow({
@@ -664,7 +661,7 @@ describe('emis server impls', () => {
   it('completeEmiImpl is idempotent on already-completed EMIs', async () => {
     const user = await createTestUser({ email: 'idemp-complete@phinio.test' })
 
-    const created = await createEmiImpl(user.profileId, {
+    const created = await callerFor(user.profileId).emis.create({
       label: 'Already done',
       type: 'bank_loan',
       principal: '10000',
@@ -672,9 +669,9 @@ describe('emis server impls', () => {
       tenureMonths: 1,
       startDate: '2026-01-01',
     })
-    await completeEmiImpl(user.profileId, { emiId: created.id })
+    await callerFor(user.profileId).emis.complete({ emiId: created.id })
 
-    const second = await completeEmiImpl(user.profileId, { emiId: created.id })
+    const second = await callerFor(user.profileId).emis.complete({ emiId: created.id })
     expect(second.alreadyCompleted).toBe(true)
   })
 
@@ -682,7 +679,7 @@ describe('emis server impls', () => {
     const alice = await createTestUser({ email: 'alice-complete@phinio.test' })
     const bob = await createTestUser({ email: 'bob-complete@phinio.test' })
 
-    const aliceEmi = await createEmiImpl(alice.profileId, {
+    const aliceEmi = await callerFor(alice.profileId).emis.create({
       label: 'Alice loan',
       type: 'bank_loan',
       principal: '30000',
@@ -692,7 +689,7 @@ describe('emis server impls', () => {
     })
 
     await expect(
-      completeEmiImpl(bob.profileId, { emiId: aliceEmi.id }),
+      callerFor(bob.profileId).emis.complete({ emiId: aliceEmi.id }),
     ).rejects.toThrow(/not found/i)
 
     const reloaded = await prisma.emi.findUniqueOrThrow({
@@ -713,7 +710,7 @@ describe('emis server impls', () => {
     const dd = String(tomorrow.getDate()).padStart(2, '0')
     const startDate = `${yyyy}-${mm}-${dd}`
 
-    await createEmiImpl(user.profileId, {
+    await callerFor(user.profileId).emis.create({
       label: 'Upcoming loan',
       type: 'bank_loan',
       principal: '120000',
@@ -722,7 +719,7 @@ describe('emis server impls', () => {
       startDate,
     })
 
-    const rows = await upcomingPaymentsImpl(user.profileId)
+    const rows = await callerFor(user.profileId).emis.upcomingPayments()
 
     expect(rows.length).toBeLessThanOrEqual(5)
     for (const r of rows) {
