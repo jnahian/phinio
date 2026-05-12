@@ -43,7 +43,7 @@ export const Route = createFileRoute('/app/emis/')({
   staticData: { title: 'pageTitles.emis' },
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(
-      emisListQueryOptions({ type: 'all', status: 'active' }),
+      emisListQueryOptions(context.queryClient, { type: 'all', status: 'active' }),
     )
   },
   component: EmisListScreen,

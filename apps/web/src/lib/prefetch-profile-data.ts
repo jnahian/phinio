@@ -49,7 +49,7 @@ export async function prefetchProfileData(queryClient: QueryClient) {
       queryClient.prefetchQuery(investmentsListQueryOptions(f)),
     ),
     ...EMI_FILTERS.map((f) =>
-      queryClient.prefetchQuery(emisListQueryOptions(f)),
+      queryClient.prefetchQuery(emisListQueryOptions(queryClient, f)),
     ),
   ]
   await Promise.allSettled(tasks)

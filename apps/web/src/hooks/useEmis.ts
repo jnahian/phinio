@@ -1,7 +1,9 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { getEmiFn, listEmisFn, upcomingPaymentsFn } from '#/server/emis'
-import type { EmiListFilters } from '#/server/emis'
+import type { inferProcedureOutput } from '@trpc/server'
+import type { AppRouter } from '@phinio/trpc'
+import type { z } from 'zod'
+import type { emiListQuerySchema } from '@phinio/validators'
 import type {
   EmiCompleteInput,
   EmiCreateInput,
@@ -15,6 +17,10 @@ import {
 } from '@phinio/calc'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
+import { makeTRPC, useTRPC } from '#/lib/trpc'
+import type { QueryClient } from '@tanstack/react-query'
+
+export type EmiListFilters = z.infer<typeof emiListQuerySchema>
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
@@ -27,30 +33,26 @@ export const emiKeys = {
   upcoming: ['upcoming-payments'] as const,
 }
 
-export function emisListQueryOptions(filters: EmiListFilters) {
-  return queryOptions({
-    queryKey: emiKeys.list(filters),
-    queryFn: () => listEmisFn({ data: filters }),
-  })
+export function emisListQueryOptions(queryClient: QueryClient, filters: EmiListFilters) {
+  return makeTRPC(queryClient).emis.list.queryOptions(filters)
 }
 
 export function useEmisQuery(filters: EmiListFilters) {
-  return useQuery(emisListQueryOptions(filters))
+  const trpc = useTRPC()
+  return useQuery(trpc.emis.list.queryOptions(filters))
 }
 
 export function useEmiQuery(emiId: string) {
+  const trpc = useTRPC()
   return useQuery({
-    queryKey: emiKeys.detail(emiId),
-    queryFn: () => getEmiFn({ data: { emiId } }),
+    ...trpc.emis.get.queryOptions({ emiId }),
     enabled: Boolean(emiId),
   })
 }
 
 export function useUpcomingPaymentsQuery() {
-  return useQuery({
-    queryKey: emiKeys.upcoming,
-    queryFn: () => upcomingPaymentsFn(),
-  })
+  const trpc = useTRPC()
+  return useQuery(trpc.emis.upcomingPayments.queryOptions())
 }
 
 /**
@@ -66,8 +68,8 @@ export function useUpcomingPaymentsQuery() {
  */
 export function useCreateEmi() {
   const qc = useQueryClient()
-  type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
-  type ListShape = Awaited<ReturnType<typeof listEmisFn>>
+  type EmiDetailShape = inferProcedureOutput<AppRouter['emis']['get']>
+  type ListShape = inferProcedureOutput<AppRouter['emis']['list']>
 
   return useOfflineMutation<
     {
@@ -332,7 +334,7 @@ export function useDeleteEmi() {
 export function useMarkPayment(emiId: string) {
   const qc = useQueryClient()
 
-  type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
+  type EmiDetailShape = inferProcedureOutput<AppRouter['emis']['get']>
   type MarkResult = { id: string; paid: boolean; autoCompleted?: boolean }
 
   return useOfflineMutation<
@@ -392,7 +394,7 @@ export function useMarkPayment(emiId: string) {
  */
 export function useCompleteEmi() {
   const qc = useQueryClient()
-  type EmiDetailShape = Awaited<ReturnType<typeof getEmiFn>>
+  type EmiDetailShape = inferProcedureOutput<AppRouter['emis']['get']>
   type CompleteResult = { id: string; alreadyCompleted: boolean }
 
   return useOfflineMutation<
