@@ -15,13 +15,7 @@ import {
   updateSavingsFn,
   withdrawFn,
 } from '#/server/investments'
-import {
-  completeEmiFn,
-  createEmiFn,
-  deleteEmiFn,
-  markPaymentPaidFn,
-  updateEmiFn,
-} from '#/server/emis'
+import { trpcClient } from '#/lib/trpc'
 import {
   clearReadNotificationsFn,
   markAllNotificationsReadFn,
@@ -180,24 +174,25 @@ export function registerMutationDefaults(queryClient: QueryClient) {
   // EMIs
   queryClient.setMutationDefaults(mutationKeys.emiCreate, {
     ...offlineFirst,
-    mutationFn: (input: EmiCreateInput) => createEmiFn({ data: input }),
+    mutationFn: (input: EmiCreateInput) => trpcClient.emis.create.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.emiUpdate, {
     ...offlineFirst,
-    mutationFn: (input: EmiUpdateInput) => updateEmiFn({ data: input }),
+    mutationFn: (input: EmiUpdateInput) => trpcClient.emis.update.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.emiComplete, {
     ...offlineFirst,
-    mutationFn: (input: EmiCompleteInput) => completeEmiFn({ data: input }),
+    mutationFn: (input: EmiCompleteInput) =>
+      trpcClient.emis.complete.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.emiDelete, {
     ...offlineFirst,
-    mutationFn: (input: EmiIdInput) => deleteEmiFn({ data: input }),
+    mutationFn: (input: EmiIdInput) => trpcClient.emis.delete.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.markPaymentPaid, {
     ...offlineFirst,
     mutationFn: (input: MarkPaymentPaidInput) =>
-      markPaymentPaidFn({ data: input }),
+      trpcClient.emis.markPaymentPaid.mutate(input),
   })
 
   // Notifications

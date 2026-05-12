@@ -11,7 +11,7 @@ import {
 } from '#/hooks/useNotifications'
 import { activityInfiniteQueryOptions } from '#/hooks/useActivityLog'
 import { getInvestmentFn } from '#/server/investments'
-import { getEmiFn } from '#/server/emis'
+import { trpcClient } from '#/lib/trpc'
 
 // Prefetch the filter combinations users routinely view. Anything beyond
 // these is on-demand — re-fetching every possible filter on each reconnect
@@ -74,7 +74,7 @@ export async function prefetchProfileData(queryClient: QueryClient) {
   await pMapLimit(emis, 4, (row) =>
     queryClient.prefetchQuery({
       queryKey: emiKeys.detail(row.id),
-      queryFn: () => getEmiFn({ data: { emiId: row.id } }),
+      queryFn: () => trpcClient.emis.get.query({ emiId: row.id }),
     }),
   )
 
