@@ -1,0 +1,26 @@
+{
+  "name": "@phinio/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/generated/client.js"
+  },
+  "scripts": {
+    "db:generate": "dotenv -e ../../.env.local -- prisma generate --schema=./prisma/schema.prisma",
+    "db:push": "dotenv -e ../../.env.local -- prisma db push --schema=./prisma/schema.prisma",
+    "db:migrate": "dotenv -e ../../.env.local -- prisma migrate dev --schema=./prisma/schema.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
+    "db:studio": "dotenv -e ../../.env.local -- prisma studio --schema=./prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0",
+    "prisma": "^7.7.0"
+  }
+}
