@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 import { authClient } from '#/lib/auth-client'
-import { loginSchema } from '#/lib/validators'
+import { loginSchema } from '@phinio/validators'
 import { getSessionFn } from '#/server/auth'
 
 export const Route = createFileRoute('/login')({

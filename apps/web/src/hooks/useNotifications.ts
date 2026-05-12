@@ -8,7 +8,7 @@ import type {
   ClearReadNotificationsInput,
   MarkAllNotificationsReadInput,
   MarkNotificationReadInput,
-} from '#/lib/validators'
+} from '@phinio/validators'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
 

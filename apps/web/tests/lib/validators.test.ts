@@ -20,7 +20,7 @@ import {
   savingsUpdateSchema,
   signupSchema,
   withdrawalSchema,
-} from '#/lib/validators'
+} from '@phinio/validators'
 
 describe('loginSchema', () => {
   it('parses a valid login payload', () => {

@@ -9,14 +9,14 @@ import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
-import { calculateReturnPercent } from '#/lib/calculations'
+import { calculateReturnPercent } from '@phinio/calc'
 import type { Currency } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   investmentsListQueryOptions,
   useInvestmentsQuery,
 } from '#/hooks/useInvestments'
-import type { InvestmentType } from '#/lib/validators'
+import type { InvestmentType } from '@phinio/validators'
 import { INVESTMENT_TYPE_META } from '#/lib/investment-types'
 
 type TypeFilter = InvestmentType | 'dps' | 'savings' | 'all'

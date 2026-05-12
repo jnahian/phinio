@@ -14,7 +14,7 @@ import {
   removeDepositSchema,
   withdrawalSchema,
   dpsCloseSchema,
-} from '#/lib/validators'
+} from '@phinio/validators'
 
 // NOTE: This wrapper file must not statically import anything that pulls
 // Prisma or Better Auth. Those imports live in `./investments.impl` and are

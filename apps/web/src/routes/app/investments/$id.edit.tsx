@@ -26,8 +26,8 @@ import {
   useInvestmentQuery,
   useUpdateInvestment,
 } from '#/hooks/useInvestments'
-import { investmentUpdateSchema } from '#/lib/validators'
-import type { InvestmentType } from '#/lib/validators'
+import { investmentUpdateSchema } from '@phinio/validators'
+import type { InvestmentType } from '@phinio/validators'
 
 export const Route = createFileRoute('/app/investments/$id/edit')({
   staticData: {

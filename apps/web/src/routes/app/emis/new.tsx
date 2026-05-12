@@ -3,13 +3,13 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Building2, CreditCard } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
-import { calculateEmi } from '#/lib/emi-calculator'
+import { calculateEmi } from '@phinio/calc'
 import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useCreateEmi } from '#/hooks/useEmis'
-import { emiCreateSchema } from '#/lib/validators'
-import type { EmiCreateInput, EmiType } from '#/lib/validators'
+import { emiCreateSchema } from '@phinio/validators'
+import type { EmiCreateInput, EmiType } from '@phinio/validators'
 
 export const Route = createFileRoute('/app/emis/new')({
   staticData: {

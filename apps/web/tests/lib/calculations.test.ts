@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateProfitLoss, calculateReturnPercent } from '#/lib/calculations'
+import { calculateProfitLoss, calculateReturnPercent } from '@phinio/calc'
 import { createFormatter } from '#/lib/i18n/format'
 
 describe('calculateReturnPercent', () => {

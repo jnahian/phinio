@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Mail } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 import { authClient } from '#/lib/auth-client'
-import { forgotPasswordSchema } from '#/lib/validators'
+import { forgotPasswordSchema } from '@phinio/validators'
 
 export const Route = createFileRoute('/forgot-password')({
   component: ForgotPasswordScreen,

@@ -17,8 +17,8 @@ import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useCreateInvestment } from '#/hooks/useInvestments'
-import { investmentCreateSchema } from '#/lib/validators'
-import type { InvestmentCreateInput, InvestmentType } from '#/lib/validators'
+import { investmentCreateSchema } from '@phinio/validators'
+import type { InvestmentCreateInput, InvestmentType } from '@phinio/validators'
 
 export const Route = createFileRoute('/app/investments/new')({
   staticData: {

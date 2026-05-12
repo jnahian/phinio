@@ -7,12 +7,12 @@ import type {
   EmiCreateInput,
   EmiUpdateInput,
   MarkPaymentPaidInput,
-} from '#/lib/validators'
+} from '@phinio/validators'
 import {
   FEE_PAYMENT_NUMBER,
   calculateEmi,
   generateAmortization,
-} from '#/lib/emi-calculator'
+} from '@phinio/calc'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
 

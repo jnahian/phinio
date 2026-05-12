@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useCreateSavings } from '#/hooks/useInvestments'
-import { savingsCreateSchema } from '#/lib/validators'
-import type { SavingsCreateInput } from '#/lib/validators'
+import { savingsCreateSchema } from '@phinio/validators'
+import type { SavingsCreateInput } from '@phinio/validators'
 
 export const Route = createFileRoute('/app/investments/savings/new')({
   staticData: {

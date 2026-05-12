@@ -18,7 +18,7 @@ import { cn } from '#/lib/cn'
 import type { Currency } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { emisListQueryOptions, useEmisQuery } from '#/hooks/useEmis'
-import type { EmiType } from '#/lib/validators'
+import type { EmiType } from '@phinio/validators'
 
 type TypeFilter = EmiType | 'all'
 type StatusFilter = 'active' | 'completed'

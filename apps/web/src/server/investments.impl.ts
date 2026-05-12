@@ -3,7 +3,7 @@ import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { Prisma } from '@phinio/db'
 import { formatCurrency } from '#/lib/currency'
-import { generateDpsSchedule } from '#/lib/dps-calculator'
+import { generateDpsSchedule } from '@phinio/calc'
 import { withIdempotency } from './_idempotency'
 import {
   diffFields,
@@ -27,7 +27,7 @@ import type {
   SavingsUpdateInput,
   WithdrawalInput,
   investmentIdSchema,
-} from '#/lib/validators'
+} from '@phinio/validators'
 
 type InvestmentIdInput = z.infer<typeof investmentIdSchema>
 

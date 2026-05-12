@@ -12,7 +12,7 @@ import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
-import { calculateReturnPercent } from '#/lib/calculations'
+import { calculateReturnPercent } from '@phinio/calc'
 import {
   useInvestmentQuery,
   useUpdateSavings,

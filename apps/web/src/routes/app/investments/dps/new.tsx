@@ -6,8 +6,8 @@ import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useCreateDps } from '#/hooks/useInvestments'
-import { dpsCreateSchema } from '#/lib/validators'
-import type { DpsCreateInput, DpsInterestType } from '#/lib/validators'
+import { dpsCreateSchema } from '@phinio/validators'
+import type { DpsCreateInput, DpsInterestType } from '@phinio/validators'
 
 export const Route = createFileRoute('/app/investments/dps/new')({
   staticData: {

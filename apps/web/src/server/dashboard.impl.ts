@@ -1,7 +1,7 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
-import { FEE_PAYMENT_NUMBER } from '#/lib/emi-calculator'
+import { FEE_PAYMENT_NUMBER } from '@phinio/calc'
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())

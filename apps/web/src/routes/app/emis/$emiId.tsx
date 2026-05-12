@@ -16,7 +16,7 @@ import { TextArea, TextField } from '#/components/ui/TextField'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
 import { useFormatter } from '#/lib/i18n/useFormatter'
-import { isFeePayment, isRegularPayment } from '#/lib/emi-calculator'
+import { isFeePayment, isRegularPayment } from '@phinio/calc'
 import {
   useCompleteEmi,
   useDeleteEmi,

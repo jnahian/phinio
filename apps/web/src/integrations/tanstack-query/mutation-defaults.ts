@@ -49,7 +49,7 @@ import type {
   emiIdSchema,
   investmentIdSchema,
   removeDepositSchema,
-} from '#/lib/validators'
+} from '@phinio/validators'
 import type {
   UpdateCurrencyInput,
   UpdateNameInput,

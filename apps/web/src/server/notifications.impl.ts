@@ -6,7 +6,7 @@ import type {
   ClearReadNotificationsInput,
   MarkAllNotificationsReadInput,
   MarkNotificationReadInput,
-} from '#/lib/validators'
+} from '@phinio/validators'
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())

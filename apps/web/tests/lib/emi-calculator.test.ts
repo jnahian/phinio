@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateEmi, generateAmortization } from '#/lib/emi-calculator'
+import { calculateEmi, generateAmortization } from '@phinio/calc'
 
 describe('calculateEmi', () => {
   it('matches the standard formula for a typical loan', () => {

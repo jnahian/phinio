@@ -8,7 +8,7 @@ import {
   generateAmortization,
   isFeePayment,
   isRegularPayment,
-} from '#/lib/emi-calculator'
+} from '@phinio/calc'
 import { withIdempotency } from './_idempotency'
 import { diffFields, fmtText, logActivity } from './activity-log.impl'
 import type {
@@ -18,7 +18,7 @@ import type {
   EmiUpdateInput,
   MarkPaymentPaidInput,
   emiIdSchema,
-} from '#/lib/validators'
+} from '@phinio/validators'
 
 type EmiIdInput = z.infer<typeof emiIdSchema>
 

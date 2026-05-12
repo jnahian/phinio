@@ -3,7 +3,7 @@ import {
   clearReadNotificationsSchema,
   markAllNotificationsReadSchema,
   markNotificationReadSchema,
-} from '#/lib/validators'
+} from '@phinio/validators'
 
 // NOTE: This wrapper file must not statically import anything that pulls
 // Prisma or Better Auth. See `./investments.ts` for the rationale.
