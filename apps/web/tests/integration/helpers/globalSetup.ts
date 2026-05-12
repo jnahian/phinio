@@ -13,7 +13,11 @@ export async function setup() {
   // Apply every Prisma migration in alphabetical (= chronological) order so
   // the test schema stays in sync with the real DB without anyone having to
   // edit this file each time a model is added.
-  const migrationsRoot = resolve(process.cwd(), 'prisma/migrations')
+  // Schema migrations live in the shared @phinio/db package post-monorepo.
+  const migrationsRoot = resolve(
+    process.cwd(),
+    '../../packages/db/prisma/migrations',
+  )
   const entries = await readdir(migrationsRoot, { withFileTypes: true })
   const migrationDirs = entries
     .filter((e) => e.isDirectory())
