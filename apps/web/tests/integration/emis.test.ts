@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { appRouter, type AppContext } from '@phinio/trpc'
+import type { AppContext } from '@phinio/trpc'
+import { appRouter } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
 function callerFor(profileId: string) {

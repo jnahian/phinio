@@ -3,12 +3,12 @@ import { toast } from 'sonner'
 import type { inferProcedureOutput } from '@trpc/server'
 import type { AppRouter } from '@phinio/trpc'
 import type { z } from 'zod'
-import type { emiListQuerySchema } from '@phinio/validators'
 import type {
   EmiCompleteInput,
   EmiCreateInput,
   EmiUpdateInput,
   MarkPaymentPaidInput,
+  emiListQuerySchema,
 } from '@phinio/validators'
 import {
   FEE_PAYMENT_NUMBER,
