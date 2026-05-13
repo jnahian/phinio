@@ -1,0 +1,15 @@
+{
+  "name": "@phinio/i18n-resources",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "echo 'no build for @phinio/i18n-resources'",
+    "build:local": "echo 'no build for @phinio/i18n-resources'",
+    "test": "echo 'no tests in @phinio/i18n-resources'"
+  }
+}

@@ -25,6 +25,7 @@
     "@phinio/calc": "workspace:^",
     "@phinio/db": "workspace:*",
     "@phinio/design-tokens": "workspace:^",
+    "@phinio/i18n-resources": "workspace:*",
     "@phinio/trpc": "workspace:*",
     "@phinio/validators": "workspace:^",
     "@prisma/adapter-pg": "^7.4.2",
