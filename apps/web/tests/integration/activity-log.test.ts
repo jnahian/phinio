@@ -7,13 +7,14 @@ import {
   listActivityImpl,
   logActivity,
 } from '@phinio/trpc/activity-log'
-import {
-  createDpsInvestmentImpl,
-  createInvestmentImpl,
-  markDepositPaidImpl,
-  updateInvestmentImpl,
-} from '#/server/investments.impl'
+import { appRouter } from '@phinio/trpc'
+import type { AppContext } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
+
+function callerFor(profileId: string) {
+  const ctx: AppContext = { prisma, profileId, locale: 'en' }
+  return appRouter.createCaller(ctx)
+}
 
 beforeEach(async () => {
   await resetDb()
@@ -219,7 +220,7 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
   it('update records currency on money-field changes', async () => {
     const user = await createTestUser({ preferredCurrency: 'BDT' })
 
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Apple',
       type: 'stock',
       investedAmount: '1000.00',
@@ -227,7 +228,7 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
       dateOfInvestment: '2026-01-15',
     })
 
-    await updateInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.update({
       id: created.id,
       name: 'Apple Inc',
       type: 'stock',
@@ -256,7 +257,7 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
   it('update does not log when nothing changed', async () => {
     const user = await createTestUser()
 
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Apple',
       type: 'stock',
       investedAmount: '1000.00',
@@ -264,7 +265,7 @@ describe('investment mutations emit log rows with currency-tagged money diffs', 
       dateOfInvestment: '2026-01-15',
     })
 
-    await updateInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.update({
       id: created.id,
       name: 'Apple',
       type: 'stock',
@@ -285,7 +286,7 @@ describe('markDepositPaidImpl DPS status transitions', () => {
   it('reactivates a matured DPS when an installment is unmarked', async () => {
     const user = await createTestUser()
 
-    const dps = await createDpsInvestmentImpl(user.profileId, {
+    const dps = await callerFor(user.profileId).investments.createDps({
       name: 'Short DPS',
       monthlyDeposit: '100.00',
       tenureMonths: 2,
@@ -300,11 +301,11 @@ describe('markDepositPaidImpl DPS status transitions', () => {
     })
     expect(deposits).toHaveLength(2)
 
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[0].id,
       paid: true,
     })
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[1].id,
       paid: true,
     })
@@ -314,7 +315,7 @@ describe('markDepositPaidImpl DPS status transitions', () => {
     })
     expect(inv.status).toBe('matured')
 
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[1].id,
       paid: false,
     })
