@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Stack } from 'expo-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { I18nextProvider } from 'react-i18next'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { createQueryClient } from '#/lib/query-client'
 import { attachPersister } from '#/lib/persister'
 import { subscribeToConnectivity } from '#/lib/net-info'
@@ -41,10 +43,19 @@ export default function RootLayout() {
   if (!ready) return null
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <I18nextProvider i18n={i18n}>
-        <Stack screenOptions={{ headerShown: false }} />
-      </I18nextProvider>
-    </QueryClientProvider>
+    // `GestureHandlerRootView` must wrap the whole app for
+    // `@gorhom/bottom-sheet` (and any other gesture-handler consumer)
+    // to register touches. `SafeAreaProvider` is required by
+    // `react-native-safe-area-context`'s `useSafeAreaInsets()` hook
+    // used by `GlassNav` / `GlassTabBar`.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <I18nextProvider i18n={i18n}>
+            <Stack screenOptions={{ headerShown: false }} />
+          </I18nextProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   )
 }

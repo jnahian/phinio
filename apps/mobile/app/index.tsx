@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'expo-router'
 import { useTheme } from '#/theme/use-theme'
 
 export default function Index() {
@@ -13,6 +14,14 @@ export default function Index() {
       <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
         {t('tagline')}
       </Text>
+      {/* DEV-ONLY: link to the glass-primitives demo. Remove or gate
+          before the first production release. */}
+      <Link
+        href="/glass-demo"
+        style={[styles.devLink, { color: colors.primary }]}
+      >
+        Open glass demo →
+      </Link>
     </View>
   )
 }
@@ -32,5 +41,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: '500',
+  },
+  devLink: {
+    marginTop: 32,
+    fontSize: 14,
+    fontWeight: '600',
   },
 })
