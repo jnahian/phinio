@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { deletePushSubscriptionFn, savePushSubscriptionFn } from '#/server/push'
+import { trpcClient } from '#/lib/trpc'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as
   | string
@@ -119,13 +119,11 @@ export function usePushSubscription(): UsePushSubscription {
       if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
         throw new Error('Invalid push subscription')
       }
-      await savePushSubscriptionFn({
-        data: {
-          endpoint: json.endpoint,
-          p256dh: json.keys.p256dh,
-          auth: json.keys.auth,
-          userAgent: navigator.userAgent,
-        },
+      await trpcClient.push.save.mutate({
+        endpoint: json.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+        userAgent: navigator.userAgent,
       })
       setIsSubscribed(true)
       toast.success('Browser notifications enabled')
@@ -149,7 +147,7 @@ export function usePushSubscription(): UsePushSubscription {
       const endpoint = sub?.endpoint
       if (sub) await sub.unsubscribe()
       if (endpoint) {
-        await deletePushSubscriptionFn({ data: { endpoint } })
+        await trpcClient.push.delete.mutate({ endpoint })
       }
       setIsSubscribed(false)
       toast.success('Browser notifications disabled')
