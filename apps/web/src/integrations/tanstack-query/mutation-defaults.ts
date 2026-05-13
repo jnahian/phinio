@@ -1,11 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { z } from 'zod'
 import { trpcClient } from '#/lib/trpc'
-import {
-  clearReadNotificationsFn,
-  markAllNotificationsReadFn,
-  markNotificationReadFn,
-} from '#/server/notifications'
 import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import type {
   AddDepositInput,
@@ -193,17 +188,17 @@ export function registerMutationDefaults(queryClient: QueryClient) {
   queryClient.setMutationDefaults(mutationKeys.markNotificationRead, {
     ...offlineFirst,
     mutationFn: (input: MarkNotificationReadInput) =>
-      markNotificationReadFn({ data: input }),
+      trpcClient.notifications.markRead.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.markAllNotificationsRead, {
     ...offlineFirst,
     mutationFn: (input: MarkAllNotificationsReadInput) =>
-      markAllNotificationsReadFn({ data: input }),
+      trpcClient.notifications.markAllRead.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.clearReadNotifications, {
     ...offlineFirst,
     mutationFn: (input: ClearReadNotificationsInput) =>
-      clearReadNotificationsFn({ data: input }),
+      trpcClient.notifications.clearRead.mutate(input),
   })
 
   // Profile

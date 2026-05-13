@@ -41,8 +41,8 @@ export async function prefetchProfileData(queryClient: QueryClient) {
 
   const tasks: Array<Promise<unknown>> = [
     queryClient.prefetchQuery(dashboardQueryOptions()),
-    queryClient.prefetchQuery(notificationsListQueryOptions()),
-    queryClient.prefetchQuery(unreadNotificationCountQueryOptions()),
+    queryClient.prefetchQuery(notificationsListQueryOptions(queryClient)),
+    queryClient.prefetchQuery(unreadNotificationCountQueryOptions(queryClient)),
     queryClient.prefetchInfiniteQuery(activityInfiniteQueryOptions(queryClient)),
     ...INVESTMENT_FILTERS.map((f) =>
       queryClient.prefetchQuery(investmentsListQueryOptions(queryClient, f)),

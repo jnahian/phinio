@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createNotification } from '#/server/notifications.impl'
+import { createNotification } from '@phinio/trpc/notifications'
 import { handleCron } from '#/routes/api/cron/send-reminders'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
@@ -270,7 +270,7 @@ describe('cron — push subscription lifecycle', () => {
 describe('createNotification — race path', () => {
   it('returns created=false when (profileId, dedupeKey) already exists', async () => {
     const user = await createTestUser()
-    const first = await createNotification({
+    const first = await createNotification(prisma, {
       profileId: user.profileId,
       type: 'test',
       title: 'x',
@@ -279,7 +279,7 @@ describe('createNotification — race path', () => {
     })
     expect(first.created).toBe(true)
 
-    const second = await createNotification({
+    const second = await createNotification(prisma, {
       profileId: user.profileId,
       type: 'test',
       title: 'x',
@@ -300,7 +300,7 @@ describe('createNotification — race path', () => {
 
     const user = await createTestUser()
     await expect(
-      createNotification({
+      createNotification(prisma, {
         profileId: user.profileId,
         type: 'test',
         title: 'x',
