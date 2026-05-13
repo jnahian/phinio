@@ -27,14 +27,10 @@ import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
 import { clearOfflineCache } from '#/lib/offline-cache'
-import {
-  updateProfileCurrencyFn,
-  updateProfileLanguageFn,
-  updateProfileNameFn,
-} from '#/server/profile'
+import { trpcClient } from '#/lib/trpc'
 import { cleanupProfileDataFn, seedProfileDataFn } from '#/server/dev-data'
 import type { Currency } from '#/lib/currency'
-import { LOCALE_LABEL } from '#/lib/i18n/config'
+import { LOCALE_COOKIE, LOCALE_LABEL } from '#/lib/i18n/config'
 import type { Locale } from '#/lib/i18n/config'
 import type { SeedCategories } from '#/server/dev-data'
 import { usePushSubscription } from '#/hooks/usePushSubscription'
@@ -94,7 +90,9 @@ function ProfileScreen() {
     setCurrency(next)
     setIsSavingCurrency(true)
     try {
-      await updateProfileCurrencyFn({ data: { preferredCurrency: next } })
+      await trpcClient.profile.updateCurrency.mutate({
+        preferredCurrency: next,
+      })
       await router.invalidate()
       qc.invalidateQueries({ queryKey: ['activity'] })
       toast.success(t('currency.updated', { value: next }))
@@ -117,7 +115,17 @@ function ProfileScreen() {
     void i18n.changeLanguage(next)
     setIsSavingLanguage(true)
     try {
-      await updateProfileLanguageFn({ data: { preferredLanguage: next } })
+      await trpcClient.profile.updateLanguage.mutate({
+        preferredLanguage: next,
+      })
+      // Persist the choice as a cookie too so anonymous SSR (e.g. immediately
+      // after sign-out / before the next session loads) still reflects the
+      // user's last preference. The cookie isn't HttpOnly (just SameSite=Lax,
+      // Secure in prod), so writing it from the client matches what the legacy
+      // server-fn handler did via setCookie — minus the round-trip header.
+      const oneYear = 60 * 60 * 24 * 365
+      const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+      document.cookie = `${LOCALE_COOKIE}=${next}; Path=/; Max-Age=${oneYear}; SameSite=Lax${secure}`
       await router.invalidate()
       qc.invalidateQueries({ queryKey: ['activity'] })
       toast.success(t('language.updated', { value: LOCALE_LABEL[next] }))
@@ -155,7 +163,7 @@ function ProfileScreen() {
     }
     setIsSavingName(true)
     try {
-      await updateProfileNameFn({ data: { fullName: trimmed } })
+      await trpcClient.profile.updateName.mutate({ fullName: trimmed })
       await router.invalidate()
       qc.invalidateQueries({ queryKey: ['activity'] })
       setIsEditingName(false)

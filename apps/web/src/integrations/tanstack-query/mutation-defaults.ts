@@ -6,7 +6,6 @@ import {
   markAllNotificationsReadFn,
   markNotificationReadFn,
 } from '#/server/notifications'
-import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
 import type {
   AddDepositInput,
   DpsCloseInput,
@@ -24,15 +23,13 @@ import type {
   MarkPaymentPaidInput,
   SavingsCreateInput,
   SavingsUpdateInput,
+  UpdateProfileCurrencyInput,
+  UpdateProfileNameInput,
   WithdrawalInput,
   emiIdSchema,
   investmentIdSchema,
   removeDepositSchema,
 } from '@phinio/validators'
-import type {
-  UpdateCurrencyInput,
-  UpdateNameInput,
-} from '#/server/profile.impl'
 
 type InvestmentIdInput = z.infer<typeof investmentIdSchema>
 type EmiIdInput = z.infer<typeof emiIdSchema>
@@ -209,12 +206,12 @@ export function registerMutationDefaults(queryClient: QueryClient) {
   // Profile
   queryClient.setMutationDefaults(mutationKeys.profileUpdateCurrency, {
     ...offlineFirst,
-    mutationFn: (input: UpdateCurrencyInput) =>
-      updateProfileCurrencyFn({ data: input }),
+    mutationFn: (input: UpdateProfileCurrencyInput) =>
+      trpcClient.profile.updateCurrency.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.profileUpdateName, {
     ...offlineFirst,
-    mutationFn: (input: UpdateNameInput) =>
-      updateProfileNameFn({ data: input }),
+    mutationFn: (input: UpdateProfileNameInput) =>
+      trpcClient.profile.updateName.mutate(input),
   })
 }

@@ -14,7 +14,8 @@ import { TopBar } from '#/components/TopBar'
 import { TopBarTitleContext } from '#/lib/top-bar-context'
 import { getSessionFn, getShellUserFn } from '#/server/auth'
 import type { ShellUser } from '#/server/auth'
-import { getProfileFn } from '#/server/profile'
+import { trpcClient } from '#/lib/trpc'
+import type { SerializedProfile } from '@phinio/trpc'
 
 // Cache the auth-shell triple via TanStack Query so the persister snapshots
 // them to IndexedDB. When the user is offline, the network calls below throw,
@@ -26,7 +27,7 @@ const PROFILE_KEY = ['auth', 'profile'] as const
 const SHELL_USER_KEY = ['auth', 'shell-user'] as const
 
 type SessionData = Awaited<ReturnType<typeof getSessionFn>>
-type ProfileData = Awaited<ReturnType<typeof getProfileFn>>
+type ProfileData = SerializedProfile
 
 export const Route = createFileRoute('/app')({
   beforeLoad: async ({ context }) => {
@@ -51,7 +52,7 @@ export const Route = createFileRoute('/app')({
       const [profile, shellUser] = await Promise.all([
         queryClient.fetchQuery({
           queryKey: PROFILE_KEY,
-          queryFn: () => getProfileFn(),
+          queryFn: () => trpcClient.profile.get.query(),
           staleTime: 5 * 60_000,
         }),
         queryClient.fetchQuery({

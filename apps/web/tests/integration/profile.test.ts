@@ -1,10 +1,13 @@
 import { randomBytes } from 'node:crypto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  getProfileImpl,
-  updateProfileCurrencyImpl,
-} from '#/server/profile.impl'
+import type { AppContext } from '@phinio/trpc'
+import { appRouter } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
+
+function callerFor(profileId: string, userId: string) {
+  const ctx: AppContext = { prisma, profileId, userId, locale: 'en' }
+  return appRouter.createCaller(ctx)
+}
 
 beforeEach(async () => {
   await resetDb()
@@ -28,15 +31,15 @@ async function createBareUser(email: string) {
   return id
 }
 
-describe('profile server impls', () => {
-  it('getProfileImpl returns the user’s profile', async () => {
+describe('profile router', () => {
+  it('get returns the user’s profile', async () => {
     const user = await createTestUser({
       email: 'ada@phinio.test',
       fullName: 'Ada Lovelace',
       preferredCurrency: 'BDT',
     })
 
-    const profile = await getProfileImpl(user.userId)
+    const profile = await callerFor(user.profileId, user.userId).profile.get()
 
     expect(profile.id).toBe(user.profileId)
     expect(profile.userId).toBe(user.userId)
@@ -45,64 +48,75 @@ describe('profile server impls', () => {
     expect(profile.createdAt).toBeInstanceOf(Date)
   })
 
-  it('getProfileImpl throws when the user has no profile', async () => {
+  it('get throws when the user has no profile', async () => {
+    // No profile row, but we still need a non-null userId to pass through the
+    // protectedProcedure guard. Synthesize a fake profileId — the query
+    // resolves by userId, so a missing Profile row is what we're testing.
     const userId = await createBareUser('orphan@phinio.test')
+    const fakeProfileId = `nonexistent_${randomBytes(6).toString('hex')}`
 
-    await expect(getProfileImpl(userId)).rejects.toThrow(/not found/i)
+    await expect(
+      callerFor(fakeProfileId, userId).profile.get(),
+    ).rejects.toThrow(/not found/i)
   })
 
-  it('getProfileImpl returns USD when the stored currency is USD', async () => {
+  it('get returns USD when the stored currency is USD', async () => {
     const user = await createTestUser({
       email: 'usd@phinio.test',
       fullName: 'Dollar User',
       preferredCurrency: 'USD',
     })
 
-    const profile = await getProfileImpl(user.userId)
+    const profile = await callerFor(user.profileId, user.userId).profile.get()
 
     expect(profile.preferredCurrency).toBe('USD')
     expect(profile.fullName).toBe('Dollar User')
   })
 
-  it('updateProfileCurrencyImpl switches from BDT to USD', async () => {
+  it('updateCurrency switches from BDT to USD', async () => {
     const user = await createTestUser({
       email: 'bdt-to-usd@phinio.test',
       preferredCurrency: 'BDT',
     })
 
-    const updated = await updateProfileCurrencyImpl(user.userId, {
+    const caller = callerFor(user.profileId, user.userId)
+    const updated = await caller.profile.updateCurrency({
       preferredCurrency: 'USD',
     })
 
     expect(updated.preferredCurrency).toBe('USD')
     expect(updated.userId).toBe(user.userId)
 
-    const roundTrip = await getProfileImpl(user.userId)
+    const roundTrip = await caller.profile.get()
     expect(roundTrip.preferredCurrency).toBe('USD')
   })
 
-  it('updateProfileCurrencyImpl switches from USD to BDT', async () => {
+  it('updateCurrency switches from USD to BDT', async () => {
     const user = await createTestUser({
       email: 'usd-to-bdt@phinio.test',
       preferredCurrency: 'USD',
     })
 
-    const updated = await updateProfileCurrencyImpl(user.userId, {
+    const caller = callerFor(user.profileId, user.userId)
+    const updated = await caller.profile.updateCurrency({
       preferredCurrency: 'BDT',
     })
 
     expect(updated.preferredCurrency).toBe('BDT')
     expect(updated.userId).toBe(user.userId)
 
-    const roundTrip = await getProfileImpl(user.userId)
+    const roundTrip = await caller.profile.get()
     expect(roundTrip.preferredCurrency).toBe('BDT')
   })
 
-  it('updateProfileCurrencyImpl throws when user has no profile', async () => {
+  it('updateCurrency throws when the profileId points at no profile', async () => {
     const userId = await createBareUser('orphan-update@phinio.test')
+    const fakeProfileId = `nonexistent_${randomBytes(6).toString('hex')}`
 
     await expect(
-      updateProfileCurrencyImpl(userId, { preferredCurrency: 'USD' }),
+      callerFor(fakeProfileId, userId).profile.updateCurrency({
+        preferredCurrency: 'USD',
+      }),
     ).rejects.toThrow()
   })
 
@@ -118,10 +132,12 @@ describe('profile server impls', () => {
       preferredCurrency: 'USD',
     })
 
-    await updateProfileCurrencyImpl(alice.userId, { preferredCurrency: 'USD' })
+    await callerFor(alice.profileId, alice.userId).profile.updateCurrency({
+      preferredCurrency: 'USD',
+    })
 
-    const aliceAfter = await getProfileImpl(alice.userId)
-    const bobAfter = await getProfileImpl(bob.userId)
+    const aliceAfter = await callerFor(alice.profileId, alice.userId).profile.get()
+    const bobAfter = await callerFor(bob.profileId, bob.userId).profile.get()
 
     expect(aliceAfter.preferredCurrency).toBe('USD')
     expect(bobAfter.preferredCurrency).toBe('USD')
@@ -130,7 +146,7 @@ describe('profile server impls', () => {
     expect(bobAfter.fullName).toBe('Bob')
   })
 
-  it('getProfileImpl scopes by userId', async () => {
+  it('get scopes by userId', async () => {
     const alice = await createTestUser({
       email: 'alice-scope@phinio.test',
       fullName: 'Alice Scope',
@@ -142,8 +158,8 @@ describe('profile server impls', () => {
       preferredCurrency: 'USD',
     })
 
-    const aliceProfile = await getProfileImpl(alice.userId)
-    const bobProfile = await getProfileImpl(bob.userId)
+    const aliceProfile = await callerFor(alice.profileId, alice.userId).profile.get()
+    const bobProfile = await callerFor(bob.profileId, bob.userId).profile.get()
 
     expect(aliceProfile.userId).toBe(alice.userId)
     expect(aliceProfile.id).toBe(alice.profileId)
