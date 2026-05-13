@@ -1,20 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { z } from 'zod'
-import {
-  addDepositFn,
-  closeDpsFn,
-  createDpsFn,
-  createInvestmentFn,
-  createSavingsFn,
-  deleteInvestmentFn,
-  deleteSavingsFn,
-  markDepositPaidFn,
-  removeDepositFn,
-  updateDpsFn,
-  updateInvestmentFn,
-  updateSavingsFn,
-  withdrawFn,
-} from '#/server/investments'
 import { trpcClient } from '#/lib/trpc'
 import {
   clearReadNotificationsFn,
@@ -111,64 +96,73 @@ export function registerMutationDefaults(queryClient: QueryClient) {
   queryClient.setMutationDefaults(mutationKeys.investmentCreate, {
     ...offlineFirst,
     mutationFn: (input: InvestmentCreateInput) =>
-      createInvestmentFn({ data: input }),
+      trpcClient.investments.create.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.investmentUpdate, {
     ...offlineFirst,
     mutationFn: (input: InvestmentUpdateInput) =>
-      updateInvestmentFn({ data: input }),
+      trpcClient.investments.update.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.investmentDelete, {
     ...offlineFirst,
     mutationFn: (input: InvestmentIdInput) =>
-      deleteInvestmentFn({ data: input }),
+      trpcClient.investments.delete.mutate(input),
   })
 
   // DPS
   queryClient.setMutationDefaults(mutationKeys.dpsCreate, {
     ...offlineFirst,
-    mutationFn: (input: DpsCreateInput) => createDpsFn({ data: input }),
+    mutationFn: (input: DpsCreateInput) =>
+      trpcClient.investments.createDps.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.dpsUpdate, {
     ...offlineFirst,
-    mutationFn: (input: DpsUpdateInput) => updateDpsFn({ data: input }),
+    mutationFn: (input: DpsUpdateInput) =>
+      trpcClient.investments.updateDps.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.dpsClose, {
     ...offlineFirst,
-    mutationFn: (input: DpsCloseInput) => closeDpsFn({ data: input }),
+    mutationFn: (input: DpsCloseInput) =>
+      trpcClient.investments.closeDps.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.markDepositPaid, {
     ...offlineFirst,
     mutationFn: (input: MarkDepositPaidInput) =>
-      markDepositPaidFn({ data: input }),
+      trpcClient.investments.markDepositPaid.mutate(input),
   })
 
   // Savings
   queryClient.setMutationDefaults(mutationKeys.savingsCreate, {
     ...offlineFirst,
-    mutationFn: (input: SavingsCreateInput) => createSavingsFn({ data: input }),
+    mutationFn: (input: SavingsCreateInput) =>
+      trpcClient.investments.createSavings.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.savingsUpdate, {
     ...offlineFirst,
-    mutationFn: (input: SavingsUpdateInput) => updateSavingsFn({ data: input }),
+    mutationFn: (input: SavingsUpdateInput) =>
+      trpcClient.investments.updateSavings.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.savingsDelete, {
     ...offlineFirst,
-    mutationFn: (input: InvestmentIdInput) => deleteSavingsFn({ data: input }),
+    mutationFn: (input: InvestmentIdInput) =>
+      trpcClient.investments.deleteSavings.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.addDeposit, {
     ...offlineFirst,
-    mutationFn: (input: AddDepositInput) => addDepositFn({ data: input }),
+    mutationFn: (input: AddDepositInput) =>
+      trpcClient.investments.addDeposit.mutate(input),
   })
   queryClient.setMutationDefaults(mutationKeys.removeDeposit, {
     ...offlineFirst,
-    mutationFn: (input: RemoveDepositInput) => removeDepositFn({ data: input }),
+    mutationFn: (input: RemoveDepositInput) =>
+      trpcClient.investments.removeDeposit.mutate(input),
   })
 
   // Withdrawals
   queryClient.setMutationDefaults(mutationKeys.withdraw, {
     ...offlineFirst,
-    mutationFn: (input: WithdrawalInput) => withdrawFn({ data: input }),
+    mutationFn: (input: WithdrawalInput) =>
+      trpcClient.investments.withdraw.mutate(input),
   })
 
   // EMIs

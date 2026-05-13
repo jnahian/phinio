@@ -10,7 +10,6 @@ import {
   unreadNotificationCountQueryOptions,
 } from '#/hooks/useNotifications'
 import { activityInfiniteQueryOptions } from '#/hooks/useActivityLog'
-import { getInvestmentFn } from '#/server/investments'
 import { trpcClient } from '#/lib/trpc'
 
 // Prefetch the filter combinations users routinely view. Anything beyond
@@ -68,7 +67,7 @@ export async function prefetchProfileData(queryClient: QueryClient) {
   await pMapLimit(investments, 4, (row) =>
     queryClient.prefetchQuery({
       queryKey: investmentKeys.detail(row.id),
-      queryFn: () => getInvestmentFn({ data: { id: row.id } }),
+      queryFn: () => trpcClient.investments.get.query({ id: row.id }),
     }),
   )
   await pMapLimit(emis, 4, (row) =>
