@@ -42,7 +42,10 @@ export const Route = createFileRoute('/app/investments/')({
   staticData: { title: 'pageTitles.investments' },
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(
-      investmentsListQueryOptions({ status: 'active', type: 'all' }),
+      investmentsListQueryOptions(context.queryClient, {
+        status: 'active',
+        type: 'all',
+      }),
     )
   },
   component: InvestmentsListScreen,

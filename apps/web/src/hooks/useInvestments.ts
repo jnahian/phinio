@@ -1,10 +1,8 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { getInvestmentFn, listInvestmentsFn } from '#/server/investments'
-import type {
-  InvestmentListFilters,
-  InvestmentListItem,
-} from '#/server/investments'
+import type { InvestmentListItem } from '#/server/investments'
+import type { z } from 'zod'
 import type {
   AddDepositInput,
   DpsCloseInput,
@@ -16,9 +14,13 @@ import type {
   SavingsCreateInput,
   SavingsUpdateInput,
   WithdrawalInput,
+  investmentListQuerySchema,
 } from '@phinio/validators'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
+import { makeTRPC, useTRPC } from '#/lib/trpc'
+
+export type InvestmentListFilters = z.infer<typeof investmentListQuerySchema>
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
@@ -35,21 +37,22 @@ export const investmentKeys = {
 // Queries
 // ---------------------------------------------------------------------------
 
-export function investmentsListQueryOptions(filters: InvestmentListFilters) {
-  return queryOptions({
-    queryKey: investmentKeys.list(filters),
-    queryFn: () => listInvestmentsFn({ data: filters }),
-  })
+export function investmentsListQueryOptions(
+  queryClient: QueryClient,
+  filters: InvestmentListFilters,
+) {
+  return makeTRPC(queryClient).investments.list.queryOptions(filters)
 }
 
 export function useInvestmentsQuery(filters: InvestmentListFilters) {
-  return useQuery(investmentsListQueryOptions(filters))
+  const trpc = useTRPC()
+  return useQuery(trpc.investments.list.queryOptions(filters))
 }
 
 export function useInvestmentQuery(id: string) {
+  const trpc = useTRPC()
   return useQuery({
-    queryKey: investmentKeys.detail(id),
-    queryFn: () => getInvestmentFn({ data: { id } }),
+    ...trpc.investments.get.queryOptions({ id }),
     enabled: Boolean(id),
   })
 }

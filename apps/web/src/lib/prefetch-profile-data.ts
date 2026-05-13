@@ -46,7 +46,7 @@ export async function prefetchProfileData(queryClient: QueryClient) {
     queryClient.prefetchQuery(unreadNotificationCountQueryOptions()),
     queryClient.prefetchInfiniteQuery(activityInfiniteQueryOptions()),
     ...INVESTMENT_FILTERS.map((f) =>
-      queryClient.prefetchQuery(investmentsListQueryOptions(f)),
+      queryClient.prefetchQuery(investmentsListQueryOptions(queryClient, f)),
     ),
     ...EMI_FILTERS.map((f) =>
       queryClient.prefetchQuery(emisListQueryOptions(queryClient, f)),
