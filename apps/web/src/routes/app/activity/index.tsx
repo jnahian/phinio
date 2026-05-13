@@ -39,7 +39,7 @@ export const Route = createFileRoute('/app/activity/')({
   staticData: { title: 'pageTitles.activity', backTo: '/app/profile' },
   loader: ({ context }) => {
     void context.queryClient.prefetchInfiniteQuery(
-      activityInfiniteQueryOptions(),
+      activityInfiniteQueryOptions(context.queryClient),
     )
   },
   component: ActivityScreen,

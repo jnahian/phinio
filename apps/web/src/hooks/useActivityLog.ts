@@ -1,34 +1,36 @@
-import {
-  infiniteQueryOptions,
-  useInfiniteQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
-import { listActivityFn } from '#/server/activity-log'
-import type { ActivityListResult } from '#/server/activity-log'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
+import { makeTRPC, useTRPC } from '#/lib/trpc'
+import type { ActivityListResult } from '@phinio/trpc/activity-log'
+
+export type { ActivityListResult }
 
 export const activityKeys = {
   all: ['activity'] as const,
   list: () => ['activity', 'list'] as const,
 }
 
-export function activityInfiniteQueryOptions() {
-  return infiniteQueryOptions<
-    ActivityListResult,
-    Error,
-    { pages: Array<ActivityListResult>; pageParams: Array<string | null> },
-    ReturnType<typeof activityKeys.list>,
-    string | null
-  >({
-    queryKey: activityKeys.list(),
-    queryFn: ({ pageParam }) =>
-      listActivityFn({ data: { cursor: pageParam ?? null, limit: 15 } }),
-    initialPageParam: null,
-    getNextPageParam: (last) => last.nextCursor,
-  })
+export function activityInfiniteQueryOptions(queryClient: QueryClient) {
+  return makeTRPC(queryClient).activity.list.infiniteQueryOptions(
+    { limit: 15 },
+    {
+      initialCursor: null as string | null,
+      getNextPageParam: (last: ActivityListResult) => last.nextCursor,
+    },
+  )
 }
 
 export function useActivityLogQuery() {
-  return useInfiniteQuery(activityInfiniteQueryOptions())
+  const trpc = useTRPC()
+  return useInfiniteQuery(
+    trpc.activity.list.infiniteQueryOptions(
+      { limit: 15 },
+      {
+        initialCursor: null as string | null,
+        getNextPageParam: (last: ActivityListResult) => last.nextCursor,
+      },
+    ),
+  )
 }
 
 export function useInvalidateActivity() {
