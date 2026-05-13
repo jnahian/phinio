@@ -19,7 +19,9 @@ const config: ExpoConfig = {
   // expo-build-properties plugin at prebuild / EAS build time. We don't add
   // the package in Phase 3A because no native build runs here; Phase 3C
   // installs `expo-build-properties` and `expo-glass-effect` together.
-  plugins: ['expo-router', 'react-native-mmkv'],
+  // react-native-mmkv v4 ships as a Nitro module — autolinking handles
+  // the native install; there is no config plugin to register here.
+  plugins: ['expo-router'],
   experiments: {
     typedRoutes: true,
   },
