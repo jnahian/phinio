@@ -130,6 +130,15 @@ export const investmentListQuerySchema = z.object({
 })
 export type InvestmentListQuery = z.infer<typeof investmentListQuerySchema>
 
+// ----------------------------------------------------------------------------
+// Activity log — paginated list
+// ----------------------------------------------------------------------------
+export const activityListQuerySchema = z.object({
+  cursor: z.string().nullish(),
+  limit: z.number().int().min(1).max(100).optional(),
+})
+export type ActivityListQueryInput = z.infer<typeof activityListQuerySchema>
+
 export const investmentIdSchema = z.object({
   id: z.string().min(1),
   ...clientMutationIdField,
