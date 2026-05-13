@@ -377,3 +377,24 @@ export const clearReadNotificationsSchema = z.object({
 export type ClearReadNotificationsInput = z.infer<
   typeof clearReadNotificationsSchema
 >
+
+// ----------------------------------------------------------------------------
+// Push subscriptions
+// ----------------------------------------------------------------------------
+
+export const savePushSubscriptionSchema = z.object({
+  endpoint: z.string().url(),
+  p256dh: z.string().min(1),
+  auth: z.string().min(1),
+  userAgent: z.string().optional().nullable(),
+})
+export type SavePushSubscriptionInput = z.infer<
+  typeof savePushSubscriptionSchema
+>
+
+export const deletePushSubscriptionSchema = z.object({
+  endpoint: z.string().url(),
+})
+export type DeletePushSubscriptionInput = z.infer<
+  typeof deletePushSubscriptionSchema
+>
