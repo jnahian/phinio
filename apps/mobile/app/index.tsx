@@ -1,9 +1,18 @@
 import { StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { useTheme } from '#/theme/use-theme'
 
 export default function Index() {
+  const { t } = useTranslation('common')
+  const { colors } = useTheme()
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Phinio Mobile — Phase 3A</Text>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+      <Text style={[styles.title, { color: colors.onSurface }]}>
+        {t('appName')}
+      </Text>
+      <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+        {t('tagline')}
+      </Text>
     </View>
   )
 }
@@ -13,11 +22,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0b0b0d',
+    paddingHorizontal: 24,
   },
-  text: {
-    color: '#f5f5f7',
-    fontSize: 18,
-    fontWeight: '600',
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 15,
+    fontWeight: '500',
   },
 })
