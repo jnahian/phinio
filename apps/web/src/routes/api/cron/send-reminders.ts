@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import { prisma } from '#/db'
-import { createNotification } from '#/server/notifications.impl'
+import { createNotification } from '@phinio/trpc/notifications'
 import type { Currency } from '#/lib/currency'
 import { FEE_PAYMENT_NUMBER } from '@phinio/calc'
 import { buildWebPushConfig, sendWebPush } from '#/server/web-push'
@@ -366,7 +366,7 @@ export async function handleCron(request: Request): Promise<Response> {
   const pushJobs: PushJob[] = []
 
   for (const c of candidates) {
-    const res = await createNotification(c)
+    const res = await createNotification(prisma, c)
     if (!res.created) continue
     created += 1
     pushJobs.push({

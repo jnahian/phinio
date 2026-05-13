@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./idempotency": "./src/idempotency.ts",
     "./activity-log": "./src/activity-log.ts",
-    "./context": "./src/context.ts"
+    "./context": "./src/context.ts",
+    "./notifications": "./src/notifications.ts"
   },
   "scripts": {
     "build": "echo 'no build for @phinio/trpc'",

@@ -1,9 +1,7 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  listNotificationsFn,
-  unreadNotificationCountFn,
-} from '#/server/notifications'
+import { makeTRPC, useTRPC } from '#/lib/trpc'
 import type {
   ClearReadNotificationsInput,
   MarkAllNotificationsReadInput,
@@ -22,28 +20,38 @@ export const notificationKeys = {
   unreadCount: () => ['notifications', 'unread-count'] as const,
 }
 
-export function notificationsListQueryOptions() {
-  return queryOptions({
-    queryKey: notificationKeys.list(),
-    queryFn: () => listNotificationsFn(),
-    refetchInterval: 5 * 60_000,
-  })
+// Poll every five minutes so a server-created notification (cron) shows up
+// without a manual refresh.
+const REFETCH_INTERVAL_MS = 5 * 60_000
+
+export function notificationsListQueryOptions(queryClient: QueryClient) {
+  return {
+    ...makeTRPC(queryClient).notifications.list.queryOptions(),
+    refetchInterval: REFETCH_INTERVAL_MS,
+  }
 }
 
 export function useNotificationsQuery() {
-  return useQuery(notificationsListQueryOptions())
-}
-
-export function unreadNotificationCountQueryOptions() {
-  return queryOptions({
-    queryKey: notificationKeys.unreadCount(),
-    queryFn: () => unreadNotificationCountFn(),
-    refetchInterval: 5 * 60_000,
+  const trpc = useTRPC()
+  return useQuery({
+    ...trpc.notifications.list.queryOptions(),
+    refetchInterval: REFETCH_INTERVAL_MS,
   })
 }
 
+export function unreadNotificationCountQueryOptions(queryClient: QueryClient) {
+  return {
+    ...makeTRPC(queryClient).notifications.unreadCount.queryOptions(),
+    refetchInterval: REFETCH_INTERVAL_MS,
+  }
+}
+
 export function useUnreadNotificationCountQuery() {
-  return useQuery(unreadNotificationCountQueryOptions())
+  const trpc = useTRPC()
+  return useQuery({
+    ...trpc.notifications.unreadCount.queryOptions(),
+    refetchInterval: REFETCH_INTERVAL_MS,
+  })
 }
 
 type NotificationItem = { id: string; read: boolean }
