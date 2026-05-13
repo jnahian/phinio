@@ -11,8 +11,8 @@ import { appRouter } from '@phinio/trpc'
 import type { AppContext } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
-function callerFor(profileId: string) {
-  const ctx: AppContext = { prisma, profileId, locale: 'en' }
+function callerFor(profileId: string, userId: string = `user_${profileId}`) {
+  const ctx: AppContext = { prisma, profileId, userId, locale: 'en' }
   return appRouter.createCaller(ctx)
 }
 
