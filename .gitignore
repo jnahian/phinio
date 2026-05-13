@@ -18,3 +18,6 @@ src/generated/
 
 # Turborepo cache
 .turbo/
+
+# Claude Code subagent worktrees (ephemeral)
+.claude/worktrees/
