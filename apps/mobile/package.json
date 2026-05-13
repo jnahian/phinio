@@ -10,9 +10,10 @@
     "build": "expo export",
     "build:local": "expo export",
     "lint": "expo lint",
-    "test": "echo \"no tests yet\" && exit 0"
+    "test": "vitest run"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "^5.2.14",
     "@phinio/calc": "workspace:*",
     "@phinio/design-tokens": "workspace:*",
     "@phinio/i18n-resources": "workspace:*",
@@ -26,16 +27,22 @@
     "@trpc/server": "^11.0.0",
     "@trpc/tanstack-react-query": "^11.0.0",
     "expo": "^54.0.1",
+    "expo-blur": "~15.0.8",
+    "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.0",
+    "expo-glass-effect": "~0.1.10",
     "expo-linking": "~8.0.0",
     "expo-router": "~6.0.0",
     "expo-status-bar": "~3.0.0",
+    "expo-symbols": "~1.0.8",
     "i18next": "^26.0.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-i18next": "^17.0.6",
     "react-native": "0.81.4",
+    "react-native-gesture-handler": "~2.28.0",
     "react-native-mmkv": "^4.3.1",
+    "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-web": "^0.21.0",
@@ -44,6 +51,7 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "eslint-config-expo": "~10.0.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
   }
 }
