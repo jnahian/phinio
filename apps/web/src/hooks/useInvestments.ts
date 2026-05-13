@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { InvestmentListItem } from '#/server/investments'
+import type { InvestmentListItem } from '@phinio/trpc'
 import type { z } from 'zod'
 import type {
   AddDepositInput,

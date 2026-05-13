@@ -1,21 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  createInvestmentImpl,
-  deleteInvestmentImpl,
-  getInvestmentImpl,
-  listInvestmentsImpl,
-  updateInvestmentImpl,
-  createDpsInvestmentImpl,
-  updateDpsInvestmentImpl,
-  markDepositPaidImpl,
-  createSavingsInvestmentImpl,
-  updateSavingsInvestmentImpl,
-  addDepositImpl,
-  removeDepositImpl,
-  withdrawImpl,
-  closeDpsImpl,
-} from '#/server/investments.impl'
+import type { AppContext } from '@phinio/trpc'
+import { appRouter } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
+
+function callerFor(profileId: string) {
+  const ctx: AppContext = { prisma, profileId, locale: 'en' }
+  return appRouter.createCaller(ctx)
+}
 
 beforeEach(async () => {
   await resetDb()
@@ -29,7 +20,7 @@ describe('lump-sum investments', () => {
   it('creates an investment scoped to the current profile', async () => {
     const user = await createTestUser()
 
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Apple',
       type: 'stock',
       investedAmount: '1000.00',
@@ -37,7 +28,7 @@ describe('lump-sum investments', () => {
       dateOfInvestment: '2026-01-15',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.name).toBe('Apple')
     expect(inv.investedAmount).toBe('1000')
     expect(inv.currentValue).toBe('1200')
@@ -49,14 +40,14 @@ describe('lump-sum investments', () => {
     const alice = await createTestUser({ email: 'alice@phinio.test' })
     const bob = await createTestUser({ email: 'bob@phinio.test' })
 
-    await createInvestmentImpl(alice.profileId, {
+    await callerFor(alice.profileId).investments.create({
       name: 'Alice stock',
       type: 'stock',
       investedAmount: '500.00',
       currentValue: '550.00',
       dateOfInvestment: '2026-02-01',
     })
-    await createInvestmentImpl(bob.profileId, {
+    await callerFor(bob.profileId).investments.create({
       name: 'Bob gold',
       type: 'gold',
       investedAmount: '2000.00',
@@ -64,14 +55,14 @@ describe('lump-sum investments', () => {
       dateOfInvestment: '2026-02-05',
     })
 
-    const aliceRows = await listInvestmentsImpl(alice.profileId, {
+    const aliceRows = await callerFor(alice.profileId).investments.list({
       status: 'active',
       type: 'all',
     })
     expect(aliceRows).toHaveLength(1)
     expect(aliceRows[0].name).toBe('Alice stock')
 
-    const bobRows = await listInvestmentsImpl(bob.profileId, {
+    const bobRows = await callerFor(bob.profileId).investments.list({
       status: 'active',
       type: 'all',
     })
@@ -83,7 +74,7 @@ describe('lump-sum investments', () => {
     const alice = await createTestUser({ email: 'alice2@phinio.test' })
     const bob = await createTestUser({ email: 'bob2@phinio.test' })
 
-    const aliceInv = await createInvestmentImpl(alice.profileId, {
+    const aliceInv = await callerFor(alice.profileId).investments.create({
       name: 'Alice fund',
       type: 'mutual_fund',
       investedAmount: '3000.00',
@@ -92,7 +83,7 @@ describe('lump-sum investments', () => {
     })
 
     await expect(
-      updateInvestmentImpl(bob.profileId, {
+      callerFor(bob.profileId).investments.update({
         id: aliceInv.id,
         name: 'Hacked',
         type: 'mutual_fund',
@@ -104,11 +95,11 @@ describe('lump-sum investments', () => {
     ).rejects.toThrow(/not found/i)
 
     await expect(
-      deleteInvestmentImpl(bob.profileId, { id: aliceInv.id }),
+      callerFor(bob.profileId).investments.delete({ id: aliceInv.id }),
     ).rejects.toThrow(/not found/i)
 
     // Alice's row is untouched
-    const stillThere = await getInvestmentImpl(alice.profileId, aliceInv.id)
+    const stillThere = await callerFor(alice.profileId).investments.get({ id: aliceInv.id })
     expect(stillThere.name).toBe('Alice fund')
     expect(stillThere.currentValue).toBe('3300')
   })
@@ -116,7 +107,7 @@ describe('lump-sum investments', () => {
   it('marks an investment as completed with exit value and completion date', async () => {
     const user = await createTestUser()
 
-    const inv = await createInvestmentImpl(user.profileId, {
+    const inv = await callerFor(user.profileId).investments.create({
       name: 'Gold',
       type: 'gold',
       investedAmount: '5000.00',
@@ -124,7 +115,7 @@ describe('lump-sum investments', () => {
       dateOfInvestment: '2025-12-01',
     })
 
-    await updateInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.update({
       id: inv.id,
       name: 'Gold',
       type: 'gold',
@@ -136,17 +127,17 @@ describe('lump-sum investments', () => {
       completedAt: '2026-03-15',
     })
 
-    const updated = await getInvestmentImpl(user.profileId, inv.id)
+    const updated = await callerFor(user.profileId).investments.get({ id: inv.id })
     expect(updated.status).toBe('completed')
     expect(updated.exitValue).toBe('6500')
 
-    const active = await listInvestmentsImpl(user.profileId, {
+    const active = await callerFor(user.profileId).investments.list({
       status: 'active',
       type: 'all',
     })
     expect(active).toHaveLength(0)
 
-    const completed = await listInvestmentsImpl(user.profileId, {
+    const completed = await callerFor(user.profileId).investments.list({
       status: 'completed',
       type: 'all',
     })
@@ -157,14 +148,14 @@ describe('lump-sum investments', () => {
   it('filters the list by investment type', async () => {
     const user = await createTestUser()
 
-    await createInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.create({
       name: 'Stock A',
       type: 'stock',
       investedAmount: '1000.00',
       currentValue: '1000.00',
       dateOfInvestment: '2026-01-01',
     })
-    await createInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.create({
       name: 'Gold bar',
       type: 'gold',
       investedAmount: '2000.00',
@@ -172,7 +163,7 @@ describe('lump-sum investments', () => {
       dateOfInvestment: '2026-01-02',
     })
 
-    const stocksOnly = await listInvestmentsImpl(user.profileId, {
+    const stocksOnly = await callerFor(user.profileId).investments.list({
       status: 'active',
       type: 'stock',
     })
@@ -183,7 +174,7 @@ describe('lump-sum investments', () => {
   it('throws a clear error when fetching an investment that does not exist', async () => {
     const user = await createTestUser()
     await expect(
-      getInvestmentImpl(user.profileId, 'does-not-exist'),
+      callerFor(user.profileId).investments.get({ id: 'does-not-exist' }),
     ).rejects.toThrow(/not found/i)
   })
 })
@@ -196,7 +187,7 @@ describe('DPS (scheduled) investments', () => {
   it('createDpsInvestmentImpl generates the full deposit schedule up front', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'My DPS',
       monthlyDeposit: '5000.00',
       tenureMonths: 12,
@@ -214,7 +205,7 @@ describe('DPS (scheduled) investments', () => {
   it('deposits start as upcoming with correct amount and installment numbers', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'Ordered DPS',
       monthlyDeposit: '3000.00',
       tenureMonths: 3,
@@ -239,7 +230,7 @@ describe('DPS (scheduled) investments', () => {
   it('investedAmount starts at 0 and is synced when deposits are paid', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'DPS Sync',
       monthlyDeposit: '2000.00',
       tenureMonths: 6,
@@ -249,7 +240,7 @@ describe('DPS (scheduled) investments', () => {
     })
 
     // investedAmount should start at 0
-    const before = await getInvestmentImpl(user.profileId, created.id)
+    const before = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(before.investedAmount).toBe('0')
 
     // Mark the first deposit paid
@@ -257,29 +248,29 @@ describe('DPS (scheduled) investments', () => {
       where: { investmentId: created.id },
       orderBy: { installmentNumber: 'asc' },
     })
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[0].id,
       paid: true,
     })
 
     // investedAmount should now equal one monthly deposit
-    const after = await getInvestmentImpl(user.profileId, created.id)
+    const after = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(after.investedAmount).toBe('2000')
     expect(after.currentValue).toBe('2000')
 
     // Mark second deposit paid too
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[1].id,
       paid: true,
     })
-    const after2 = await getInvestmentImpl(user.profileId, created.id)
+    const after2 = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(after2.investedAmount).toBe('4000')
   })
 
   it('markDepositPaidImpl toggles a deposit back to upcoming and re-syncs amount', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'Toggle DPS',
       monthlyDeposit: '1000.00',
       tenureMonths: 3,
@@ -294,25 +285,25 @@ describe('DPS (scheduled) investments', () => {
     })
 
     // Pay two deposits
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[0].id,
       paid: true,
     })
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[1].id,
       paid: true,
     })
 
-    const twoIn = await getInvestmentImpl(user.profileId, created.id)
+    const twoIn = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(twoIn.investedAmount).toBe('2000')
 
     // Unpay the second
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[1].id,
       paid: false,
     })
 
-    const oneIn = await getInvestmentImpl(user.profileId, created.id)
+    const oneIn = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(oneIn.investedAmount).toBe('1000')
 
     const toggled = await prisma.investmentDeposit.findUniqueOrThrow({
@@ -325,7 +316,7 @@ describe('DPS (scheduled) investments', () => {
   it('auto-matures the investment when all deposits are paid', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'Short DPS',
       monthlyDeposit: '500.00',
       tenureMonths: 2,
@@ -339,10 +330,10 @@ describe('DPS (scheduled) investments', () => {
     })
 
     for (const d of deposits) {
-      await markDepositPaidImpl(user.profileId, { depositId: d.id, paid: true })
+      await callerFor(user.profileId).investments.markDepositPaid({ depositId: d.id, paid: true })
     }
 
-    const matured = await getInvestmentImpl(user.profileId, created.id)
+    const matured = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(matured.status).toBe('matured')
   })
 
@@ -350,7 +341,7 @@ describe('DPS (scheduled) investments', () => {
     const alice = await createTestUser({ email: 'alice-dps@phinio.test' })
     const bob = await createTestUser({ email: 'bob-dps@phinio.test' })
 
-    const created = await createDpsInvestmentImpl(alice.profileId, {
+    const created = await callerFor(alice.profileId).investments.createDps({
       name: 'Alice DPS',
       monthlyDeposit: '1000.00',
       tenureMonths: 3,
@@ -364,7 +355,7 @@ describe('DPS (scheduled) investments', () => {
     })
 
     await expect(
-      markDepositPaidImpl(bob.profileId, { depositId: deposit.id, paid: true }),
+      callerFor(bob.profileId).investments.markDepositPaid({ depositId: deposit.id, paid: true }),
     ).rejects.toThrow(/not found/i)
 
     const unchanged = await prisma.investmentDeposit.findUniqueOrThrow({
@@ -376,7 +367,7 @@ describe('DPS (scheduled) investments', () => {
   it('updateDpsInvestmentImpl updates name and notes only', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'Original Name',
       monthlyDeposit: '2000.00',
       tenureMonths: 6,
@@ -385,13 +376,13 @@ describe('DPS (scheduled) investments', () => {
       startDate: '2026-01-01',
     })
 
-    await updateDpsInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.updateDps({
       id: created.id,
       name: 'Renamed DPS',
       notes: 'Updated note',
     })
 
-    const updated = await getInvestmentImpl(user.profileId, created.id)
+    const updated = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(updated.name).toBe('Renamed DPS')
     expect(updated.notes).toBe('Updated note')
     // Core financial fields unchanged
@@ -402,14 +393,14 @@ describe('DPS (scheduled) investments', () => {
   it('filters the list by DPS type', async () => {
     const user = await createTestUser()
 
-    await createInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.create({
       name: 'My Stock',
       type: 'stock',
       investedAmount: '1000.00',
       currentValue: '1000.00',
       dateOfInvestment: '2026-01-01',
     })
-    await createDpsInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.createDps({
       name: 'My DPS',
       monthlyDeposit: '3000.00',
       tenureMonths: 12,
@@ -418,7 +409,7 @@ describe('DPS (scheduled) investments', () => {
       startDate: '2026-01-01',
     })
 
-    const dpsOnly = await listInvestmentsImpl(user.profileId, {
+    const dpsOnly = await callerFor(user.profileId).investments.list({
       status: 'active',
       type: 'dps',
     })
@@ -430,7 +421,7 @@ describe('DPS (scheduled) investments', () => {
   it('list exposes paidCount and nextDueDate for DPS cards', async () => {
     const user = await createTestUser()
 
-    const created = await createDpsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createDps({
       name: 'DPS List Info',
       monthlyDeposit: '1000.00',
       tenureMonths: 3,
@@ -444,12 +435,12 @@ describe('DPS (scheduled) investments', () => {
       orderBy: { installmentNumber: 'asc' },
     })
 
-    await markDepositPaidImpl(user.profileId, {
+    await callerFor(user.profileId).investments.markDepositPaid({
       depositId: deposits[0].id,
       paid: true,
     })
 
-    const rows = await listInvestmentsImpl(user.profileId, {
+    const rows = await callerFor(user.profileId).investments.list({
       status: 'active',
       type: 'dps',
     })
@@ -467,13 +458,13 @@ describe('savings pot (flexible) investments', () => {
   it('createSavingsInvestmentImpl with currentValue=0 creates an empty pot', async () => {
     const user = await createTestUser()
 
-    const created = await createSavingsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createSavings({
       name: 'Empty Fund',
       startDate: '2026-01-01',
       currentValue: '0',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.name).toBe('Empty Fund')
     expect(inv.mode).toBe('flexible')
     expect(inv.type).toBe('savings')
@@ -486,13 +477,13 @@ describe('savings pot (flexible) investments', () => {
   it('createSavingsInvestmentImpl with non-zero currentValue seeds an "Initial deposit"', async () => {
     const user = await createTestUser()
 
-    const created = await createSavingsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createSavings({
       name: 'Emergency Fund',
       startDate: '2026-01-01',
       currentValue: '50000.00',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.name).toBe('Emergency Fund')
     expect(inv.mode).toBe('flexible')
     expect(inv.type).toBe('savings')
@@ -509,20 +500,20 @@ describe('savings pot (flexible) investments', () => {
   it('addDepositImpl creates a deposit row and syncs investedAmount', async () => {
     const user = await createTestUser()
 
-    const created = await createSavingsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createSavings({
       name: 'Vacation Fund',
       startDate: '2026-01-01',
       currentValue: '0',
     })
 
-    await addDepositImpl(user.profileId, {
+    await callerFor(user.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '10000.00',
       depositDate: '2026-02-01',
       notes: 'First deposit',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.investedAmount).toBe('10000')
     expect(inv.deposits).toHaveLength(1)
     expect(inv.deposits[0].status).toBe('paid')
@@ -532,29 +523,29 @@ describe('savings pot (flexible) investments', () => {
   it('addDepositImpl accumulates investedAmount across multiple deposits', async () => {
     const user = await createTestUser()
 
-    const created = await createSavingsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createSavings({
       name: 'Multi deposit pot',
       startDate: '2026-01-01',
       currentValue: '0',
     })
 
-    await addDepositImpl(user.profileId, {
+    await callerFor(user.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '5000.00',
       depositDate: '2026-01-15',
     })
-    await addDepositImpl(user.profileId, {
+    await callerFor(user.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '3000.00',
       depositDate: '2026-02-15',
     })
-    await addDepositImpl(user.profileId, {
+    await callerFor(user.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '2000.00',
       depositDate: '2026-03-15',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.investedAmount).toBe('10000')
     expect(inv.deposits).toHaveLength(3)
   })
@@ -562,31 +553,31 @@ describe('savings pot (flexible) investments', () => {
   it('removeDepositImpl deletes the deposit and re-syncs investedAmount', async () => {
     const user = await createTestUser()
 
-    const created = await createSavingsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createSavings({
       name: 'Remove test pot',
       startDate: '2026-01-01',
       currentValue: '0',
     })
 
-    await addDepositImpl(user.profileId, {
+    await callerFor(user.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '8000.00',
       depositDate: '2026-01-01',
     })
-    await addDepositImpl(user.profileId, {
+    await callerFor(user.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '2000.00',
       depositDate: '2026-02-01',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.investedAmount).toBe('10000')
 
     const secondDeposit = inv.deposits.find((d) => String(d.amount) === '2000')!
 
-    await removeDepositImpl(user.profileId, { depositId: secondDeposit.id })
+    await callerFor(user.profileId).investments.removeDeposit({ depositId: secondDeposit.id })
 
-    const afterRemove = await getInvestmentImpl(user.profileId, created.id)
+    const afterRemove = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(afterRemove.investedAmount).toBe('8000')
     expect(afterRemove.deposits).toHaveLength(1)
   })
@@ -595,13 +586,13 @@ describe('savings pot (flexible) investments', () => {
     const alice = await createTestUser({ email: 'alice-sav@phinio.test' })
     const bob = await createTestUser({ email: 'bob-sav@phinio.test' })
 
-    const created = await createSavingsInvestmentImpl(alice.profileId, {
+    const created = await callerFor(alice.profileId).investments.createSavings({
       name: 'Alice pot',
       startDate: '2026-01-01',
       currentValue: '0',
     })
 
-    await addDepositImpl(alice.profileId, {
+    await callerFor(alice.profileId).investments.addDeposit({
       investmentId: created.id,
       amount: '5000.00',
       depositDate: '2026-01-01',
@@ -612,30 +603,30 @@ describe('savings pot (flexible) investments', () => {
     })
 
     await expect(
-      removeDepositImpl(bob.profileId, { depositId: deposit.id }),
+      callerFor(bob.profileId).investments.removeDeposit({ depositId: deposit.id }),
     ).rejects.toThrow(/not found/i)
 
     // Deposit still intact
-    const stillThere = await getInvestmentImpl(alice.profileId, created.id)
+    const stillThere = await callerFor(alice.profileId).investments.get({ id: created.id })
     expect(stillThere.investedAmount).toBe('5000')
   })
 
   it('updateSavingsInvestmentImpl updates name and currentValue', async () => {
     const user = await createTestUser()
 
-    const created = await createSavingsInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.createSavings({
       name: 'Old Name',
       startDate: '2026-01-01',
       currentValue: '20000.00',
     })
 
-    await updateSavingsInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.updateSavings({
       id: created.id,
       name: 'New Name',
       currentValue: '22000.00',
     })
 
-    const updated = await getInvestmentImpl(user.profileId, created.id)
+    const updated = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(updated.name).toBe('New Name')
     expect(updated.currentValue).toBe('22000')
   })
@@ -643,20 +634,20 @@ describe('savings pot (flexible) investments', () => {
   it('filters the list by savings type', async () => {
     const user = await createTestUser()
 
-    await createInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.create({
       name: 'My Stock',
       type: 'stock',
       investedAmount: '1000.00',
       currentValue: '1000.00',
       dateOfInvestment: '2026-01-01',
     })
-    await createSavingsInvestmentImpl(user.profileId, {
+    await callerFor(user.profileId).investments.createSavings({
       name: 'My Savings',
       startDate: '2026-01-01',
       currentValue: '0',
     })
 
-    const savingsOnly = await listInvestmentsImpl(user.profileId, {
+    const savingsOnly = await callerFor(user.profileId).investments.list({
       status: 'active',
       type: 'savings',
     })
@@ -673,7 +664,7 @@ describe('savings pot (flexible) investments', () => {
 describe('withdrawals', () => {
   it('partial lump-sum withdrawal reduces currentValue, preserves investedAmount, logs row', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Apple',
       type: 'stock',
       investedAmount: '10000.00',
@@ -681,14 +672,14 @@ describe('withdrawals', () => {
       dateOfInvestment: '2026-01-01',
     })
 
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '3000.00',
       withdrawalDate: '2026-03-01',
       notes: 'partial sale',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.investedAmount).toBe('10000')
     expect(inv.currentValue).toBe('9000')
     expect(inv.status).toBe('active')
@@ -700,7 +691,7 @@ describe('withdrawals', () => {
 
   it('full lump-sum withdrawal with closeInvestment closes the investment and sets exitValue', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Gold bar',
       type: 'gold',
       investedAmount: '5000.00',
@@ -708,14 +699,14 @@ describe('withdrawals', () => {
       dateOfInvestment: '2026-01-01',
     })
 
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '5500.00',
       withdrawalDate: '2026-04-10',
       closeInvestment: true,
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.status).toBe('completed')
     expect(inv.currentValue).toBe('0')
     expect(inv.exitValue).toBe('5500')
@@ -729,21 +720,21 @@ describe('withdrawals', () => {
     // uses exitValue alone for completed items; if it added totalWithdrawn
     // the realized proceeds would be counted twice.
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '10000.00',
       currentValue: '10000.00',
       dateOfInvestment: '2026-01-01',
     })
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '10000.00',
       withdrawalDate: '2026-04-10',
       closeInvestment: true,
     })
 
-    const [row] = await listInvestmentsImpl(user.profileId, {
+    const [row] = await callerFor(user.profileId).investments.list({
       status: 'completed',
       type: 'all',
     })
@@ -758,19 +749,19 @@ describe('withdrawals', () => {
 
   it('savings (flexible) partial withdrawal mirrors lump-sum behavior', async () => {
     const user = await createTestUser()
-    const pot = await createSavingsInvestmentImpl(user.profileId, {
+    const pot = await callerFor(user.profileId).investments.createSavings({
       name: 'Emergency fund',
       startDate: '2026-01-01',
       currentValue: '10000.00',
     })
 
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: pot.id,
       amount: '3000.00',
       withdrawalDate: '2026-02-15',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, pot.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: pot.id })
     expect(inv.investedAmount).toBe('10000') // preserved (deposits unchanged)
     expect(inv.currentValue).toBe('7000')
     expect(inv.status).toBe('active')
@@ -779,7 +770,7 @@ describe('withdrawals', () => {
 
   it('rejects a withdrawal amount that exceeds currentValue', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '1000.00',
@@ -788,21 +779,21 @@ describe('withdrawals', () => {
     })
 
     await expect(
-      withdrawImpl(user.profileId, {
+      callerFor(user.profileId).investments.withdraw({
         investmentId: created.id,
         amount: '1500.00',
         withdrawalDate: '2026-02-01',
       }),
     ).rejects.toThrow(/exceeds/i)
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.currentValue).toBe('1000') // untouched
     expect(inv.withdrawals).toHaveLength(0)
   })
 
   it('rejects withdrawImpl on a DPS (scheduled) investment — must use closeDpsImpl', async () => {
     const user = await createTestUser()
-    const dps = await createDpsInvestmentImpl(user.profileId, {
+    const dps = await callerFor(user.profileId).investments.createDps({
       name: 'Bank DPS',
       monthlyDeposit: '1000.00',
       tenureMonths: 12,
@@ -812,7 +803,7 @@ describe('withdrawals', () => {
     })
 
     await expect(
-      withdrawImpl(user.profileId, {
+      callerFor(user.profileId).investments.withdraw({
         investmentId: dps.id,
         amount: '500.00',
         withdrawalDate: '2026-02-01',
@@ -822,7 +813,7 @@ describe('withdrawals', () => {
 
   it('rejects withdrawals on a non-active investment', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '1000.00',
@@ -830,7 +821,7 @@ describe('withdrawals', () => {
       dateOfInvestment: '2026-01-01',
     })
     // Close it via a full withdrawal first
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '1000.00',
       withdrawalDate: '2026-02-01',
@@ -838,7 +829,7 @@ describe('withdrawals', () => {
     })
 
     await expect(
-      withdrawImpl(user.profileId, {
+      callerFor(user.profileId).investments.withdraw({
         investmentId: created.id,
         amount: '100.00',
         withdrawalDate: '2026-03-01',
@@ -849,7 +840,7 @@ describe('withdrawals', () => {
   it("refuses withdrawals against another profile's investment", async () => {
     const alice = await createTestUser({ email: 'alice@phinio.test' })
     const bob = await createTestUser({ email: 'bob@phinio.test' })
-    const aliceInv = await createInvestmentImpl(alice.profileId, {
+    const aliceInv = await callerFor(alice.profileId).investments.create({
       name: 'Alice stock',
       type: 'stock',
       investedAmount: '1000.00',
@@ -858,7 +849,7 @@ describe('withdrawals', () => {
     })
 
     await expect(
-      withdrawImpl(bob.profileId, {
+      callerFor(bob.profileId).investments.withdraw({
         investmentId: aliceInv.id,
         amount: '100.00',
         withdrawalDate: '2026-02-01',
@@ -868,7 +859,7 @@ describe('withdrawals', () => {
 
   it('closeDpsImpl deletes upcoming installments, keeps paid ones, sets exitValue', async () => {
     const user = await createTestUser()
-    const dps = await createDpsInvestmentImpl(user.profileId, {
+    const dps = await callerFor(user.profileId).investments.createDps({
       name: 'Bank DPS',
       monthlyDeposit: '1000.00',
       tenureMonths: 12,
@@ -878,22 +869,22 @@ describe('withdrawals', () => {
     })
 
     // Pay the first 4 installments
-    const before = await getInvestmentImpl(user.profileId, dps.id)
+    const before = await callerFor(user.profileId).investments.get({ id: dps.id })
     for (const dep of before.deposits.slice(0, 4)) {
-      await markDepositPaidImpl(user.profileId, {
+      await callerFor(user.profileId).investments.markDepositPaid({
         depositId: dep.id,
         paid: true,
       })
     }
 
-    await closeDpsImpl(user.profileId, {
+    await callerFor(user.profileId).investments.closeDps({
       investmentId: dps.id,
       receivedAmount: '3950.00',
       closureDate: '2026-05-15',
       notes: 'switched bank',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, dps.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: dps.id })
     expect(inv.status).toBe('closed')
     expect(inv.currentValue).toBe('0')
     expect(inv.exitValue).toBe('3950')
@@ -908,7 +899,7 @@ describe('withdrawals', () => {
 
   it('closeDpsImpl rejects non-DPS investments', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '1000.00',
@@ -917,7 +908,7 @@ describe('withdrawals', () => {
     })
 
     await expect(
-      closeDpsImpl(user.profileId, {
+      callerFor(user.profileId).investments.closeDps({
         investmentId: created.id,
         receivedAmount: '500.00',
         closureDate: '2026-02-01',
@@ -927,7 +918,7 @@ describe('withdrawals', () => {
 
   it('closeDpsImpl rejects an already-closed DPS', async () => {
     const user = await createTestUser()
-    const dps = await createDpsInvestmentImpl(user.profileId, {
+    const dps = await callerFor(user.profileId).investments.createDps({
       name: 'DPS',
       monthlyDeposit: '500.00',
       tenureMonths: 6,
@@ -935,14 +926,14 @@ describe('withdrawals', () => {
       interestType: 'simple',
       startDate: '2026-01-01',
     })
-    await closeDpsImpl(user.profileId, {
+    await callerFor(user.profileId).investments.closeDps({
       investmentId: dps.id,
       receivedAmount: '100.00',
       closureDate: '2026-02-01',
     })
 
     await expect(
-      closeDpsImpl(user.profileId, {
+      callerFor(user.profileId).investments.closeDps({
         investmentId: dps.id,
         receivedAmount: '50.00',
         closureDate: '2026-03-01',
@@ -952,7 +943,7 @@ describe('withdrawals', () => {
 
   it('listInvestmentsImpl returns totalWithdrawn summed across the table', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '5000.00',
@@ -960,18 +951,18 @@ describe('withdrawals', () => {
       dateOfInvestment: '2026-01-01',
     })
 
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '1000.00',
       withdrawalDate: '2026-02-01',
     })
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '500.00',
       withdrawalDate: '2026-03-01',
     })
 
-    const rows = await listInvestmentsImpl(user.profileId, {
+    const rows = await callerFor(user.profileId).investments.list({
       status: 'active',
       type: 'all',
     })
@@ -982,7 +973,7 @@ describe('withdrawals', () => {
 
   it('getInvestmentImpl returns withdrawals sorted by date desc', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '5000.00',
@@ -990,41 +981,41 @@ describe('withdrawals', () => {
       dateOfInvestment: '2026-01-01',
     })
 
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '500.00',
       withdrawalDate: '2026-02-01',
     })
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '300.00',
       withdrawalDate: '2026-04-01',
     })
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '200.00',
       withdrawalDate: '2026-03-01',
     })
 
-    const inv = await getInvestmentImpl(user.profileId, created.id)
+    const inv = await callerFor(user.profileId).investments.get({ id: created.id })
     expect(inv.withdrawals.map((w) => w.amount)).toEqual(['300', '200', '500'])
   })
 
   it('cascades: deleting the investment removes its withdrawal rows', async () => {
     const user = await createTestUser()
-    const created = await createInvestmentImpl(user.profileId, {
+    const created = await callerFor(user.profileId).investments.create({
       name: 'Stock',
       type: 'stock',
       investedAmount: '1000.00',
       currentValue: '1000.00',
       dateOfInvestment: '2026-01-01',
     })
-    await withdrawImpl(user.profileId, {
+    await callerFor(user.profileId).investments.withdraw({
       investmentId: created.id,
       amount: '200.00',
       withdrawalDate: '2026-02-01',
     })
-    await deleteInvestmentImpl(user.profileId, { id: created.id })
+    await callerFor(user.profileId).investments.delete({ id: created.id })
 
     const remaining = await prisma.investmentWithdrawal.count({
       where: { investmentId: created.id },
