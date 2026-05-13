@@ -16,12 +16,14 @@ import type { AppContext } from '@phinio/trpc'
 export async function createTRPCContext(req: Request): Promise<AppContext> {
   const session = await auth.api.getSession({ headers: req.headers })
   let profileId: string | null = null
+  let userId: string | null = null
   if (session) {
+    userId = session.user.id
     const profile = await prisma.profile.findUnique({
       where: { userId: session.user.id },
       select: { id: true },
     })
     profileId = profile?.id ?? null
   }
-  return { prisma, profileId, locale: 'en' }
+  return { prisma, profileId, userId, locale: 'en' }
 }

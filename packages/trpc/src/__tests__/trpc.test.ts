@@ -9,6 +9,7 @@ describe('protectedProcedure', () => {
     const caller = testRouter.createCaller({
       prisma: {} as never,
       profileId: null,
+      userId: null,
       locale: 'en',
     })
     await expect(caller.ping()).rejects.toMatchObject({
@@ -23,6 +24,7 @@ describe('protectedProcedure', () => {
     const caller = testRouter.createCaller({
       prisma: {} as never,
       profileId: 'profile-123',
+      userId: 'user-123',
       locale: 'en',
     })
     expect(await caller.ping()).toBe('profile-123')

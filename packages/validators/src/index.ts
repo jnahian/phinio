@@ -321,6 +321,38 @@ export const emiCompleteSchema = z.object({
 export type EmiCompleteInput = z.infer<typeof emiCompleteSchema>
 
 // ----------------------------------------------------------------------------
+// Profile
+// ----------------------------------------------------------------------------
+
+export const PREFERRED_CURRENCIES = ['BDT', 'USD'] as const
+export type PreferredCurrency = (typeof PREFERRED_CURRENCIES)[number]
+
+export const SUPPORTED_LOCALES = ['en', 'bn'] as const
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
+
+export const updateProfileCurrencySchema = z.object({
+  preferredCurrency: z.enum(PREFERRED_CURRENCIES),
+  ...clientMutationIdField,
+})
+export type UpdateProfileCurrencyInput = z.infer<
+  typeof updateProfileCurrencySchema
+>
+
+export const updateProfileNameSchema = z.object({
+  fullName: z.string().trim().min(2, 'Name must be at least 2 characters'),
+  ...clientMutationIdField,
+})
+export type UpdateProfileNameInput = z.infer<typeof updateProfileNameSchema>
+
+export const updateProfileLanguageSchema = z.object({
+  preferredLanguage: z.enum(SUPPORTED_LOCALES),
+  ...clientMutationIdField,
+})
+export type UpdateProfileLanguageInput = z.infer<
+  typeof updateProfileLanguageSchema
+>
+
+// ----------------------------------------------------------------------------
 // Notifications
 // ----------------------------------------------------------------------------
 

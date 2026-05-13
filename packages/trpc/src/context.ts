@@ -12,6 +12,13 @@ export type AppContext = {
    * `protectedProcedure` middleware narrows this to a non-null `profileId`.
    */
   profileId: string | null
+  /**
+   * The authenticated Better Auth user id, or `null` for unauthenticated
+   * requests. Needed by the profile domain, where some operations (name /
+   * currency / language) update the underlying `User` row directly rather
+   * than only the `Profile`. `protectedProcedure` narrows to non-null.
+   */
+  userId: string | null
   /** Detected locale (en | bn). */
   locale: string
 }

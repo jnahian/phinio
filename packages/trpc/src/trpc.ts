@@ -19,9 +19,11 @@ export const publicProcedure = t.procedure
  */
 export const protectedProcedure = t.procedure.use(
   middleware(({ ctx, next }) => {
-    if (!ctx.profileId) {
+    if (!ctx.profileId || !ctx.userId) {
       throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
-    return next({ ctx: { ...ctx, profileId: ctx.profileId } })
+    return next({
+      ctx: { ...ctx, profileId: ctx.profileId, userId: ctx.userId },
+    })
   }),
 )
