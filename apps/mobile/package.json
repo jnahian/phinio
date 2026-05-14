@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.6.11",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@phinio/calc": "workspace:*",
     "@phinio/design-tokens": "workspace:*",
@@ -32,7 +33,9 @@
     "expo-constants": "~18.0.0",
     "expo-glass-effect": "~0.1.10",
     "expo-linking": "~8.0.0",
+    "expo-network": "^55.0.14",
     "expo-router": "~6.0.0",
+    "expo-secure-store": "^55.0.14",
     "expo-status-bar": "~3.0.0",
     "expo-symbols": "~1.0.8",
     "i18next": "^26.0.9",
