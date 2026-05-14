@@ -40,10 +40,12 @@
   },
   "tabs": {
     "home": "হোম",
+    "dashboard": "ড্যাশবোর্ড",
     "investments": "বিনিয়োগ",
     "emis": "ইএমআই",
     "activity": "কার্যকলাপ",
-    "profile": "প্রোফাইল"
+    "profile": "প্রোফাইল",
+    "settings": "সেটিংস"
   },
   "pageTitles": {
     "dashboard": "ড্যাশবোর্ড",

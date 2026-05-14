@@ -40,10 +40,12 @@
   },
   "tabs": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "investments": "Invest",
     "emis": "EMIs",
     "activity": "Activity",
-    "profile": "Profile"
+    "profile": "Profile",
+    "settings": "Settings"
   },
   "pageTitles": {
     "dashboard": "Dashboard",
