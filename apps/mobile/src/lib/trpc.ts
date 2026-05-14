@@ -5,6 +5,7 @@ import superjson from 'superjson'
 import type { AppRouter } from '@phinio/trpc'
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
+import { getSessionToken } from './auth'
 
 /**
  * Base URL for the Phinio API. Expo only exposes env vars prefixed with
@@ -23,12 +24,11 @@ export const trpcClient = createTRPCClient<AppRouter>({
     httpBatchLink({
       url: `${BASE_URL}/api/trpc`,
       transformer: superjson,
-      headers() {
-        // Locale header is a stub for now; Phase 3D will add the
-        // Better Auth bearer token via the session manager.
-        return {
-          'x-locale': 'en',
-        }
+      async headers() {
+        const token = await getSessionToken()
+        const headers: Record<string, string> = { 'x-locale': 'en' }
+        if (token) headers.Authorization = `Bearer ${token}`
+        return headers
       },
     }),
   ],
