@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
+import { expo } from '@better-auth/expo'
 import { Resend } from 'resend'
 import { prisma } from '#/db'
 import {
@@ -111,5 +112,6 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [tanstackStartCookies()],
+  trustedOrigins: ['phinio://'],
+  plugins: [expo(), tanstackStartCookies()],
 })
