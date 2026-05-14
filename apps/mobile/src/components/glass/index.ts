@@ -14,6 +14,7 @@ export { GlassNav } from './GlassNav'
 export type { GlassNavProps } from './GlassNav'
 
 export { GlassTabBar } from './GlassTabBar'
+export type { GlassTabIconName } from './GlassTabBar'
 
 export { GlassSheet } from './GlassSheet'
 export type { GlassSheetHandle, GlassSheetProps } from './GlassSheet'

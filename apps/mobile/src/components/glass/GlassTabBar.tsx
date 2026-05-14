@@ -1,8 +1,16 @@
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
+import { SymbolView, type SFSymbol } from 'expo-symbols'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons'
+import type { ComponentProps } from 'react'
 import { GlassSurface } from './GlassSurface'
 import { useTheme } from '#/theme/use-theme'
+
+export type GlassTabIconName = {
+  sf: SFSymbol
+  material: ComponentProps<typeof MaterialIcons>['name']
+}
 
 /**
  * Bottom tab bar compatible with `expo-router`'s `<Tabs />` tabBar
@@ -48,6 +56,8 @@ export function GlassTabBar({
           }
 
           const tint = isFocused ? colors.primary : colors.onSurfaceVariant
+          const iconName = (options as { tabBarIconName?: GlassTabIconName })
+            .tabBarIconName
 
           return (
             <Pressable
@@ -57,7 +67,7 @@ export function GlassTabBar({
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
             >
-              <TabIcon label={label} tint={tint} />
+              <TabIcon label={label} tint={tint} icon={iconName} />
               <Text style={[styles.label, { color: tint }]}>{label}</Text>
             </Pressable>
           )
@@ -67,13 +77,28 @@ export function GlassTabBar({
   )
 }
 
-/**
- * Tiny icon proxy so the bar still renders in scaffold/demo contexts
- * where real icons haven't been wired yet. Production usage in
- * Phase 3D will replace this with `<SymbolView />` (iOS) and
- * `<MaterialIcons />` (Android) driven by per-tab config.
- */
-function TabIcon({ label, tint }: { label: string; tint: string }) {
+function TabIcon({
+  label,
+  tint,
+  icon,
+}: {
+  label: string
+  tint: string
+  icon?: GlassTabIconName
+}) {
+  if (icon) {
+    if (Platform.OS === 'ios') {
+      return (
+        <SymbolView
+          name={icon.sf}
+          size={22}
+          tintColor={tint}
+          resizeMode="scaleAspectFit"
+        />
+      )
+    }
+    return <MaterialIcons name={icon.material} size={22} color={tint} />
+  }
   const initial = label.slice(0, 1).toUpperCase()
   return (
     <View style={styles.iconStub}>
@@ -81,10 +106,6 @@ function TabIcon({ label, tint }: { label: string; tint: string }) {
         style={[
           styles.iconText,
           { color: tint },
-          // SF symbols look meaningfully different from Material icons —
-          // this stub is intentionally generic so the difference is
-          // invisible in 3C. Marked here so the eventual upgrade path
-          // is obvious.
           Platform.OS === 'android' ? styles.iconAndroid : null,
         ]}
       >
