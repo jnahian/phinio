@@ -126,6 +126,7 @@ model Investment {
   currentValue     Decimal             @db.Decimal(15, 2) @default(0)
   exitValue        Decimal?            @db.Decimal(15, 2)
   dateOfInvestment DateTime?           @db.Date
+  estimatedClosureDate DateTime?       @db.Date
   completedAt      DateTime?           @db.Date
 
   // scheduled (DPS) — fixed monthly, pre-generated schedule

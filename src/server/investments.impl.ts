@@ -73,6 +73,7 @@ export interface InvestmentListItem {
   exitValue: string | null
   totalWithdrawn: string
   dateOfInvestment: Date | null
+  estimatedClosureDate: Date | null
   // scheduled (DPS)
   monthlyDeposit: string | null
   tenureMonths: number | null
@@ -149,6 +150,7 @@ export async function listInvestmentsImpl(
       exitValue: decOrNull(row.exitValue),
       totalWithdrawn,
       dateOfInvestment: row.dateOfInvestment,
+      estimatedClosureDate: row.estimatedClosureDate,
       monthlyDeposit: decOrNull(row.monthlyDeposit),
       tenureMonths: row.tenureMonths,
       interestRate: decOrNull(row.interestRate),
@@ -200,6 +202,7 @@ export interface InvestmentDetail {
   currentValue: string
   exitValue: string | null
   dateOfInvestment: Date | null
+  estimatedClosureDate: Date | null
   completedAt: Date | null
   monthlyDeposit: string | null
   tenureMonths: number | null
@@ -235,6 +238,7 @@ export async function getInvestmentImpl(
     currentValue: dec(row.currentValue),
     exitValue: decOrNull(row.exitValue),
     dateOfInvestment: row.dateOfInvestment,
+    estimatedClosureDate: row.estimatedClosureDate,
     completedAt: row.completedAt,
     monthlyDeposit: decOrNull(row.monthlyDeposit),
     tenureMonths: row.tenureMonths,
@@ -283,6 +287,9 @@ export async function createInvestmentImpl(
         investedAmount: data.investedAmount,
         currentValue: data.currentValue,
         dateOfInvestment: new Date(data.dateOfInvestment),
+        estimatedClosureDate: data.estimatedClosureDate
+          ? new Date(data.estimatedClosureDate)
+          : null,
         notes: data.notes,
       },
     })
@@ -329,6 +336,9 @@ export async function updateInvestmentImpl(
       data.status === 'completed' && data.completedAt
         ? new Date(data.completedAt)
         : null
+    const nextEstimatedClosureDate = data.estimatedClosureDate
+      ? new Date(data.estimatedClosureDate)
+      : null
 
     // Scope the write itself by profileId so authorization lives in the
     // WHERE clause, not in the prior findFirst. updateMany returns a count
@@ -341,6 +351,7 @@ export async function updateInvestmentImpl(
         investedAmount: data.investedAmount,
         currentValue: data.currentValue,
         dateOfInvestment: new Date(data.dateOfInvestment),
+        estimatedClosureDate: nextEstimatedClosureDate,
         notes: data.notes,
         status: data.status,
         exitValue: nextExitValue,
@@ -361,6 +372,7 @@ export async function updateInvestmentImpl(
         investedAmount: data.investedAmount,
         currentValue: data.currentValue,
         dateOfInvestment: new Date(data.dateOfInvestment),
+        estimatedClosureDate: nextEstimatedClosureDate,
         notes: data.notes ?? null,
         status: data.status,
         exitValue: nextExitValue,
@@ -372,6 +384,11 @@ export async function updateInvestmentImpl(
         { key: 'investedAmount', label: 'Invested amount', isMoney: true },
         { key: 'currentValue', label: 'Current value', isMoney: true },
         { key: 'dateOfInvestment', label: 'Date', format: fmtDate },
+        {
+          key: 'estimatedClosureDate',
+          label: 'Estimated closure',
+          format: fmtDate,
+        },
         { key: 'notes', label: 'Notes', format: fmtText },
         { key: 'status', label: 'Status', format: fmtText },
         { key: 'exitValue', label: 'Exit value', isMoney: true },

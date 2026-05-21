@@ -21,7 +21,8 @@
     "deposits_one": "{{count}}টি জমা",
     "deposits_other": "{{count}}টি জমা",
     "next": "পরবর্তী",
-    "returnSuffix": "রিটার্ন"
+    "returnSuffix": "রিটার্ন",
+    "estimatedClosure": "আনুমানিক সমাপ্তি"
   },
   "types": {
     "all": "সব",
@@ -53,6 +54,7 @@
     "investedLabel": "বিনিয়োগকৃত",
     "currentValueLabel": "বর্তমান মূল্য",
     "dateLabel": "বিনিয়োগের তারিখ",
+    "estimatedClosureLabel": "আনুমানিক সমাপ্তির তারিখ (ঐচ্ছিক)",
     "notesLabel": "নোট",
     "notesPlaceholder": "এই বিনিয়োগের কারণ, লক্ষ্য বা যেকোনো প্রসঙ্গ",
     "submit": "বিনিয়োগ সংরক্ষণ করুন",

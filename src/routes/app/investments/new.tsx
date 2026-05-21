@@ -68,6 +68,7 @@ function AddInvestmentScreen() {
   const [investedAmount, setInvestedAmount] = useState('')
   const [currentValue, setCurrentValue] = useState('')
   const [dateOfInvestment, setDateOfInvestment] = useState(todayIso())
+  const [estimatedClosureDate, setEstimatedClosureDate] = useState('')
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -81,6 +82,7 @@ function AddInvestmentScreen() {
       investedAmount,
       currentValue,
       dateOfInvestment,
+      estimatedClosureDate: estimatedClosureDate || undefined,
       notes: notes.trim() || undefined,
     } satisfies InvestmentCreateInput)
 
@@ -151,6 +153,14 @@ function AddInvestmentScreen() {
               value={dateOfInvestment}
               onChange={(e) => setDateOfInvestment(e.target.value)}
               error={fieldErrors.dateOfInvestment}
+            />
+            <TextField
+              id="estimatedClosureDate"
+              label={t('form.estimatedClosureLabel')}
+              type="date"
+              value={estimatedClosureDate}
+              onChange={(e) => setEstimatedClosureDate(e.target.value)}
+              error={fieldErrors.estimatedClosureDate}
             />
           </section>
 
