@@ -129,7 +129,9 @@ describe('lump-sum investments', () => {
       name: 'Gold',
       type: 'gold',
       investedAmount: '5000.00',
-      currentValue: '6500.00',
+      // A stale current value here should be overridden by the exit value once
+      // the position is completed.
+      currentValue: '6000.00',
       dateOfInvestment: '2025-12-01',
       status: 'completed',
       exitValue: '6500.00',
@@ -139,6 +141,8 @@ describe('lump-sum investments', () => {
     const updated = await getInvestmentImpl(user.profileId, inv.id)
     expect(updated.status).toBe('completed')
     expect(updated.exitValue).toBe('6500')
+    // On completion the current value collapses to the exit value.
+    expect(updated.currentValue).toBe('6500')
 
     const active = await listInvestmentsImpl(user.profileId, {
       status: 'active',
