@@ -3,8 +3,8 @@
 High-level system design for Phinio. For deeper specs, see:
 
 - **Product behavior:** `docs/Phinio_PRD_v1.md`
-- **Database:** `SCHEMAS.md` (and `prisma/schema.prisma`)
-- **Execution patterns:** `WORKFLOWS.md`
+- **Database:** `docs/SCHEMAS.md` (and `prisma/schema.prisma`)
+- **Execution patterns:** `docs/WORKFLOWS.md`
 - **Offline strategy:** `docs/OFFLINE_PLAN.md`
 
 ---
@@ -88,7 +88,7 @@ This split is mandatory — a static import of `./*.impl` from `*.ts` will pollu
 
 ### Offline-first
 
-Cache lives in IndexedDB (24h `gcTime`, 7-day persister `maxAge`). Mutations queue while offline (`networkMode: 'offlineFirst'`) and replay on reconnect via `queryClient.resumePausedMutations()`. Idempotency is enforced server-side via `clientMutationId` + `ProcessedMutation` table — see `WORKFLOWS.md`.
+Cache lives in IndexedDB (24h `gcTime`, 7-day persister `maxAge`). Mutations queue while offline (`networkMode: 'offlineFirst'`) and replay on reconnect via `queryClient.resumePausedMutations()`. Idempotency is enforced server-side via `clientMutationId` + `ProcessedMutation` table — see `docs/WORKFLOWS.md`.
 
 Cached financial data must survive app patch releases — the persister buster is a manually-bumped `CACHE_SCHEMA_VERSION`, **not** the app version.
 
@@ -108,7 +108,7 @@ Every user-initiated mutation writes one `ActivityLog` row. `entityLabel` is **d
 
 ### Styling
 
-Tailwind v4 via `@tailwindcss/vite`. **No `tailwind.config.js`** — all tokens live under `@theme` in `src/styles.css`. Dark-only; see `design.md`.
+Tailwind v4 via `@tailwindcss/vite`. **No `tailwind.config.js`** — all tokens live under `@theme` in `src/styles.css`. Dark-only; see `docs/design.md`.
 
 ---
 

@@ -107,7 +107,7 @@ Idempotency log for offline replay. Every mutating server-fn accepts an optional
 - `resultJson` is the cached server response — must survive Prisma's JSON serializer.
 - Index `(createdAt)` for the daily TTL cleanup (>30 days).
 
-See `WORKFLOWS.md` → "Mutation lifecycle" for how this wraps every mutation.
+See `docs/WORKFLOWS.md` → "Mutation lifecycle" for how this wraps every mutation.
 
 ---
 

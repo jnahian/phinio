@@ -1,6 +1,6 @@
 # Workflows
 
-Execution patterns for Phinio. Each section is a recipe — when you're adding a feature, find the matching workflow and follow it. For the _why_ behind these patterns, see `ARCHITECTURE.md`.
+Execution patterns for Phinio. Each section is a recipe — when you're adding a feature, find the matching workflow and follow it. For the _why_ behind these patterns, see `docs/ARCHITECTURE.md`.
 
 ---
 
@@ -181,7 +181,7 @@ VAPID keys: `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` in `.env.local`.
 
 ## 8. Adding a new screen
 
-1. **Reference order:** PRD section (behavior) → `screens/<name>/code.html` (layout) → `design.md` + `screens/phinio_modern_noir/DESIGN.md` (tokens).
+1. **Reference order:** PRD section (behavior) → `screens/<name>/code.html` (layout) → `docs/design.md` + `screens/phinio_modern_noir/DESIGN.md` (tokens).
 2. Create route file under `src/routes/app/<area>/<name>.tsx`. Plugin regenerates `routeTree.gen.ts` automatically — never hand-edit it.
 3. Compose components from `src/components/`. New leaf components go there; per-screen layouts stay in the route file.
 4. Data: add a hook in `src/hooks/` if the screen has its own queries; otherwise import an existing one.
