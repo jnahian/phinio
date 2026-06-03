@@ -66,10 +66,19 @@ function AddInvestmentScreen() {
   const [name, setName] = useState('')
   const [type, setType] = useState<InvestmentType>('stock')
   const [investedAmount, setInvestedAmount] = useState('')
+  const [currentValue, setCurrentValue] = useState('')
+  // Until the user edits the current value themselves, it mirrors the invested
+  // amount — a brand-new position is worth what was put in.
+  const [currentValueTouched, setCurrentValueTouched] = useState(false)
   const [dateOfInvestment, setDateOfInvestment] = useState(todayIso())
   const [estimatedClosureDate, setEstimatedClosureDate] = useState('')
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  function handleInvestedAmountChange(value: string) {
+    setInvestedAmount(value)
+    if (!currentValueTouched) setCurrentValue(value)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -79,9 +88,7 @@ function AddInvestmentScreen() {
       name,
       type,
       investedAmount,
-      // A brand-new position is worth exactly what was put in; the current
-      // value tracks from the invested amount and is edited later.
-      currentValue: investedAmount,
+      currentValue,
       dateOfInvestment,
       estimatedClosureDate: estimatedClosureDate || undefined,
       notes: notes.trim() || undefined,
@@ -125,16 +132,31 @@ function AddInvestmentScreen() {
               error={fieldErrors.name}
               autoFocus
             />
-            <TextField
-              id="investedAmount"
-              label={t('form.investedLabel')}
-              placeholder="0.00"
-              inputMode="decimal"
-              prefix={symbol}
-              value={investedAmount}
-              onChange={(e) => setInvestedAmount(e.target.value)}
-              error={fieldErrors.investedAmount}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                id="investedAmount"
+                label={t('form.investedLabel')}
+                placeholder="0.00"
+                inputMode="decimal"
+                prefix={symbol}
+                value={investedAmount}
+                onChange={(e) => handleInvestedAmountChange(e.target.value)}
+                error={fieldErrors.investedAmount}
+              />
+              <TextField
+                id="currentValue"
+                label={t('form.currentValueLabel')}
+                placeholder="0.00"
+                inputMode="decimal"
+                prefix={symbol}
+                value={currentValue}
+                onChange={(e) => {
+                  setCurrentValueTouched(true)
+                  setCurrentValue(e.target.value)
+                }}
+                error={fieldErrors.currentValue}
+              />
+            </div>
             <TextField
               id="dateOfInvestment"
               label={t('form.dateLabel')}
