@@ -67,10 +67,18 @@ function AddInvestmentScreen() {
   const [type, setType] = useState<InvestmentType>('stock')
   const [investedAmount, setInvestedAmount] = useState('')
   const [currentValue, setCurrentValue] = useState('')
+  // Until the user edits the current value themselves, it mirrors the invested
+  // amount — a brand-new position is worth what was put in.
+  const [currentValueTouched, setCurrentValueTouched] = useState(false)
   const [dateOfInvestment, setDateOfInvestment] = useState(todayIso())
   const [estimatedClosureDate, setEstimatedClosureDate] = useState('')
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  function handleInvestedAmountChange(value: string) {
+    setInvestedAmount(value)
+    if (!currentValueTouched) setCurrentValue(value)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -132,7 +140,7 @@ function AddInvestmentScreen() {
                 inputMode="decimal"
                 prefix={symbol}
                 value={investedAmount}
-                onChange={(e) => setInvestedAmount(e.target.value)}
+                onChange={(e) => handleInvestedAmountChange(e.target.value)}
                 error={fieldErrors.investedAmount}
               />
               <TextField
@@ -142,7 +150,10 @@ function AddInvestmentScreen() {
                 inputMode="decimal"
                 prefix={symbol}
                 value={currentValue}
-                onChange={(e) => setCurrentValue(e.target.value)}
+                onChange={(e) => {
+                  setCurrentValueTouched(true)
+                  setCurrentValue(e.target.value)
+                }}
                 error={fieldErrors.currentValue}
               />
             </div>

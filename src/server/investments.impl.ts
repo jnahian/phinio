@@ -339,6 +339,10 @@ export async function updateInvestmentImpl(
     const nextEstimatedClosureDate = data.estimatedClosureDate
       ? new Date(data.estimatedClosureDate)
       : null
+    // On completion the position is realized, so its current value collapses to
+    // whatever it was exited at. Otherwise keep tracking the user-entered value.
+    const nextCurrentValue =
+      nextExitValue !== null ? nextExitValue : data.currentValue
 
     // Scope the write itself by profileId so authorization lives in the
     // WHERE clause, not in the prior findFirst. updateMany returns a count
@@ -349,7 +353,7 @@ export async function updateInvestmentImpl(
         name: data.name,
         type: data.type,
         investedAmount: data.investedAmount,
-        currentValue: data.currentValue,
+        currentValue: nextCurrentValue,
         dateOfInvestment: new Date(data.dateOfInvestment),
         estimatedClosureDate: nextEstimatedClosureDate,
         notes: data.notes,
@@ -370,7 +374,7 @@ export async function updateInvestmentImpl(
         name: data.name,
         type: data.type,
         investedAmount: data.investedAmount,
-        currentValue: data.currentValue,
+        currentValue: nextCurrentValue,
         dateOfInvestment: new Date(data.dateOfInvestment),
         estimatedClosureDate: nextEstimatedClosureDate,
         notes: data.notes ?? null,
