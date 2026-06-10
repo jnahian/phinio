@@ -56,6 +56,7 @@ export interface InvestmentListItem {
   exitValue: string | null
   totalWithdrawn: string
   dateOfInvestment: Date | null
+  estimatedClosureDate: Date | null
   // scheduled (DPS)
   monthlyDeposit: string | null
   tenureMonths: number | null
@@ -106,6 +107,7 @@ export interface InvestmentDetail {
   currentValue: string
   exitValue: string | null
   dateOfInvestment: Date | null
+  estimatedClosureDate: Date | null
   completedAt: Date | null
   monthlyDeposit: string | null
   tenureMonths: number | null
@@ -181,6 +183,7 @@ export const investmentsRouter = router({
           exitValue: decOrNull(row.exitValue),
           totalWithdrawn,
           dateOfInvestment: row.dateOfInvestment,
+          estimatedClosureDate: row.estimatedClosureDate,
           monthlyDeposit: decOrNull(row.monthlyDeposit),
           tenureMonths: row.tenureMonths,
           interestRate: decOrNull(row.interestRate),
@@ -217,6 +220,7 @@ export const investmentsRouter = router({
         currentValue: dec(row.currentValue),
         exitValue: decOrNull(row.exitValue),
         dateOfInvestment: row.dateOfInvestment,
+        estimatedClosureDate: row.estimatedClosureDate,
         completedAt: row.completedAt,
         monthlyDeposit: decOrNull(row.monthlyDeposit),
         tenureMonths: row.tenureMonths,
@@ -260,6 +264,9 @@ export const investmentsRouter = router({
             investedAmount: input.investedAmount,
             currentValue: input.currentValue,
             dateOfInvestment: new Date(input.dateOfInvestment),
+            estimatedClosureDate: input.estimatedClosureDate
+              ? new Date(input.estimatedClosureDate)
+              : null,
             notes: input.notes,
           },
         })
@@ -305,6 +312,13 @@ export const investmentsRouter = router({
           input.status === 'completed' && input.completedAt
             ? new Date(input.completedAt)
             : null
+        const nextEstimatedClosureDate = input.estimatedClosureDate
+          ? new Date(input.estimatedClosureDate)
+          : null
+        // On completion the position is realized, so its current value collapses to
+        // whatever it was exited at. Otherwise keep tracking the user-entered value.
+        const nextCurrentValue =
+          nextExitValue !== null ? nextExitValue : input.currentValue
 
         // Scope the write itself by profileId so authorization lives in the
         // WHERE clause, not in the prior findFirst. updateMany returns a count
@@ -315,8 +329,9 @@ export const investmentsRouter = router({
             name: input.name,
             type: input.type,
             investedAmount: input.investedAmount,
-            currentValue: input.currentValue,
+            currentValue: nextCurrentValue,
             dateOfInvestment: new Date(input.dateOfInvestment),
+            estimatedClosureDate: nextEstimatedClosureDate,
             notes: input.notes,
             status: input.status,
             exitValue: nextExitValue,
@@ -335,8 +350,9 @@ export const investmentsRouter = router({
             name: input.name,
             type: input.type,
             investedAmount: input.investedAmount,
-            currentValue: input.currentValue,
+            currentValue: nextCurrentValue,
             dateOfInvestment: new Date(input.dateOfInvestment),
+            estimatedClosureDate: nextEstimatedClosureDate,
             notes: input.notes ?? null,
             status: input.status,
             exitValue: nextExitValue,
@@ -348,6 +364,11 @@ export const investmentsRouter = router({
             { key: 'investedAmount', label: 'Invested amount', isMoney: true },
             { key: 'currentValue', label: 'Current value', isMoney: true },
             { key: 'dateOfInvestment', label: 'Date', format: fmtDate },
+            {
+              key: 'estimatedClosureDate',
+              label: 'Estimated closure',
+              format: fmtDate,
+            },
             { key: 'notes', label: 'Notes', format: fmtText },
             { key: 'status', label: 'Status', format: fmtText },
             { key: 'exitValue', label: 'Exit value', isMoney: true },
