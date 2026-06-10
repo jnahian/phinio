@@ -94,6 +94,7 @@ export const investmentCreateSchema = z.object({
   investedAmount: positiveDecimalString,
   currentValue: positiveDecimalString,
   dateOfInvestment: isoDateString,
+  estimatedClosureDate: isoDateString.optional(),
   notes: z.string().trim().max(1000).optional(),
   // Client-supplied row id so an offline optimistic create lines up with
   // the server's eventual insert on replay.
