@@ -80,6 +80,7 @@ function EditInvestmentScreen() {
   const [investedAmount, setInvestedAmount] = useState('')
   const [currentValue, setCurrentValue] = useState('')
   const [dateOfInvestment, setDateOfInvestment] = useState('')
+  const [estimatedClosureDate, setEstimatedClosureDate] = useState('')
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<'active' | 'completed'>('active')
   const [exitValue, setExitValue] = useState('')
@@ -96,6 +97,7 @@ function EditInvestmentScreen() {
     setInvestedAmount(String(investment.investedAmount))
     setCurrentValue(String(investment.currentValue))
     setDateOfInvestment(toDateInput(investment.dateOfInvestment))
+    setEstimatedClosureDate(toDateInput(investment.estimatedClosureDate))
     setNotes(investment.notes ?? '')
     setStatus(investment.status as 'active' | 'completed')
     setExitValue(investment.exitValue !== null ? investment.exitValue : '')
@@ -113,6 +115,7 @@ function EditInvestmentScreen() {
       investedAmount,
       currentValue,
       dateOfInvestment,
+      estimatedClosureDate: estimatedClosureDate || undefined,
       notes: notes.trim() || undefined,
       status,
       exitValue: status === 'completed' ? exitValue : undefined,
@@ -249,6 +252,14 @@ function EditInvestmentScreen() {
               value={dateOfInvestment}
               onChange={(e) => setDateOfInvestment(e.target.value)}
               error={fieldErrors.dateOfInvestment}
+            />
+            <TextField
+              id="estimatedClosureDate"
+              label={t('form.estimatedClosureLabel')}
+              type="date"
+              value={estimatedClosureDate}
+              onChange={(e) => setEstimatedClosureDate(e.target.value)}
+              error={fieldErrors.estimatedClosureDate}
             />
           </section>
 

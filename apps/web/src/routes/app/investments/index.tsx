@@ -312,6 +312,7 @@ interface ListItemProps {
     exitValue: string | null
     totalWithdrawn: string
     dateOfInvestment: Date | string | null
+    estimatedClosureDate: Date | string | null
     monthlyDeposit: string | null
     tenureMonths: number | null
     interestRate: string | null
@@ -348,6 +349,14 @@ function InvestmentCard({ item, currency }: ListItemProps) {
         year: 'numeric',
       })
     : null
+  const formattedClosureDate =
+    !isCompleted && item.estimatedClosureDate
+      ? fmt.date(item.estimatedClosureDate, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : null
   const typeKey = (
     item.type in INVESTMENT_TYPE_META ? item.type : 'other'
   ) as keyof typeof INVESTMENT_TYPE_META
@@ -407,6 +416,17 @@ function InvestmentCard({ item, currency }: ListItemProps) {
           <span className="font-medium text-on-surface-variant">
             {fmt.currency(item.investedAmount, currency)}
           </span>
+          {formattedClosureDate && (
+            <>
+              <span>·</span>
+              <span>
+                {t('list.estimatedClosure')}:{' '}
+                <span className="font-medium text-on-surface-variant">
+                  {formattedClosureDate}
+                </span>
+              </span>
+            </>
+          )}
         </div>
       </Card>
     </Link>
