@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.2] - 2026-06-03
+
+### Changed
+
+- The new-investment form now autofills the current value from the invested
+  amount as you type, so you no longer enter the same number twice for a fresh
+  lump-sum position. The field stays editable — type your own value and it
+  holds.
+- Completing an investment now sets its current value to the exit value, so a
+  realized position reads back the amount it was closed at.
+
+## [1.8.1] - 2026-05-21
+
+### Added
+
+- **Estimated closure date for investments.** Investments now carry an
+  optional estimated closure date that can be set when creating an
+  investment, changed later from the edit screen, and is shown on the
+  investments list.
+
 ## [1.8.0] - 2026-05-10
 
 ### Added
