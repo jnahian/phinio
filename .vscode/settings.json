@@ -8,7 +8,5 @@
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
   },
-  "i18n-ally.localesPaths": [
-    "src/lib/i18n"
-  ]
+  "i18n-ally.localesPaths": ["src/lib/i18n"]
 }

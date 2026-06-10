@@ -21,7 +21,8 @@
     "deposits_one": "{{count}} deposit",
     "deposits_other": "{{count}} deposits",
     "next": "Next",
-    "returnSuffix": "return"
+    "returnSuffix": "return",
+    "estimatedClosure": "Est. closure"
   },
   "types": {
     "all": "All",
@@ -53,6 +54,7 @@
     "investedLabel": "Invested",
     "currentValueLabel": "Current value",
     "dateLabel": "Date of investment",
+    "estimatedClosureLabel": "Estimated closure date (optional)",
     "notesLabel": "Notes",
     "notesPlaceholder": "Why this investment, goals, or any context",
     "submit": "Save investment",
