@@ -5,7 +5,7 @@ description: Cut a Phinio release — write user-facing CHANGELOG entries, bump 
 
 # Cutting a Phinio Release
 
-This skill turns "we have unreleased commits on main" into "v_X.Y.Z_ is published on GitHub." It has two halves:
+This skill turns "we have unreleased commits on main" into "v*X.Y.Z* is published on GitHub." It has two halves:
 
 1. **Author the changelog** — translate raw git history into release notes a real user can read. (The hard, judgment-heavy part.)
 2. **Publish** — bump versions, commit, push, create a GitHub Release. (Mechanical, but easy to get wrong on auth/branch boundaries.)
@@ -76,6 +76,7 @@ This is the work. Principles:
 Write the changelog block into `CHANGELOG.md`. Do **not** `git add`, do **not** commit yet — the user needs to eyeball the prose first.
 
 Report back with:
+
 - Entry counts per section.
 - Any judgment calls the user should verify — especially commits you folded, dropped, or grouped in non-obvious ways, and any version/`package.json` mismatches.
 
@@ -148,16 +149,16 @@ The auto-mode classifier may block this too, with a similar error citing "create
 
 ## Quick reference — full flow
 
-| Step | Command | Notes |
-|------|---------|-------|
-| Read commits | `git log --pretty=format:"%h %s%n%b%n---" v<PREV>..HEAD` | Read the whole output |
-| Edit `CHANGELOG.md` | (Edit tool) | Prepend new `## [VERSION]` block |
-| **STOP — let user review changelog prose** | | Don't proceed until asked |
-| Bump version | Edit `package.json`; `npm install --package-lock-only --silent` | Both files must move |
-| Commit | `git commit -m "🔖 chore: release v<NEW>" ...` | Co-author trailer per project convention |
-| **STOP — confirm push to main** | | `main` is protected; user must opt in |
-| Push | `git push origin main` | May need approval prompt |
-| Release | `gh release create v<NEW> --title "v<NEW>" --target main --notes "..."` | GitHub creates the tag; may need approval prompt |
+| Step                                       | Command                                                                 | Notes                                            |
+| ------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| Read commits                               | `git log --pretty=format:"%h %s%n%b%n---" v<PREV>..HEAD`                | Read the whole output                            |
+| Edit `CHANGELOG.md`                        | (Edit tool)                                                             | Prepend new `## [VERSION]` block                 |
+| **STOP — let user review changelog prose** |                                                                         | Don't proceed until asked                        |
+| Bump version                               | Edit `package.json`; `npm install --package-lock-only --silent`         | Both files must move                             |
+| Commit                                     | `git commit -m "🔖 chore: release v<NEW>" ...`                          | Co-author trailer per project convention         |
+| **STOP — confirm push to main**            |                                                                         | `main` is protected; user must opt in            |
+| Push                                       | `git push origin main`                                                  | May need approval prompt                         |
+| Release                                    | `gh release create v<NEW> --title "v<NEW>" --target main --notes "..."` | GitHub creates the tag; may need approval prompt |
 
 ## Example translation (changelog only)
 
