@@ -21,6 +21,7 @@
     "@phinio/trpc": "workspace:*",
     "@phinio/validators": "workspace:*",
     "@react-native-community/netinfo": "11.4.1",
+    "@shopify/flash-list": "^2.3.2",
     "@tanstack/query-persist-client-core": "^5.100.6",
     "@tanstack/query-sync-storage-persister": "^5.100.6",
     "@tanstack/react-query": "^5.100.6",
