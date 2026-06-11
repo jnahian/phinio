@@ -4,7 +4,7 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { calculateReturnPercent } from '@phinio/calc'
-import { GlassNav, GlassPill } from '#/components/glass'
+import { GlassFAB, GlassNav, GlassPill } from '#/components/glass'
 import { FilterPills } from '#/components/FilterPills'
 import { EmptyState, ErrorState, LoadingState } from '#/components/ScreenState'
 import { useTheme } from '#/theme/use-theme'
@@ -68,6 +68,10 @@ export default function InvestmentsScreen() {
           )}
         />
       )}
+      <GlassFAB
+        onPress={() => router.push('/investments/new')}
+        accessibilityLabel={t('list.addCta')}
+      />
     </View>
   )
 }

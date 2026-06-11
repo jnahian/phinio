@@ -1,13 +1,54 @@
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useRef, useState } from 'react'
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { SymbolView } from 'expo-symbols'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
+import {
+  addDepositSchema,
+  dpsCloseSchema,
+  investmentUpdateSchema,
+  withdrawalSchema,
+} from '@phinio/validators'
 import { GlassNav, GlassPill } from '#/components/glass'
+import type { GlassSheetHandle } from '#/components/glass'
 import { ErrorState, LoadingState } from '#/components/ScreenState'
+import { FormSheet, type FormSheetConfig } from '#/components/FormSheet'
 import { useTheme } from '#/theme/use-theme'
-import { useInvestmentQuery } from '#/hooks/useInvestments'
+import {
+  useAddDeposit,
+  useCloseDps,
+  useDeleteInvestment,
+  useDeleteSavings,
+  useInvestmentQuery,
+  useMarkDepositPaid,
+  useUpdateInvestment,
+  useWithdraw,
+} from '#/hooks/useInvestments'
 import { useMoney } from '#/hooks/useMoney'
+
+function isoToday(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function zodFieldErrors(
+  issues: readonly { path: PropertyKey[]; message: string }[],
+): Record<string, string> {
+  const fieldErrors: Record<string, string> = {}
+  for (const issue of issues) {
+    const field = String(issue.path[0] ?? '')
+    if (field && !fieldErrors[field]) fieldErrors[field] = issue.message
+  }
+  return fieldErrors
+}
 
 function BackButton() {
   const router = useRouter()
@@ -38,10 +79,179 @@ export default function InvestmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation('investments')
   const { colors } = useTheme()
+  const router = useRouter()
   const { money, date } = useMoney()
 
   const detail = useInvestmentQuery(id ?? '')
   const inv = detail.data
+
+  const sheetRef = useRef<GlassSheetHandle>(null)
+  const [sheetConfig, setSheetConfig] = useState<FormSheetConfig | null>(null)
+  const markDepositPaid = useMarkDepositPaid(id ?? '')
+  const updateInvestment = useUpdateInvestment()
+  const deleteInvestment = useDeleteInvestment()
+  const deleteSavings = useDeleteSavings()
+  const withdraw = useWithdraw()
+  const addDeposit = useAddDeposit()
+  const closeDps = useCloseDps()
+
+  const isActive = inv?.status === 'active'
+
+  const openSheet = (config: FormSheetConfig) => {
+    setSheetConfig(config)
+    // Give state a tick to propagate before expanding.
+    requestAnimationFrame(() => sheetRef.current?.expand())
+  }
+
+  const openWithdraw = () =>
+    openSheet({
+      title: t('withdraw:title'),
+      submitLabel: t('withdraw:confirm'),
+      fields: [
+        {
+          key: 'amount',
+          label: t('withdraw:amountLabel'),
+          keyboardType: 'decimal-pad',
+          placeholder: '0.00',
+        },
+        {
+          key: 'withdrawalDate',
+          label: t('withdraw:dateLabel'),
+          initialValue: isoToday(),
+          placeholder: 'YYYY-MM-DD',
+        },
+        { key: 'notes', label: t('withdraw:notesLabel') },
+      ],
+      onSubmit: (values) => {
+        const parsed = withdrawalSchema.safeParse({
+          investmentId: id,
+          amount: values.amount,
+          withdrawalDate: values.withdrawalDate,
+          notes: values.notes || undefined,
+        })
+        if (!parsed.success) return zodFieldErrors(parsed.error.issues)
+        withdraw.mutate(parsed.data)
+        return null
+      },
+    })
+
+  const openAddDeposit = () =>
+    openSheet({
+      title: t('savings.depositTitle'),
+      submitLabel: t('savings.depositCta'),
+      fields: [
+        {
+          key: 'amount',
+          label: t('savings.depositAmount'),
+          keyboardType: 'decimal-pad',
+          placeholder: '0.00',
+        },
+        {
+          key: 'depositDate',
+          label: t('savings.startDate'),
+          initialValue: isoToday(),
+          placeholder: 'YYYY-MM-DD',
+        },
+      ],
+      onSubmit: (values) => {
+        const parsed = addDepositSchema.safeParse({
+          investmentId: id,
+          amount: values.amount,
+          depositDate: values.depositDate,
+        })
+        if (!parsed.success) return zodFieldErrors(parsed.error.issues)
+        addDeposit.mutate(parsed.data)
+        return null
+      },
+    })
+
+  const openCloseDps = () =>
+    openSheet({
+      title: t('dps.closePremature'),
+      submitLabel: t('dps.closePremature'),
+      fields: [
+        {
+          key: 'receivedAmount',
+          label: t('withdraw:amountReceivedLabel'),
+          keyboardType: 'decimal-pad',
+          placeholder: '0.00',
+        },
+        {
+          key: 'closureDate',
+          label: t('withdraw:closureDateLabel'),
+          initialValue: isoToday(),
+          placeholder: 'YYYY-MM-DD',
+        },
+      ],
+      onSubmit: (values) => {
+        const parsed = dpsCloseSchema.safeParse({
+          investmentId: id,
+          receivedAmount: values.receivedAmount,
+          closureDate: values.closureDate,
+        })
+        if (!parsed.success) return zodFieldErrors(parsed.error.issues)
+        closeDps.mutate(parsed.data)
+        return null
+      },
+    })
+
+  const openComplete = () => {
+    if (!inv || !inv.dateOfInvestment) return
+    openSheet({
+      title: t('form.completed'),
+      submitLabel: t('form.submit'),
+      fields: [
+        {
+          key: 'exitValue',
+          label: t('form.exitValueLabel'),
+          keyboardType: 'decimal-pad',
+          initialValue: inv.currentValue,
+        },
+        {
+          key: 'completedAt',
+          label: t('form.completionDateLabel'),
+          initialValue: isoToday(),
+          placeholder: 'YYYY-MM-DD',
+        },
+      ],
+      onSubmit: (values) => {
+        const parsed = investmentUpdateSchema.safeParse({
+          id: inv.id,
+          name: inv.name,
+          type: inv.type,
+          investedAmount: inv.investedAmount,
+          currentValue: inv.currentValue,
+          dateOfInvestment: inv.dateOfInvestment!.toISOString().slice(0, 10),
+          estimatedClosureDate: inv.estimatedClosureDate
+            ? inv.estimatedClosureDate.toISOString().slice(0, 10)
+            : undefined,
+          notes: inv.notes ?? undefined,
+          status: 'completed',
+          exitValue: values.exitValue,
+          completedAt: values.completedAt,
+        })
+        if (!parsed.success) return zodFieldErrors(parsed.error.issues)
+        updateInvestment.mutate(parsed.data)
+        return null
+      },
+    })
+  }
+
+  const confirmDelete = () => {
+    Alert.alert(t('form.deleteConfirmTitle'), t('form.deleteConfirmBody'), [
+      { text: t('common:actions.cancel'), style: 'cancel' },
+      {
+        text: t('form.deleteConfirm'),
+        style: 'destructive',
+        onPress: () => {
+          const mutation =
+            inv?.mode === 'flexible' ? deleteSavings : deleteInvestment
+          mutation.mutate({ id: id ?? '' })
+          router.back()
+        },
+      },
+    ])
+  }
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.surface }]}>
@@ -143,14 +353,27 @@ export default function InvestmentDetailScreen() {
                   <Text style={[styles.scheduleAmount, { color: colors.onSurface }]}>
                     {money(d.amount)}
                   </Text>
-                  <GlassPill
-                    tone={d.status === 'paid' ? 'gain' : 'neutral'}
-                    label={
-                      d.status === 'paid'
-                        ? t('dps.statusPaid')
-                        : t('dps.statusUpcoming')
-                    }
-                  />
+                  <Pressable
+                    onPress={() => {
+                      if (!isActive) return
+                      markDepositPaid.mutate({
+                        depositId: d.id,
+                        paid: d.status !== 'paid',
+                      })
+                    }}
+                    disabled={!isActive}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('dps.markPaid')}
+                  >
+                    <GlassPill
+                      tone={d.status === 'paid' ? 'gain' : 'neutral'}
+                      label={
+                        d.status === 'paid'
+                          ? t('dps.statusPaid')
+                          : t('dps.statusUpcoming')
+                      }
+                    />
+                  </Pressable>
                 </View>
               ))}
             </View>
@@ -197,9 +420,72 @@ export default function InvestmentDetailScreen() {
               ))}
             </View>
           ) : null}
+          {isActive ? (
+            <View style={styles.actions}>
+              {inv.mode === 'flexible' ? (
+                <ActionButton
+                  label={t('savings.depositCta')}
+                  color={colors.primary}
+                  onPress={openAddDeposit}
+                />
+              ) : null}
+              {inv.mode !== 'scheduled' ? (
+                <ActionButton
+                  label={t('list.withdraw')}
+                  color={colors.primary}
+                  onPress={openWithdraw}
+                />
+              ) : null}
+              {inv.mode === 'lump_sum' ? (
+                <ActionButton
+                  label={t('form.completed')}
+                  color={colors.primary}
+                  onPress={openComplete}
+                />
+              ) : null}
+              {inv.mode === 'scheduled' ? (
+                <ActionButton
+                  label={t('dps.closePremature')}
+                  color={colors.primary}
+                  onPress={openCloseDps}
+                />
+              ) : null}
+              <ActionButton
+                label={t('form.delete')}
+                color={colors.tertiary}
+                onPress={confirmDelete}
+              />
+            </View>
+          ) : null}
         </ScrollView>
       ) : null}
+      <FormSheet
+        ref={sheetRef}
+        config={sheetConfig}
+        onDone={() => sheetRef.current?.close()}
+      />
     </View>
+  )
+}
+
+function ActionButton({
+  label,
+  color,
+  onPress,
+}: {
+  label: string
+  color: string
+  onPress: () => void
+}) {
+  const { colors } = useTheme()
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={[styles.actionButton, { borderColor: colors.outline }]}
+    >
+      <Text style={[styles.actionText, { color }]}>{label}</Text>
+    </Pressable>
   )
 }
 
@@ -283,6 +569,23 @@ const styles = StyleSheet.create({
   },
   scheduleAmount: {
     fontSize: 13,
+    fontWeight: '600',
+  },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  actionButton: {
+    flexGrow: 1,
+    flexBasis: '40%',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
     fontWeight: '600',
   },
 })
