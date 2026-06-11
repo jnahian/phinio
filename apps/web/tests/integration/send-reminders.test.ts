@@ -248,21 +248,29 @@ describe('cron — push subscription lifecycle', () => {
     await seedEmiPaymentDueIn(user.profileId, 3)
     await seedSubscription(user.profileId, 'https://push.test/one')
 
-    const original = prisma.pushSubscription.findMany.bind(
-      prisma.pushSubscription,
-    )
-    const spy = vi
-      .spyOn(prisma.pushSubscription, 'findMany')
-      .mockImplementation((args) => original(args))
+    // Count findMany calls WITHOUT vi.spyOn: the client is proxy-backed
+    // and memoized on globalThis, and spyOn's mockRestore() leaves the
+    // method non-callable for every later test in the shared fork.
+    // Install/restore symmetrically through plain property assignment.
+    const delegate = prisma.pushSubscription as unknown as Record<
+      string,
+      unknown
+    >
+    const original = delegate.findMany as (...args: unknown[]) => unknown
+    let findManyCalls = 0
+    delegate.findMany = function (this: unknown, ...args: unknown[]) {
+      findManyCalls += 1
+      return original.apply(prisma.pushSubscription, args)
+    }
     try {
       const res = await handleCron(cronRequest())
       const body = (await res.json()) as { created: number; pushed: number }
       expect(body.created).toBe(3)
       expect(body.pushed).toBe(3)
       // Batched: one findMany for all three notifications.
-      expect(spy).toHaveBeenCalledTimes(1)
+      expect(findManyCalls).toBe(1)
     } finally {
-      spy.mockRestore()
+      delegate.findMany = original
     }
   })
 })
@@ -291,16 +299,21 @@ describe('createNotification — race path', () => {
   })
 
   it('propagates non-P2002 errors instead of swallowing them', async () => {
-    // Simulate a non-unique-constraint DB error by spying on create.
-    const spy = vi
-      .spyOn(prisma.notification, 'create')
-      .mockRejectedValueOnce(
-        Object.assign(new Error('DB down'), { code: 'P1001' }),
-      )
+    // Simulate a non-unique-constraint DB error with a throwaway stub.
+    // Do NOT vi.spyOn the real client: prisma is memoized on globalThis
+    // and its models are proxy-backed — mockRestore leaves the shared
+    // client's `create` non-callable for every later test in the fork.
+    const failingPrisma = {
+      notification: {
+        findUnique: () => Promise.resolve(null),
+        create: () =>
+          Promise.reject(Object.assign(new Error('DB down'), { code: 'P1001' })),
+      },
+    } as unknown as typeof prisma
 
     const user = await createTestUser()
     await expect(
-      createNotification(prisma, {
+      createNotification(failingPrisma, {
         profileId: user.profileId,
         type: 'test',
         title: 'x',
@@ -308,7 +321,5 @@ describe('createNotification — race path', () => {
         dedupeKey: 'db-error:1',
       }),
     ).rejects.toThrow(/DB down/)
-
-    spy.mockRestore()
   })
 })

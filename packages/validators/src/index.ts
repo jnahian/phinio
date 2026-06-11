@@ -383,18 +383,37 @@ export type ClearReadNotificationsInput = z.infer<
 // Push subscriptions
 // ----------------------------------------------------------------------------
 
-export const savePushSubscriptionSchema = z.object({
-  endpoint: z.string().url(),
-  p256dh: z.string().min(1),
-  auth: z.string().min(1),
-  userAgent: z.string().optional().nullable(),
-})
+export const PUSH_TRANSPORTS = ['web_push', 'expo'] as const
+export type PushTransport = (typeof PUSH_TRANSPORTS)[number]
+
+export const savePushSubscriptionSchema = z
+  .object({
+    // Defaulted so existing web clients that omit it keep working.
+    transport: z.enum(PUSH_TRANSPORTS).default('web_push'),
+    // Web Push: push-service URL. Expo: ExponentPushToken[...] string.
+    endpoint: z.string().min(1),
+    p256dh: z.string().min(1).optional(),
+    auth: z.string().min(1).optional(),
+    userAgent: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) =>
+      data.transport !== 'web_push' ||
+      (z.string().url().safeParse(data.endpoint).success &&
+        Boolean(data.p256dh) &&
+        Boolean(data.auth)),
+    {
+      message: 'Web Push subscriptions need a URL endpoint and p256dh/auth keys',
+      path: ['endpoint'],
+    },
+  )
 export type SavePushSubscriptionInput = z.infer<
   typeof savePushSubscriptionSchema
 >
 
 export const deletePushSubscriptionSchema = z.object({
-  endpoint: z.string().url(),
+  // URL for web_push rows, ExponentPushToken for expo rows.
+  endpoint: z.string().min(1),
 })
 export type DeletePushSubscriptionInput = z.infer<
   typeof deletePushSubscriptionSchema

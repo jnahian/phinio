@@ -274,9 +274,13 @@ model PushSubscription {
   id         String   @id @default(cuid())
   profileId  String
   profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  // Delivery transport: 'web_push' (VAPID, endpoint is a push-service URL,
+  // p256dh/auth required) or 'expo' (endpoint is an ExponentPushToken, no
+  // encryption keys). Existing rows backfill to 'web_push' via the default.
+  transport  String   @default("web_push")
   endpoint   String   @unique
-  p256dh     String
-  auth       String
+  p256dh     String?
+  auth       String?
   userAgent  String?
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())

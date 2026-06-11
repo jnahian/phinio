@@ -5,6 +5,7 @@ import { createNotification } from '@phinio/trpc/notifications'
 import type { Currency } from '#/lib/currency'
 import { FEE_PAYMENT_NUMBER } from '@phinio/calc'
 import { buildWebPushConfig, sendWebPush } from '#/server/web-push'
+import { sendExpoPushBatch } from '#/server/expo-push'
 import type { PushPayload, PushSubscriptionRow } from '#/server/web-push'
 import { createI18n } from '#/lib/i18n/instance'
 import { createFormatter } from '#/lib/i18n/format'
@@ -382,23 +383,47 @@ export async function handleCron(request: Request): Promise<Response> {
   }
 
   if (pushJobs.length > 0) {
-    // Batch subscription lookup: one query per unique profile.
+    // Batch subscription lookup: one query per unique profile. Rows split
+    // by transport — web_push goes through VAPID, expo through the Expo
+    // push API (Phase 6).
     const profileIds = [...new Set(pushJobs.map((j) => j.profileId))]
     const subs = await prisma.pushSubscription.findMany({
       where: { profileId: { in: profileIds } },
     })
-    const subsByProfile = new Map<string, PushSubscriptionRow[]>()
+    const webSubsByProfile = new Map<string, PushSubscriptionRow[]>()
+    const expoTokensByProfile = new Map<string, string[]>()
     for (const s of subs) {
-      const list = subsByProfile.get(s.profileId) ?? []
-      list.push(s)
-      subsByProfile.set(s.profileId, list)
+      if (s.transport === 'expo') {
+        const list = expoTokensByProfile.get(s.profileId) ?? []
+        list.push(s.endpoint)
+        expoTokensByProfile.set(s.profileId, list)
+      } else if (s.p256dh && s.auth) {
+        const list = webSubsByProfile.get(s.profileId) ?? []
+        list.push({ endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth })
+        webSubsByProfile.set(s.profileId, list)
+      }
+    }
+
+    // iOS badge = unread Notification rows for the profile (spec §6.3).
+    // One grouped count covers every expo recipient in this run.
+    const expoProfileIds = [...expoTokensByProfile.keys()]
+    const badgeByProfile = new Map<string, number>()
+    if (expoProfileIds.length > 0) {
+      const unread = await prisma.notification.groupBy({
+        by: ['profileId'],
+        where: { profileId: { in: expoProfileIds }, readAt: null },
+        _count: { _all: true },
+      })
+      for (const row of unread) {
+        badgeByProfile.set(row.profileId, row._count._all)
+      }
     }
 
     const expiredEndpoints = new Set<string>()
 
     const sendResults = await Promise.all(
       pushJobs.flatMap((job) => {
-        const list = subsByProfile.get(job.profileId) ?? []
+        const list = webSubsByProfile.get(job.profileId) ?? []
         return list.map(async (s) => {
           const result = await sendWebPush(pushConfig, s, job.payload)
           return { endpoint: s.endpoint, result }
@@ -413,6 +438,25 @@ export async function handleCron(request: Request): Promise<Response> {
         pushed += 1
       } else {
         failed += 1
+      }
+    }
+
+    for (const job of pushJobs) {
+      const tokens = expoTokensByProfile.get(job.profileId) ?? []
+      if (tokens.length === 0) continue
+      const badge = badgeByProfile.get(job.profileId)
+      const results = await sendExpoPushBatch(
+        tokens.map((endpoint) => ({ endpoint, badge })),
+        job.payload,
+      )
+      for (const r of results) {
+        if (r.gone) {
+          expiredEndpoints.add(r.endpoint)
+        } else if (r.ok) {
+          pushed += 1
+        } else {
+          failed += 1
+        }
       }
     }
 
