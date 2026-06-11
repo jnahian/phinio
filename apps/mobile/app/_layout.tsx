@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { createQueryClient } from '#/lib/query-client'
 import { attachPersister } from '#/lib/persister'
+import { registerMutationDefaults } from '#/lib/mutation-defaults'
 import { subscribeToConnectivity } from '#/lib/net-info'
 import { getI18n } from '#/lib/i18n'
 
@@ -15,8 +16,14 @@ import { getI18n } from '#/lib/i18n'
 // persistQueryClient API returns a promise), so the first render
 // suspends until it resolves to avoid showing routes against an empty
 // cache.
+//
+// Mutation defaults MUST be registered before the persister restore
+// resolves: rehydrated paused mutations carry only a mutationKey, and
+// `resumePausedMutations()` silently no-ops for keys with no registered
+// mutationFn.
 const queryClient = createQueryClient()
 const i18n = getI18n()
+registerMutationDefaults(queryClient)
 const restorePromise = attachPersister(queryClient)
 
 export default function RootLayout() {

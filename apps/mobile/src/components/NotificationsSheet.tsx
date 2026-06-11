@@ -1,10 +1,15 @@
 import { forwardRef } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet'
 import { useTranslation } from 'react-i18next'
 import { GlassSheet, type GlassSheetHandle } from '#/components/glass'
 import { useTheme } from '#/theme/use-theme'
-import { useNotificationsQuery } from '#/hooks/useNotifications'
+import {
+  useClearReadNotifications,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotificationsQuery,
+} from '#/hooks/useNotifications'
 
 type NotificationRow = {
   id: string
@@ -34,23 +39,55 @@ function shortRelative(
 }
 
 /**
- * Read-only notifications list in a glass bottom sheet. Mark-read /
- * mark-all-read / clear are Phase 5 writes — this surface only shows
- * state, mirroring web's bell dropdown content.
+ * Notifications list in a glass bottom sheet, mirroring web's bell
+ * dropdown: tap a row to mark it read; header actions mark everything
+ * read or clear already-read rows. All three are offline-first
+ * mutations with optimistic patches.
  */
 export const NotificationsSheet = forwardRef<GlassSheetHandle>(
   function NotificationsSheet(_props, ref) {
     const { t } = useTranslation('notifications')
     const { colors } = useTheme()
     const { data, isPending } = useNotificationsQuery()
+    const markRead = useMarkNotificationRead()
+    const markAllRead = useMarkAllNotificationsRead()
+    const clearRead = useClearReadNotifications()
 
     const rows: NotificationRow[] = data ?? []
+    const hasUnread = rows.some((n) => !n.read)
+    const hasRead = rows.some((n) => n.read)
 
     return (
       <GlassSheet ref={ref}>
-        <Text style={[styles.title, { color: colors.onSurface }]}>
-          {t('title')}
-        </Text>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.onSurface }]}>
+            {t('title')}
+          </Text>
+          <View style={styles.headerActions}>
+            {hasUnread ? (
+              <Pressable
+                onPress={() => markAllRead.mutate({})}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <Text style={[styles.action, { color: colors.primary }]}>
+                  {t('markAllRead')}
+                </Text>
+              </Pressable>
+            ) : null}
+            {hasRead ? (
+              <Pressable
+                onPress={() => clearRead.mutate({})}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <Text style={[styles.action, { color: colors.onSurfaceVariant }]}>
+                  {t('clearRead')}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
         <BottomSheetFlatList
           data={rows}
           keyExtractor={(item: NotificationRow) => item.id}
@@ -60,7 +97,11 @@ export const NotificationsSheet = forwardRef<GlassSheetHandle>(
             </Text>
           }
           renderItem={({ item }: { item: NotificationRow }) => (
-            <View
+            <Pressable
+              onPress={() => {
+                if (!item.read) markRead.mutate({ id: item.id })
+              }}
+              accessibilityRole="button"
               style={[
                 styles.row,
                 { borderBottomColor: colors.outlineVariant },
@@ -97,7 +138,7 @@ export const NotificationsSheet = forwardRef<GlassSheetHandle>(
               <Text style={[styles.rowTime, { color: colors.onSurfaceVariant }]}>
                 {shortRelative(item.createdAt, t)}
               </Text>
-            </View>
+            </Pressable>
           )}
         />
       </GlassSheet>
@@ -106,10 +147,24 @@ export const NotificationsSheet = forwardRef<GlassSheetHandle>(
 )
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 12,
+    gap: 12,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  action: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   title: {
     fontSize: 17,
     fontWeight: '600',
-    marginBottom: 12,
   },
   empty: {
     fontSize: 14,

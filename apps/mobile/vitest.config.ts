@@ -17,6 +17,12 @@ export default defineConfig({
       // actual runtime in node-side unit tests, so swap it for a lean
       // stub that exposes just `Platform` + `AccessibilityInfo`.
       'react-native': resolve(__dirname, 'src/test/react-native-stub.ts'),
+      // Expo native modules pulled in transitively by lib/trpc → lib/auth.
+      // Tests never exercise them; they just need to resolve in node.
+      'expo-secure-store': resolve(__dirname, 'src/test/expo-stub.ts'),
+      'expo-crypto': resolve(__dirname, 'src/test/expo-stub.ts'),
+      '@better-auth/expo/client': resolve(__dirname, 'src/test/expo-stub.ts'),
+      'better-auth/react': resolve(__dirname, 'src/test/expo-stub.ts'),
     },
   },
   test: {
