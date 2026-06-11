@@ -40,7 +40,7 @@ export async function prefetchProfileData(queryClient: QueryClient) {
   if (Date.now() - last < PREFETCH_COOLDOWN_MS) return
 
   const tasks: Array<Promise<unknown>> = [
-    queryClient.prefetchQuery(dashboardQueryOptions()),
+    queryClient.prefetchQuery(dashboardQueryOptions(queryClient)),
     queryClient.prefetchQuery(notificationsListQueryOptions(queryClient)),
     queryClient.prefetchQuery(unreadNotificationCountQueryOptions(queryClient)),
     queryClient.prefetchInfiniteQuery(activityInfiniteQueryOptions(queryClient)),

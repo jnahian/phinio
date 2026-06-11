@@ -1,6 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getDashboardStatsImpl } from '#/server/dashboard.impl'
+import type { AppContext } from '@phinio/trpc'
+import { appRouter } from '@phinio/trpc'
 import { createTestUser, prisma, resetDb } from './helpers/db'
+
+function callerFor(profileId: string, userId: string = `user_${profileId}`) {
+  const ctx: AppContext = { prisma, profileId, userId, locale: 'en' }
+  return appRouter.createCaller(ctx)
+}
+
+function getDashboardStats(profileId: string) {
+  return callerFor(profileId).dashboard.stats()
+}
 
 beforeEach(async () => {
   await resetDb()
@@ -98,11 +108,11 @@ async function insertPayment(
 
 // Tests ----------------------------------------------------------------------
 
-describe('getDashboardStatsImpl', () => {
+describe('dashboard.stats', () => {
   it('returns all zeros for a freshly created profile with no data', async () => {
     const user = await createTestUser()
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.netWorth).toBe('0.00')
     expect(stats.investmentTotals.invested).toBe('0.00')
@@ -134,7 +144,7 @@ describe('getDashboardStatsImpl', () => {
       currentValue: '1800.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     // 1000 + 500 + 2000 = 3500; 1200 + 600 + 1800 = 3600
     expect(stats.investmentTotals.invested).toBe('3500.00')
@@ -151,7 +161,7 @@ describe('getDashboardStatsImpl', () => {
       currentValue: '1123.45',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.investmentTotals.gainLossPercent).toBe(12.35)
   })
@@ -173,7 +183,7 @@ describe('getDashboardStatsImpl', () => {
       },
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     // current=7000, invested=10000, withdrawn=3000
     // (7000 + 3000 - 10000) / 10000 = 0%
@@ -203,7 +213,7 @@ describe('getDashboardStatsImpl', () => {
       },
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     // Allocation should not be inflated by the 1000 withdrawal — only
     // currentValue counts toward holdings.
@@ -233,7 +243,7 @@ describe('getDashboardStatsImpl', () => {
       status: 'completed',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.investmentTotals.invested).toBe('1000.00')
     expect(stats.investmentTotals.current).toBe('1200.00')
@@ -262,7 +272,7 @@ describe('getDashboardStatsImpl', () => {
       currentValue: '1000.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     // 3000 stock, 1000 gold — total 4000
     expect(stats.allocation).toHaveLength(2)
@@ -281,7 +291,7 @@ describe('getDashboardStatsImpl', () => {
   it('guards against division-by-zero in allocation percent when no investments', async () => {
     const user = await createTestUser()
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.allocation).toEqual([])
     expect(stats.investmentTotals.gainLossPercent).toBe(0)
@@ -298,7 +308,7 @@ describe('getDashboardStatsImpl', () => {
       emiAmount: '4500.25',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.monthlyEmiOutflow).toBe('5750.75')
   })
@@ -319,7 +329,7 @@ describe('getDashboardStatsImpl', () => {
       remainingBalance: '400.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.netWorth).toBe('600.00')
   })
@@ -348,7 +358,7 @@ describe('getDashboardStatsImpl', () => {
       status: 'upcoming',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     // 1000 current - 250 next-unpaid remaining = 750
     expect(stats.netWorth).toBe('750.00')
@@ -369,7 +379,7 @@ describe('getDashboardStatsImpl', () => {
       })
     }
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(5)
     // Ordered ascending by dueDate.
@@ -411,7 +421,7 @@ describe('getDashboardStatsImpl', () => {
       remainingBalance: '800.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(1)
     expect(stats.upcomingPayments[0].kind).toBe('emi')
@@ -432,7 +442,7 @@ describe('getDashboardStatsImpl', () => {
       remainingBalance: '900.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(1)
     const [p] = stats.upcomingPayments
@@ -450,7 +460,7 @@ describe('getDashboardStatsImpl', () => {
       remainingBalance: '900.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(1)
     const [p] = stats.upcomingPayments
@@ -498,7 +508,7 @@ describe('getDashboardStatsImpl', () => {
       remainingBalance: '9000.00',
     })
 
-    const aliceStats = await getDashboardStatsImpl(alice.profileId)
+    const aliceStats = await getDashboardStats(alice.profileId)
 
     expect(aliceStats.investmentTotals.invested).toBe('1000.00')
     expect(aliceStats.investmentTotals.current).toBe('1200.00')
@@ -511,7 +521,7 @@ describe('getDashboardStatsImpl', () => {
     expect(aliceStats.upcomingPayments[0].label).toBe('Alice loan')
     expect(aliceStats.upcomingPayments[0].emiId).toBe(aliceEmi.id)
 
-    const bobStats = await getDashboardStatsImpl(bob.profileId)
+    const bobStats = await getDashboardStats(bob.profileId)
     expect(bobStats.monthlyEmiOutflow).toBe('999.00')
     expect(bobStats.upcomingPayments).toHaveLength(1)
     expect(bobStats.upcomingPayments[0].label).toBe('Bob loan')
@@ -581,7 +591,7 @@ describe('getDashboardStatsImpl', () => {
       remainingBalance: '900.00',
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(2)
     // EMI is sooner (3d) than the deposit (7d).
@@ -625,7 +635,7 @@ describe('getDashboardStatsImpl', () => {
       },
     })
 
-    const stats = await getDashboardStatsImpl(user.profileId)
+    const stats = await getDashboardStats(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(0)
   })

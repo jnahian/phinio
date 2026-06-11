@@ -28,7 +28,7 @@ const ALLOCATION_TOP_N = 5
 export const Route = createFileRoute('/app/')({
   staticData: { title: 'pageTitles.dashboard' },
   loader: ({ context }) => {
-    void context.queryClient.prefetchQuery(dashboardQueryOptions())
+    void context.queryClient.prefetchQuery(dashboardQueryOptions(context.queryClient))
   },
   component: HomeScreen,
 })

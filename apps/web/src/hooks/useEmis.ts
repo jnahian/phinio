@@ -16,6 +16,7 @@ import {
   generateAmortization,
 } from '@phinio/calc'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
+import { dashboardKeys } from '#/hooks/useDashboard'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
 import { makeTRPC, useTRPC } from '#/lib/trpc'
 import type { QueryClient } from '@tanstack/react-query'
@@ -244,7 +245,7 @@ export function useCreateEmi() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -265,7 +266,7 @@ export function useUpdateEmi() {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.detail(data.id) })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
@@ -319,7 +320,7 @@ export function useDeleteEmi() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -380,7 +381,7 @@ export function useMarkPayment(emiId: string) {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.detail(emiId) })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -438,7 +439,7 @@ export function useCompleteEmi() {
       qc.invalidateQueries({ queryKey: emiKeys.all })
       qc.invalidateQueries({ queryKey: emiKeys.detail(input.emiId) })
       qc.invalidateQueries({ queryKey: emiKeys.upcoming })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })

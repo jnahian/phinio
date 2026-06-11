@@ -17,6 +17,7 @@ import type {
   investmentListQuerySchema,
 } from '@phinio/validators'
 import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
+import { dashboardKeys } from '#/hooks/useDashboard'
 import { useOfflineMutation } from '#/lib/use-offline-mutation'
 import { makeTRPC, useTRPC } from '#/lib/trpc'
 
@@ -123,7 +124,7 @@ export function useCreateInvestment() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -163,7 +164,7 @@ export function useUpdateInvestment() {
       )
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
@@ -281,7 +282,7 @@ export function useDeleteInvestment() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -347,7 +348,7 @@ export function useCreateDps() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -366,7 +367,7 @@ export function useUpdateDps() {
       )
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
@@ -412,7 +413,7 @@ export function useMarkDepositPaid(investmentId: string) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -445,7 +446,7 @@ export function useDeleteDps() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -512,7 +513,7 @@ export function useCreateSavings() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -531,7 +532,7 @@ export function useUpdateSavings() {
       )
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
@@ -546,7 +547,7 @@ export function useAddDeposit(investmentId: string) {
       toast.success('Deposit added')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to add deposit')),
@@ -561,7 +562,7 @@ export function useRemoveDeposit(investmentId: string) {
       toast.success('Deposit removed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to remove')),
@@ -595,7 +596,7 @@ export function useDeleteSavings() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
@@ -613,7 +614,7 @@ export function useWithdraw(investmentId: string) {
       toast.success(data.closed ? 'Investment closed' : 'Withdrawal recorded')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to withdraw')),
@@ -628,7 +629,7 @@ export function useCloseDps(investmentId: string) {
       toast.success('DPS closed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
-      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.stats })
       qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to close')),
