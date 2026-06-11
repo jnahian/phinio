@@ -19,6 +19,7 @@ const config: ExpoConfig = {
   // the native install; there is no config plugin to register here.
   plugins: [
     'expo-router',
+    'expo-notifications',
     [
       'expo-build-properties',
       {

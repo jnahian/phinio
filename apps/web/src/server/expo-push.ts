@@ -62,7 +62,7 @@ export async function sendExpoPushBatch(
       const json = (await res.json()) as { data?: ExpoTicket[] }
       const tickets = json.data ?? []
       chunk.forEach((tkn, idx) => {
-        const ticket = tickets[idx]
+        const ticket = tickets[idx] as ExpoTicket | undefined
         if (ticket?.status === 'ok') {
           results.push({ endpoint: tkn.endpoint, ok: true, gone: false })
         } else {

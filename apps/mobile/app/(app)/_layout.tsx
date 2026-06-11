@@ -1,7 +1,12 @@
+import { useEffect } from 'react'
 import { Redirect, Tabs } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { authClient } from '#/lib/auth'
+import { configureForegroundNotifications, syncBadgeCount } from '#/lib/push'
+import { useUnreadNotificationCountQuery } from '#/hooks/useNotifications'
 import { GlassTabBar, type GlassTabIconName } from '#/components/glass'
+
+configureForegroundNotifications()
 
 const ICONS: Record<string, GlassTabIconName> = {
   index: { sf: 'house.fill', material: 'home' },
@@ -14,6 +19,13 @@ const ICONS: Record<string, GlassTabIconName> = {
 export default function AppLayout() {
   const { t } = useTranslation('common')
   const { data: session, isPending } = authClient.useSession()
+  const unread = useUnreadNotificationCountQuery()
+
+  // Keep the app icon badge in sync with unread rows: the query already
+  // refetches on foreground/reconnect, so piggyback on its data (§6.3).
+  useEffect(() => {
+    if (unread.data) void syncBadgeCount(unread.data.count)
+  }, [unread.data])
 
   if (!isPending && !session) return <Redirect href="/(auth)/login" />
 

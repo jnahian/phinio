@@ -21,9 +21,17 @@ import {
   useUpdateProfileName,
 } from '#/hooks/useProfile'
 import { authClient } from '#/lib/auth'
+import {
+  registerForPushNotifications,
+  unregisterPushNotifications,
+} from '#/lib/push'
+import { notifyError } from '#/lib/notify'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTRPC } from '#/lib/trpc'
 
 export default function SettingsScreen() {
   const { t } = useTranslation('profile')
+  const { t: tNotif } = useTranslation('notifications')
   const { colors } = useTheme()
   const router = useRouter()
 
@@ -34,6 +42,31 @@ export default function SettingsScreen() {
 
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState<string | undefined>()
+  const [pushBusy, setPushBusy] = useState(false)
+
+  const qc = useQueryClient()
+  const trpc = useTRPC()
+  const hasSubscription = useQuery(trpc.push.hasActiveSubscription.queryOptions())
+  const remindersOn = (hasSubscription.data?.count ?? 0) > 0
+
+  const toggleReminders = async () => {
+    setPushBusy(true)
+    try {
+      if (remindersOn) {
+        await unregisterPushNotifications()
+      } else {
+        const token = await registerForPushNotifications()
+        if (!token) {
+          notifyError(new Error(tNotif('blocked')), tNotif('enableReminders'))
+        }
+      }
+      await qc.invalidateQueries(trpc.push.pathFilter())
+    } catch (err) {
+      notifyError(err, tNotif('enableReminders'))
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   // Seed the name field once the profile loads (and after external edits).
   useEffect(() => {
@@ -136,6 +169,29 @@ export default function SettingsScreen() {
               updateLanguage.mutate({ preferredLanguage })
             }
           />
+        </View>
+
+        <View
+          style={[styles.card, { backgroundColor: colors.surfaceContainerLow }]}
+        >
+          <Text style={[styles.cardTitle, { color: colors.onSurface }]}>
+            {t('notifications.title', { defaultValue: tNotif('title') })}
+          </Text>
+          <Text style={[styles.hint, { color: colors.onSurfaceVariant }]}>
+            {tNotif('enableReminders')}
+          </Text>
+          <Pressable
+            onPress={() => void toggleReminders()}
+            disabled={pushBusy || hasSubscription.isPending}
+            accessibilityRole="button"
+            style={[styles.button, { borderColor: colors.outline }]}
+          >
+            <Text style={[styles.buttonText, { color: colors.primary }]}>
+              {remindersOn
+                ? t('common:actions.disable', { defaultValue: 'Disable' })
+                : t('common:actions.enable', { defaultValue: 'Enable' })}
+            </Text>
+          </Pressable>
         </View>
 
         <Pressable
