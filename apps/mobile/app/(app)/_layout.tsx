@@ -30,14 +30,14 @@ export default function AppLayout() {
         } as never}
       />
       <Tabs.Screen
-        name="investments/index"
+        name="investments"
         options={{
           title: t('tabs.investments'),
           tabBarIconName: ICONS.investments,
         } as never}
       />
       <Tabs.Screen
-        name="emis/index"
+        name="emis"
         options={{
           title: t('tabs.emis'),
           tabBarIconName: ICONS.emis,
