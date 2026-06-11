@@ -1,4 +1,12 @@
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { SymbolView } from 'expo-symbols'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -7,7 +15,12 @@ import { isFeePayment } from '@phinio/calc'
 import { GlassNav, GlassPill } from '#/components/glass'
 import { ErrorState, LoadingState } from '#/components/ScreenState'
 import { useTheme } from '#/theme/use-theme'
-import { useEmiQuery } from '#/hooks/useEmis'
+import {
+  useCompleteEmi,
+  useDeleteEmi,
+  useEmiQuery,
+  useMarkPayment,
+} from '#/hooks/useEmis'
 import { useMoney } from '#/hooks/useMoney'
 
 function BackButton() {
@@ -39,10 +52,47 @@ export default function EmiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { t } = useTranslation('emis')
   const { colors } = useTheme()
+  const router = useRouter()
   const { money, date } = useMoney()
 
   const detail = useEmiQuery(id ?? '')
   const emi = detail.data
+  const markPayment = useMarkPayment(id ?? '')
+  const completeEmi = useCompleteEmi()
+  const deleteEmi = useDeleteEmi()
+  const isActive = emi?.status === 'active'
+
+  const confirmComplete = () => {
+    Alert.alert(
+      t('detail.completeConfirmTitle'),
+      t('detail.completeConfirmBody', {
+        count:
+          emi?.payments.filter((p) => !isFeePayment(p) && p.status !== 'paid')
+            .length ?? 0,
+      }),
+      [
+        { text: t('common:actions.cancel'), style: 'cancel' },
+        {
+          text: t('detail.completeConfirm'),
+          onPress: () => completeEmi.mutate({ emiId: id ?? '' }),
+        },
+      ],
+    )
+  }
+
+  const confirmDelete = () => {
+    Alert.alert(t('detail.deleteConfirmTitle'), t('detail.deleteConfirmBody'), [
+      { text: t('common:actions.cancel'), style: 'cancel' },
+      {
+        text: t('detail.deleteConfirm'),
+        style: 'destructive',
+        onPress: () => {
+          deleteEmi.mutate({ emiId: id ?? '' })
+          router.back()
+        },
+      },
+    ])
+  }
 
   const regularPayments = emi?.payments.filter((p) => !isFeePayment(p)) ?? []
   const feeRow = emi?.payments.find((p) => isFeePayment(p))
@@ -126,13 +176,49 @@ export default function EmiDetailScreen() {
                 <Text style={[styles.scheduleAmount, { color: colors.onSurface }]}>
                   {money(p.emiAmount)}
                 </Text>
-                <GlassPill
-                  tone={p.status === 'paid' ? 'gain' : 'neutral'}
-                  label={t(`status.${p.status}`, { defaultValue: p.status })}
-                />
+                <Pressable
+                  onPress={() => {
+                    if (!isActive) return
+                    markPayment.mutate({
+                      paymentId: p.id,
+                      paid: p.status !== 'paid',
+                    })
+                  }}
+                  disabled={!isActive}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('detail.markPaid')}
+                >
+                  <GlassPill
+                    tone={p.status === 'paid' ? 'gain' : 'neutral'}
+                    label={t(`status.${p.status}`, { defaultValue: p.status })}
+                  />
+                </Pressable>
               </View>
             ))}
           </View>
+
+          {isActive ? (
+            <View style={styles.actions}>
+              <Pressable
+                onPress={confirmComplete}
+                accessibilityRole="button"
+                style={[styles.actionButton, { borderColor: colors.outline }]}
+              >
+                <Text style={[styles.actionText, { color: colors.primary }]}>
+                  {t('detail.markCompleteAction')}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmDelete}
+                accessibilityRole="button"
+                style={[styles.actionButton, { borderColor: colors.outline }]}
+              >
+                <Text style={[styles.actionText, { color: colors.tertiary }]}>
+                  {t('detail.delete')}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
         </ScrollView>
       ) : null}
     </View>
@@ -219,6 +305,21 @@ const styles = StyleSheet.create({
   },
   scheduleAmount: {
     fontSize: 13,
+    fontWeight: '600',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
     fontWeight: '600',
   },
 })

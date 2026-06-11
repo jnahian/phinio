@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import type { inferProcedureOutput } from '@trpc/server'
 import type { AppRouter } from '@phinio/trpc'
-import { GlassNav } from '#/components/glass'
+import { GlassFAB, GlassNav } from '#/components/glass'
 import { FilterPills } from '#/components/FilterPills'
 import { EmptyState, ErrorState, LoadingState } from '#/components/ScreenState'
 import { useTheme } from '#/theme/use-theme'
@@ -72,6 +72,10 @@ export default function EmisScreen() {
           )}
         />
       )}
+      <GlassFAB
+        onPress={() => router.push('/emis/new')}
+        accessibilityLabel={t('list.addCta')}
+      />
     </View>
   )
 }
