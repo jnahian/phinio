@@ -91,6 +91,9 @@ export function useCreateInvestment() {
         exitValue: null,
         totalWithdrawn: '0',
         dateOfInvestment: new Date(input.dateOfInvestment),
+        estimatedClosureDate: input.estimatedClosureDate
+          ? new Date(input.estimatedClosureDate)
+          : null,
         monthlyDeposit: null,
         tenureMonths: null,
         interestRate: null,
@@ -314,6 +317,7 @@ export function useCreateDps() {
         exitValue: null,
         totalWithdrawn: '0',
         dateOfInvestment: null,
+        estimatedClosureDate: null,
         monthlyDeposit: input.monthlyDeposit,
         tenureMonths: input.tenureMonths,
         interestRate: input.interestRate,
@@ -478,6 +482,7 @@ export function useCreateSavings() {
         exitValue: null,
         totalWithdrawn: '0',
         dateOfInvestment: null,
+        estimatedClosureDate: null,
         monthlyDeposit: null,
         tenureMonths: null,
         interestRate: null,
