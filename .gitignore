@@ -21,3 +21,8 @@ src/generated/
 
 # Claude Code subagent worktrees (ephemeral)
 .claude/worktrees/
+
+# Playwright MCP run artifacts + ad-hoc app screenshots
+.playwright-mcp/
+/mobile-login.png
+/mobile-signup.png
