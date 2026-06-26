@@ -31,6 +31,26 @@ export function Nav() {
           <Logo size="md" />
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
+          <div className="hidden items-center gap-8 lg:flex">
+            <a
+              href="#features"
+              className="text-sm font-normal text-on-surface-variant transition-colors duration-200 hover:text-on-surface"
+            >
+              {t('nav.features')}
+            </a>
+            <a
+              href="#security"
+              className="text-sm font-normal text-on-surface-variant transition-colors duration-200 hover:text-on-surface"
+            >
+              {t('nav.security')}
+            </a>
+            <a
+              href="#how"
+              className="text-sm font-normal text-on-surface-variant transition-colors duration-200 hover:text-on-surface"
+            >
+              {t('nav.how')}
+            </a>
+          </div>
           <LangSwitcher />
           <Link
             to="/login"

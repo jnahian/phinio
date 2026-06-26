@@ -1,75 +1,113 @@
-import type { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BellSvg, CalendarSvg, VaultSvg } from './icons'
-import type { SvgProps } from './icons'
 import { useInView } from './use-in-view'
 
-interface Step {
-  num: string
-  Icon: (props: SvgProps) => ReactElement
-  key: 'step1' | 'step2' | 'step3'
-}
-
-const steps: Array<Step> = [
-  { num: '01', Icon: VaultSvg, key: 'step1' },
-  { num: '02', Icon: CalendarSvg, key: 'step2' },
-  { num: '03', Icon: BellSvg, key: 'step3' },
-]
+const stepKeys = ['step1', 'step2', 'step3'] as const
 
 export function HowItWorks() {
   const { t } = useTranslation('landing')
   const { ref, inView } = useInView()
 
   return (
-    <section className="py-24 px-6 bg-surface-container-low">
-      <div className="mx-auto max-w-5xl">
-        <div className="text-center mb-16">
-          <span
-            className="label-sm text-secondary"
-            style={{ letterSpacing: '0.16em' }}
-          >
+    <section
+      id="how"
+      className="relative z-[2] mx-auto max-w-6xl px-6 py-[70px]"
+    >
+      <div
+        ref={ref}
+        className="grid items-center gap-12 rounded-[30px] bg-[linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.012))] p-8 sm:p-12 lg:grid-cols-2"
+        style={{
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,.07)',
+          opacity: inView ? 1 : 0,
+          transform: inView ? 'translateY(0)' : 'translateY(24px)',
+          transition: 'opacity 0.6s ease, transform 0.6s ease',
+        }}
+      >
+        {/* Steps */}
+        <div>
+          <div className="mb-3.5 text-[12.5px] font-semibold uppercase tracking-[0.14em] text-primary">
             {t('howItWorks.label')}
-          </span>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-on-surface tracking-tight mt-3 leading-snug">
+          </div>
+          <h2 className="mb-7 font-display text-[2.125rem] font-extrabold leading-[1.12] tracking-[-0.02em]">
             {t('howItWorks.heading')}
           </h2>
+          <div className="flex flex-col gap-[22px]">
+            {stepKeys.map((key, i) => (
+              <div key={key} className="flex gap-4">
+                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[10px] bg-primary-container/15 font-display font-bold text-primary">
+                  {i + 1}
+                </div>
+                <div>
+                  <div className="mb-[3px] text-[15.5px] font-semibold">
+                    {t(`howItWorks.${key}.title`)}
+                  </div>
+                  <div className="text-sm leading-[1.55] text-on-surface-variant">
+                    {t(`howItWorks.${key}.description`)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {steps.map(({ num, Icon, key }, i) => (
-            <div
-              key={num}
-              className="flex flex-col items-center text-center gap-5"
-              style={{
-                opacity: inView ? 1 : 0,
-                transform: inView ? 'translateY(0)' : 'translateY(24px)',
-                transition: `opacity 0.55s ease ${i * 140}ms, transform 0.55s ease ${i * 140}ms`,
-              }}
-            >
-              <div className="relative">
-                <div
-                  className="w-20 h-20 rounded-2xl bg-surface-container-high flex items-center justify-center"
-                  style={{ border: '1px solid rgba(67,70,85,0.18)' }}
-                >
-                  <Icon className="w-9 h-9 text-primary" animated={inView} />
-                </div>
-                <div className="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.55)]">
-                  <span className="font-display font-bold text-[10px] text-on-primary-container">
-                    {num}
-                  </span>
-                </div>
+        {/* Illustrative sample cards (decorative, not localized) */}
+        <div className="flex flex-col gap-3.5">
+          <div
+            className="flex items-center justify-between rounded-[18px] bg-[#070c1a]/55 px-5 py-[18px]"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06)' }}
+          >
+            <div>
+              <div className="text-[13px] text-on-surface-variant">
+                DPS · Monthly deposit
               </div>
-
-              <div>
-                <h3 className="font-display font-bold text-lg text-on-surface tracking-tight mb-2">
-                  {t(`howItWorks.${key}.title`)}
-                </h3>
-                <p className="body-sm text-on-surface-variant leading-relaxed max-w-xs mx-auto">
-                  {t(`howItWorks.${key}.description`)}
-                </p>
+              <div className="mt-[3px] font-display text-lg font-bold">
+                ৳5,000{' '}
+                <span className="text-xs font-medium text-outline">
+                  / 60 mo
+                </span>
               </div>
             </div>
-          ))}
+            <div className="text-right">
+              <div className="text-[11px] text-outline">Matures at</div>
+              <div className="font-display font-bold text-secondary">
+                ৳3,86,400
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="rounded-[18px] bg-[#070c1a]/55 px-5 py-[18px]"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06)' }}
+          >
+            <div className="mb-2.5 flex items-center justify-between">
+              <div className="text-[13px] text-on-surface-variant">
+                Home Loan amortization
+              </div>
+              <div className="text-xs text-outline">42 / 120 paid</div>
+            </div>
+            <div className="h-[7px] overflow-hidden rounded-full bg-white/[0.07]">
+              <div className="h-full w-[35%] rounded-full bg-[linear-gradient(90deg,#2563eb,#3b78f0)]" />
+            </div>
+            <div className="mt-[9px] flex justify-between text-[11.5px] text-outline">
+              <span>Principal ৳18,40,000</span>
+              <span>Remaining ৳11,96,000</span>
+            </div>
+          </div>
+
+          <div
+            className="flex items-center gap-3.5 rounded-[18px] bg-[#070c1a]/55 px-5 py-[18px]"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06)' }}
+          >
+            <div
+              className="h-2 w-2 flex-shrink-0 rounded-full bg-secondary"
+              style={{ boxShadow: '0 0 10px var(--color-secondary)' }}
+            />
+            <div className="flex-1 text-[13.5px] text-on-surface-variant">
+              Stocks position up{' '}
+              <span className="font-semibold text-secondary">+12.6%</span> since
+              entry
+            </div>
+            <div className="font-display text-[15px] font-bold">৳1,98,400</div>
+          </div>
         </div>
       </div>
     </section>
