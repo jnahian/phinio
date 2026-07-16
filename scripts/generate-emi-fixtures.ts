@@ -88,7 +88,7 @@ const fixtures = cases.map((c) => {
 
 const out = resolve(
   process.cwd(),
-  'apps/ios/PhinioTests/Fixtures/emi-fixtures.json',
+  'apps/ios/Phinio/PhinioTests/Fixtures/emi-fixtures.json',
 )
 mkdirSync(dirname(out), { recursive: true })
 writeFileSync(out, `${JSON.stringify(fixtures, null, 2)}\n`)

@@ -15,3 +15,8 @@ todos.json
 # Prisma-generated client
 src/generated/
 .vercel
+
+# Xcode
+apps/ios/**/xcuserdata/
+apps/ios/**/*.xcuserstate
+apps/ios/DerivedData/

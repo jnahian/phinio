@@ -1,0 +1,47 @@
+- generic [active] [ref=f1e1]:
+    - main [ref=f1e305]:
+        - generic [ref=f1e306]:
+            - generic [ref=f1e307]: Phinio
+            - generic [ref=f1e311]:
+                - heading "Create your vault" [level=1] [ref=f1e312]
+                - paragraph [ref=f1e313]: Start tracking your finances in minutes
+            - generic [ref=f1e314]:
+                - generic [ref=f1e315]:
+                    - text: Full name
+                    - textbox "Full name" [ref=f1e317]:
+                        - /placeholder: Jane Doe
+                        - text: Test User
+                - generic [ref=f1e318]:
+                    - text: Email address
+                    - textbox "Email address" [ref=f1e320]:
+                        - /placeholder: name@company.com
+                        - text: testuser@example.com
+                - generic [ref=f1e321]:
+                    - text: Password
+                    - generic [ref=f1e322]:
+                        - textbox "Password" [ref=f1e323]:
+                            - /placeholder: At least 8 characters
+                            - text: testpass1234
+                        - button "Show password" [ref=f1e324]
+                - generic [ref=f1e328]:
+                    - text: Preferred currency
+                    - generic [ref=f1e329]:
+                        - button "৳ BDT Bangladeshi Taka" [pressed] [ref=f1e330]:
+                            - generic [ref=f1e331]:
+                                - generic [ref=f1e332]: ৳
+                                - generic [ref=f1e333]: BDT
+                            - text: Bangladeshi Taka
+                        - button "$ USD US Dollar" [ref=f1e334]:
+                            - generic [ref=f1e335]:
+                                - generic [ref=f1e336]: $
+                                - generic [ref=f1e337]: USD
+                            - text: US Dollar
+                - alert [ref=f1e342]: Invalid origin
+                - button "Create vault" [ref=f1e338]
+            - paragraph [ref=f1e340]:
+                - text: Already have an account?
+                - link "Sign in" [ref=f1e341] [cursor=pointer]:
+                    - /url: /login
+    - region "Notifications alt+T"
+    - button "Open TanStack Devtools" [ref=f1e272] [cursor=pointer]:
+        - img "TanStack Devtools" [ref=f1e273]
