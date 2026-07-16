@@ -84,7 +84,7 @@ tests/lib/apns.test.ts                                 (new: JWT unit test)
   - `class ApiError extends Error { status: number; code: string }`
   - Test helpers: `createAuthedUser(overrides?): Promise<{ token, userId, profileId, email }>` and `apiRequest(path, { method?, token?, body?, idempotencyKey? }): Request`.
 
-- [ ] **Step 1: Add the bearer plugin**
+- [x] **Step 1: Add the bearer plugin**
 
 In `src/lib/auth.ts`, change the imports and plugins line:
 
@@ -99,7 +99,7 @@ and at the bottom:
   plugins: [bearer(), tanstackStartCookies()],
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Create `tests/integration/api-auth.test.ts`:
 
@@ -261,12 +261,12 @@ export function apiRequest(
 }
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-auth.test.ts --project integration`
 Expected: FAIL — `Cannot find module '#/server/api-v1'` (or equivalent).
 
-- [ ] **Step 4: Implement `src/server/api-v1.ts`**
+- [x] **Step 4: Implement `src/server/api-v1.ts`**
 
 ```ts
 import { ZodError } from 'zod'
@@ -402,12 +402,12 @@ export async function api(fn: () => Promise<unknown>): Promise<Response> {
 }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-auth.test.ts --project integration`
 Expected: PASS (all 9 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 npm run check
@@ -429,7 +429,7 @@ git commit -m "✨ feat(api): bearer auth plugin + /api/v1 helper layer"
 - Consumes: Task 1 helpers; `listEmisImpl`, `getEmiImpl`, `createEmiImpl`, `updateEmiImpl`, `deleteEmiImpl`, `markPaymentPaidImpl`, `completeEmiImpl`, `upcomingPaymentsImpl` from `#/server/emis.impl` (all `(profileId, data)` except `getEmiImpl(profileId, emiId)` and `upcomingPaymentsImpl(profileId)`); schemas from `#/lib/validators`.
 - Produces: HTTP endpoints `GET|POST /api/v1/emis`, `GET /api/v1/emis/upcoming`, `GET|PATCH|DELETE /api/v1/emis/:emiId`, `POST /api/v1/emis/:emiId/complete`, `POST /api/v1/emi-payments/:paymentId/mark-paid`. Exported handlers: `handleListEmis`, `handleCreateEmi`, `handleUpcomingPayments`, `handleGetEmi`, `handleUpdateEmi`, `handleDeleteEmi`, `handleCompleteEmi`, `handleMarkPaymentPaid` — each `(request: Request, <pathParam>?: string) => Promise<Response>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-emis.test.ts`:
 
@@ -632,12 +632,12 @@ describe('EMI REST routes', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-emis.test.ts --project integration`
 Expected: FAIL — cannot resolve `#/routes/api/v1/emis.index`.
 
-- [ ] **Step 3: Implement the route files**
+- [x] **Step 3: Implement the route files**
 
 `src/routes/api/v1/emis.index.ts`:
 
@@ -816,12 +816,12 @@ export const Route = createFileRoute(
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-emis.test.ts --project integration`
 Expected: PASS (9 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -850,7 +850,7 @@ git commit -m "✨ feat(api): EMI REST routes under /api/v1"
   - `DELETE /api/v1/deposits/:depositId` (remove savings deposit), `POST /api/v1/deposits/:depositId/mark-paid` (DPS installment)
 - Exported handlers (each `(request, <param>?) => Promise<Response>`): `handleListInvestments`, `handleCreateInvestment`, `handleGetInvestment`, `handleUpdateInvestment`, `handleDeleteInvestment`, `handleWithdraw`, `handleCreateSavings`, `handleUpdateSavings`, `handleDeleteSavings`, `handleAddDeposit`, `handleCreateDps`, `handleUpdateDps`, `handleCloseDps`, `handleRemoveDeposit`, `handleMarkDepositPaid`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-investments.test.ts`:
 
@@ -1079,12 +1079,12 @@ describe('investment REST routes', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-investments.test.ts --project integration`
 Expected: FAIL — cannot resolve the route modules.
 
-- [ ] **Step 3: Implement the route files**
+- [x] **Step 3: Implement the route files**
 
 `src/routes/api/v1/investments.index.ts`:
 
@@ -1473,12 +1473,12 @@ export const Route = createFileRoute('/api/v1/deposits/$depositId/mark-paid')({
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-investments.test.ts --project integration`
 Expected: PASS (7 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -1502,7 +1502,7 @@ git commit -m "✨ feat(api): investment REST routes under /api/v1"
 
 **Idempotency note (important):** the three update impls each call `withIdempotency` keyed on `clientMutationId`. A single PATCH touching two fields with one `Idempotency-Key` would make the second impl call replay the first's cached result and silently skip the update. The handler therefore suffixes the key per field (`<key>:name`, `<key>:currency`, `<key>:language`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-profile.test.ts`:
 
@@ -1577,12 +1577,12 @@ describe('profile REST routes', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-profile.test.ts --project integration`
 Expected: FAIL — cannot resolve `#/routes/api/v1/profile`.
 
-- [ ] **Step 3: Implement `src/routes/api/v1/profile.ts`**
+- [x] **Step 3: Implement `src/routes/api/v1/profile.ts`**
 
 ```ts
 import { createFileRoute } from '@tanstack/react-router'
@@ -1655,12 +1655,12 @@ export const Route = createFileRoute('/api/v1/profile')({
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-profile.test.ts --project integration`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -1682,7 +1682,7 @@ git commit -m "✨ feat(api): profile REST routes under /api/v1"
 - Consumes: Task 1 helpers; `getDashboardStatsImpl(profileId)` from `#/server/dashboard.impl`; `listActivityImpl(profileId, { cursor?, limit? })` from `#/server/activity-log.impl`.
 - Produces: `GET /api/v1/dashboard`; `GET /api/v1/activity?cursor=<id>&limit=<n>`. Exported handlers `handleDashboard(request)`, `handleListActivity(request)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-dashboard-activity.test.ts`:
 
@@ -1741,12 +1741,12 @@ describe('dashboard + activity REST routes', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-dashboard-activity.test.ts --project integration`
 Expected: FAIL — cannot resolve the route modules.
 
-- [ ] **Step 3: Implement the route files**
+- [x] **Step 3: Implement the route files**
 
 `src/routes/api/v1/dashboard.ts`:
 
@@ -1805,12 +1805,12 @@ export const Route = createFileRoute('/api/v1/activity')({
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-dashboard-activity.test.ts --project integration`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -1832,7 +1832,7 @@ git commit -m "✨ feat(api): dashboard + activity REST routes"
 - Consumes: Task 1 helpers; from `#/server/notifications.impl`: `listNotificationsImpl(profileId)`, `unreadNotificationCountImpl(profileId)`, `markNotificationReadImpl(profileId, { id, clientMutationId? })`, `markAllNotificationsReadImpl(profileId, data)`, `clearReadNotificationsImpl(profileId, data)`, `createNotification({ profileId, type, title, body, link, dedupeKey })` (test seeding).
 - Produces: `GET /api/v1/notifications`, `GET /api/v1/notifications/unread-count`, `POST /api/v1/notifications/:id/read`, `POST /api/v1/notifications/read-all`, `POST /api/v1/notifications/clear-read`. Exported handlers: `handleListNotifications`, `handleUnreadCount`, `handleMarkRead`, `handleMarkAllRead`, `handleClearRead`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-notifications.test.ts`:
 
@@ -1946,12 +1946,12 @@ describe('notification REST routes', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-notifications.test.ts --project integration`
 Expected: FAIL — cannot resolve the route modules.
 
-- [ ] **Step 3: Implement the route files**
+- [x] **Step 3: Implement the route files**
 
 `src/routes/api/v1/notifications.index.ts`:
 
@@ -2083,12 +2083,12 @@ export const Route = createFileRoute('/api/v1/notifications/clear-read')({
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-notifications.test.ts --project integration`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -2110,7 +2110,7 @@ git commit -m "✨ feat(api): notification REST routes under /api/v1"
 - Consumes: Task 1 helpers; `prisma` directly (raw rows — Prisma `Decimal.toJSON()` yields strings, `Date` yields ISO, so plain `JSON.stringify` satisfies the wire conventions).
 - Produces: `GET /api/v1/sync/snapshot` → `{ serverTime, profile, investments, investmentDeposits, investmentWithdrawals, emis, emiPayments, notifications }`, every collection scoped by `profileId`. Exported handler `handleSnapshot(request)`. This is the iOS SyncEngine's pull endpoint.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-snapshot.test.ts`:
 
@@ -2176,12 +2176,12 @@ describe('GET /api/v1/sync/snapshot', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-snapshot.test.ts --project integration`
 Expected: FAIL — cannot resolve `#/routes/api/v1/sync.snapshot`.
 
-- [ ] **Step 3: Implement `src/routes/api/v1/sync.snapshot.ts`**
+- [x] **Step 3: Implement `src/routes/api/v1/sync.snapshot.ts`**
 
 ```ts
 import { createFileRoute } from '@tanstack/react-router'
@@ -2238,12 +2238,12 @@ export const Route = createFileRoute('/api/v1/sync/snapshot')({
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-snapshot.test.ts --project integration`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -2267,7 +2267,7 @@ git commit -m "✨ feat(api): full-snapshot sync endpoint"
 - Consumes: Task 1 helpers; `prisma`.
 - Produces: Prisma model `DeviceToken` (`prisma.deviceToken`); `POST /api/v1/device-tokens` body `{ token: string, platform?: 'ios' }` (upsert on token — re-registering moves the token to the caller's profile); `DELETE /api/v1/device-tokens/:token` (scoped delete, used at logout). Exported handlers `handleRegisterDeviceToken(request)`, `handleDeleteDeviceToken(request, token)`. Task 10's cron branch reads `prisma.deviceToken.findMany({ where: { profileId: { in } } })`.
 
-- [ ] **Step 1: Add the schema model and migrate**
+- [x] **Step 1: Add the schema model and migrate**
 
 In `prisma/schema.prisma`, add inside `model Profile`'s relation list (after `processedMutations ProcessedMutation[]`):
 
@@ -2298,7 +2298,7 @@ model DeviceToken {
 Run: `npm run db:migrate -- --name add_device_tokens` then `npm run db:generate`
 Expected: migration created, client regenerated without errors.
 
-- [ ] **Step 2: Add `device_tokens` to the test truncate list**
+- [x] **Step 2: Add `device_tokens` to the test truncate list**
 
 In `tests/integration/helpers/db.ts`, extend the TRUNCATE statement to start with the new table:
 
@@ -2306,7 +2306,7 @@ In `tests/integration/helpers/db.ts`, extend the TRUNCATE statement to start wit
     `TRUNCATE TABLE "device_tokens", "processed_mutations", "activity_log", "push_subscriptions", "notifications", "emi_payments", "emis", "investment_withdrawals", "investment_deposits", "investments", "profiles", "verification", "account", "session", "user" RESTART IDENTITY CASCADE`,
 ```
 
-- [ ] **Step 3: Write the failing test**
+- [x] **Step 3: Write the failing test**
 
 Create `tests/integration/api-device-tokens.test.ts`:
 
@@ -2390,12 +2390,12 @@ describe('device token REST routes', () => {
 })
 ```
 
-- [ ] **Step 4: Run the test to verify it fails**
+- [x] **Step 4: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-device-tokens.test.ts --project integration`
 Expected: FAIL — cannot resolve the route modules.
 
-- [ ] **Step 5: Implement the route files**
+- [x] **Step 5: Implement the route files**
 
 `src/routes/api/v1/device-tokens.ts`:
 
@@ -2463,12 +2463,12 @@ export const Route = createFileRoute('/api/v1/device-tokens/$token')({
 })
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `npx vitest run tests/integration/api-device-tokens.test.ts --project integration`
 Expected: PASS (3 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 npm run check
@@ -2495,7 +2495,7 @@ git commit -m "✨ feat(api): DeviceToken model + registration routes for APNs"
 
 **Why node:http2:** APNs only speaks HTTP/2; Node's `fetch` is HTTP/1.1-only, so the sender uses `http2.connect` directly. No SDK dependency.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/lib/apns.test.ts`:
 
@@ -2559,12 +2559,12 @@ describe('buildApnsConfig', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/lib/apns.test.ts --project unit`
 Expected: FAIL — cannot resolve `#/server/apns`.
 
-- [ ] **Step 3: Implement `src/server/apns.ts`**
+- [x] **Step 3: Implement `src/server/apns.ts`**
 
 ```ts
 import { createPrivateKey, sign } from 'node:crypto'
@@ -2681,12 +2681,12 @@ export function sendApns(
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/lib/apns.test.ts --project unit`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npm run check
@@ -2708,7 +2708,7 @@ git commit -m "✨ feat(api): APNs HTTP/2 sender with ES256 provider JWT"
 - Consumes: `buildApnsConfig`, `sendApns` from `#/server/apns` (Task 9); `prisma.deviceToken` (Task 8); the cron's existing `pushJobs` array (`{ profileId, payload: { title, body, link } }`).
 - Produces: cron response gains `apnsPushed`, `apnsExpired`, `apnsFailed` counters. Reminders now reach iOS devices; `gone` tokens are deleted. Badge is set to the profile's unread notification count.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/integration/api-apns-reminders.test.ts`:
 
@@ -2837,12 +2837,12 @@ describe('cron APNs branch', () => {
 
 (The `beforeAll` env block matches `tests/integration/send-reminders.test.ts:20-25` so `handleCron` passes its `CRON_SECRET` and VAPID config guards.)
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/integration/api-apns-reminders.test.ts --project integration`
 Expected: FAIL — response has no `apnsPushed` field.
 
-- [ ] **Step 3: Implement the cron branch**
+- [x] **Step 3: Implement the cron branch**
 
 In `src/routes/api/cron/send-reminders.ts`:
 
@@ -2931,12 +2931,12 @@ return json({
 })
 ```
 
-- [ ] **Step 4: Run the new test and the existing cron test**
+- [x] **Step 4: Run the new test and the existing cron test**
 
 Run: `npx vitest run tests/integration/api-apns-reminders.test.ts tests/integration/send-reminders.test.ts --project integration`
 Expected: PASS — new tests pass and the existing cron suite is unbroken (its assertions on `scanned/created/pushed/expired/failed` still hold; APNs is skipped there because `buildApnsConfig()` returns null without env).
 
-- [ ] **Step 5: Document the env vars**
+- [x] **Step 5: Document the env vars**
 
 Add to `.env.local` (values from your Apple Developer account later; leave placeholders commented out) and note in the deploy env (Vercel) when going live:
 
@@ -2949,7 +2949,7 @@ Add to `.env.local` (values from your Apple Developer account later; leave place
 # APNS_ENV=development
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 npm run check
@@ -2965,17 +2965,17 @@ git commit -m "✨ feat(cron): send EMI/DPS reminders to iOS devices via APNs"
 
 - Modify (generated): `src/routeTree.gen.ts` (regenerated by the build — do not hand-edit)
 
-- [ ] **Step 1: Run the full test suite**
+- [x] **Step 1: Run the full test suite**
 
 Run: `npm run test`
 Expected: all projects pass (unit + integration), including every pre-existing test.
 
-- [ ] **Step 2: Build to regenerate the route tree and typecheck**
+- [x] **Step 2: Build to regenerate the route tree and typecheck**
 
 Run: `npm run build`
 Expected: build succeeds; `src/routeTree.gen.ts` now includes every `/api/v1/*` route; no TS errors from `createFileRoute` path literals.
 
-- [ ] **Step 3: Manual smoke test over real HTTP**
+- [x] **Step 3: Manual smoke test over real HTTP**
 
 ```bash
 npm run dev &
@@ -2993,7 +2993,7 @@ kill %1
 
 Expected: first curl returns the 401 error envelope; snapshot returns the profile dataset with string money fields.
 
-- [ ] **Step 4: Commit and lint sweep**
+- [x] **Step 4: Commit and lint sweep**
 
 ```bash
 npm run check
