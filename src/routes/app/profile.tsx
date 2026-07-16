@@ -7,8 +7,6 @@ import {
   BellRing,
   Camera,
   Check,
-  ChevronDown,
-  Database,
   ChevronRight,
   History,
   KeyRound,
@@ -16,7 +14,6 @@ import {
   LogOut,
   Mail,
   Pencil,
-  Trash2,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
