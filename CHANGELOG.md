@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.3] - 2026-07-16
+
+### Changed
+
+- **The landing page has been redesigned.** A two-column hero with an
+  interactive phone mockup and an animated allocation donut, an asset-class
+  trust bar, feature cards with checklists, a numbered how-it-works walkthrough
+  with sample cards, a new "A vault, not a feed" security section, and
+  Features / Security / How-it-works anchor links in the nav. English and
+  Bangla copy were restructured to match; the Bangla translations are new and
+  worth a review pass.
+
+### Fixed
+
+- Closed Savings pots no longer read as ৳0.00. A card now shows the payout you
+  actually realized at closure instead of its drained current value.
+- Closed and matured DPS cards now show the amount actually received rather
+  than the invested amount, and no longer display the maturity-value arrow —
+  a premature closure typically pays less than maturity, and showing the
+  forecast hid that.
+- Closing an investment with a partial withdrawal is now rejected. Previously
+  a request could mark an investment completed while it still held a positive
+  balance, which broke return accounting.
+
 ## [1.8.2] - 2026-06-03
 
 ### Changed
