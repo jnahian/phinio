@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Release-iphonesimulator/Phinio.app/Phinio'
+relocations:     []
+...

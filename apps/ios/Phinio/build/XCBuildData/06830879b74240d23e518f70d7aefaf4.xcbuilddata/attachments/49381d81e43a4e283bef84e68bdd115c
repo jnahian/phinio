@@ -1,0 +1,46 @@
+{
+  "" : {
+    "const-values" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary.swiftconstvalues",
+    "dependencies" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary.d",
+    "diagnostics" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary.dia",
+    "emit-module-dependencies" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary-emit-module.dia",
+    "pch" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests-primary.swiftdeps"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/APIClientTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/APIClientTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/APIClientTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/APIClientTests.o"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/DTOTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/DTOTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/DTOTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/DTOTests.o"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/EmiCalculatorTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/EmiCalculatorTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/EmiCalculatorTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/EmiCalculatorTests.o"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/MoneyTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/MoneyTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/MoneyTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/MoneyTests.o"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/PhinioTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/PhinioTests.o"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/StoreTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/StoreTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/StoreTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/StoreTests.o"
+  },
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/SyncEngineTests.swift" : {
+    "index-unit-output-path" : "/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/SyncEngineTests.o",
+    "llvm-bc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/SyncEngineTests.bc",
+    "object" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/x86_64/SyncEngineTests.o"
+  }
+}

@@ -1,17 +1,52 @@
-//
-//  PhinioApp.swift
-//  Phinio
-//
-//  Created by Nahian on 7/17/26.
-//
-
+import SwiftData
 import SwiftUI
 
 @main
 struct PhinioApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  @Environment(\.scenePhase) private var scenePhase
+
+  private let container: ModelContainer
+  @StateObject private var auth: AuthManager
+  @StateObject private var sync: SyncEngine
+
+  init() {
+    let container = try! makeModelContainer()
+    let client = APIClient()
+    self.container = container
+    _auth = StateObject(wrappedValue: AuthManager(client: client))
+    _sync = StateObject(wrappedValue: SyncEngine(transport: client, container: container))
+  }
+
+  var body: some Scene {
+    WindowGroup {
+      RootView()
+        .environmentObject(auth)
+        .environmentObject(sync)
     }
+    .modelContainer(container)
+    .onChange(of: scenePhase) { _, phase in
+      if phase == .active, auth.isAuthenticated {
+        Task { await sync.syncNow() }
+      }
+    }
+  }
+}
+
+struct RootView: View {
+  @EnvironmentObject private var auth: AuthManager
+  @EnvironmentObject private var sync: SyncEngine
+  @Environment(\.modelContext) private var context
+
+  var body: some View {
+    if auth.isAuthenticated {
+      DebugHomeView()
+        .onChange(of: sync.state) { _, state in
+          if state == .unauthorized {
+            auth.signOut(container: context.container)
+          }
+        }
+    } else {
+      LoginView()
+    }
+  }
 }

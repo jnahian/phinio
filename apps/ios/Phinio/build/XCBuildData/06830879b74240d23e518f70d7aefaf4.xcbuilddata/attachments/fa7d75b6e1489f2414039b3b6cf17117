@@ -1,0 +1,16 @@
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Auth/AuthManager.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Domain/EmiCalculator.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Models/DomainModels.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Models/OutboxModels.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Networking/APIClient.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Networking/APIError.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Networking/DTOs.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Support/AppConfig.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Support/Keychain.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Support/Money.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Sync/Store.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/Sync/SyncEngine.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/UI/DebugHomeView.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/UI/LoginView.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/Phinio/PhinioApp.swift
+/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/Phinio.build/DerivedSources/GeneratedAssetSymbols.swift

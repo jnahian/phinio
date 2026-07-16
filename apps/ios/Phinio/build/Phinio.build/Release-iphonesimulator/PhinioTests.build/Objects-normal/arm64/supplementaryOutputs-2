@@ -1,0 +1,12 @@
+{
+  "/Users/nahian/Projects/phinio/apps/ios/Phinio/PhinioTests/APIClientTests.swift" : {
+    "abi-baseline-json" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests.abi.json",
+    "const-values" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests-primary.swiftconstvalues",
+    "dependencies" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests-primary.d",
+    "diagnostics" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests-primary.dia",
+    "objc-header" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests-Swift.h",
+    "swiftdoc" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests.swiftdoc",
+    "swiftmodule" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests.swiftmodule",
+    "swiftsourceinfo" : "/Users/nahian/Projects/phinio/apps/ios/Phinio/build/Phinio.build/Release-iphonesimulator/PhinioTests.build/Objects-normal/arm64/PhinioTests.swiftsourceinfo"
+  }
+}

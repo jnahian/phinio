@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'PhinioTests' in project 'Phinio'
+➜ Explicit dependency on target 'Phinio' in project 'Phinio'
+Target 'Phinio' in project 'Phinio' (no dependencies)
