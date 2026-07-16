@@ -1,75 +1,103 @@
 {
   "hero": {
-    "encrypted": "ENCRYPTED",
-    "vault": "DIGITAL PRIVATE VAULT",
-    "headline1": "Own your",
-    "headline2": "financial future",
-    "subheading": "Investments, DPS deposits, savings pots, and EMI schedules — tracked side by side in one encrypted vault. Works offline. Push reminders before every due date.",
-    "cta": "Open your vault",
-    "signin": "Sign in",
-    "explore": "Explore"
+    "eyebrow": "Your private financial vault",
+    "headline": "Every taka you <own>own</own> and <owe>owe</owe>, in one encrypted dashboard.",
+    "subheading": "Phinio unifies your investment portfolio and loan EMIs into a single, beautifully private view — end-to-end secured and scoped to you alone.",
+    "ctaPrimary": "Create your vault",
+    "ctaSecondary": "See how it works",
+    "stats": [
+      { "value": "256-bit", "label": "encrypted at rest" },
+      { "value": "11 types", "label": "of assets tracked" },
+      { "value": "Zero", "label": "cross-user leakage" }
+    ]
+  },
+  "assets": {
+    "title": "One vault for every asset class",
+    "items": [
+      "Stocks",
+      "Mutual funds",
+      "DPS",
+      "Sanchayapatra",
+      "Gold",
+      "Crypto",
+      "Real estate",
+      "Agro farms",
+      "Savings pots"
+    ]
   },
   "features": {
-    "label": "CAPABILITIES",
-    "heading": "Everything you need to run your finances",
+    "label": "What's inside",
+    "heading": "Two halves of your money, finally in one place.",
+    "intro": "What you own and what you owe have always lived in different apps. Phinio holds both — and shows you the number that actually matters.",
     "portfolio": {
-      "title": "One portfolio, every asset",
-      "description": "Lump-sum holdings, DPS schemes, and flexible savings pots side by side — no more spreadsheets."
+      "title": "Investment portfolio",
+      "description": "Lump-sum, scheduled DPS, and flexible savings pots under one schema. Returns are computed automatically; exit values record realised P&L.",
+      "bullets": [
+        "Auto-generated DPS installment schedules",
+        "Partial withdrawals & premature closure",
+        "Per-investment activity log"
+      ]
     },
-    "amortization": {
-      "title": "Amortization, solved",
-      "description": "Reducing-balance schedules build the moment you log a loan or credit-card EMI."
+    "emi": {
+      "title": "EMI management",
+      "description": "Bank loans and credit-card EMIs with a full reducing-balance amortization schedule generated upfront — every row stored, never guessed.",
+      "bullets": [
+        "Principal / interest split per payment",
+        "Upcoming · paid · overdue tracking",
+        "Push reminders before every due date"
+      ]
     },
-    "networth": {
-      "title": "Net worth at a glance",
-      "description": "Active investments minus outstanding debts — updated as you mark payments paid."
-    },
-    "reminders": {
-      "title": "Reminders that travel",
-      "description": "Web-push alerts for upcoming and overdue installments across every device you use."
-    },
-    "audit": {
-      "title": "Every move, recorded",
-      "description": "An immutable audit trail of every create, update, and delete you make."
-    },
-    "privacy": {
-      "title": "Yours alone",
-      "description": "No bank linking, no third-party trackers — just your data, encrypted."
+    "dashboard": {
+      "title": "Unified dashboard",
+      "description": "One net-worth snapshot — active investment values minus EMI balances — with an interactive allocation donut and upcoming dues at a glance.",
+      "bullets": [
+        "Live net worth & overall return %",
+        "Tap a slice to isolate an asset type",
+        "Installable PWA, works offline"
+      ]
     }
   },
   "howItWorks": {
-    "label": "HOW IT WORKS",
-    "heading": "From sign-up to insight in minutes",
+    "label": "How it works",
+    "heading": "From scattered to settled in three steps.",
     "step1": {
-      "title": "Create your vault",
-      "description": "Email and password — that is it. No bank linking, no credit card, no setup wizard."
+      "title": "Create your encrypted vault",
+      "description": "Sign up with verified email. Sessions are httpOnly and every query is scoped to you alone."
     },
     "step2": {
-      "title": "Add your assets",
-      "description": "Log investments, DPS deposits, savings pots, and loans. Schedules and amortization tables build themselves."
+      "title": "Log what you own & owe",
+      "description": "Add investments and EMIs once — Phinio builds the schedules and computes returns for you."
     },
     "step3": {
-      "title": "Stay ahead",
-      "description": "Push reminders fire before every due date. Mark a payment paid and the dashboard updates instantly."
+      "title": "Watch one number that matters",
+      "description": "Your net worth updates live, with reminders so a due date never slips past you again."
+    }
+  },
+  "security": {
+    "label": "Privacy by architecture",
+    "heading": "A vault, not a feed.",
+    "intro": "Phinio never sells, shares, or aggregates your data. Authorization isn't a setting — it's enforced on every single database query, so cross-user leakage is structurally impossible.",
+    "scoping": {
+      "title": "Per-query scoping",
+      "description": "Every read filters on your profile ID. No exceptions."
+    },
+    "sessions": {
+      "title": "Encrypted sessions",
+      "description": "httpOnly, secure cookies via Better Auth."
+    },
+    "identity": {
+      "title": "Verified identity",
+      "description": "Mandatory email verification on sign-up."
+    },
+    "audit": {
+      "title": "Full audit trail",
+      "description": "Every create, update & delete is logged."
     }
   },
   "finalCta": {
-    "label": "GET STARTED TODAY",
-    "heading": "Your vault is waiting.",
-    "subheading": "Investments, DPS, savings, and loans — finally in one place that is private, offline-ready, and entirely yours.",
-    "cta": "Create free account",
-    "signin": "Already have an account?"
-  },
-  "trust": {
-    "privateValue": "100%",
-    "privateLabel": "Private",
-    "privateSub": "Zero data sharing, ever",
-    "encryptedValue": "E2E",
-    "encryptedLabel": "Encrypted",
-    "encryptedSub": "Bank-grade security",
-    "trackingValue": "Live",
-    "trackingLabel": "Tracking",
-    "trackingSub": "Real-time net worth"
+    "heading": "Take your money private.",
+    "subheading": "Open your vault in under a minute. Free to start — your data never leaves your scope.",
+    "cta": "Create your vault"
   },
   "footer": {
     "ariaHome": "Phinio home",
@@ -80,7 +108,10 @@
   "nav": {
     "home": "Phinio home",
     "signin": "Sign in",
-    "getStarted": "Get started"
+    "getStarted": "Get started",
+    "features": "Features",
+    "security": "Security",
+    "how": "How it works"
   },
   "changelog": {
     "label": "RELEASE NOTES",

@@ -8,51 +8,32 @@ export function FinalCta() {
   const { ref, inView } = useInView()
 
   return (
-    <section className="relative py-36 px-6 overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none flex items-center justify-center"
-        aria-hidden
-      >
-        <div className="w-[640px] h-[640px] rounded-full bg-primary-container/7 blur-[110px] animate-lp-glow-pulse" />
-      </div>
-
+    <section className="relative z-[2] mx-auto max-w-6xl px-6 pb-24 pt-5">
       <div
         ref={ref}
-        className="relative z-10 mx-auto max-w-2xl flex flex-col items-center text-center gap-8"
+        className="relative overflow-hidden rounded-[30px] bg-[linear-gradient(160deg,#14213f,#0a1124)] px-10 py-14 text-center sm:py-[60px]"
         style={{
+          boxShadow:
+            'inset 0 1px 0 rgba(255,255,255,.1), 0 40px 90px -40px rgba(0,0,0,.7)',
           opacity: inView ? 1 : 0,
           transform: inView ? 'translateY(0)' : 'translateY(24px)',
           transition: 'opacity 0.6s ease, transform 0.6s ease',
         }}
       >
-        <div className="space-y-3">
-          <span
-            className="label-sm text-primary"
-            style={{ letterSpacing: '0.16em' }}
-          >
-            {t('finalCta.label')}
-          </span>
-          <h2 className="font-display font-extrabold text-4xl sm:text-5xl text-on-surface tracking-[-0.03em] leading-tight">
+        <div className="pointer-events-none absolute -top-28 left-1/2 h-[400px] w-[600px] max-w-[120%] -translate-x-1/2 bg-[radial-gradient(50%_50%_at_50%_50%,rgba(37,99,235,.16),transparent_70%)]" />
+        <div className="relative">
+          <h2 className="mb-4 text-balance font-display text-[2.25rem] font-extrabold leading-[1.08] tracking-[-0.025em] sm:text-[2.625rem]">
             {t('finalCta.heading')}
           </h2>
-          <p className="body-md text-on-surface-variant max-w-sm mx-auto">
+          <p className="mx-auto mb-[30px] max-w-[440px] text-[17px] leading-[1.55] text-on-surface-variant">
             {t('finalCta.subheading')}
           </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <Link
             to="/signup"
-            className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-primary-container text-on-primary-container font-display font-bold text-base shadow-[0_14px_40px_-10px_rgba(37,99,235,0.68)] hover:shadow-[0_20px_50px_-10px_rgba(37,99,235,0.82)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
+            className="inline-flex items-center gap-2.5 rounded-[13px] bg-primary-container px-[30px] py-4 font-display text-base font-semibold text-on-primary-container shadow-[0_14px_34px_rgba(37,99,235,.3),inset_0_1px_0_rgba(255,255,255,.5)] transition-transform duration-200 hover:-translate-y-0.5"
           >
             {t('finalCta.cta')}
-            <ArrowRightSvg className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center justify-center px-6 py-4 rounded-xl font-display font-medium text-base text-on-surface-variant hover:text-on-surface transition-colors duration-200"
-          >
-            {t('finalCta.signin')}
+            <ArrowRightSvg className="h-4 w-4" />
           </Link>
         </div>
       </div>

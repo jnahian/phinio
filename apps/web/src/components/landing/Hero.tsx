@@ -1,140 +1,96 @@
 import { Link } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
-import { ArrowRightSvg, ChevronDownSvg, LockSvg, SparkleSvg } from './icons'
+import { Trans, useTranslation } from 'react-i18next'
+import { ArrowRightSvg } from './icons'
+import { PhoneMockup } from './PhoneMockup'
 
 export function Hero() {
   const { t } = useTranslation('landing')
+  const stats = t('hero.stats', { returnObjects: true }) as Array<{
+    value: string
+    label: string
+  }>
+
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-[calc(6rem+env(safe-area-inset-top))] pb-20 overflow-hidden">
-      {/* Drifting ambient orbs */}
-      <div className="pointer-events-none select-none" aria-hidden>
-        <div className="absolute -top-24 -left-32 w-[560px] h-[560px] rounded-full bg-primary-container/8 blur-[120px] animate-lp-orb-drift" />
-        <div className="absolute -bottom-24 -right-32 w-[480px] h-[480px] rounded-full bg-secondary/6 blur-[100px] animate-lp-orb-drift-2" />
-        <div
-          className="absolute top-2/3 left-1/3 w-[320px] h-[320px] rounded-full blur-[80px] animate-lp-orb-drift"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(37,99,235,0.07), transparent)',
-            animationDelay: '-9s',
-          }}
-        />
+    <section className="relative overflow-hidden px-6 pb-24 pt-[calc(7rem+env(safe-area-inset-top))]">
+      {/* Ambient glows */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -top-56 left-1/2 h-[760px] w-[1100px] max-w-[120vw] -translate-x-1/2 bg-[radial-gradient(60%_60%_at_50%_30%,rgba(180,197,255,.16),transparent_70%)] blur-lg" />
+        <div className="absolute -right-40 top-28 h-[620px] w-[620px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(37,99,235,.10),transparent_70%)]" />
       </div>
 
-      {/* Dot grid */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, rgba(180,197,255,0.055) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
-
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto gap-8">
-        {/* Floating logo cluster */}
-        <div className="relative animate-lp-float">
-          <div className="absolute inset-0 rounded-[2rem] bg-primary-container/20 blur-3xl scale-[1.7] animate-lp-glow-pulse" />
+      <div className="relative z-[2] mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
+        {/* Copy column */}
+        <div className="text-center lg:text-left">
           <div
-            className="absolute inset-[-16px] rounded-[2.8rem] animate-lp-spin-slow"
-            style={{ border: '1px solid rgba(180,197,255,0.09)' }}
-          />
-          <div
-            className="absolute inset-[-30px] rounded-[3.4rem] animate-lp-spin-slow"
-            style={{
-              border: '1px solid rgba(180,197,255,0.05)',
-              animationDuration: '28s',
-              animationDirection: 'reverse',
-            }}
-          />
-          <div
-            className="relative w-28 h-28 rounded-[2rem] overflow-hidden shadow-[0_24px_64px_-12px_rgba(37,99,235,0.6)]"
-            style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+            className="mb-6 inline-flex items-center gap-2.5 rounded-full bg-white/[0.045] py-[7px] pl-[9px] pr-3.5"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.07)' }}
           >
-            <img
-              src="/phinio-square.png"
-              alt="Phinio"
-              className="w-full h-full object-cover"
+            <span
+              className="h-[7px] w-[7px] rounded-full bg-secondary"
+              style={{ boxShadow: '0 0 10px var(--color-secondary)' }}
             />
-          </div>
-          <div className="absolute -top-3 -right-3 w-9 h-9 bg-secondary rounded-full flex items-center justify-center shadow-[0_8px_20px_-4px_rgba(78,222,163,0.7)]">
-            <LockSvg className="w-4 h-4 text-on-secondary" />
-          </div>
-          <div
-            className="absolute -bottom-4 -left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-highest shadow-lg"
-            style={{ border: '1px solid rgba(67,70,85,0.2)' }}
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-lp-glow-pulse" />
-            <span className="text-[10px] font-semibold text-on-surface-variant tracking-widest">
-              {t('hero.encrypted')}
+            <span className="text-[12.5px] font-medium text-on-surface-variant">
+              {t('hero.eyebrow')}
             </span>
           </div>
-        </div>
 
-        {/* Eyebrow pill */}
-        <div
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container"
-          style={{ border: '1px solid rgba(67,70,85,0.25)' }}
-        >
-          <SparkleSvg className="w-3.5 h-3.5 text-primary" />
-          <span
-            className="label-sm text-primary"
-            style={{ letterSpacing: '0.16em' }}
-          >
-            {t('hero.vault')}
-          </span>
-        </div>
-
-        {/* Headline */}
-        <div className="space-y-1">
-          <h1 className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-[-0.03em] text-on-surface">
-            {t('hero.headline1')}
+          <h1 className="mx-auto max-w-xl text-balance font-display text-[2.6rem] font-extrabold leading-[1.04] tracking-[-0.03em] sm:text-[3.25rem] lg:mx-0 lg:text-[3.6rem]">
+            <Trans
+              t={t}
+              i18nKey="hero.headline"
+              components={{
+                own: <span className="text-secondary" />,
+                owe: <span className="text-primary" />,
+              }}
+            />
           </h1>
-          <h1
-            className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-[-0.03em]"
-            style={{
-              background:
-                'linear-gradient(130deg, #b4c5ff 10%, #7ab8f7 50%, #4edea3 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            {t('hero.headline2')}
-          </h1>
+
+          <p className="mx-auto mt-5 max-w-[480px] text-[17.5px] leading-relaxed text-on-surface-variant lg:mx-0">
+            {t('hero.subheading')}
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5 lg:justify-start">
+            <Link
+              to="/signup"
+              className="inline-flex items-center gap-2.5 rounded-[13px] bg-primary-container px-[26px] py-[15px] font-display text-[15.5px] font-semibold text-on-primary-container shadow-[0_14px_34px_rgba(37,99,235,.26),inset_0_1px_0_rgba(255,255,255,.5)] transition-transform duration-200 hover:-translate-y-0.5"
+            >
+              {t('hero.ctaPrimary')}
+              <ArrowRightSvg className="h-4 w-4" />
+            </Link>
+            <a
+              href="#how"
+              className="inline-flex items-center gap-2.5 rounded-[13px] bg-white/5 px-6 py-[15px] font-display text-[15.5px] font-medium text-on-surface transition-transform duration-200 hover:-translate-y-0.5"
+              style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.08)' }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M8 5v14l11-7L8 5z" fill="currentColor" />
+              </svg>
+              {t('hero.ctaSecondary')}
+            </a>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-10 flex items-center justify-center gap-6 lg:justify-start">
+            {stats.map((s, i) => (
+              <div key={s.label} className="flex items-center gap-6">
+                {i > 0 && (
+                  <div className="h-[30px] w-px bg-[linear-gradient(transparent,rgba(255,255,255,.12),transparent)]" />
+                )}
+                <div className="text-left">
+                  <div className="font-display text-[22px] font-bold">
+                    {s.value}
+                  </div>
+                  <div className="mt-0.5 text-[12.5px] text-outline">
+                    {s.label}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Subheadline */}
-        <p className="body-md text-on-surface-variant max-w-lg leading-relaxed">
-          {t('hero.subheading')}
-        </p>
-
-        {/* CTA row */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-1">
-          <Link
-            to="/signup"
-            className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-primary-container text-on-primary-container font-display font-bold text-base shadow-[0_14px_40px_-10px_rgba(37,99,235,0.68)] hover:shadow-[0_20px_50px_-10px_rgba(37,99,235,0.82)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
-          >
-            {t('hero.cta')}
-            <ArrowRightSvg className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-xl font-display font-semibold text-base text-on-surface hover:bg-white/5 transition-all duration-200"
-            style={{ border: '1px solid rgba(67,70,85,0.28)' }}
-          >
-            {t('hero.signin')}
-          </Link>
-        </div>
-
-        {/* Scroll cue */}
-        <div className="mt-6 flex flex-col items-center gap-2 text-on-surface-variant/35 animate-lp-bounce-y">
-          <span className="text-[10px] tracking-[0.22em] font-semibold uppercase">
-            {t('hero.explore')}
-          </span>
-          <ChevronDownSvg className="w-4 h-4" />
-        </div>
+        {/* Phone column */}
+        <PhoneMockup />
       </div>
     </section>
   )
