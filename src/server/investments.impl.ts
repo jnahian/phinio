@@ -950,6 +950,9 @@ export async function withdrawImpl(profileId: string, data: WithdrawalInput) {
       new Prisma.Decimal(0),
       currentValue.minus(amount),
     )
+    if (data.closeInvestment === true && !newCurrentValueDec.isZero()) {
+      throw new Error('Only full withdrawals can close an investment')
+    }
     const shouldClose =
       data.closeInvestment === true || newCurrentValueDec.isZero()
 
