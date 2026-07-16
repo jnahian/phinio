@@ -10,8 +10,13 @@ declare global {
   var __prisma: PrismaClient | undefined
 }
 
-export const prisma = globalThis.__prisma || new PrismaClient({ adapter })
+// Under Vitest each test file gets an isolated module registry; reusing a
+// client instance across registries leaves Prisma 7 model delegates partially
+// broken (e.g. `.create` undefined on one model). Fresh instance per registry
+// there; HMR memoization everywhere else.
+export const prisma =
+  (!process.env.VITEST && globalThis.__prisma) || new PrismaClient({ adapter })
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.VITEST) {
   globalThis.__prisma = prisma
 }
