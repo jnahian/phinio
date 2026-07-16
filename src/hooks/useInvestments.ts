@@ -1,40 +1,24 @@
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  createInvestmentFn,
-  deleteInvestmentFn,
-  getInvestmentFn,
-  listInvestmentsFn,
-  updateInvestmentFn,
-  createDpsFn,
-  updateDpsFn,
-  markDepositPaidFn,
-  createSavingsFn,
-  updateSavingsFn,
-  addDepositFn,
-  removeDepositFn,
-  deleteSavingsFn,
-  withdrawFn,
-  closeDpsFn,
-} from '#/server/investments'
-import type { InvestmentListFilters } from '#/server/investments'
+import { getInvestmentFn, listInvestmentsFn } from '#/server/investments'
 import type {
-  InvestmentCreateInput,
-  InvestmentUpdateInput,
+  InvestmentListFilters,
+  InvestmentListItem,
+} from '#/server/investments'
+import type {
+  AddDepositInput,
+  DpsCloseInput,
   DpsCreateInput,
   DpsUpdateInput,
+  InvestmentCreateInput,
+  InvestmentUpdateInput,
   MarkDepositPaidInput,
   SavingsCreateInput,
   SavingsUpdateInput,
-  AddDepositInput,
   WithdrawalInput,
-  DpsCloseInput,
 } from '#/lib/validators'
+import { mutationKeys } from '#/integrations/tanstack-query/mutation-defaults'
+import { useOfflineMutation } from '#/lib/use-offline-mutation'
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
@@ -72,47 +56,231 @@ export function useInvestmentQuery(id: string) {
 
 // ---------------------------------------------------------------------------
 // Lump-sum mutations
+//
+// Every hook below uses `mutationKey` only; the `mutationFn` lives in
+// `setMutationDefaults` (registerMutationDefaults) so persisted-then-replayed
+// mutations on tab reopen can find it. Don't add a `mutationFn` here.
 // ---------------------------------------------------------------------------
 
 export function useCreateInvestment() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: InvestmentCreateInput) =>
-      createInvestmentFn({ data: input }),
+  return useOfflineMutation<
+    { id: string },
+    Error,
+    InvestmentCreateInput,
+    { snapshot: ListSnapshot; id: string }
+  >({
+    mutationKey: mutationKeys.investmentCreate,
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+    }),
+    onMutate: async (input) => {
+      const id = input.id!
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      const row: InvestmentListItem = {
+        id,
+        name: input.name,
+        type: input.type,
+        mode: 'lump_sum',
+        status: 'active',
+        notes: input.notes ?? null,
+        createdAt: new Date(),
+        investedAmount: input.investedAmount,
+        currentValue: input.currentValue,
+        exitValue: null,
+        totalWithdrawn: '0',
+        dateOfInvestment: new Date(input.dateOfInvestment),
+        estimatedClosureDate: input.estimatedClosureDate
+          ? new Date(input.estimatedClosureDate)
+          : null,
+        monthlyDeposit: null,
+        tenureMonths: null,
+        interestRate: null,
+        interestType: null,
+        startDate: null,
+        paidCount: 0,
+        maturityValue: null,
+        nextDueDate: null,
+      }
+      const snapshot = applyOptimisticCreate(qc, row)
+      return { snapshot, id }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx)
+        rollbackOptimisticCreate(
+          qc,
+          ctx.snapshot,
+          investmentKeys.detail(ctx.id),
+        )
+      toast.error(errorMessage(err, 'Failed to save'))
+    },
     onSuccess: () => {
       toast.success('Investment added')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
+}
+
+// Server-side LWW response shape — see src/server/_idempotency.ts.
+// `stale: true` means the client's expectedUpdatedAt didn't match and the
+// edit was skipped; the client should reconcile to the server's row.
+type UpdateResult = { id: string; updatedAt?: Date; stale?: boolean }
+
+function handleUpdateResult(
+  data: UpdateResult,
+  okMessage: string,
+  qc: ReturnType<typeof useQueryClient>,
+  detailKey: ReadonlyArray<unknown>,
+) {
+  if (data.stale) {
+    toast.warning(
+      'Your edit was overwritten by a newer change — refreshing the latest.',
+    )
+    qc.invalidateQueries({ queryKey: detailKey })
+  } else {
+    toast.success(okMessage)
+  }
 }
 
 export function useUpdateInvestment() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: InvestmentUpdateInput) =>
-      updateInvestmentFn({ data: input }),
+  return useOfflineMutation<UpdateResult, Error, InvestmentUpdateInput>({
+    mutationKey: mutationKeys.investmentUpdate,
     onSuccess: (data) => {
-      toast.success('Investment updated')
+      handleUpdateResult(
+        data,
+        'Investment updated',
+        qc,
+        investmentKeys.detail(data.id),
+      )
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 
+/**
+ * Shared rollback shape for optimistic delete mutations across investments,
+ * DPS, savings, and EMI lists. We snapshot every list-cache entry under the
+ * relevant key prefix before filtering AND the matching detail cache, so
+ * rollback restores all of them even if multiple list filters were active.
+ * Without the detail snapshot, an offline tap on Delete from inside a
+ * detail view would clear the row from lists but the detail page would
+ * still show stale data until replay finishes (or never, if replay errors).
+ */
+type DeleteRollbackContext = {
+  previousLists: Array<[ReadonlyArray<unknown>, unknown]>
+  detailKey: ReadonlyArray<unknown>
+  previousDetail: unknown
+}
+
+function buildDeleteRollback(
+  qc: ReturnType<typeof useQueryClient>,
+  listPrefix: ReadonlyArray<string>,
+  detailKey: ReadonlyArray<unknown>,
+  predicate: (row: { id: string }) => boolean,
+): DeleteRollbackContext {
+  const entries: Array<[ReadonlyArray<unknown>, unknown]> = qc
+    .getQueriesData({ queryKey: listPrefix })
+    .map(([key, value]) => [key, value])
+
+  for (const [key, value] of entries) {
+    if (!Array.isArray(value)) continue
+    qc.setQueryData(key, value.filter(predicate))
+  }
+  const previousDetail = qc.getQueryData(detailKey)
+  qc.removeQueries({ queryKey: detailKey })
+  return { previousLists: entries, detailKey, previousDetail }
+}
+
+/**
+ * Inserts an optimistic row into every list cache whose filter would have
+ * matched the new investment server-side. Returns a snapshot the caller
+ * can pass to `rollbackOptimisticCreate` on error. Active-only because
+ * brand-new rows always start with `status: 'active'` — completed/closed
+ * filter views must NOT show them.
+ */
+type ListSnapshot = Array<[ReadonlyArray<unknown>, unknown]>
+
+function applyOptimisticCreate(
+  qc: ReturnType<typeof useQueryClient>,
+  row: InvestmentListItem,
+): ListSnapshot {
+  const previous: ListSnapshot = qc
+    .getQueriesData({ queryKey: ['investments', 'list'] })
+    .map(([key, value]) => [key, value])
+  for (const [key, value] of previous) {
+    if (!Array.isArray(value)) continue
+    const filter = key[2] as { status?: string; type?: string } | undefined
+    if (filter?.status && filter.status !== 'active') continue
+    const filterType = filter?.type ?? 'all'
+    if (filterType !== 'all' && filterType !== row.type) continue
+    qc.setQueryData(key, [row, ...value])
+  }
+  return previous
+}
+
+function rollbackOptimisticCreate(
+  qc: ReturnType<typeof useQueryClient>,
+  snapshot: ListSnapshot,
+  detailKey: ReadonlyArray<unknown>,
+) {
+  for (const [key, value] of snapshot) {
+    qc.setQueryData(key, value)
+  }
+  qc.removeQueries({ queryKey: detailKey })
+}
+
+function rollbackDeletes(
+  qc: ReturnType<typeof useQueryClient>,
+  ctx: DeleteRollbackContext,
+) {
+  for (const [key, value] of ctx.previousLists) {
+    qc.setQueryData(key, value)
+  }
+  if (ctx.previousDetail !== undefined) {
+    qc.setQueryData(ctx.detailKey, ctx.previousDetail)
+  }
+}
+
 export function useDeleteInvestment() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => deleteInvestmentFn({ data: { id } }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    { id: string },
+    DeleteRollbackContext
+  >({
+    mutationKey: mutationKeys.investmentDelete,
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      return buildDeleteRollback(
+        qc,
+        ['investments', 'list'],
+        investmentKeys.detail(input.id),
+        (r) => r.id !== input.id,
+      )
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) rollbackDeletes(qc, ctx)
+      toast.error(errorMessage(err, 'Failed to delete'))
+    },
     onSuccess: () => {
       toast.success('Investment deleted')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
 }
 
@@ -122,25 +290,81 @@ export function useDeleteInvestment() {
 
 export function useCreateDps() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: DpsCreateInput) => createDpsFn({ data: input }),
+  return useOfflineMutation<
+    { id: string; name: string },
+    Error,
+    DpsCreateInput,
+    { snapshot: ListSnapshot; id: string }
+  >({
+    mutationKey: mutationKeys.dpsCreate,
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+    }),
+    onMutate: async (input) => {
+      const id = input.id!
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      const row: InvestmentListItem = {
+        id,
+        name: input.name,
+        type: 'dps',
+        mode: 'scheduled',
+        status: 'active',
+        notes: input.notes ?? null,
+        createdAt: new Date(),
+        investedAmount: '0',
+        currentValue: '0',
+        exitValue: null,
+        totalWithdrawn: '0',
+        dateOfInvestment: null,
+        estimatedClosureDate: null,
+        monthlyDeposit: input.monthlyDeposit,
+        tenureMonths: input.tenureMonths,
+        interestRate: input.interestRate,
+        interestType: input.interestType,
+        startDate: new Date(input.startDate),
+        paidCount: 0,
+        maturityValue: null,
+        nextDueDate: new Date(input.startDate),
+      }
+      const snapshot = applyOptimisticCreate(qc, row)
+      return { snapshot, id }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx)
+        rollbackOptimisticCreate(
+          qc,
+          ctx.snapshot,
+          investmentKeys.detail(ctx.id),
+        )
+      toast.error(errorMessage(err, 'Failed to save'))
+    },
     onSuccess: () => {
       toast.success('DPS scheme added')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 
 export function useUpdateDps() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: DpsUpdateInput) => updateDpsFn({ data: input }),
+  return useOfflineMutation<UpdateResult, Error, DpsUpdateInput>({
+    mutationKey: mutationKeys.dpsUpdate,
     onSuccess: (data) => {
-      toast.success('DPS updated')
+      handleUpdateResult(
+        data,
+        'DPS updated',
+        qc,
+        investmentKeys.detail(data.id),
+      )
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -148,9 +372,13 @@ export function useUpdateDps() {
 
 export function useMarkDepositPaid(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: MarkDepositPaidInput) =>
-      markDepositPaidFn({ data: input }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    MarkDepositPaidInput,
+    { prev: unknown }
+  >({
+    mutationKey: mutationKeys.markDepositPaid,
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: investmentKeys.detail(investmentId) })
       const prev = qc.getQueryData(investmentKeys.detail(investmentId))
@@ -182,20 +410,41 @@ export function useMarkDepositPaid(investmentId: string) {
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
 }
 
 export function useDeleteDps() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => deleteInvestmentFn({ data: { id } }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    { id: string },
+    DeleteRollbackContext
+  >({
+    mutationKey: mutationKeys.investmentDelete,
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      return buildDeleteRollback(
+        qc,
+        ['investments', 'list'],
+        investmentKeys.detail(input.id),
+        (r) => r.id !== input.id,
+      )
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) rollbackDeletes(qc, ctx)
+      toast.error(errorMessage(err, 'Failed to delete'))
+    },
     onSuccess: () => {
       toast.success('DPS scheme deleted')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
 }
 
@@ -205,26 +454,82 @@ export function useDeleteDps() {
 
 export function useCreateSavings() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: SavingsCreateInput) => createSavingsFn({ data: input }),
+  return useOfflineMutation<
+    { id: string; name: string },
+    Error,
+    SavingsCreateInput,
+    { snapshot: ListSnapshot; id: string }
+  >({
+    mutationKey: mutationKeys.savingsCreate,
+    prepareVariables: (input) => ({
+      ...input,
+      id: input.id ?? crypto.randomUUID(),
+    }),
+    onMutate: async (input) => {
+      const id = input.id!
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      const initial = Number(input.currentValue)
+      const row: InvestmentListItem = {
+        id,
+        name: input.name,
+        type: 'savings',
+        mode: 'flexible',
+        status: 'active',
+        notes: input.notes ?? null,
+        createdAt: new Date(),
+        investedAmount: initial > 0 ? input.currentValue : '0',
+        currentValue: input.currentValue,
+        exitValue: null,
+        totalWithdrawn: '0',
+        dateOfInvestment: null,
+        estimatedClosureDate: null,
+        monthlyDeposit: null,
+        tenureMonths: null,
+        interestRate: null,
+        interestType: null,
+        startDate: new Date(input.startDate),
+        paidCount: 0,
+        maturityValue: null,
+        nextDueDate: null,
+      }
+      const snapshot = applyOptimisticCreate(qc, row)
+      return { snapshot, id }
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx)
+        rollbackOptimisticCreate(
+          qc,
+          ctx.snapshot,
+          investmentKeys.detail(ctx.id),
+        )
+      toast.error(errorMessage(err, 'Failed to save'))
+    },
     onSuccess: () => {
       toast.success('Savings pot added')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
 }
 
 export function useUpdateSavings() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: SavingsUpdateInput) => updateSavingsFn({ data: input }),
+  return useOfflineMutation<UpdateResult, Error, SavingsUpdateInput>({
+    mutationKey: mutationKeys.savingsUpdate,
     onSuccess: (data) => {
-      toast.success('Savings pot updated')
+      handleUpdateResult(
+        data,
+        'Savings pot updated',
+        qc,
+        investmentKeys.detail(data.id),
+      )
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: investmentKeys.detail(data.id) })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to save')),
   })
@@ -232,13 +537,14 @@ export function useUpdateSavings() {
 
 export function useAddDeposit(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: AddDepositInput) => addDepositFn({ data: input }),
+  return useOfflineMutation<unknown, Error, AddDepositInput>({
+    mutationKey: mutationKeys.addDeposit,
     onSuccess: () => {
       toast.success('Deposit added')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to add deposit')),
   })
@@ -246,13 +552,14 @@ export function useAddDeposit(investmentId: string) {
 
 export function useRemoveDeposit(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (depositId: string) => removeDepositFn({ data: { depositId } }),
+  return useOfflineMutation<unknown, Error, { depositId: string }>({
+    mutationKey: mutationKeys.removeDeposit,
     onSuccess: () => {
       toast.success('Deposit removed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to remove')),
   })
@@ -260,14 +567,34 @@ export function useRemoveDeposit(investmentId: string) {
 
 export function useDeleteSavings() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => deleteSavingsFn({ data: { id } }),
+  return useOfflineMutation<
+    unknown,
+    Error,
+    { id: string },
+    DeleteRollbackContext
+  >({
+    mutationKey: mutationKeys.savingsDelete,
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: investmentKeys.all })
+      return buildDeleteRollback(
+        qc,
+        ['investments', 'list'],
+        investmentKeys.detail(input.id),
+        (r) => r.id !== input.id,
+      )
+    },
+    onError: (err, _input, ctx) => {
+      if (ctx) rollbackDeletes(qc, ctx)
+      toast.error(errorMessage(err, 'Failed to delete'))
+    },
     onSuccess: () => {
       toast.success('Savings pot deleted')
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to delete')),
   })
 }
 
@@ -277,13 +604,14 @@ export function useDeleteSavings() {
 
 export function useWithdraw(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: WithdrawalInput) => withdrawFn({ data: input }),
+  return useOfflineMutation<{ closed: boolean }, Error, WithdrawalInput>({
+    mutationKey: mutationKeys.withdraw,
     onSuccess: (data) => {
       toast.success(data.closed ? 'Investment closed' : 'Withdrawal recorded')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to withdraw')),
   })
@@ -291,13 +619,14 @@ export function useWithdraw(investmentId: string) {
 
 export function useCloseDps(investmentId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: DpsCloseInput) => closeDpsFn({ data: input }),
+  return useOfflineMutation<unknown, Error, DpsCloseInput>({
+    mutationKey: mutationKeys.dpsClose,
     onSuccess: () => {
       toast.success('DPS closed')
       qc.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) })
       qc.invalidateQueries({ queryKey: investmentKeys.all })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
     onError: (err) => toast.error(errorMessage(err, 'Failed to close')),
   })

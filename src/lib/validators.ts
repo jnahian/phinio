@@ -23,6 +23,20 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 // Shared primitives
 // ----------------------------------------------------------------------------
 
+// Optional client-generated UUID that the server uses to dedupe replayed
+// mutations. Offline write queues (Phase 3) include this on every mutation;
+// online callers can omit it without changing behaviour.
+const clientMutationIdField = {
+  clientMutationId: z.string().uuid().optional(),
+}
+
+// Optional ISO-8601 timestamp the client last saw on the row. The server
+// compares against the current `updatedAt` for last-write-wins conflict
+// resolution. Only update mutations need this.
+const expectedUpdatedAtField = {
+  expectedUpdatedAt: z.string().datetime().optional(),
+}
+
 const positiveDecimalString = z
   .string()
   .trim()
@@ -80,7 +94,12 @@ export const investmentCreateSchema = z.object({
   investedAmount: positiveDecimalString,
   currentValue: positiveDecimalString,
   dateOfInvestment: isoDateString,
+  estimatedClosureDate: isoDateString.optional(),
   notes: z.string().trim().max(1000).optional(),
+  // Client-supplied row id so an offline optimistic create lines up with
+  // the server's eventual insert on replay.
+  id: z.string().uuid().optional(),
+  ...clientMutationIdField,
 })
 export type InvestmentCreateInput = z.infer<typeof investmentCreateSchema>
 
@@ -90,6 +109,7 @@ export const investmentUpdateSchema = investmentCreateSchema
     status: z.enum(['active', 'completed']),
     exitValue: positiveDecimalString.optional(),
     completedAt: isoDateString.optional(),
+    ...expectedUpdatedAtField,
   })
   .refine(
     (data) => {
@@ -111,7 +131,10 @@ export const investmentListQuerySchema = z.object({
 })
 export type InvestmentListQuery = z.infer<typeof investmentListQuerySchema>
 
-export const investmentIdSchema = z.object({ id: z.string().min(1) })
+export const investmentIdSchema = z.object({
+  id: z.string().min(1),
+  ...clientMutationIdField,
+})
 
 // ----------------------------------------------------------------------------
 // Investments — scheduled mode (DPS: fixed monthly deposit, tenure, interest)
@@ -132,6 +155,8 @@ export const dpsCreateSchema = z.object({
   interestType: z.enum(DPS_INTEREST_TYPES),
   startDate: isoDateString,
   notes: z.string().trim().max(1000).optional(),
+  id: z.string().uuid().optional(),
+  ...clientMutationIdField,
 })
 export type DpsCreateInput = z.infer<typeof dpsCreateSchema>
 
@@ -139,12 +164,15 @@ export const dpsUpdateSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1, 'Name is required').max(120),
   notes: z.string().trim().max(1000).optional(),
+  ...clientMutationIdField,
+  ...expectedUpdatedAtField,
 })
 export type DpsUpdateInput = z.infer<typeof dpsUpdateSchema>
 
 export const markDepositPaidSchema = z.object({
   depositId: z.string().min(1),
   paid: z.boolean(),
+  ...clientMutationIdField,
 })
 export type MarkDepositPaidInput = z.infer<typeof markDepositPaidSchema>
 
@@ -157,6 +185,8 @@ export const savingsCreateSchema = z.object({
   startDate: isoDateString,
   currentValue: nonNegativeDecimalString,
   notes: z.string().trim().max(1000).optional(),
+  id: z.string().uuid().optional(),
+  ...clientMutationIdField,
 })
 export type SavingsCreateInput = z.infer<typeof savingsCreateSchema>
 
@@ -165,6 +195,8 @@ export const savingsUpdateSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
   currentValue: nonNegativeDecimalString,
   notes: z.string().trim().max(1000).optional(),
+  ...clientMutationIdField,
+  ...expectedUpdatedAtField,
 })
 export type SavingsUpdateInput = z.infer<typeof savingsUpdateSchema>
 
@@ -173,11 +205,13 @@ export const addDepositSchema = z.object({
   amount: positiveDecimalString,
   depositDate: isoDateString,
   notes: z.string().trim().max(500).optional(),
+  ...clientMutationIdField,
 })
 export type AddDepositInput = z.infer<typeof addDepositSchema>
 
 export const removeDepositSchema = z.object({
   depositId: z.string().min(1),
+  ...clientMutationIdField,
 })
 export type RemoveDepositInput = z.infer<typeof removeDepositSchema>
 
@@ -191,6 +225,7 @@ export const withdrawalSchema = z.object({
   withdrawalDate: isoDateString,
   notes: z.string().trim().max(500).optional(),
   closeInvestment: z.boolean().optional(),
+  ...clientMutationIdField,
 })
 export type WithdrawalInput = z.infer<typeof withdrawalSchema>
 
@@ -199,6 +234,7 @@ export const dpsCloseSchema = z.object({
   receivedAmount: positiveDecimalString,
   closureDate: isoDateString,
   notes: z.string().trim().max(500).optional(),
+  ...clientMutationIdField,
 })
 export type DpsCloseInput = z.infer<typeof dpsCloseSchema>
 
@@ -220,18 +256,84 @@ export const emiCreateSchema = z.object({
     .min(1, 'Tenure must be at least 1 month')
     .max(600, 'Tenure must be 600 months or less'),
   startDate: isoDateString,
+  // One-time processing fee charged at disbursement (separate from interest).
+  // When present and > 0, the create flow records it as a paymentNumber=0
+  // EmiPayment row marked paid; "0"/"0.00" is treated as "no fee" by the
+  // server, so we accept non-negative values here rather than forcing the
+  // user to clear the field.
+  processingFee: nonNegativeDecimalString.optional(),
+  // Optional client-supplied id for the processing-fee EmiPayment row, used
+  // by the offline create flow so the optimistic cache and the eventual
+  // server insert agree on identity. Only meaningful when `processingFee`
+  // is set.
+  processingFeeId: z.string().uuid().optional(),
+  notes: z.string().trim().max(1000).optional(),
+  // Optional client-supplied IDs so an offline-created EMI keeps the same
+  // identity on both sides of the queue. Without these, the optimistic
+  // detail entry in the cache would have UUIDs that the server doesn't
+  // know about, and a follow-up "mark paid" tap on a generated payment
+  // row would 404 on replay.
+  id: z.string().uuid().optional(),
+  paymentIds: z.array(z.string().uuid()).optional(),
+  ...clientMutationIdField,
 })
 export type EmiCreateInput = z.infer<typeof emiCreateSchema>
 
+export const emiUpdateSchema = z.object({
+  emiId: z.string().min(1),
+  label: z.string().trim().min(1, 'Label is required').max(120),
+  notes: z.string().trim().max(1000).optional(),
+  ...clientMutationIdField,
+  ...expectedUpdatedAtField,
+})
+export type EmiUpdateInput = z.infer<typeof emiUpdateSchema>
+
 export const emiListQuerySchema = z.object({
   type: z.enum([...EMI_TYPES, 'all']).default('all'),
+  status: z.enum(['active', 'completed']).default('active'),
 })
 export type EmiListQuery = z.infer<typeof emiListQuerySchema>
 
-export const emiIdSchema = z.object({ emiId: z.string().min(1) })
+export const emiIdSchema = z.object({
+  emiId: z.string().min(1),
+  ...clientMutationIdField,
+})
 
 export const markPaymentPaidSchema = z.object({
   paymentId: z.string().min(1),
   paid: z.boolean(),
+  ...clientMutationIdField,
 })
 export type MarkPaymentPaidInput = z.infer<typeof markPaymentPaidSchema>
+
+export const emiCompleteSchema = z.object({
+  emiId: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type EmiCompleteInput = z.infer<typeof emiCompleteSchema>
+
+// ----------------------------------------------------------------------------
+// Notifications
+// ----------------------------------------------------------------------------
+
+export const markNotificationReadSchema = z.object({
+  id: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type MarkNotificationReadInput = z.infer<
+  typeof markNotificationReadSchema
+>
+
+export const markAllNotificationsReadSchema = z.object({
+  ...clientMutationIdField,
+})
+export type MarkAllNotificationsReadInput = z.infer<
+  typeof markAllNotificationsReadSchema
+>
+
+export const clearReadNotificationsSchema = z.object({
+  ...clientMutationIdField,
+})
+export type ClearReadNotificationsInput = z.infer<
+  typeof clearReadNotificationsSchema
+>

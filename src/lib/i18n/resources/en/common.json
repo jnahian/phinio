@@ -1,0 +1,123 @@
+{
+  "appName": "Phinio",
+  "tagline": "Your finances, simplified.",
+  "actions": {
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "continue": "Continue",
+    "retry": "Try again",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "remove": "Remove",
+    "submit": "Submit",
+    "viewAll": "View all",
+    "yesterday": "Yesterday",
+    "today": "Today",
+    "all": "All",
+    "discard": "Discard",
+    "creating": "Creating…",
+    "adding": "Adding…",
+    "deleting": "Deleting…",
+    "removing": "Removing…"
+  },
+  "labels": {
+    "amount": "Amount",
+    "date": "Date",
+    "name": "Name",
+    "notes": "Notes",
+    "notesOptional": "Notes (optional)",
+    "startDate": "Start date",
+    "total": "Total",
+    "overdue": "Overdue"
+  },
+  "tabs": {
+    "home": "Home",
+    "investments": "Invest",
+    "emis": "EMIs",
+    "activity": "Activity",
+    "profile": "Profile"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "investments": "Investments",
+    "emis": "EMIs",
+    "activity": "Activity",
+    "profile": "Profile",
+    "addInvestment": "Add Investment",
+    "addEmi": "Add EMI",
+    "addDps": "Add DPS Scheme",
+    "addSavings": "Add Savings Pot",
+    "newDps": "New DPS",
+    "newSavings": "New Savings",
+    "editInvestment": "Edit Investment",
+    "changelog": "Changelog"
+  },
+  "fab": {
+    "create": "Create",
+    "investment": "Investment",
+    "dps": "DPS Scheme",
+    "savings": "Savings Pot",
+    "emi": "EMI"
+  },
+  "states": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "errorDescription": "An unexpected error occurred. Try again, or head back home.",
+    "notFound": "Page not found",
+    "notFoundDescription": "We couldn't find the page you were looking for.",
+    "backToHome": "Back to home",
+    "tryAgain": "Try again"
+  },
+  "offline": {
+    "banner": "You're offline. Changes will sync when you're back online.",
+    "queuedShort": "You're offline. Changes will sync when you reconnect.",
+    "queuedWithCount_one": "You're offline with {{count}} action queued. Reconnect soon to avoid losing it.",
+    "queuedWithCount_other": "You're offline with {{count}} actions queued. Reconnect soon to avoid losing them.",
+    "syncing_one": "Syncing {{count}} change…",
+    "syncing_other": "Syncing {{count}} changes…",
+    "failed_one": "{{count}} action failed to sync.",
+    "failed_other": "{{count}} actions failed to sync.",
+    "retry": "Retry",
+    "discard": "Discard"
+  },
+  "due": {
+    "today": "Due today",
+    "tomorrow": "Due tomorrow",
+    "inDays_one": "Due in {{count}} day",
+    "inDays_other": "Due in {{count}} days",
+    "overdueDays_one": "Overdue by {{count}} day",
+    "overdueDays_other": "Overdue by {{count}} days"
+  },
+  "relativeTime": {
+    "justNow": "just now",
+    "minutesAgo_one": "{{count}} minute ago",
+    "minutesAgo_other": "{{count}} minutes ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
+  "units": {
+    "months": "months",
+    "perMonth": "/mo",
+    "percent": "%"
+  },
+  "currency": {
+    "BDT": "BDT",
+    "USD": "USD"
+  },
+  "ariaLabels": {
+    "back": "Back",
+    "profile": "Profile",
+    "close": "Close",
+    "moreActions": "More actions"
+  }
+}

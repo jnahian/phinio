@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "phinio-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "phinio-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview:local"],
+      "port": 3000
+    }
+  ]
+}

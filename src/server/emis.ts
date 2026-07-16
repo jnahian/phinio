@@ -1,9 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
 import type { z } from 'zod'
 import {
+  emiCompleteSchema,
   emiCreateSchema,
   emiIdSchema,
   emiListQuerySchema,
+  emiUpdateSchema,
   markPaymentPaidSchema,
 } from '#/lib/validators'
 
@@ -31,11 +33,18 @@ export const createEmiFn = createServerFn({ method: 'POST' })
     return createEmiImpl(await requireProfileId(), data)
   })
 
+export const updateEmiFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => emiUpdateSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { requireProfileId, updateEmiImpl } = await import('./emis.impl')
+    return updateEmiImpl(await requireProfileId(), data)
+  })
+
 export const deleteEmiFn = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => emiIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, deleteEmiImpl } = await import('./emis.impl')
-    return deleteEmiImpl(await requireProfileId(), data.emiId)
+    return deleteEmiImpl(await requireProfileId(), data)
   })
 
 export const markPaymentPaidFn = createServerFn({ method: 'POST' })
@@ -44,6 +53,13 @@ export const markPaymentPaidFn = createServerFn({ method: 'POST' })
     const { requireProfileId, markPaymentPaidImpl } =
       await import('./emis.impl')
     return markPaymentPaidImpl(await requireProfileId(), data)
+  })
+
+export const completeEmiFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => emiCompleteSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { requireProfileId, completeEmiImpl } = await import('./emis.impl')
+    return completeEmiImpl(await requireProfileId(), data)
   })
 
 export const upcomingPaymentsFn = createServerFn({ method: 'GET' }).handler(

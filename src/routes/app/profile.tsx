@@ -1,35 +1,60 @@
-import { useRef, useState } from 'react'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
+  BellRing,
   Camera,
   Check,
   ChevronDown,
+  Database,
+  ChevronRight,
+  History,
   KeyRound,
+  Languages,
   LogOut,
   Mail,
   Pencil,
+  Trash2,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
+import { SeedDataModal } from '#/components/SeedDataModal'
 import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
-import { updateProfileCurrencyFn, updateProfileNameFn } from '#/server/profile'
+import { clearOfflineCache } from '#/lib/offline-cache'
+import {
+  updateProfileCurrencyFn,
+  updateProfileLanguageFn,
+  updateProfileNameFn,
+} from '#/server/profile'
+import { cleanupProfileDataFn, seedProfileDataFn } from '#/server/dev-data'
 import type { Currency } from '#/lib/currency'
+import { LOCALE_LABEL } from '#/lib/i18n/config'
+import type { Locale } from '#/lib/i18n/config'
+import type { SeedCategories } from '#/server/dev-data'
+import { usePushSubscription } from '#/hooks/usePushSubscription'
 
 export const Route = createFileRoute('/app/profile')({
-  staticData: { title: 'Profile' },
+  staticData: { title: 'pageTitles.profile' },
   component: ProfileScreen,
 })
 
 function ProfileScreen() {
+  const { t, i18n } = useTranslation('profile')
+  const { t: tCommon } = useTranslation('common')
   const router = useRouter()
+  const qc = useQueryClient()
   const { user, profile, shellUser } = Route.useRouteContext()
 
   const [currency, setCurrency] = useState<Currency>(profile.preferredCurrency)
   const [isSavingCurrency, setIsSavingCurrency] = useState(false)
+  const [language, setLanguage] = useState<Locale>(profile.preferredLanguage)
+  const [isSavingLanguage, setIsSavingLanguage] = useState(false)
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(profile.fullName)
@@ -50,6 +75,13 @@ function ProfileScreen() {
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
+  const [seedModalOpen, setSeedModalOpen] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
+  const [confirmCleanup, setConfirmCleanup] = useState(false)
+  const [isCleaningUp, setIsCleaningUp] = useState(false)
+
+  const push = usePushSubscription()
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // -------------------------------------------------------------------------
@@ -64,14 +96,39 @@ function ProfileScreen() {
     try {
       await updateProfileCurrencyFn({ data: { preferredCurrency: next } })
       await router.invalidate()
-      toast.success(`Currency set to ${next}`)
+      qc.invalidateQueries({ queryKey: ['activity'] })
+      toast.success(t('currency.updated', { value: next }))
     } catch (err) {
       setCurrency(previous)
       toast.error(
-        err instanceof Error ? err.message : 'Failed to update currency',
+        err instanceof Error ? err.message : t('currency.updateFailed'),
       )
     } finally {
       setIsSavingCurrency(false)
+    }
+  }
+
+  async function handleLanguageChange(next: Locale) {
+    if (next === language || isSavingLanguage) return
+    const previous = language
+    setLanguage(next)
+    // Optimistic UI flip — the rest of the app re-renders in the new locale
+    // immediately, before the server round-trip lands.
+    void i18n.changeLanguage(next)
+    setIsSavingLanguage(true)
+    try {
+      await updateProfileLanguageFn({ data: { preferredLanguage: next } })
+      await router.invalidate()
+      qc.invalidateQueries({ queryKey: ['activity'] })
+      toast.success(t('language.updated', { value: LOCALE_LABEL[next] }))
+    } catch (err) {
+      setLanguage(previous)
+      void i18n.changeLanguage(previous)
+      toast.error(
+        err instanceof Error ? err.message : t('language.updateFailed'),
+      )
+    } finally {
+      setIsSavingLanguage(false)
     }
   }
 
@@ -100,10 +157,11 @@ function ProfileScreen() {
     try {
       await updateProfileNameFn({ data: { fullName: trimmed } })
       await router.invalidate()
+      qc.invalidateQueries({ queryKey: ['activity'] })
       setIsEditingName(false)
-      toast.success('Name updated')
+      toast.success(t('name.updated'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update name')
+      toast.error(err instanceof Error ? err.message : t('name.updateFailed'))
     } finally {
       setIsSavingName(false)
     }
@@ -125,9 +183,9 @@ function ProfileScreen() {
       await authClient.updateUser({ image: dataUrl })
       setAvatarUrl(dataUrl)
       await router.invalidate()
-      toast.success('Photo updated')
+      toast.success(t('photo.uploaded'))
     } catch {
-      toast.error('Failed to update photo')
+      toast.error(t('photo.updateFailed'))
     } finally {
       setIsUploadingPhoto(false)
     }
@@ -153,11 +211,19 @@ function ProfileScreen() {
     e.preventDefault()
     setPwError('')
     if (pwForm.next.length < 8) {
-      setPwError('New password must be at least 8 characters')
+      setPwError(
+        tCommon('validation.newPasswordMin', {
+          defaultValue: 'New password must be at least 8 characters',
+        }),
+      )
       return
     }
     if (pwForm.next !== pwForm.confirm) {
-      setPwError('Passwords do not match')
+      setPwError(
+        tCommon('validation.passwordMatch', {
+          defaultValue: 'Passwords do not match',
+        }),
+      )
       return
     }
     setIsSavingPassword(true)
@@ -172,7 +238,7 @@ function ProfileScreen() {
         return
       }
       closeChangePassword()
-      toast.success('Password changed')
+      toast.success(t('password.updated'))
     } catch (err) {
       setPwError(
         err instanceof Error ? err.message : 'Failed to change password',
@@ -189,13 +255,53 @@ function ProfileScreen() {
   async function handleSignOut() {
     setIsSigningOut(true)
     await authClient.signOut()
+    // Clear persisted query/mutation cache so the next user (or this user
+    // re-signing in) doesn't see the previous session's cached financial
+    // data, and any paused offline mutations don't replay into the next
+    // account.
+    await clearOfflineCache(qc)
     window.location.href = '/login'
+  }
+
+  // -------------------------------------------------------------------------
+  // Test data — seed / cleanup
+  // -------------------------------------------------------------------------
+
+  async function handleSeed(input: {
+    categories: SeedCategories
+    wipe: boolean
+  }) {
+    setIsSeeding(true)
+    try {
+      await seedProfileDataFn({ data: input })
+      await router.invalidate()
+      setSeedModalOpen(false)
+      toast.success(t('danger.loaded'))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('danger.loadFailed'))
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  async function handleCleanup() {
+    setIsCleaningUp(true)
+    try {
+      await cleanupProfileDataFn()
+      await router.invalidate()
+      setConfirmCleanup(false)
+      toast.success(t('danger.cleared'))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('danger.clearFailed'))
+    } finally {
+      setIsCleaningUp(false)
+    }
   }
 
   const initials = getInitials(profile.fullName)
 
   return (
-    <main className="noir-bg min-h-dvh px-5 pb-28 pt-12">
+    <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-12">
       {/* ------------------------------------------------------------------ */}
       {/* Header — avatar + name                                               */}
       {/* ------------------------------------------------------------------ */}
@@ -235,7 +341,7 @@ function ProfileScreen() {
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingPhoto}
             className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant shadow-md transition hover:bg-surface-container disabled:opacity-50"
-            aria-label="Change profile photo"
+            aria-label={t('photo.change')}
           >
             <Camera className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
@@ -271,7 +377,7 @@ function ProfileScreen() {
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-outline-variant/30 py-2.5 text-sm text-on-surface-variant transition hover:bg-white/5 disabled:opacity-50"
               >
                 <X className="h-4 w-4" strokeWidth={2} />
-                Cancel
+                {tCommon('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -284,7 +390,7 @@ function ProfileScreen() {
                 ) : (
                   <Check className="h-4 w-4" strokeWidth={2.5} />
                 )}
-                Save
+                {tCommon('actions.save')}
               </button>
             </div>
           </div>
@@ -295,7 +401,7 @@ function ProfileScreen() {
               type="button"
               onClick={startEditingName}
               className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
-              aria-label="Edit name"
+              aria-label={tCommon('actions.edit')}
             >
               <Pencil className="h-4 w-4" strokeWidth={1.75} />
             </button>
@@ -309,39 +415,116 @@ function ProfileScreen() {
       </header>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Currency                                                             */}
+      {/* Preferences                                                         */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
+      <section className="mb-8">
         <h2 className="label-md mb-3 px-1 text-on-surface-variant">
-          Preferred currency
+          {t('preferences')}
         </h2>
-        <Card variant="low" className="p-2">
-          <div className="grid grid-cols-2 gap-2">
-            <CurrencyOption
-              active={currency === 'BDT'}
-              onClick={() => handleCurrencyChange('BDT')}
-              symbol="৳"
-              label="BDT"
-              hint="Bangladeshi Taka"
-              disabled={isSavingCurrency}
-            />
-            <CurrencyOption
-              active={currency === 'USD'}
-              onClick={() => handleCurrencyChange('USD')}
-              symbol="$"
-              label="USD"
-              hint="US Dollar"
-              disabled={isSavingCurrency}
-            />
-          </div>
-        </Card>
+        <div className="space-y-3">
+          <Card variant="low" className="p-2">
+            <div className="grid grid-cols-2 gap-2">
+              <CurrencyOption
+                active={currency === 'BDT'}
+                onClick={() => handleCurrencyChange('BDT')}
+                symbol="৳"
+                label="BDT"
+                hint={t('currency.bdtName')}
+                disabled={isSavingCurrency}
+              />
+              <CurrencyOption
+                active={currency === 'USD'}
+                onClick={() => handleCurrencyChange('USD')}
+                symbol="$"
+                label="USD"
+                hint={t('currency.usdName')}
+                disabled={isSavingCurrency}
+              />
+            </div>
+          </Card>
+          <Card variant="low" className="p-4">
+            <div className="flex items-start gap-3">
+              <Languages
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <div className="flex-1">
+                <p className="body-sm text-on-surface">{t('language.title')}</p>
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  {t('language.hint')}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <LanguageOption
+                    active={language === 'en'}
+                    onClick={() => handleLanguageChange('en')}
+                    label="English"
+                    sublabel="EN"
+                    disabled={isSavingLanguage}
+                  />
+                  <LanguageOption
+                    active={language === 'bn'}
+                    onClick={() => handleLanguageChange('bn')}
+                    label="বাংলা"
+                    sublabel="BN"
+                    disabled={isSavingLanguage}
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card variant="low" className="p-4">
+            <div className="flex items-start gap-3">
+              <BellRing
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <div className="flex-1">
+                <p className="body-sm text-on-surface">
+                  {t('notifications.title')}
+                </p>
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  {push.permission === 'unsupported'
+                    ? t('notifications.unsupported')
+                    : push.permission === 'denied'
+                      ? t('notifications.denied')
+                      : push.isSubscribed
+                        ? t('notifications.subscribed')
+                        : t('notifications.hint')}
+                </p>
+              </div>
+              <PushToggle push={push} />
+            </div>
+          </Card>
+        </div>
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Change password                                                      */}
+      {/* Account                                                             */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-6">
-        {!isChangingPassword ? (
+      <section className="mb-8">
+        <h2 className="label-md mb-3 px-1 text-on-surface-variant">
+          {t('account')}
+        </h2>
+        <div className="space-y-2">
+          <Link
+            to="/app/activity"
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <History
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">
+                {t('activity.title')}
+              </span>
+            </div>
+            <ChevronRight
+              className="h-4 w-4 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
+          </Link>
+
           <button
             type="button"
             onClick={openChangePassword}
@@ -353,113 +536,111 @@ function ProfileScreen() {
                 strokeWidth={1.75}
               />
               <span className="font-display font-semibold">
-                Change password
+                {t('password.title')}
               </span>
             </div>
-            <ChevronDown
+            <ChevronRight
               className="h-4 w-4 text-on-surface-variant/50"
               strokeWidth={2}
             />
           </button>
-        ) : (
-          <Card variant="low">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="label-md text-on-surface-variant">
-                Change password
-              </h2>
-              <button
-                type="button"
-                onClick={closeChangePassword}
-                className="rounded-lg p-1 text-on-surface-variant/50 transition hover:bg-white/5 hover:text-on-surface-variant"
-                aria-label="Cancel"
-              >
-                <X className="h-4 w-4" strokeWidth={2} />
-              </button>
+
+          <button
+            type="button"
+            onClick={() => setConfirmLogout(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="h-5 w-5 text-error" strokeWidth={1.75} />
+              <span className="font-display font-semibold text-error">
+                {t('danger.signOut')}
+              </span>
             </div>
-            <form onSubmit={handleChangePassword} className="space-y-3">
-              <TextField
-                id="pw-current"
-                type="password"
-                placeholder="Current password"
-                value={pwForm.current}
-                onChange={(e) =>
-                  setPwForm((f) => ({ ...f, current: e.target.value }))
-                }
-                disabled={isSavingPassword}
-                autoComplete="current-password"
-              />
-              <TextField
-                id="pw-new"
-                type="password"
-                placeholder="New password"
-                value={pwForm.next}
-                onChange={(e) =>
-                  setPwForm((f) => ({ ...f, next: e.target.value }))
-                }
-                disabled={isSavingPassword}
-                autoComplete="new-password"
-              />
-              <TextField
-                id="pw-confirm"
-                type="password"
-                placeholder="Confirm new password"
-                value={pwForm.confirm}
-                onChange={(e) =>
-                  setPwForm((f) => ({ ...f, confirm: e.target.value }))
-                }
-                disabled={isSavingPassword}
-                autoComplete="new-password"
-              />
-              {pwError && (
-                <p className="body-sm px-1 text-error" role="alert">
-                  {pwError}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={
-                  isSavingPassword ||
-                  !pwForm.current ||
-                  !pwForm.next ||
-                  !pwForm.confirm
-                }
-                className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
-              >
-                {isSavingPassword ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
-                ) : (
-                  <Check className="h-4 w-4" strokeWidth={2.5} />
-                )}
-                {isSavingPassword ? 'Saving…' : 'Update password'}
-              </button>
-            </form>
-          </Card>
-        )}
+          </button>
+        </div>
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Sign out                                                             */}
+      {/* Developer tools                                                     */}
       {/* ------------------------------------------------------------------ */}
-      <section className="mb-10">
-        <button
-          type="button"
-          onClick={() => setConfirmLogout(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-outline-variant/30 px-4 py-4 text-on-surface transition hover:bg-white/5"
-        >
-          <LogOut className="h-5 w-5" strokeWidth={1.75} />
-          <span className="font-display font-semibold">Sign out</span>
-        </button>
-      </section>
+      {/* <section className="mb-10">
+        <h2 className="label-md mb-3 px-1 text-on-surface-variant">
+          Developer tools
+        </h2>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setSeedModalOpen(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <Database
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">Load test data</span>
+            </div>
+            <ChevronDown
+              className="h-4 w-4 -rotate-90 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmCleanup(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <Trash2 className="h-5 w-5 text-error" strokeWidth={1.75} />
+              <span className="font-display font-semibold">
+                Clear all my data
+              </span>
+            </div>
+            <ChevronDown
+              className="h-4 w-4 -rotate-90 text-on-surface-variant/50"
+              strokeWidth={2}
+            />
+          </button>
+        </div>
+      </section> */}
+
+      <ChangePasswordModal
+        open={isChangingPassword}
+        form={pwForm}
+        setForm={setPwForm}
+        error={pwError}
+        isPending={isSavingPassword}
+        onSubmit={handleChangePassword}
+        onClose={closeChangePassword}
+      />
 
       <ConfirmModal
         open={confirmLogout}
-        title="Sign out"
-        message="Sign out of Phinio? You'll need to log in again next time."
-        confirmLabel="Sign out"
-        pendingLabel="Signing out…"
+        title={t('danger.signOut')}
+        message={t('danger.signOutMessage')}
+        confirmLabel={t('danger.signOut')}
+        pendingLabel={t('danger.signingOut')}
         isPending={isSigningOut}
         onConfirm={handleSignOut}
         onCancel={() => setConfirmLogout(false)}
+      />
+
+      <SeedDataModal
+        open={seedModalOpen}
+        isPending={isSeeding}
+        onConfirm={handleSeed}
+        onCancel={() => setSeedModalOpen(false)}
+      />
+
+      <ConfirmModal
+        open={confirmCleanup}
+        title={t('danger.clearTitle')}
+        message={t('danger.clearMessage')}
+        confirmLabel={t('danger.clearConfirm')}
+        pendingLabel={t('danger.clearing')}
+        isPending={isCleaningUp}
+        onConfirm={handleCleanup}
+        onCancel={() => setConfirmCleanup(false)}
       />
 
       <p className="body-sm text-center text-on-surface-variant/60">
@@ -472,6 +653,193 @@ function ProfileScreen() {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
+
+interface PwForm {
+  current: string
+  next: string
+  confirm: string
+}
+
+function ChangePasswordModal({
+  open,
+  form,
+  setForm,
+  error,
+  isPending,
+  onSubmit,
+  onClose,
+}: {
+  open: boolean
+  form: PwForm
+  setForm: React.Dispatch<React.SetStateAction<PwForm>>
+  error: string
+  isPending: boolean
+  onSubmit: (e: React.FormEvent) => void
+  onClose: () => void
+}) {
+  const { t } = useTranslation('profile')
+  const { t: tCommon } = useTranslation('common')
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !isPending) onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [open, isPending, onClose])
+
+  if (!open) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/70 px-4 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isPending) onClose()
+      }}
+    >
+      <div className="w-full max-w-sm rounded-3xl bg-surface-container-high p-6 text-on-surface shadow-[0_20px_60px_-10px_rgba(6,14,32,0.8)]">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold text-on-surface">
+            {t('password.title')}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-lg p-1 text-on-surface-variant/70 transition hover:bg-white/5 hover:text-on-surface disabled:opacity-50"
+            aria-label={tCommon('actions.close')}
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <TextField
+            id="pw-current"
+            type="password"
+            placeholder={t('password.currentLabel')}
+            value={form.current}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, current: e.target.value }))
+            }
+            disabled={isPending}
+            autoComplete="current-password"
+          />
+          <TextField
+            id="pw-new"
+            type="password"
+            placeholder={t('password.newLabel')}
+            value={form.next}
+            onChange={(e) => setForm((f) => ({ ...f, next: e.target.value }))}
+            disabled={isPending}
+            autoComplete="new-password"
+          />
+          <TextField
+            id="pw-confirm"
+            type="password"
+            placeholder={t('password.confirmLabel')}
+            value={form.confirm}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, confirm: e.target.value }))
+            }
+            disabled={isPending}
+            autoComplete="new-password"
+          />
+          {error && (
+            <p className="body-sm px-1 text-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={isPending || !form.current || !form.next || !form.confirm}
+            className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 font-display font-semibold text-on-primary-container transition disabled:opacity-50"
+          >
+            {isPending ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-container/30 border-t-on-primary-container" />
+            ) : (
+              <Check className="h-4 w-4" strokeWidth={2.5} />
+            )}
+            {isPending ? t('password.submitting') : t('password.submit')}
+          </button>
+        </form>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function PushToggle({
+  push,
+}: {
+  push: ReturnType<typeof usePushSubscription>
+}) {
+  const disabled =
+    !push.isSupported ||
+    push.permission === 'unsupported' ||
+    push.permission === 'denied' ||
+    push.isBusy
+  const on = push.isSubscribed && push.permission === 'granted'
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={() => (on ? push.unsubscribe() : push.subscribe())}
+      className={cn(
+        'relative h-6 w-11 flex-shrink-0 rounded-full transition disabled:opacity-50',
+        on ? 'bg-primary-container' : 'bg-surface-container-highest',
+      )}
+    >
+      <span
+        className={cn(
+          'absolute top-0.5 h-5 w-5 rounded-full bg-on-surface transition-all',
+          on ? 'left-[1.375rem]' : 'left-0.5',
+        )}
+      />
+    </button>
+  )
+}
+
+function LanguageOption({
+  active,
+  onClick,
+  label,
+  sublabel,
+  disabled,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  sublabel: string
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      className={cn(
+        'flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition disabled:opacity-60',
+        active
+          ? 'bg-primary-container text-on-primary-container'
+          : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container',
+      )}
+    >
+      <span className="font-display text-sm font-bold">{label}</span>
+      <span
+        className={cn(
+          'label-sm text-xs',
+          active ? 'text-on-primary-container/70' : 'text-on-surface-variant',
+        )}
+      >
+        {sublabel}
+      </span>
+    </button>
+  )
+}
 
 function CurrencyOption({
   active,

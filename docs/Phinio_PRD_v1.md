@@ -1,7 +1,7 @@
 # PHINIO — Product Requirements Document
 
 **Personal Finance Management App**
-Version 2.0 | April 2026 | Status: Active Development
+Version 2.1 | April 2026 | Status: Active Development
 
 ---
 
@@ -20,24 +20,25 @@ Phinio is a mobile-first personal finance PWA that helps users track their inves
 
 ## 2. Technology Stack
 
-| Layer              | Technology                                             | Version / Notes                                                    |
-| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------ |
-| Frontend Framework | **TanStack Start**                                     | React 19, Vite 8, SSR, file-based routing                          |
-| Server/API         | **TanStack Start Server Functions** (`createServerFn`) | Dynamic import pattern — Prisma never leaks into the client bundle |
-| Data Fetching      | **TanStack Query**                                     | Caching, mutations, optimistic updates                             |
-| Routing            | **TanStack Router** + `@tanstack/router-plugin`        | Code-generated route tree (`src/routeTree.gen.ts`)                 |
-| ORM                | **Prisma 7** with `@prisma/adapter-pg`                 | Custom output to `src/generated/prisma/`; not `@prisma/client`     |
-| Database           | **PostgreSQL** via Neon                                | Pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings |
-| Authentication     | **Better Auth 1.5**                                    | Email/password, email verification, password reset, cookie session |
-| Email              | **Resend**                                             | Branded HTML templates for verification and password reset         |
-| Styling            | **Tailwind CSS v4** via `@tailwindcss/vite`            | All tokens in `src/styles.css` under `@theme`; no config file      |
-| Design System      | **Material Design 3 / Digital Private Bank**           | Nocturnal palette, dark-only, Manrope numerics, Inter body         |
-| Charts             | **Recharts**                                           | Lazy-loaded; allocation donut + EMI principal/interest donut       |
-| Validation         | **Zod**                                                | All forms and server function inputs                               |
-| Icons              | **lucide-react**                                       |                                                                    |
-| Toasts             | **Sonner**                                             |                                                                    |
-| PWA                | **vite-plugin-pwa** + Workbox                          | Auto-update, precached assets, runtime caching                     |
-| Deployment         | **Vercel** (Nitro preset)                              | With Vercel Analytics and Speed Insights                           |
+| Layer              | Technology                                             | Version / Notes                                                     |
+| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------- |
+| Frontend Framework | **TanStack Start**                                     | React 19, Vite 8, SSR, file-based routing                           |
+| Server/API         | **TanStack Start Server Functions** (`createServerFn`) | Dynamic import pattern — Prisma never leaks into the client bundle  |
+| Data Fetching      | **TanStack Query**                                     | Caching, mutations, optimistic updates                              |
+| Routing            | **TanStack Router** + `@tanstack/router-plugin`        | Code-generated route tree (`src/routeTree.gen.ts`)                  |
+| ORM                | **Prisma 7** with `@prisma/adapter-pg`                 | Custom output to `src/generated/prisma/`; not `@prisma/client`      |
+| Database           | **PostgreSQL** via Neon                                | Pooled (`DATABASE_URL`) + direct (`DIRECT_URL`) connection strings  |
+| Authentication     | **Better Auth 1.5**                                    | Email/password, email verification, password reset, cookie session  |
+| Email              | **Resend**                                             | Branded HTML templates for verification and password reset          |
+| Styling            | **Tailwind CSS v4** via `@tailwindcss/vite`            | All tokens in `src/styles.css` under `@theme`; no config file       |
+| Design System      | **Material Design 3 / Digital Private Bank**           | Nocturnal palette, dark-only, Manrope numerics, Inter body          |
+| Charts             | **Recharts**                                           | Lazy-loaded; allocation donut + EMI principal/interest donut        |
+| Validation         | **Zod**                                                | All forms and server function inputs                                |
+| Icons              | **lucide-react**                                       |                                                                     |
+| Toasts             | **Sonner**                                             |                                                                     |
+| PWA                | **vite-plugin-pwa** + Workbox                          | Auto-update, precached assets, runtime caching, iOS safe-area aware |
+| Web Push           | **web-push** + VAPID                                   | Push reminders for upcoming / overdue EMI + DPS payments            |
+| Deployment         | **Vercel** (Nitro preset)                              | Build-time prerender for public pages; Analytics + Speed Insights   |
 
 ---
 
@@ -317,7 +318,7 @@ All authenticated app screens share:
   - Total invested, current value, % gain/loss (green/red)
   - Monthly EMI outflow total
 - **Upcoming Payments** — next 5 EMI payments due within 30 days. Each card: EMI label, amount, relative due date, overdue badge if past due. Tapping → EMI detail.
-- **Investment Allocation Donut** — lazy-loaded Recharts pie; groups active investments by type. Legend shows top 5 types with color and %.
+- **Investment Allocation Donut** — lazy-loaded Recharts pie; groups active investments by type. Legend shows top 5 types with color and %. Tapping a legend row highlights that slice on the donut and visually dims the others; dimmed rows remain clickable so users can switch focus directly. Tap the selected row again to clear.
 - **Empty state** (fresh account) — CTA cards linking to add first investment or EMI.
 
 ### 5.8 Investments List Screen
@@ -429,14 +430,43 @@ All authenticated app screens share:
 
 **Route:** `/app/profile`
 
+Organized into themed sections (Header → Preferences → Account → Developer tools).
+
+**Header**
+
 - **Avatar** — Gravatar (SHA-256 hash of email) or user-uploaded image. Tap to open camera/gallery picker. Uploading sets `user.image` via Better Auth `updateUser`.
 - **Name** — Editable inline (Pencil icon). Saves to both `Profile.fullName` and `User.name`.
 - **Email** — Read-only.
-- **Currency** — BDT / USD dropdown. Saved to `Profile.preferredCurrency` + `User.preferredCurrency`. Triggers router invalidation.
-- **Change Password** — Collapsible section: Current password, New password, Confirm password. Uses Better Auth `changePassword` endpoint.
-- **Logout** — Button with confirmation.
 
-### 5.19 Notification Center
+**Preferences**
+
+- **Currency** — BDT / USD selector (two tonal tiles). Saved to `Profile.preferredCurrency` + `User.preferredCurrency`. Triggers router invalidation so all formatted amounts re-render in the new currency.
+- **Payment reminders** — Push notification toggle. Requests `Notification` permission and subscribes to `PushManager` using `VITE_VAPID_PUBLIC_KEY`. Handles the three permission states (granted / denied / unsupported) with distinct helper copy. Subscription endpoint is persisted server-side so the cron worker can push to it.
+
+**Account**
+
+- **Activity history** — Link to `/app/activity` (full audit log of create/update/delete actions across investments, deposits, withdrawals, EMIs, payments, profile changes).
+- **Change password** — Opens a portal-based modal (not inline) with Current / New / Confirm fields and Escape-to-close. Uses Better Auth `changePassword` endpoint; matches the style of `ConfirmModal`.
+- **Sign out** — Icon and label render in the error color so the destructive action reads at a glance. Opens a confirm modal before signing out.
+
+**Developer tools**
+
+- **Load test data** — Opens a modal to pick which category fixtures to seed (investments, EMIs, notifications, etc.) with an option to wipe existing app data first.
+- **Clear all my data** — Confirm modal, then deletes all investments, deposits, withdrawals, EMIs, payments, and notifications for the current profile. Account and profile row are preserved so sign-in still works.
+
+### 5.19 Activity History Screen
+
+**Route:** `/app/activity`
+
+Full audit trail of mutations performed by the user, rendered as an infinite-scroll list.
+
+- **Entity types tracked:** investment, investment deposit, investment withdrawal, EMI, EMI payment, profile.
+- **Actions tracked:** `create`, `update`, `delete` — each rendered with a distinct icon + badge color.
+- **Row content:** entity label, action verb, relative time, and a diff of changed fields (old → new) for `update` actions.
+- **Pagination:** cursor-based via `useInfiniteQuery`; 15 rows per page, "Load more" button triggers `fetchNextPage`.
+- **Back navigation:** `staticData.backTo = '/app/profile'` — tapping the back arrow returns to Profile where this screen was launched from.
+
+### 5.20 Notification Center
 
 **Trigger:** Notification bell in TopBar (shows unread count badge)
 
@@ -612,14 +642,45 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 ## 9. Progressive Web App
 
 - **Manifest** (`public/site.webmanifest`) — `display: standalone`, `orientation: portrait`, `theme_color: #0b1326`. Icons at 16, 32, 180, 192 (maskable), 512 (maskable) px.
-- **Service worker** — registered manually in `__root.tsx` (no injected tag, avoids SSR hydration conflicts). `navigateFallback: null` (all routes must hit the server for SSR).
+- **Service worker** — owned at `src/sw.ts` (Workbox `injectManifest` strategy) so the app can add push + `notificationclick` handlers alongside precache. Registered manually in `__root.tsx` — no injected tag, avoiding SSR hydration conflicts. `navigateFallback: null` (all routes must hit the server for SSR). A `scripts/copy-sw-to-vercel.mjs` post-build step copies the compiled SW into Vercel's static output.
 - **Precache** — hashed JS, CSS, fonts, images. Runtime caching: JS/CSS (CacheFirst 30d), images (CacheFirst 7d), Google Fonts (CacheFirst 365d).
 - **Auto-update** — `registerType: 'autoUpdate'`; new SW takes over on next page load.
 - **Dev** — service worker disabled in development (`devOptions.enabled: false`).
+- **Safe-area handling** — installed PWAs reserve `env(safe-area-inset-top)` under the iOS Dynamic Island / notch and `env(safe-area-inset-bottom)` above the home indicator. Page padding and the bottom tab bar both respect these insets.
+
+### 9.1 Web Push Notifications
+
+- **VAPID keypair** — generated once via `npx web-push generate-vapid-keys`. Private key lives server-side (`VAPID_PRIVATE_KEY`); public key is duplicated to the client as `VITE_VAPID_PUBLIC_KEY` for `PushManager.subscribe()`.
+- **Subscribe flow** — user toggles "Payment reminders" in Profile → Preferences. `usePushSubscription` hook orchestrates `Notification.requestPermission()` → `sw.pushManager.subscribe()` → persists the `PushSubscription` to the server.
+- **Deliver flow** — a Vercel cron endpoint (`/api/cron/send-reminders`, guarded by `CRON_SECRET`) runs on a schedule, calls `syncDerivedNotifications()`, and fans out to each active subscription via `web-push`. The service worker's `push` handler renders the notification; `notificationclick` routes to the linked screen.
+- **Permission states** — granted, denied, `default`, and unsupported are all handled distinctly in the Profile UI. Denied users see a helper line explaining they must re-enable in browser settings.
 
 ---
 
-## 10. Implementation Status
+## 10. Performance & Deployment Optimizations
+
+### 10.1 Intent-preload with cache-aware loaders
+
+- Router is configured with `defaultPreload: 'intent'` + `defaultPreloadStaleTime: 30s`, so hover / touch-start on a tab warms data before the click lands.
+- The four primary tabs (`/app`, `/app/investments`, `/app/emis`, `/app/activity`) each expose a `loader` that calls `queryClient.ensureQueryData()` (or `ensureInfiniteQueryData()` for activity) against the default view — hover → prefetch → mount-with-data, no skeleton flash.
+- Shared `queryOptions` factories live in the hook files so the loader and `useQuery` call use identical keys and fetchers.
+
+### 10.2 Client-side query cache defaults
+
+- `QueryClient` is configured with `defaultOptions.queries.staleTime: 60s` and `gcTime: 5m`, so back-navigation between screens hits the cache instead of triggering a fresh RPC. Mutation `onSuccess` callbacks still call `invalidateQueries` to bust the cache when data actually changes.
+
+### 10.3 Build-time prerendering
+
+- Nitro is configured with `prerender.routes: ['/', '/login', '/signup', '/check-email', '/forgot-password']` and `crawlLinks: false`. These public pages are generated as static HTML at build time and served from Vercel's CDN — near-zero TTFB, no serverless cold starts.
+- Authenticated `/app/*` routes remain server-rendered per request since they need the session cookie.
+
+### 10.4 Global tap feedback
+
+- A single zero-specificity `:where(…):active` rule in `src/styles.css` applies a 120ms `transform: scale(0.97)` across every interactive element (`button`, `a`, `[role="button"]`, form inputs, etc.). Component-level `active:scale-*` overrides and `.btn-primary:active` still win because `:where()` contributes no specificity. `prefers-reduced-motion: reduce` disables the scale.
+
+---
+
+## 11. Implementation Status
 
 ### ✅ Phase 1 — Foundation
 
@@ -667,9 +728,20 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 - PWA (installable, precached, auto-update)
 - Vercel Analytics + Speed Insights
 
+### ✅ Phase 6 — Engagement & Performance
+
+- Web push notifications for upcoming / overdue EMI and DPS installments (VAPID + Vercel cron worker)
+- Activity history screen with infinite-scroll cursor pagination
+- Investment withdrawals (partial + close) and DPS premature closure
+- Profile dev tools: seed fixtures, full-profile data wipe
+- Route loaders + tuned query / preload stale-times for instant tab switches
+- Build-time prerendering of public marketing / auth pages via Nitro
+- Global tap / press animation on all interactive elements
+- PWA safe-area insets (Dynamic Island + home indicator)
+
 ---
 
-## 11. File Structure
+## 12. File Structure
 
 ```
 phinio/
@@ -764,44 +836,52 @@ phinio/
 
 ---
 
-## 12. Environment Variables
+## 13. Environment Variables
 
-| Variable             | Description                                                            |
-| -------------------- | ---------------------------------------------------------------------- |
-| `DATABASE_URL`       | Pooled Neon connection string (used at runtime via PgBouncer)          |
-| `DIRECT_URL`         | Direct Neon connection string (used by `prisma migrate deploy`)        |
-| `BETTER_AUTH_SECRET` | Random secret — generate with `npx -y @better-auth/cli secret`         |
-| `BETTER_AUTH_URL`    | Full app URL (e.g. `http://localhost:3000` in dev, Vercel URL in prod) |
-| `RESEND_API_KEY`     | API key from Resend dashboard                                          |
-| `RESEND_FROM`        | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`        |
+| Variable                | Description                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | Pooled Neon connection string (used at runtime via PgBouncer)                                   |
+| `DIRECT_URL`            | Direct Neon connection string (used by `prisma migrate deploy`)                                 |
+| `BETTER_AUTH_SECRET`    | Random secret — generate with `npx -y @better-auth/cli secret`                                  |
+| `BETTER_AUTH_URL`       | Full app URL (e.g. `http://localhost:3000` in dev, Vercel URL in prod)                          |
+| `RESEND_API_KEY`        | API key from Resend dashboard                                                                   |
+| `RESEND_FROM`           | Verified sender address, e.g. `Phinio <noreply@yourdomain.com>`                                 |
+| `VAPID_PUBLIC_KEY`      | Web-push VAPID public key — generate with `npx web-push generate-vapid-keys`                    |
+| `VAPID_PRIVATE_KEY`     | Web-push VAPID private key (server-only, never exposed to client)                               |
+| `VAPID_SUBJECT`         | `mailto:` or `https:` URI the browser can reach for subscription administration                 |
+| `VITE_VAPID_PUBLIC_KEY` | Client-exposed copy of `VAPID_PUBLIC_KEY` (must be identical) — used by `PushManager.subscribe` |
+| `CRON_SECRET`           | Guards `/api/cron/send-reminders`; generate with `openssl rand -hex 32`                         |
 
-> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim into every email link. In dev it must be `http://localhost:3000`; in `npm run preview` (port 4173) set it to `http://localhost:4173` or links will 404.
+> **`BETTER_AUTH_URL` gotcha:** Better Auth embeds this URL verbatim into every email link. In dev it must be `http://localhost:3000`; in `npm run preview:local` (port 4173) set it to `http://localhost:4173` or links will 404.
 
 ---
 
-## 13. Commands
+## 14. Commands
 
 ```bash
-npm run dev          # Vite dev server on :3000
-npm run build        # Production build
-npm run test         # Vitest (run once)
-npm run lint         # ESLint
-npm run check        # prettier --write + eslint --fix (run before committing)
+npm run dev             # Vite dev server on :3000
+npm run build           # Production build (Vercel-env-only: prisma migrate deploy + generate + vite build + sw copy)
+npm run build:local     # Same chain wrapped in dotenv -e .env.local so it runs against local env
+npm run preview         # Preview a prod build (expects host-provided env)
+npm run preview:local   # dotenv-wrapped preview for local testing
+npm run test            # Vitest (run once)
+npm run lint            # ESLint
+npm run check           # prettier --write + eslint --fix (run before committing)
 
-npm run db:generate  # prisma generate (after schema changes)
-npm run db:push      # push schema to DB without migration (dev)
-npm run db:migrate   # prisma migrate dev
-npm run db:studio    # Prisma Studio
-npm run db:seed      # Seed test data
+npm run db:generate     # prisma generate (after schema changes)
+npm run db:push         # push schema to DB without migration (dev)
+npm run db:migrate      # prisma migrate dev
+npm run db:studio       # Prisma Studio
+npm run db:seed         # Seed test data
 ```
 
-All `db:*` scripts are wrapped in `dotenv -e .env.local` — always use them, not raw `npx prisma`, or `DATABASE_URL` won't resolve.
+All `db:*` scripts are wrapped in `dotenv -e .env.local` — always use them, not raw `npx prisma`, or `DATABASE_URL` won't resolve. The same rule is why `build:local` / `preview:local` exist: the bare `build` / `preview` expect Vercel-provided env and will fail locally with `PrismaConfigEnvError` otherwise.
 
 ---
 
-## 14. Future Enhancements (Post-MVP)
+## 15. Future Enhancements (Post-MVP)
 
-- Push notifications / email reminders for upcoming payments
+- Email reminders (complement to push) for upcoming payments
 - Multi-currency portfolio with live exchange rates
 - CSV / Excel export of investment portfolio and EMI schedules
 - Goal-based savings targets on savings pots

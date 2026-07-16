@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowDownLeft, Plus, Trash2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { ArrowDownLeft, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ActionMenu } from '#/components/ui/ActionMenu'
+import type { ActionMenuItem } from '#/components/ui/ActionMenu'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
-import { TextField } from '#/components/ui/TextField'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
-import { calculateReturnPercent, formatReturnPercent } from '#/lib/calculations'
+import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
+import { calculateReturnPercent } from '#/lib/calculations'
 import {
   useInvestmentQuery,
   useUpdateSavings,
@@ -28,11 +32,14 @@ function todayIso(): string {
 }
 
 function SavingsDetailScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
+  const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
   useSetTopBarTitle(inv?.name ?? null)
@@ -50,6 +57,7 @@ function SavingsDetailScreen() {
   // Edit form state
   const [editName, setEditName] = useState('')
   const [editCurrentValue, setEditCurrentValue] = useState('')
+  const [editNotes, setEditNotes] = useState('')
 
   // Deposit form state
   const [depositAmount, setDepositAmount] = useState('')
@@ -59,7 +67,7 @@ function SavingsDetailScreen() {
   if (isLoading || !inv) {
     return (
       <main className="noir-bg flex min-h-dvh items-center justify-center text-on-surface-variant">
-        Loading…
+        {tCommon('actions.loading')}
       </main>
     )
   }
@@ -122,7 +130,7 @@ function SavingsDetailScreen() {
 
   async function handleDelete() {
     try {
-      await deleteSavings.mutateAsync(id)
+      await deleteSavings.mutateAsync({ id })
       navigate({ to: '/app/investments' })
     } catch {
       // handled in hook
@@ -132,6 +140,7 @@ function SavingsDetailScreen() {
   function openEdit() {
     setEditName(inv?.name ?? '')
     setEditCurrentValue(inv?.currentValue ?? '0')
+    setEditNotes(inv?.notes ?? '')
     setShowEditForm(true)
   }
 
@@ -141,6 +150,7 @@ function SavingsDetailScreen() {
         id,
         name: editName.trim() || inv?.name || '',
         currentValue: editCurrentValue || '0',
+        notes: editNotes.trim() || undefined,
       })
       setShowEditForm(false)
     } catch {
@@ -169,50 +179,64 @@ function SavingsDetailScreen() {
 
   async function handleRemoveDeposit(depositId: string) {
     try {
-      await removeDeposit.mutateAsync(depositId)
+      await removeDeposit.mutateAsync({ depositId })
       setConfirmRemoveId(null)
     } catch {
       // handled in hook
     }
   }
 
-
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
         <div className="flex items-center justify-between">
-          <p className="body-sm text-on-surface-variant">Savings pot</p>
-          <button
-            type="button"
-            aria-label="Edit"
-            onClick={openEdit}
-            className="rounded-xl px-3 py-1.5 text-sm font-semibold text-on-surface-variant hover:bg-white/5"
-          >
-            Edit
-          </button>
+          <p className="body-sm text-on-surface-variant">
+            {t('savings.savingsPot')}
+          </p>
+          <ActionMenu
+            ariaLabel={tCommon('ariaLabels.moreActions')}
+            items={
+              [
+                {
+                  key: 'edit',
+                  label: t('savings.edit'),
+                  icon: <Pencil className="h-4 w-4" strokeWidth={1.75} />,
+                  onSelect: openEdit,
+                },
+                {
+                  key: 'delete',
+                  label: t('savings.delete'),
+                  icon: <Trash2 className="h-4 w-4" strokeWidth={1.75} />,
+                  variant: 'danger',
+                  onSelect: () => setConfirmDelete(true),
+                },
+              ] satisfies Array<ActionMenuItem>
+            }
+          />
         </div>
         {/* Hero card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3147] to-[#0f1f2d] p-6">
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#164e63] to-[#083344] p-6">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
           />
-          <p className="label-sm text-white/70">Current balance</p>
+          <p className="label-sm text-white/70">{t('savings.currentValue')}</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {formatCurrency(inv.currentValue, currency)}
+            {fmt.currency(inv.currentValue, currency)}
           </p>
           {hasReturn && (
             <p
               className={cn(
                 'body-sm mt-2 font-semibold',
                 returnPercent > 0
-                  ? 'text-[#60a5fa]'
+                  ? 'text-[#67e8f9]'
                   : returnPercent < 0
                     ? 'text-tertiary'
                     : 'text-white/70',
               )}
             >
-              {formatReturnPercent(returnPercent)} return
+              {fmt.percent(returnPercent, { showSign: true })}{' '}
+              {t('savings.returnSuffix')}
             </p>
           )}
           {isActive && !showDepositForm && (
@@ -223,7 +247,7 @@ function SavingsDetailScreen() {
                 className="flex items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 <Plus className="h-4 w-4" strokeWidth={2} />
-                Deposit
+                {t('savings.deposit')}
               </button>
               <button
                 type="button"
@@ -232,7 +256,7 @@ function SavingsDetailScreen() {
                 className="flex items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-white/10"
               >
                 <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-                Withdraw
+                {t('savings.withdraw')}
               </button>
             </div>
           )}
@@ -241,17 +265,22 @@ function SavingsDetailScreen() {
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3">
           <StatTile
-            label="Total deposited"
-            value={formatCurrency(inv.investedAmount, currency)}
+            label={t('savings.totalDeposited')}
+            value={fmt.currency(inv.investedAmount, currency)}
           />
-          <StatTile label="Deposits" value={String(deposits.length)} />
+          <StatTile
+            label={t('savings.depositCount')}
+            value={fmt.number(deposits.length)}
+          />
         </section>
 
         {/* Add deposit */}
         {showDepositForm && (
           <Card variant="low">
             <div className="mb-3 flex items-center justify-between">
-              <p className="label-sm text-on-surface-variant">Add deposit</p>
+              <p className="label-sm text-on-surface-variant">
+                {t('savings.addDepositTitle')}
+              </p>
               <button
                 type="button"
                 onClick={() => setShowDepositForm(false)}
@@ -264,7 +293,7 @@ function SavingsDetailScreen() {
               <div className="grid grid-cols-2 gap-3">
                 <TextField
                   id="depositAmount"
-                  label="Amount"
+                  label={tCommon('labels.amount')}
                   placeholder="0.00"
                   inputMode="decimal"
                   prefix={symbol}
@@ -274,7 +303,7 @@ function SavingsDetailScreen() {
                 />
                 <TextField
                   id="depositDate"
-                  label="Date"
+                  label={tCommon('labels.date')}
                   type="date"
                   value={depositDate}
                   onChange={(e) => setDepositDate(e.target.value)}
@@ -282,8 +311,8 @@ function SavingsDetailScreen() {
               </div>
               <TextField
                 id="depositNotes"
-                label="Notes (optional)"
-                placeholder="e.g. salary, bonus"
+                label={tCommon('labels.notesOptional')}
+                placeholder={t('savings.depositNotesPlaceholder')}
                 value={depositNotes}
                 onChange={(e) => setDepositNotes(e.target.value)}
               />
@@ -292,7 +321,9 @@ function SavingsDetailScreen() {
                 disabled={addDeposit.isPending}
                 className="w-full rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {addDeposit.isPending ? 'Adding…' : 'Add deposit'}
+                {addDeposit.isPending
+                  ? tCommon('actions.adding')
+                  : t('savings.addDepositSubmit')}
               </button>
             </form>
           </Card>
@@ -302,7 +333,7 @@ function SavingsDetailScreen() {
         {activity.length > 0 && (
           <section className="rounded-3xl bg-surface-container-low p-4">
             <h2 className="label-md mb-3 px-2 text-on-surface-variant">
-              Activity
+              {t('savings.activity')}
             </h2>
             <ul className="space-y-1">
               {activity.map((row) => {
@@ -314,7 +345,7 @@ function SavingsDetailScreen() {
                       <div className="min-w-0 flex-1">
                         {date && (
                           <p className="body-sm text-on-surface">
-                            {date.toLocaleDateString(undefined, {
+                            {fmt.date(date, {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
@@ -335,14 +366,14 @@ function SavingsDetailScreen() {
                           )}
                         >
                           {isDeposit ? '+' : '−'}
-                          {formatCurrency(row.amount, currency)}
+                          {fmt.currency(row.amount, currency)}
                         </p>
                         {isDeposit && (
                           <button
                             type="button"
                             onClick={() => setConfirmRemoveId(row.id)}
                             className="text-on-surface-variant/40 transition hover:text-tertiary"
-                            aria-label="Remove deposit"
+                            aria-label={t('savings.removeDeposit')}
                           >
                             <X className="h-4 w-4" strokeWidth={1.75} />
                           </button>
@@ -359,24 +390,38 @@ function SavingsDetailScreen() {
         {/* Edit form */}
         {showEditForm && (
           <Card variant="low">
-            <p className="label-sm mb-3 text-on-surface-variant">Edit pot</p>
+            <p className="label-sm mb-3 text-on-surface-variant">
+              {t('savings.edit')}
+            </p>
             <div className="space-y-4">
               <TextField
                 id="edit-name"
-                label="Name"
+                label={tCommon('labels.name')}
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 autoFocus
               />
               <TextField
                 id="edit-current-value"
-                label="Current balance"
+                label={t('savings.currentValue')}
                 placeholder="0.00"
                 inputMode="decimal"
                 prefix={symbol}
                 value={editCurrentValue}
                 onChange={(e) => setEditCurrentValue(e.target.value)}
               />
+              <div>
+                <p className="label-sm mb-2 text-on-surface-variant">
+                  {tCommon('labels.notesOptional')}
+                </p>
+                <TextArea
+                  id="edit-notes"
+                  placeholder={t('savings.editNotesPlaceholder')}
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  maxLength={1000}
+                />
+              </div>
             </div>
             <div className="mt-4 flex gap-3">
               <button
@@ -384,7 +429,7 @@ function SavingsDetailScreen() {
                 onClick={() => setShowEditForm(false)}
                 className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
               >
-                Cancel
+                {tCommon('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -392,29 +437,21 @@ function SavingsDetailScreen() {
                 disabled={updateSavings.isPending}
                 className="flex-1 rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {updateSavings.isPending ? 'Saving…' : 'Save'}
+                {updateSavings.isPending
+                  ? tCommon('actions.saving')
+                  : tCommon('actions.save')}
               </button>
             </div>
           </Card>
         )}
-
-        {/* Delete */}
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          Delete pot
-        </button>
       </div>
 
       <ConfirmModal
         open={confirmDelete}
-        title="Delete pot"
-        message={`Delete "${inv.name}" and all its deposit history?`}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
+        title={t('savings.deleteConfirmTitle')}
+        message={t('savings.deleteConfirmBody', { name: inv.name })}
+        confirmLabel={t('savings.deleteConfirm')}
+        pendingLabel={t('savings.deletePending')}
         isPending={deleteSavings.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
@@ -422,10 +459,10 @@ function SavingsDetailScreen() {
 
       <ConfirmModal
         open={confirmRemoveId !== null}
-        title="Remove deposit"
-        message="Remove this deposit entry? This can't be undone."
-        confirmLabel="Remove"
-        pendingLabel="Removing…"
+        title={t('savings.removeDepositTitle')}
+        message={t('savings.removeDepositBody')}
+        confirmLabel={t('savings.removeConfirm')}
+        pendingLabel={t('savings.removePending')}
         isPending={removeDeposit.isPending}
         onConfirm={() =>
           confirmRemoveId && handleRemoveDeposit(confirmRemoveId)

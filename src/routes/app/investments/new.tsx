@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Bitcoin,
   Briefcase,
@@ -22,7 +23,7 @@ import type { InvestmentCreateInput, InvestmentType } from '#/lib/validators'
 export const Route = createFileRoute('/app/investments/new')({
   staticData: {
     hideTabBar: true,
-    title: 'Add Investment',
+    title: 'pageTitles.addInvestment',
     backTo: '/app/investments',
   },
   component: AddInvestmentScreen,
@@ -30,19 +31,18 @@ export const Route = createFileRoute('/app/investments/new')({
 
 const TYPE_OPTIONS: Array<{
   value: InvestmentType
-  label: string
   icon: typeof LineChart
 }> = [
-  { value: 'stock', label: 'Stocks', icon: LineChart },
-  { value: 'mutual_fund', label: 'Mutual Fund', icon: PieChart },
-  { value: 'fd', label: 'Fixed Deposit', icon: Circle },
-  { value: 'gold', label: 'Gold', icon: Coins },
-  { value: 'crypto', label: 'Crypto', icon: Bitcoin },
-  { value: 'sanchayapatra', label: 'Sanchayapatra', icon: Shield },
-  { value: 'real_estate', label: 'Real Estate', icon: Building },
-  { value: 'agro_farm', label: 'Agro Farm', icon: Sprout },
-  { value: 'business', label: 'Business', icon: Briefcase },
-  { value: 'other', label: 'Other', icon: Package },
+  { value: 'stock', icon: LineChart },
+  { value: 'mutual_fund', icon: PieChart },
+  { value: 'fd', icon: Circle },
+  { value: 'gold', icon: Coins },
+  { value: 'crypto', icon: Bitcoin },
+  { value: 'sanchayapatra', icon: Shield },
+  { value: 'real_estate', icon: Building },
+  { value: 'agro_farm', icon: Sprout },
+  { value: 'business', icon: Briefcase },
+  { value: 'other', icon: Package },
 ]
 
 function todayIso(): string {
@@ -54,6 +54,8 @@ function todayIso(): string {
 }
 
 function AddInvestmentScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
@@ -65,9 +67,18 @@ function AddInvestmentScreen() {
   const [type, setType] = useState<InvestmentType>('stock')
   const [investedAmount, setInvestedAmount] = useState('')
   const [currentValue, setCurrentValue] = useState('')
+  // Until the user edits the current value themselves, it mirrors the invested
+  // amount — a brand-new position is worth what was put in.
+  const [currentValueTouched, setCurrentValueTouched] = useState(false)
   const [dateOfInvestment, setDateOfInvestment] = useState(todayIso())
+  const [estimatedClosureDate, setEstimatedClosureDate] = useState('')
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  function handleInvestedAmountChange(value: string) {
+    setInvestedAmount(value)
+    if (!currentValueTouched) setCurrentValue(value)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -79,6 +90,7 @@ function AddInvestmentScreen() {
       investedAmount,
       currentValue,
       dateOfInvestment,
+      estimatedClosureDate: estimatedClosureDate || undefined,
       notes: notes.trim() || undefined,
     } satisfies InvestmentCreateInput)
 
@@ -104,15 +116,17 @@ function AddInvestmentScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Asset details</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.details')}
+            </p>
             <TextField
               id="name"
-              label="Asset name"
-              placeholder="e.g. Vanguard S&P 500 ETF"
+              label={t('form.nameLabel')}
+              placeholder={t('form.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={fieldErrors.name}
@@ -121,37 +135,50 @@ function AddInvestmentScreen() {
             <div className="grid grid-cols-2 gap-4">
               <TextField
                 id="investedAmount"
-                label="Invested"
+                label={t('form.investedLabel')}
                 placeholder="0.00"
                 inputMode="decimal"
                 prefix={symbol}
                 value={investedAmount}
-                onChange={(e) => setInvestedAmount(e.target.value)}
+                onChange={(e) => handleInvestedAmountChange(e.target.value)}
                 error={fieldErrors.investedAmount}
               />
               <TextField
                 id="currentValue"
-                label="Current value"
+                label={t('form.currentValueLabel')}
                 placeholder="0.00"
                 inputMode="decimal"
                 prefix={symbol}
                 value={currentValue}
-                onChange={(e) => setCurrentValue(e.target.value)}
+                onChange={(e) => {
+                  setCurrentValueTouched(true)
+                  setCurrentValue(e.target.value)
+                }}
                 error={fieldErrors.currentValue}
               />
             </div>
             <TextField
               id="dateOfInvestment"
-              label="Date of investment"
+              label={t('form.dateLabel')}
               type="date"
               value={dateOfInvestment}
               onChange={(e) => setDateOfInvestment(e.target.value)}
               error={fieldErrors.dateOfInvestment}
             />
+            <TextField
+              id="estimatedClosureDate"
+              label={t('form.estimatedClosureLabel')}
+              type="date"
+              value={estimatedClosureDate}
+              onChange={(e) => setEstimatedClosureDate(e.target.value)}
+              error={fieldErrors.estimatedClosureDate}
+            />
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Category</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.category')}
+            </p>
             <div className="grid grid-cols-3 gap-3">
               {TYPE_OPTIONS.map((opt) => {
                 const active = type === opt.value
@@ -170,7 +197,7 @@ function AddInvestmentScreen() {
                     )}
                   >
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
-                    {opt.label}
+                    {t(`types.${opt.value}`)}
                   </button>
                 )
               })}
@@ -178,10 +205,12 @@ function AddInvestmentScreen() {
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Notes (optional)</p>
+            <p className="label-sm text-on-surface-variant">
+              {tCommon('labels.notesOptional')}
+            </p>
             <TextArea
               id="notes"
-              placeholder="Why this investment, goals, or any context"
+              placeholder={t('form.notesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               maxLength={1000}
@@ -195,7 +224,9 @@ function AddInvestmentScreen() {
             disabled={createInvestment.isPending}
             className="btn-primary"
           >
-            {createInvestment.isPending ? 'Saving…' : 'Save investment'}
+            {createInvestment.isPending
+              ? tCommon('actions.saving')
+              : t('form.submit')}
           </button>
         </div>
       </form>

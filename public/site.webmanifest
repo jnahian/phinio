@@ -5,7 +5,7 @@
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "16x16 24x24 32x32 64x64",
+      "sizes": "48x48",
       "type": "image/x-icon"
     },
     {
@@ -27,13 +27,25 @@
       "src": "android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "start_url": "/",
@@ -41,5 +53,21 @@
   "orientation": "portrait",
   "theme_color": "#0b1326",
   "background_color": "#0b1326",
-  "categories": ["finance", "productivity"]
+  "categories": ["finance", "productivity"],
+  "screenshots": [
+    {
+      "src": "screenshots/mobile-1.jpg",
+      "sizes": "860x1868",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Phinio dashboard on mobile"
+    },
+    {
+      "src": "screenshots/desktop-1.jpg",
+      "sizes": "5120x2630",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Phinio dashboard on desktop"
+    }
+  ]
 }

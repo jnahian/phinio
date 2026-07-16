@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowDownLeft,
   Bitcoin,
@@ -18,7 +19,8 @@ import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useDeleteInvestment,
   useInvestmentQuery,
@@ -30,7 +32,7 @@ import type { InvestmentType } from '#/lib/validators'
 export const Route = createFileRoute('/app/investments/$id/edit')({
   staticData: {
     hideTabBar: true,
-    title: 'Edit Investment',
+    title: 'pageTitles.editInvestment',
     backTo: '/app/investments',
   },
   component: EditInvestmentScreen,
@@ -38,19 +40,18 @@ export const Route = createFileRoute('/app/investments/$id/edit')({
 
 const TYPE_OPTIONS: Array<{
   value: InvestmentType
-  label: string
   icon: typeof LineChart
 }> = [
-  { value: 'stock', label: 'Stocks', icon: LineChart },
-  { value: 'mutual_fund', label: 'Mutual Fund', icon: PieChart },
-  { value: 'fd', label: 'Fixed Deposit', icon: Circle },
-  { value: 'gold', label: 'Gold', icon: Coins },
-  { value: 'crypto', label: 'Crypto', icon: Bitcoin },
-  { value: 'sanchayapatra', label: 'Sanchayapatra', icon: Shield },
-  { value: 'real_estate', label: 'Real Estate', icon: Building },
-  { value: 'agro_farm', label: 'Agro Farm', icon: Sprout },
-  { value: 'business', label: 'Business', icon: Briefcase },
-  { value: 'other', label: 'Other', icon: Package },
+  { value: 'stock', icon: LineChart },
+  { value: 'mutual_fund', icon: PieChart },
+  { value: 'fd', icon: Circle },
+  { value: 'gold', icon: Coins },
+  { value: 'crypto', icon: Bitcoin },
+  { value: 'sanchayapatra', icon: Shield },
+  { value: 'real_estate', icon: Building },
+  { value: 'agro_farm', icon: Sprout },
+  { value: 'business', icon: Briefcase },
+  { value: 'other', icon: Package },
 ]
 
 function toDateInput(value: Date | string | null | undefined): string {
@@ -61,6 +62,9 @@ function toDateInput(value: Date | string | null | undefined): string {
 }
 
 function EditInvestmentScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
+  const fmt = useFormatter()
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
@@ -76,6 +80,7 @@ function EditInvestmentScreen() {
   const [investedAmount, setInvestedAmount] = useState('')
   const [currentValue, setCurrentValue] = useState('')
   const [dateOfInvestment, setDateOfInvestment] = useState('')
+  const [estimatedClosureDate, setEstimatedClosureDate] = useState('')
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<'active' | 'completed'>('active')
   const [exitValue, setExitValue] = useState('')
@@ -92,6 +97,7 @@ function EditInvestmentScreen() {
     setInvestedAmount(String(investment.investedAmount))
     setCurrentValue(String(investment.currentValue))
     setDateOfInvestment(toDateInput(investment.dateOfInvestment))
+    setEstimatedClosureDate(toDateInput(investment.estimatedClosureDate))
     setNotes(investment.notes ?? '')
     setStatus(investment.status as 'active' | 'completed')
     setExitValue(investment.exitValue !== null ? investment.exitValue : '')
@@ -109,6 +115,7 @@ function EditInvestmentScreen() {
       investedAmount,
       currentValue,
       dateOfInvestment,
+      estimatedClosureDate: estimatedClosureDate || undefined,
       notes: notes.trim() || undefined,
       status,
       exitValue: status === 'completed' ? exitValue : undefined,
@@ -135,7 +142,7 @@ function EditInvestmentScreen() {
 
   async function handleDelete() {
     try {
-      await deleteInvestment.mutateAsync(id)
+      await deleteInvestment.mutateAsync({ id })
       navigate({ to: '/app/investments' })
     } catch {
       // handled by useDeleteInvestment onError → toast.error
@@ -145,7 +152,7 @@ function EditInvestmentScreen() {
   if (isLoading || !investment) {
     return (
       <main className="noir-bg flex min-h-dvh items-center justify-center text-on-surface-variant">
-        Loading…
+        {tCommon('actions.loading')}
       </main>
     )
   }
@@ -165,18 +172,20 @@ function EditInvestmentScreen() {
   const hasReturn = investedNum > 0
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           {/* Hero card */}
           <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a3147] to-[#0f1f2d] p-6">
             <div
               aria-hidden
-              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
             />
-            <p className="label-sm text-white/70">Current value</p>
+            <p className="label-sm text-white/70">
+              {t('form.currentValueLabel')}
+            </p>
             <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-              {formatCurrency(investment.currentValue, currency)}
+              {fmt.currency(investment.currentValue, currency)}
             </p>
             {hasReturn && (
               <p
@@ -190,7 +199,7 @@ function EditInvestmentScreen() {
                 )}
               >
                 {returnPct > 0 ? '+' : ''}
-                {returnPct}% return
+                {fmt.number(returnPct)}% {t('list.returnSuffix')}
               </p>
             )}
             {investment.status === 'active' && (
@@ -200,16 +209,18 @@ function EditInvestmentScreen() {
                 className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-                Withdraw
+                {t('list.withdraw')}
               </button>
             )}
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Asset details</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.details')}
+            </p>
             <TextField
               id="name"
-              label="Asset name"
+              label={t('form.nameLabel')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={fieldErrors.name}
@@ -217,7 +228,7 @@ function EditInvestmentScreen() {
             <div className="grid grid-cols-2 gap-4">
               <TextField
                 id="investedAmount"
-                label="Invested"
+                label={t('form.investedLabel')}
                 inputMode="decimal"
                 prefix={symbol}
                 value={investedAmount}
@@ -226,7 +237,7 @@ function EditInvestmentScreen() {
               />
               <TextField
                 id="currentValue"
-                label="Current value"
+                label={t('form.currentValueLabel')}
                 inputMode="decimal"
                 prefix={symbol}
                 value={currentValue}
@@ -236,16 +247,26 @@ function EditInvestmentScreen() {
             </div>
             <TextField
               id="dateOfInvestment"
-              label="Date of investment"
+              label={t('form.dateLabel')}
               type="date"
               value={dateOfInvestment}
               onChange={(e) => setDateOfInvestment(e.target.value)}
               error={fieldErrors.dateOfInvestment}
             />
+            <TextField
+              id="estimatedClosureDate"
+              label={t('form.estimatedClosureLabel')}
+              type="date"
+              value={estimatedClosureDate}
+              onChange={(e) => setEstimatedClosureDate(e.target.value)}
+              error={fieldErrors.estimatedClosureDate}
+            />
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Category</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.category')}
+            </p>
             <div className="grid grid-cols-3 gap-3">
               {TYPE_OPTIONS.map((opt) => {
                 const active = type === opt.value
@@ -264,7 +285,7 @@ function EditInvestmentScreen() {
                     )}
                   >
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
-                    {opt.label}
+                    {t(`types.${opt.value}`)}
                   </button>
                 )
               })}
@@ -273,19 +294,21 @@ function EditInvestmentScreen() {
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
             <div className="flex items-center justify-between">
-              <p className="label-sm text-on-surface-variant">Status</p>
+              <p className="label-sm text-on-surface-variant">
+                {t('form.section.status')}
+              </p>
               <div className="inline-flex gap-1 rounded-full bg-surface-container-lowest p-1">
                 <StatusTab
                   active={status === 'active'}
                   onClick={() => setStatus('active')}
                 >
-                  Active
+                  {t('list.active')}
                 </StatusTab>
                 <StatusTab
                   active={status === 'completed'}
                   onClick={() => setStatus('completed')}
                 >
-                  Completed
+                  {t('list.completed')}
                 </StatusTab>
               </div>
             </div>
@@ -293,7 +316,7 @@ function EditInvestmentScreen() {
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <TextField
                   id="exitValue"
-                  label="Exit value"
+                  label={t('form.exitValueLabel')}
                   inputMode="decimal"
                   prefix={symbol}
                   placeholder="0.00"
@@ -303,7 +326,7 @@ function EditInvestmentScreen() {
                 />
                 <TextField
                   id="completedAt"
-                  label="Completed on"
+                  label={t('form.completionDateLabel')}
                   type="date"
                   value={completedAt}
                   onChange={(e) => setCompletedAt(e.target.value)}
@@ -314,7 +337,9 @@ function EditInvestmentScreen() {
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Notes (optional)</p>
+            <p className="label-sm text-on-surface-variant">
+              {tCommon('labels.notesOptional')}
+            </p>
             <TextArea
               id="notes"
               value={notes}
@@ -326,7 +351,7 @@ function EditInvestmentScreen() {
           {investment.withdrawals.length > 0 && (
             <section className="rounded-3xl bg-surface-container-low p-4">
               <h2 className="label-md mb-3 px-2 text-on-surface-variant">
-                Withdrawal history
+                {t('form.withdrawals')}
               </h2>
               <ul className="space-y-1">
                 {investment.withdrawals.map((w) => {
@@ -336,7 +361,7 @@ function EditInvestmentScreen() {
                       <div className="flex w-full items-center gap-3 rounded-2xl px-3 py-3">
                         <div className="min-w-0 flex-1">
                           <p className="body-sm text-on-surface">
-                            {date.toLocaleDateString(undefined, {
+                            {fmt.date(date, {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
@@ -349,7 +374,7 @@ function EditInvestmentScreen() {
                           )}
                         </div>
                         <p className="font-display text-sm font-bold text-tertiary">
-                          −{formatCurrency(w.amount, currency)}
+                          −{fmt.currency(w.amount, currency)}
                         </p>
                       </div>
                     </li>
@@ -365,7 +390,7 @@ function EditInvestmentScreen() {
             className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
           >
             <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-            Remove investment
+            {t('form.delete')}
           </button>
         </div>
 
@@ -375,17 +400,19 @@ function EditInvestmentScreen() {
             disabled={updateInvestment.isPending}
             className="btn-primary"
           >
-            {updateInvestment.isPending ? 'Saving…' : 'Save changes'}
+            {updateInvestment.isPending
+              ? tCommon('actions.saving')
+              : tCommon('actions.saveChanges')}
           </button>
         </div>
       </form>
 
       <ConfirmModal
         open={confirmDelete}
-        title="Remove investment"
-        message={`Delete "${investment.name}"? This can't be undone.`}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
+        title={t('form.deleteConfirmTitle')}
+        message={t('form.deleteConfirmBody', { name: investment.name })}
+        confirmLabel={t('form.deleteConfirm')}
+        pendingLabel={t('form.deletePending')}
         isPending={deleteInvestment.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}

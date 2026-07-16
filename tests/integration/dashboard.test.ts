@@ -414,10 +414,30 @@ describe('getDashboardStatsImpl', () => {
     const stats = await getDashboardStatsImpl(user.profileId)
 
     expect(stats.upcomingPayments).toHaveLength(1)
-    expect(stats.upcomingPayments[0].paymentNumber).toBe(1)
-    expect(stats.upcomingPayments[0].emiLabel).toBe('Loan X')
-    expect(stats.upcomingPayments[0].emiType).toBe('loan')
+    expect(stats.upcomingPayments[0].kind).toBe('emi')
+    expect(stats.upcomingPayments[0].sequenceNumber).toBe(1)
+    expect(stats.upcomingPayments[0].label).toBe('Loan X')
+    expect(stats.upcomingPayments[0].type).toBe('loan')
     expect(stats.upcomingPayments[0].emiId).toBe(emi.id)
+    expect(stats.upcomingPayments[0].investmentId).toBeNull()
+  })
+
+  it('does not mark a payment due today as overdue', async () => {
+    const user = await createTestUser()
+    const emi = await insertEmi(user.profileId, { emiAmount: '100.00' })
+    await insertPayment(user.profileId, emi.id, {
+      paymentNumber: 1,
+      dueDate: daysFromNow(0),
+      emiAmount: '100.00',
+      remainingBalance: '900.00',
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.upcomingPayments).toHaveLength(1)
+    const [p] = stats.upcomingPayments
+    expect(p.isOverdue).toBe(false)
+    expect(p.daysUntilDue).toBe(0)
   })
 
   it('marks past-due unpaid payments as isOverdue with non-positive daysUntilDue', async () => {
@@ -488,12 +508,125 @@ describe('getDashboardStatsImpl', () => {
     expect(aliceStats.allocation).toHaveLength(1)
     expect(aliceStats.allocation[0].type).toBe('stock')
     expect(aliceStats.upcomingPayments).toHaveLength(1)
-    expect(aliceStats.upcomingPayments[0].emiLabel).toBe('Alice loan')
+    expect(aliceStats.upcomingPayments[0].label).toBe('Alice loan')
     expect(aliceStats.upcomingPayments[0].emiId).toBe(aliceEmi.id)
 
     const bobStats = await getDashboardStatsImpl(bob.profileId)
     expect(bobStats.monthlyEmiOutflow).toBe('999.00')
     expect(bobStats.upcomingPayments).toHaveLength(1)
-    expect(bobStats.upcomingPayments[0].emiLabel).toBe('Bob loan')
+    expect(bobStats.upcomingPayments[0].label).toBe('Bob loan')
+  })
+
+  it('includes upcoming scheduled investment deposits and merges them with EMI payments', async () => {
+    const user = await createTestUser()
+
+    const dps = await prisma.investment.create({
+      data: {
+        profileId: user.profileId,
+        name: 'My DPS',
+        type: 'dps',
+        mode: 'scheduled',
+        investedAmount: '0.00',
+        currentValue: '0.00',
+        monthlyDeposit: '500.00',
+        tenureMonths: 12,
+        interestRate: '8.00',
+        interestType: 'compound',
+        startDate: daysFromNow(-5),
+        status: 'active',
+      },
+    })
+    await prisma.investmentDeposit.create({
+      data: {
+        investmentId: dps.id,
+        profileId: user.profileId,
+        amount: '500.00',
+        dueDate: daysFromNow(7),
+        installmentNumber: 1,
+        status: 'upcoming',
+      },
+    })
+    // Paid deposit must be excluded.
+    await prisma.investmentDeposit.create({
+      data: {
+        investmentId: dps.id,
+        profileId: user.profileId,
+        amount: '500.00',
+        dueDate: daysFromNow(-25),
+        installmentNumber: 0,
+        status: 'paid',
+        paidAt: daysFromNow(-25),
+      },
+    })
+    // Beyond 30-day window must be excluded.
+    await prisma.investmentDeposit.create({
+      data: {
+        investmentId: dps.id,
+        profileId: user.profileId,
+        amount: '500.00',
+        dueDate: daysFromNow(45),
+        installmentNumber: 2,
+        status: 'upcoming',
+      },
+    })
+
+    const emi = await insertEmi(user.profileId, {
+      label: 'Car loan',
+      emiAmount: '300.00',
+    })
+    await insertPayment(user.profileId, emi.id, {
+      paymentNumber: 1,
+      dueDate: daysFromNow(3),
+      emiAmount: '300.00',
+      remainingBalance: '900.00',
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.upcomingPayments).toHaveLength(2)
+    // EMI is sooner (3d) than the deposit (7d).
+    expect(stats.upcomingPayments[0].kind).toBe('emi')
+    expect(stats.upcomingPayments[0].label).toBe('Car loan')
+    expect(stats.upcomingPayments[1].kind).toBe('deposit')
+    expect(stats.upcomingPayments[1].label).toBe('My DPS')
+    expect(stats.upcomingPayments[1].investmentId).toBe(dps.id)
+    expect(stats.upcomingPayments[1].emiId).toBeNull()
+    expect(stats.upcomingPayments[1].sequenceNumber).toBe(1)
+    expect(Number(stats.upcomingPayments[1].amount)).toBe(500)
+    expect(stats.upcomingPayments[1].type).toBe('dps')
+  })
+
+  it('excludes deposits from closed/matured investments', async () => {
+    const user = await createTestUser()
+    const dps = await prisma.investment.create({
+      data: {
+        profileId: user.profileId,
+        name: 'Closed DPS',
+        type: 'dps',
+        mode: 'scheduled',
+        investedAmount: '0.00',
+        currentValue: '0.00',
+        monthlyDeposit: '500.00',
+        tenureMonths: 12,
+        interestRate: '8.00',
+        interestType: 'compound',
+        startDate: daysFromNow(-5),
+        status: 'closed',
+      },
+    })
+    await prisma.investmentDeposit.create({
+      data: {
+        investmentId: dps.id,
+        profileId: user.profileId,
+        amount: '500.00',
+        dueDate: daysFromNow(5),
+        installmentNumber: 1,
+        status: 'upcoming',
+      },
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.upcomingPayments).toHaveLength(0)
   })
 })

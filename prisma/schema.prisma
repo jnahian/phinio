@@ -20,6 +20,7 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   preferredCurrency String    @default("BDT")
+  preferredLanguage String    @default("en")
   sessions          Session[]
   accounts          Account[]
   profile           Profile?
@@ -86,13 +87,18 @@ model Profile {
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName           String
   preferredCurrency  String              @default("BDT")
+  preferredLanguage  String              @default("en")
   createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   investments           Investment[]
   investmentDeposits    InvestmentDeposit[]
   investmentWithdrawals InvestmentWithdrawal[]
   emis                  Emi[]
   emiPayments           EmiPayment[]
   notifications         Notification[]
+  activityLogs          ActivityLog[]
+  pushSubscriptions     PushSubscription[]
+  processedMutations    ProcessedMutation[]
 
   @@map("profiles")
 }
@@ -112,7 +118,7 @@ model Investment {
   profileId        String
   profile          Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
   name             String
-  type             String              // stock | mutual_fund | fd | gold | crypto | dps | savings | other
+  type             String              // stock | mutual_fund | fd | gold | crypto | sanchayapatra | real_estate | agro_farm | business | dps | savings | other
   mode             String              @default("lump_sum") // lump_sum | scheduled | flexible
 
   // lump_sum mode
@@ -120,6 +126,7 @@ model Investment {
   currentValue     Decimal             @db.Decimal(15, 2) @default(0)
   exitValue        Decimal?            @db.Decimal(15, 2)
   dateOfInvestment DateTime?           @db.Date
+  estimatedClosureDate DateTime?       @db.Date
   completedAt      DateTime?           @db.Date
 
   // scheduled (DPS) — fixed monthly, pre-generated schedule
@@ -159,6 +166,7 @@ model InvestmentDeposit {
   status            String     @default("upcoming") // upcoming | paid
   notes             String?
   createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   @@index([investmentId, installmentNumber])
   @@index([profileId, status, dueDate])
@@ -176,6 +184,7 @@ model InvestmentWithdrawal {
   withdrawalDate DateTime   @db.Date
   notes          String?
   createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@index([investmentId, withdrawalDate])
   @@index([profileId])
@@ -194,7 +203,9 @@ model Emi {
   emiAmount    Decimal      @db.Decimal(15, 2)
   startDate    DateTime     @db.Date
   status       String       @default("active")
+  notes        String?
   createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   payments     EmiPayment[]
 
   @@index([profileId, status])
@@ -215,6 +226,7 @@ model EmiPayment {
   remainingBalance   Decimal   @db.Decimal(15, 2)
   status             String    @default("upcoming")
   paidAt             DateTime?
+  updatedAt          DateTime  @updatedAt
 
   @@index([emiId, paymentNumber])
   @@index([profileId, status, dueDate])
@@ -236,4 +248,56 @@ model Notification {
   @@unique([profileId, dedupeKey])
   @@index([profileId, readAt, createdAt])
   @@map("notifications")
+}
+
+// User-facing activity log — one row per user-initiated mutation.
+// entityId is a dangling reference: the entity it points to may be deleted.
+// entityLabel denormalizes the name at the time of the action so the log
+// still reads correctly after deletion.
+model ActivityLog {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  action      String   // create | update | delete
+  entityType  String   // investment | investment_deposit | investment_withdrawal | emi | emi_payment | profile
+  entityId    String?
+  entityLabel String
+  summary     String
+  changes     Json?    // [{ field, from, to }] for updates
+  createdAt   DateTime @default(now())
+
+  @@index([profileId, createdAt])
+  @@map("activity_log")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([profileId])
+  @@map("push_subscriptions")
+}
+
+// Idempotency log for offline-replay safety. Every mutating server function
+// accepts an optional clientMutationId; if the same (profileId, clientMutationId)
+// is seen twice, the original result is replayed instead of re-executing the
+// mutation. The cleanup of stale rows (>30d) is left to a separate cron.
+model ProcessedMutation {
+  id               String   @id @default(uuid())
+  profileId        String
+  profile          Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  clientMutationId String
+  resultJson       Json?
+  createdAt        DateTime @default(now())
+
+  @@unique([profileId, clientMutationId])
+  @@index([createdAt])
+  @@map("processed_mutations")
 }

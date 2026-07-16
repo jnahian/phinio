@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowDownLeft, Check, Pencil, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import {
+  AlertTriangle,
+  ArrowDownLeft,
+  Check,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
+import { ActionMenu } from '#/components/ui/ActionMenu'
+import type { ActionMenuItem } from '#/components/ui/ActionMenu'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
-import { TextField } from '#/components/ui/TextField'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useInvestmentQuery,
   useMarkDepositPaid,
@@ -21,11 +30,13 @@ export const Route = createFileRoute('/app/investments/dps/$id')({
 })
 
 function DpsDetailScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
+  const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
   useSetTopBarTitle(inv?.name ?? null)
@@ -36,12 +47,13 @@ function DpsDetailScreen() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
+  const [editNotes, setEditNotes] = useState('')
   const [showClose, setShowClose] = useState(false)
 
   if (isLoading || !inv) {
     return (
       <main className="noir-bg flex min-h-dvh items-center justify-center text-on-surface-variant">
-        Loading…
+        {tCommon('actions.loading')}
       </main>
     )
   }
@@ -53,14 +65,25 @@ function DpsDetailScreen() {
   const isMatured = inv.status === 'matured'
   const isActive = inv.status === 'active'
   const now = new Date()
+  const overdueDeposits = deposits.filter(
+    (d) =>
+      d.status !== 'paid' && d.dueDate !== null && new Date(d.dueDate) < now,
+  )
 
+  let contiguousPaid = 0
+  for (const d of deposits) {
+    if (d.status !== 'paid') break
+    contiguousPaid++
+  }
   const interestEarned =
-    Number(maturityValue) -
-    Number(inv.monthlyDeposit ?? 0) * (inv.tenureMonths ?? 0)
+    contiguousPaid === 0
+      ? 0
+      : Number(deposits[contiguousPaid - 1].accruedValue) -
+        contiguousPaid * Number(inv.monthlyDeposit ?? 0)
 
   async function handleDelete() {
     try {
-      await deleteDps.mutateAsync(id)
+      await deleteDps.mutateAsync({ id })
       navigate({ to: '/app/investments' })
     } catch {
       // toast handled in hook
@@ -72,6 +95,7 @@ function DpsDetailScreen() {
       await updateDps.mutateAsync({
         id,
         name: editName.trim() || inv?.name || '',
+        notes: editNotes.trim() || undefined,
       })
       setEditing(false)
     } catch {
@@ -79,38 +103,138 @@ function DpsDetailScreen() {
     }
   }
 
+  function renderDepositRow(dep: (typeof deposits)[number]) {
+    const isPaid = dep.status === 'paid'
+    const due = dep.dueDate ? new Date(dep.dueDate) : null
+    const isOverdue = !isPaid && due !== null && due < now
+    return (
+      <li key={dep.id}>
+        <button
+          type="button"
+          onClick={() =>
+            markDeposit.mutate({
+              depositId: dep.id,
+              paid: !isPaid,
+            })
+          }
+          className={cn(
+            'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition',
+            isPaid
+              ? 'bg-transparent text-on-surface-variant/60'
+              : isOverdue
+                ? 'bg-tertiary-container/15 text-on-surface'
+                : 'hover:bg-surface-container-lowest text-on-surface',
+          )}
+        >
+          <span
+            className={cn(
+              'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
+              isPaid
+                ? 'border-secondary bg-secondary text-on-secondary'
+                : 'border-outline-variant/50 bg-transparent',
+            )}
+          >
+            {isPaid && <Check className="h-4 w-4" strokeWidth={3} />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'body-sm font-semibold',
+                  isPaid && 'line-through',
+                )}
+              >
+                #{dep.installmentNumber}
+              </span>
+              {due && (
+                <span className="body-sm">
+                  {fmt.date(due, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+              )}
+              {isOverdue && (
+                <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
+                  {tCommon('labels.overdue')}
+                </span>
+              )}
+            </div>
+            {dep.accruedValue && (
+              <p className="mt-0.5 text-xs text-on-surface-variant/75">
+                {t('dps.balanceAfter')}{' '}
+                {fmt.currency(dep.accruedValue, currency)}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <p
+              className={cn(
+                'font-display text-sm font-bold',
+                isPaid && 'line-through',
+              )}
+            >
+              {fmt.currency(dep.amount, currency)}
+            </p>
+          </div>
+        </button>
+      </li>
+    )
+  }
+
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <div className="space-y-6 px-5 pt-4">
         <div className="flex items-center justify-between">
           <p className="body-sm text-on-surface-variant">
-            DPS · {inv.interestType === 'compound' ? 'Compound' : 'Simple'}{' '}
-            interest · {inv.interestRate}% p.a.
+            {t('types.dps')} ·{' '}
+            {inv.interestType === 'compound'
+              ? t('dps.interestCompound')
+              : t('dps.interestSimple')}{' '}
+            {t('dps.interestSuffix')} · {inv.interestRate}% p.a.
           </p>
-          <button
-            type="button"
-            aria-label="Edit name"
-            onClick={() => {
-              setEditName(inv.name)
-              setEditing(true)
-            }}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/5"
-          >
-            <Pencil className="h-4 w-4" strokeWidth={1.75} />
-          </button>
+          <ActionMenu
+            ariaLabel={tCommon('ariaLabels.moreActions')}
+            items={(() => {
+              const items: Array<ActionMenuItem> = [
+                {
+                  key: 'edit',
+                  label: t('dps.edit'),
+                  icon: <Pencil className="h-4 w-4" strokeWidth={1.75} />,
+                  onSelect: () => {
+                    setEditName(inv.name)
+                    setEditNotes(inv.notes ?? '')
+                    setEditing(true)
+                  },
+                },
+              ]
+              items.push({
+                key: 'delete',
+                label: t('dps.delete'),
+                icon: <Trash2 className="h-4 w-4" strokeWidth={1.75} />,
+                variant: 'danger',
+                onSelect: () => setConfirmDelete(true),
+              })
+              return items
+            })()}
+          />
         </div>
         {/* Hero card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a4731] to-[#0f2d1f] p-6">
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#14532d] to-[#052e16] p-6">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
           />
-          <p className="label-sm text-white/70">Total deposited</p>
+          <p className="label-sm text-white/70">{t('dps.totalDeposited')}</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {formatCurrency(inv.investedAmount, currency)}
+            {fmt.currency(inv.investedAmount, currency)}
           </p>
           <p className="body-sm mt-2 text-white/70">
-            {paidCount} of {inv.tenureMonths} months paid
+            {t('dps.monthsPaid', {
+              paid: fmt.number(paidCount),
+              total: fmt.number(inv.tenureMonths ?? 0),
+            })}
           </p>
           <div className="mt-4 h-1.5 rounded-full bg-white/10">
             <div
@@ -127,7 +251,7 @@ function DpsDetailScreen() {
               className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
             >
               <ArrowDownLeft className="h-4 w-4" strokeWidth={2} />
-              Close prematurely
+              {t('dps.closePremature')}
             </button>
           )}
         </section>
@@ -135,17 +259,17 @@ function DpsDetailScreen() {
         {/* Stats */}
         <section className="grid grid-cols-3 gap-3">
           <StatTile
-            label="Monthly"
-            value={formatCurrency(inv.monthlyDeposit ?? '0', currency)}
+            label={t('dps.monthlyDeposit')}
+            value={fmt.currency(inv.monthlyDeposit ?? '0', currency)}
           />
           <StatTile
-            label="Maturity value"
-            value={formatCurrency(maturityValue, currency)}
+            label={t('dps.maturityValue')}
+            value={fmt.currency(maturityValue, currency)}
             accent="secondary"
           />
           <StatTile
-            label="Interest earned"
-            value={formatCurrency(
+            label={t('dps.interestEarned')}
+            value={fmt.currency(
               Math.max(0, interestEarned).toFixed(2),
               currency,
             )}
@@ -164,11 +288,12 @@ function DpsDetailScreen() {
             )}
           >
             <p className="label-sm text-on-surface-variant">
-              {isClosed ? 'Closed prematurely' : 'Matured'}
+              {isClosed ? t('dps.closedPrematurely') : t('dps.matured')}
             </p>
             <p className="font-display mt-1 text-lg font-bold">
-              Received {formatCurrency(inv.exitValue, currency)} on{' '}
-              {new Date(inv.completedAt).toLocaleDateString(undefined, {
+              {t('dps.received')} {fmt.currency(inv.exitValue, currency)}{' '}
+              {t('dps.on')}{' '}
+              {fmt.date(inv.completedAt, {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric',
@@ -177,122 +302,77 @@ function DpsDetailScreen() {
           </section>
         )}
 
+        {/* Overdue */}
+        {overdueDeposits.length > 0 && (
+          <section className="rounded-3xl border border-tertiary/30 bg-tertiary-container/10 p-4">
+            <h2 className="label-md mb-3 flex items-center gap-2 px-2 text-tertiary">
+              <AlertTriangle className="h-4 w-4" strokeWidth={2} />
+              {tCommon('labels.overdue')} ({fmt.number(overdueDeposits.length)})
+            </h2>
+            <ul className="space-y-1">
+              {overdueDeposits.map((dep) => renderDepositRow(dep))}
+            </ul>
+          </section>
+        )}
+
         {/* Installment schedule */}
         <section className="rounded-3xl bg-surface-container-low p-4">
           <h2 className="label-md mb-3 px-2 text-on-surface-variant">
-            Deposit schedule
+            {t('dps.depositSchedule')}
           </h2>
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             <ul className="space-y-1">
-              {deposits.map((dep) => {
-                const isPaid = dep.status === 'paid'
-                const due = dep.dueDate ? new Date(dep.dueDate) : null
-                const isOverdue = !isPaid && due !== null && due < now
-                return (
-                  <li key={dep.id}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        markDeposit.mutate({
-                          depositId: dep.id,
-                          paid: !isPaid,
-                        })
-                      }
-                      className={cn(
-                        'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition',
-                        isPaid
-                          ? 'bg-transparent text-on-surface-variant/60'
-                          : isOverdue
-                            ? 'bg-tertiary-container/15 text-on-surface'
-                            : 'hover:bg-surface-container-lowest text-on-surface',
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
-                          isPaid
-                            ? 'border-secondary bg-secondary text-on-secondary'
-                            : 'border-outline-variant/50 bg-transparent',
-                        )}
-                      >
-                        {isPaid && (
-                          <Check className="h-4 w-4" strokeWidth={3} />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              'body-sm font-semibold',
-                              isPaid && 'line-through',
-                            )}
-                          >
-                            #{dep.installmentNumber}
-                          </span>
-                          {due && (
-                            <span className="body-sm">
-                              {due.toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
-                            </span>
-                          )}
-                          {isOverdue && (
-                            <span className="label-sm rounded-full bg-tertiary-container/30 px-2 py-0.5 text-tertiary-fixed-dim normal-case tracking-wide">
-                              Overdue
-                            </span>
-                          )}
-                        </div>
-                        {dep.accruedValue && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant/75">
-                            Balance after: {symbol}
-                            {Number(dep.accruedValue).toLocaleString(
-                              undefined,
-                              {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              },
-                            )}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn(
-                            'font-display text-sm font-bold',
-                            isPaid && 'line-through',
-                          )}
-                        >
-                          {formatCurrency(dep.amount, currency)}
-                        </p>
-                      </div>
-                    </button>
-                  </li>
-                )
-              })}
+              {deposits.map((dep) => renderDepositRow(dep))}
             </ul>
           </div>
         </section>
 
-        {/* Edit name */}
+        {/* Notes display when not editing */}
+        {inv.notes && !editing && (
+          <section className="rounded-3xl bg-surface-container-low p-5">
+            <p className="label-sm mb-2 text-on-surface-variant">
+              {tCommon('labels.notes')}
+            </p>
+            <p className="body-sm whitespace-pre-wrap text-on-surface">
+              {inv.notes}
+            </p>
+          </section>
+        )}
+
+        {/* Edit panel */}
         {editing && (
           <Card variant="low">
-            <p className="label-sm mb-3 text-on-surface-variant">Edit name</p>
-            <TextField
-              id="edit-name"
-              label="Scheme name"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              autoFocus
-            />
+            <p className="label-sm mb-3 text-on-surface-variant">
+              {t('dps.edit')}
+            </p>
+            <div className="space-y-4">
+              <TextField
+                id="edit-name"
+                label={t('form.nameLabel')}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                autoFocus
+              />
+              <div>
+                <p className="label-sm mb-2 text-on-surface-variant">
+                  {tCommon('labels.notesOptional')}
+                </p>
+                <TextArea
+                  id="edit-notes"
+                  placeholder={t('dps.notesPlaceholder')}
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  maxLength={1000}
+                />
+              </div>
+            </div>
             <div className="mt-4 flex gap-3">
               <button
                 type="button"
                 onClick={() => setEditing(false)}
                 className="flex-1 rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface transition hover:bg-white/5"
               >
-                Cancel
+                {tCommon('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -300,29 +380,21 @@ function DpsDetailScreen() {
                 disabled={updateDps.isPending}
                 className="flex-1 rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {updateDps.isPending ? 'Saving…' : 'Save'}
+                {updateDps.isPending
+                  ? tCommon('actions.saving')
+                  : tCommon('actions.save')}
               </button>
             </div>
           </Card>
         )}
-
-        {/* Delete */}
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-tertiary opacity-70 transition hover:opacity-100"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          Delete scheme
-        </button>
       </div>
 
       <ConfirmModal
         open={confirmDelete}
-        title="Delete scheme"
-        message={`Delete "${inv.name}" and all its installment rows?`}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
+        title={t('dps.deleteConfirmTitle')}
+        message={t('dps.deleteConfirmBody', { name: inv.name })}
+        confirmLabel={t('dps.deleteConfirm')}
+        pendingLabel={t('dps.deletePending')}
         isPending={deleteDps.isPending}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}

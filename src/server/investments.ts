@@ -66,7 +66,7 @@ export const deleteInvestmentFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
-    return deleteInvestmentImpl(await requireProfileId(), data.id)
+    return deleteInvestmentImpl(await requireProfileId(), data)
   })
 
 // ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ export const deleteSavingsFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
-    return deleteInvestmentImpl(await requireProfileId(), data.id)
+    return deleteInvestmentImpl(await requireProfileId(), data)
   })
 
 // ---------------------------------------------------------------------------
@@ -162,3 +162,13 @@ export const closeDpsFn = createServerFn({ method: 'POST' })
   })
 
 export type InvestmentListFilters = z.infer<typeof investmentListQuerySchema>
+
+// Re-export pure interfaces so client hooks can `import type` without
+// pulling the Prisma-bound impl module into the client bundle. The `type`
+// keyword erases at compile time; the runtime side never loads `.impl`.
+export type {
+  DepositItem,
+  InvestmentDetail,
+  InvestmentListItem,
+  WithdrawalItem,
+} from './investments.impl'

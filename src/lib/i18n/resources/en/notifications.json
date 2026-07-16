@@ -1,0 +1,46 @@
+{
+  "title": "Notifications",
+  "ariaLabel": "Notifications",
+  "ariaLabelUnread_one": "Notifications, {{count}} unread",
+  "ariaLabelUnread_other": "Notifications, {{count}} unread",
+  "markAllRead": "Mark all read",
+  "clearRead": "Clear read",
+  "enableReminders": "Enable reminders so you don't miss a payment.",
+  "blocked": "Reminders are blocked. Re-enable notifications in your browser settings to turn them on.",
+  "empty": "You're all caught up.",
+  "loading": "Loading…",
+  "shortRelative": {
+    "now": "now",
+    "minutes": "{{value}}m",
+    "hours": "{{value}}h",
+    "days": "{{value}}d"
+  },
+  "emi": {
+    "dueToday": {
+      "title": "EMI due today",
+      "body": "{{label}} — {{amount}} due today"
+    },
+    "dueSoon": {
+      "title": "EMI due in {{days}} days",
+      "body": "{{label}} — {{amount}} due on {{date}}"
+    },
+    "overdue": {
+      "title": "EMI overdue",
+      "body": "{{label}} — {{amount}} was due on {{date}}"
+    }
+  },
+  "dps": {
+    "dueToday": {
+      "title": "DPS installment due today",
+      "body": "{{label}} — {{amount}} due today"
+    },
+    "dueSoon": {
+      "title": "DPS due in {{days}} days",
+      "body": "{{label}} — {{amount}} due on {{date}}"
+    },
+    "overdue": {
+      "title": "DPS overdue",
+      "body": "{{label}} — {{amount}} was due on {{date}}"
+    }
+  }
+}

@@ -1,35 +1,49 @@
+import type { Locale } from './i18n/config'
+
 export type Currency = 'BDT' | 'USD'
 
 // Accept anything that has a sensible `.toString()` — Prisma Decimal, string, number.
 type DecimalLike = { toString: () => string } | string | number
 
-const CURRENCY_META: Record<Currency, { symbol: string; locale: string }> = {
-  BDT: { symbol: '৳', locale: 'en-BD' },
-  USD: { symbol: '$', locale: 'en-US' },
+const CURRENCY_SYMBOL: Record<Currency, string> = {
+  BDT: '৳',
+  USD: '$',
+}
+
+// Pick the BCP-47 tag for Intl.NumberFormat. Bangla mode pins the numbering
+// system to `beng` so digits render as native Bengali numerals (০-৯) on every
+// browser; some ICU builds default `bn-BD` to Latin digits otherwise. English
+// mode keeps the per-currency English locale so USD shows "1,234.56" with US
+// grouping and BDT keeps the Indic grouping Bangladeshi users expect.
+function numberLocale(currency: Currency, locale: Locale): string {
+  if (locale === 'bn') return 'bn-BD-u-nu-beng'
+  return currency === 'USD' ? 'en-US' : 'en-BD'
 }
 
 /**
  * Format a monetary amount in the user's preferred currency.
  * Decimal-safe: pass Prisma Decimal, string, or number directly. Never perform
- * arithmetic on the returned string.
+ * arithmetic on the returned string. Pass `locale` to switch numeral systems
+ * (defaults to English digits).
  */
 export function formatCurrency(
   amount: DecimalLike | null | undefined,
   currency: Currency,
-  options: { compact?: boolean; showSign?: boolean } = {},
+  options: { compact?: boolean; showSign?: boolean; locale?: Locale } = {},
 ): string {
-  const meta = CURRENCY_META[currency]
+  const symbol = CURRENCY_SYMBOL[currency]
   if (amount === null || amount === undefined) {
-    return `${meta.symbol}—`
+    return `${symbol}—`
   }
 
   const raw = typeof amount === 'string' ? amount : amount.toString()
   const value = Number(raw)
   if (!Number.isFinite(value)) {
-    return `${meta.symbol}—`
+    return `${symbol}—`
   }
 
-  const formatter = new Intl.NumberFormat(meta.locale, {
+  const tag = numberLocale(currency, options.locale ?? 'en')
+  const formatter = new Intl.NumberFormat(tag, {
     style: 'decimal',
     minimumFractionDigits: options.compact ? 0 : 2,
     maximumFractionDigits: options.compact ? 0 : 2,
@@ -38,9 +52,9 @@ export function formatCurrency(
 
   const formatted = formatter.format(Math.abs(value))
   const sign = value < 0 ? '-' : options.showSign && value > 0 ? '+' : ''
-  return `${sign}${meta.symbol}${formatted}`
+  return `${sign}${symbol}${formatted}`
 }
 
 export function getCurrencySymbol(currency: Currency): string {
-  return CURRENCY_META[currency].symbol
+  return CURRENCY_SYMBOL[currency]
 }

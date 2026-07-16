@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  calculateProfitLoss,
-  calculateReturnPercent,
-  formatReturnPercent,
-} from '#/lib/calculations'
+import { calculateProfitLoss, calculateReturnPercent } from '#/lib/calculations'
+import { createFormatter } from '#/lib/i18n/format'
 
 describe('calculateReturnPercent', () => {
   it('returns a positive percent for a gain', () => {
@@ -99,25 +96,34 @@ describe('calculateProfitLoss', () => {
   })
 })
 
-describe('formatReturnPercent', () => {
-  it('prefixes positive values with + and suffixes with %', () => {
-    expect(formatReturnPercent(20)).toBe('+20.00%')
+describe('formatter.percent', () => {
+  const enFmt = createFormatter('en')
+
+  it('prefixes positive values with + when showSign is set', () => {
+    expect(enFmt.percent(20, { showSign: true })).toBe('+20.00%')
   })
 
   it('formats zero without a sign prefix', () => {
-    expect(formatReturnPercent(0)).toBe('0.00%')
+    expect(enFmt.percent(0, { showSign: true })).toBe('0.00%')
   })
 
-  it('formats negative values with the minus from toFixed', () => {
-    expect(formatReturnPercent(-5.5)).toBe('-5.50%')
+  it('formats negative values with a minus regardless of showSign', () => {
+    expect(enFmt.percent(-5.5, { showSign: true })).toBe('-5.50%')
+    expect(enFmt.percent(-5.5)).toBe('-5.50%')
   })
 
   it('always emits exactly 2 decimal places', () => {
-    expect(formatReturnPercent(12.3)).toBe('+12.30%')
-    expect(formatReturnPercent(12.345)).toBe('+12.35%')
+    expect(enFmt.percent(12.3, { showSign: true })).toBe('+12.30%')
+    expect(enFmt.percent(12.345, { showSign: true })).toBe('+12.35%')
   })
 
   it('does not prefix + on small negative values', () => {
-    expect(formatReturnPercent(-0.01)).toBe('-0.01%')
+    expect(enFmt.percent(-0.01, { showSign: true })).toBe('-0.01%')
+  })
+
+  it('renders Bangla digits in bn locale', () => {
+    const bnFmt = createFormatter('bn')
+    expect(bnFmt.percent(12.3, { showSign: true })).toBe('+১২.৩০%')
+    expect(bnFmt.percent(-0.01)).toBe('-০.০১%')
   })
 })

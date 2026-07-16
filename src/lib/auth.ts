@@ -83,19 +83,28 @@ export const auth = betterAuth({
         defaultValue: 'BDT',
         input: true,
       },
+      preferredLanguage: {
+        type: 'string',
+        required: false,
+        defaultValue: 'en',
+        input: true,
+      },
     },
   },
   databaseHooks: {
     user: {
       create: {
         after: async (user) => {
+          const u = user as {
+            preferredCurrency?: string
+            preferredLanguage?: string
+          }
           await prisma.profile.create({
             data: {
               userId: user.id,
               fullName: user.name,
-              preferredCurrency:
-                (user as { preferredCurrency?: string }).preferredCurrency ??
-                'BDT',
+              preferredCurrency: u.preferredCurrency ?? 'BDT',
+              preferredLanguage: u.preferredLanguage ?? 'en',
             },
           })
         },

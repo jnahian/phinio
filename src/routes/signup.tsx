@@ -5,6 +5,7 @@ import {
   redirect,
   useNavigate,
 } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 import { authClient } from '#/lib/auth-client'
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/signup')({
 })
 
 function SignupScreen() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -64,7 +66,7 @@ function SignupScreen() {
     setIsSubmitting(false)
 
     if (error) {
-      setFormError(error.message ?? 'Unable to create account.')
+      setFormError(error.message ?? t('signup.genericError'))
       return
     }
 
@@ -79,16 +81,16 @@ function SignupScreen() {
       <div className="glass w-full max-w-md rounded-3xl border border-white/5 p-8 shadow-2xl sm:p-10">
         <Logo size="lg" className="justify-center mx-auto mb-8" />
         <header className="mb-8">
-          <h1 className="headline-lg text-on-surface">Create your vault</h1>
+          <h1 className="headline-lg text-on-surface">{t('signup.title')}</h1>
           <p className="body-md mt-2 text-on-surface-variant">
-            A private bank for your finances, in one tap.
+            {t('signup.subtitle')}
           </p>
         </header>
 
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <Field
             id="fullName"
-            label="Full name"
+            label={t('signup.fullNameLabel')}
             icon={<User className="h-5 w-5" />}
             error={fieldErrors.fullName}
           >
@@ -96,7 +98,7 @@ function SignupScreen() {
               id="fullName"
               type="text"
               autoComplete="name"
-              placeholder="Jane Doe"
+              placeholder={t('signup.fullNamePlaceholder')}
               className="input-carved"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -106,7 +108,7 @@ function SignupScreen() {
 
           <Field
             id="email"
-            label="Email address"
+            label={t('signup.emailLabel')}
             icon={<Mail className="h-5 w-5" />}
             error={fieldErrors.email}
           >
@@ -114,7 +116,7 @@ function SignupScreen() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="name@company.com"
+              placeholder={t('signup.emailPlaceholder')}
               className="input-carved"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -124,7 +126,7 @@ function SignupScreen() {
 
           <Field
             id="password"
-            label="Password"
+            label={t('signup.passwordLabel')}
             icon={<Lock className="h-5 w-5" />}
             error={fieldErrors.password}
           >
@@ -132,7 +134,7 @@ function SignupScreen() {
               id="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="At least 8 characters"
+              placeholder={t('signup.passwordPlaceholder')}
               className="input-carved pr-12"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -142,7 +144,9 @@ function SignupScreen() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-outline transition-colors hover:text-on-surface"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={
+                showPassword ? t('login.hidePassword') : t('login.showPassword')
+              }
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -154,7 +158,7 @@ function SignupScreen() {
 
           <div className="space-y-2">
             <span className="label-sm px-1 text-on-surface-variant">
-              Preferred currency
+              {t('signup.currencyLabel')}
             </span>
             <div className="grid grid-cols-2 gap-3">
               <CurrencyOption
@@ -184,18 +188,18 @@ function SignupScreen() {
           )}
 
           <button type="submit" className="btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating…' : 'Create account'}
+            {isSubmitting ? t('signup.submitting') : t('signup.submit')}
           </button>
         </form>
 
         <footer className="mt-8 text-center">
           <p className="body-sm text-on-surface-variant">
-            Already have an account?{' '}
+            {t('signup.haveAccount')}{' '}
             <Link
               to="/login"
               className="font-semibold text-primary-fixed-dim hover:underline decoration-primary-container underline-offset-4"
             >
-              Login
+              {t('signup.login')}
             </Link>
           </p>
         </footer>

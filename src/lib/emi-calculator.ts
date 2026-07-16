@@ -18,6 +18,27 @@
 
 export type EmiMethod = 'bank_loan' | 'credit_card'
 
+/**
+ * Sentinel: an optional one-time processing fee, when present, is stored as
+ * an `EmiPayment` with `paymentNumber === 0` (status `'paid'`, settled at
+ * disbursement). Regular monthly schedule rows are 1-indexed. Anywhere we
+ * aggregate or query payments, filter through `isRegularPayment` so the fee
+ * row doesn't inflate progress or appear as "upcoming".
+ */
+export const FEE_PAYMENT_NUMBER = 0
+
+export function isFeePayment<T extends { paymentNumber: number }>(
+  p: T,
+): boolean {
+  return p.paymentNumber === FEE_PAYMENT_NUMBER
+}
+
+export function isRegularPayment<T extends { paymentNumber: number }>(
+  p: T,
+): boolean {
+  return p.paymentNumber > FEE_PAYMENT_NUMBER
+}
+
 export interface CalculateEmiInput {
   principal: string | number
   annualRate: string | number // percent, e.g. 12 for 12%

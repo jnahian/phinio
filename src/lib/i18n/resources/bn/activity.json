@@ -1,0 +1,27 @@
+{
+  "title": "কার্যকলাপ",
+  "empty": {
+    "title": "এখনো কোনো কার্যকলাপ নেই",
+    "description": "প্রতিটি বিনিয়োগ, ইএমআই, এবং প্রোফাইল পরিবর্তন এখানে দেখাবে।"
+  },
+  "errors": {
+    "loadFailed": "কার্যকলাপ লোড করা যায়নি",
+    "checkConnection": "আপনার সংযোগ পরীক্ষা করুন এবং আবার চেষ্টা করুন।"
+  },
+  "loadingMore": "আরও কার্যকলাপ লোড হচ্ছে",
+  "today": "আজ",
+  "yesterday": "গতকাল",
+  "actions": {
+    "create": "তৈরি করেছেন",
+    "update": "আপডেট করেছেন",
+    "delete": "মুছেছেন"
+  },
+  "entities": {
+    "investment": "বিনিয়োগ",
+    "investment_deposit": "জমা",
+    "investment_withdrawal": "প্রত্যাহার",
+    "emi": "ইএমআই",
+    "emi_payment": "ইএমআই পেমেন্ট",
+    "profile": "প্রোফাইল"
+  }
+}

@@ -1,16 +1,22 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Building2, CreditCard } from 'lucide-react'
-import { TextField } from '#/components/ui/TextField'
+import { TextArea, TextField } from '#/components/ui/TextField'
 import { calculateEmi } from '#/lib/emi-calculator'
 import { cn } from '#/lib/cn'
-import { formatCurrency, getCurrencySymbol } from '#/lib/currency'
+import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useCreateEmi } from '#/hooks/useEmis'
 import { emiCreateSchema } from '#/lib/validators'
 import type { EmiCreateInput, EmiType } from '#/lib/validators'
 
 export const Route = createFileRoute('/app/emis/new')({
-  staticData: { hideTabBar: true, title: 'Add EMI', backTo: '/app/emis' },
+  staticData: {
+    hideTabBar: true,
+    title: 'pageTitles.addEmi',
+    backTo: '/app/emis',
+  },
   component: AddEmiScreen,
 })
 
@@ -27,6 +33,9 @@ function AddEmiScreen() {
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
+  const fmt = useFormatter()
+  const { t } = useTranslation('emis')
+  const { t: tCommon } = useTranslation('common')
 
   const createEmi = useCreateEmi()
 
@@ -36,6 +45,8 @@ function AddEmiScreen() {
   const [interestRate, setInterestRate] = useState('')
   const [tenureMonths, setTenureMonths] = useState<string>('')
   const [startDate, setStartDate] = useState(todayIso())
+  const [processingFee, setProcessingFee] = useState('')
+  const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   // Live preview: compute EMI breakdown whenever principal/rate/tenure are
@@ -59,6 +70,18 @@ function AddEmiScreen() {
     }
   }, [principal, interestRate, tenureMonths, type])
 
+  // Total cost = principal + total interest + processing fee. Only meaningful
+  // when the preview is computable; the fee is added on top whether or not
+  // the user provided one.
+  const totalCost = useMemo(() => {
+    if (!preview) return null
+    const fee = Number(processingFee)
+    const feeNum = Number.isFinite(fee) && fee > 0 ? fee : 0
+    return (Number(principal) + Number(preview.totalInterest) + feeNum).toFixed(
+      2,
+    )
+  }, [preview, principal, processingFee])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFieldErrors({})
@@ -70,6 +93,8 @@ function AddEmiScreen() {
       interestRate,
       tenureMonths: Number(tenureMonths),
       startDate,
+      processingFee: processingFee.trim() || undefined,
+      notes: notes.trim() || undefined,
     } satisfies EmiCreateInput)
 
     if (!parsed.success) {
@@ -91,15 +116,17 @@ function AddEmiScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">EMI details</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.details')}
+            </p>
             <TextField
               id="label"
-              label="Label"
-              placeholder="e.g. Home Loan — HSBC"
+              label={t('form.labelLabel')}
+              placeholder={t('form.labelPlaceholder')}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               error={fieldErrors.label}
@@ -110,22 +137,24 @@ function AddEmiScreen() {
                 active={type === 'bank_loan'}
                 onClick={() => setType('bank_loan')}
                 icon={<Building2 className="h-5 w-5" strokeWidth={1.75} />}
-                label="Bank Loan"
+                label={t('types.bank_loan')}
               />
               <TypeButton
                 active={type === 'credit_card'}
                 onClick={() => setType('credit_card')}
                 icon={<CreditCard className="h-5 w-5" strokeWidth={1.75} />}
-                label="Credit Card"
+                label={t('types.credit_card')}
               />
             </div>
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Loan terms</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.terms')}
+            </p>
             <TextField
               id="principal"
-              label="Principal amount"
+              label={t('form.principalLabel')}
               placeholder="0.00"
               inputMode="decimal"
               prefix={symbol}
@@ -136,7 +165,7 @@ function AddEmiScreen() {
             <div className="grid grid-cols-2 gap-4">
               <TextField
                 id="interestRate"
-                label="Annual rate"
+                label={t('form.rateLabel')}
                 placeholder="0"
                 inputMode="decimal"
                 trailing="%"
@@ -146,10 +175,10 @@ function AddEmiScreen() {
               />
               <TextField
                 id="tenureMonths"
-                label="Tenure"
+                label={t('form.tenureLabel')}
                 placeholder="12"
                 inputMode="numeric"
-                trailing="months"
+                trailing={tCommon('units.months')}
                 value={tenureMonths}
                 onChange={(e) => setTenureMonths(e.target.value)}
                 error={fieldErrors.tenureMonths}
@@ -157,11 +186,21 @@ function AddEmiScreen() {
             </div>
             <TextField
               id="startDate"
-              label="Start date"
+              label={t('form.startDateLabel')}
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               error={fieldErrors.startDate}
+            />
+            <TextField
+              id="processingFee"
+              label={t('form.feeLabel')}
+              placeholder="0.00"
+              inputMode="decimal"
+              prefix={symbol}
+              value={processingFee}
+              onChange={(e) => setProcessingFee(e.target.value)}
+              error={fieldErrors.processingFee}
             />
           </section>
 
@@ -175,7 +214,7 @@ function AddEmiScreen() {
           >
             <div
               aria-hidden
-              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10"
             />
             <p
               className={cn(
@@ -185,7 +224,7 @@ function AddEmiScreen() {
                   : 'text-on-surface-variant',
               )}
             >
-              Monthly EMI
+              {t('form.monthlyEmi')}
             </p>
             <p
               className={cn(
@@ -196,27 +235,60 @@ function AddEmiScreen() {
               )}
             >
               {preview
-                ? formatCurrency(preview.emiAmount, currency)
-                : formatCurrency(0, currency)}
+                ? fmt.currency(preview.emiAmount, currency)
+                : fmt.currency(0, currency)}
             </p>
             <div className="mt-5 grid grid-cols-2 gap-4">
               <PreviewCell
                 active={Boolean(preview)}
-                label="Total payment"
+                label={t('form.preview.totalPayment')}
                 value={
-                  preview ? formatCurrency(preview.totalPayment, currency) : '—'
+                  preview ? fmt.currency(preview.totalPayment, currency) : '—'
                 }
               />
               <PreviewCell
                 active={Boolean(preview)}
-                label="Total interest"
+                label={t('form.preview.totalInterest')}
+                value={
+                  preview ? fmt.currency(preview.totalInterest, currency) : '—'
+                }
+              />
+              <PreviewCell
+                active={Boolean(preview)}
+                label={t('form.preview.processingFee')}
                 value={
                   preview
-                    ? formatCurrency(preview.totalInterest, currency)
+                    ? fmt.currency(
+                        // String-safe positivity check: a fee like '0.00',
+                        // '', or undefined renders as '0.00'; any other
+                        // non-empty string passes through to fmt.currency.
+                        processingFee && /[1-9]/.test(processingFee)
+                          ? processingFee
+                          : '0',
+                        currency,
+                      )
                     : '—'
                 }
               />
+              <PreviewCell
+                active={Boolean(preview && totalCost)}
+                label={t('form.preview.totalCost')}
+                value={totalCost ? fmt.currency(totalCost, currency) : '—'}
+              />
             </div>
+          </section>
+
+          <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
+            <p className="label-sm text-on-surface-variant">
+              {t('form.section.notes')}
+            </p>
+            <TextArea
+              id="notes"
+              placeholder={t('form.notesPlaceholder')}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              maxLength={1000}
+            />
           </section>
         </div>
 
@@ -226,7 +298,7 @@ function AddEmiScreen() {
             disabled={createEmi.isPending}
             className="btn-primary"
           >
-            {createEmi.isPending ? 'Creating schedule…' : 'Create EMI'}
+            {createEmi.isPending ? t('form.submitting') : t('form.submit')}
           </button>
         </div>
       </form>

@@ -104,7 +104,7 @@ describe('lump-sum investments', () => {
     ).rejects.toThrow(/not found/i)
 
     await expect(
-      deleteInvestmentImpl(bob.profileId, aliceInv.id),
+      deleteInvestmentImpl(bob.profileId, { id: aliceInv.id }),
     ).rejects.toThrow(/not found/i)
 
     // Alice's row is untouched
@@ -129,7 +129,9 @@ describe('lump-sum investments', () => {
       name: 'Gold',
       type: 'gold',
       investedAmount: '5000.00',
-      currentValue: '6500.00',
+      // A stale current value here should be overridden by the exit value once
+      // the position is completed.
+      currentValue: '6000.00',
       dateOfInvestment: '2025-12-01',
       status: 'completed',
       exitValue: '6500.00',
@@ -139,6 +141,8 @@ describe('lump-sum investments', () => {
     const updated = await getInvestmentImpl(user.profileId, inv.id)
     expect(updated.status).toBe('completed')
     expect(updated.exitValue).toBe('6500')
+    // On completion the current value collapses to the exit value.
+    expect(updated.currentValue).toBe('6500')
 
     const active = await listInvestmentsImpl(user.profileId, {
       status: 'active',
@@ -1036,11 +1040,7 @@ describe('withdrawals', () => {
     })
 
     const inv = await getInvestmentImpl(user.profileId, created.id)
-    expect(inv.withdrawals.map((w) => w.amount)).toEqual([
-      '300',
-      '200',
-      '500',
-    ])
+    expect(inv.withdrawals.map((w) => w.amount)).toEqual(['300', '200', '500'])
   })
 
   it('cascades: deleting the investment removes its withdrawal rows', async () => {
@@ -1057,7 +1057,7 @@ describe('withdrawals', () => {
       amount: '200.00',
       withdrawalDate: '2026-02-01',
     })
-    await deleteInvestmentImpl(user.profileId, created.id)
+    await deleteInvestmentImpl(user.profileId, { id: created.id })
 
     const remaining = await prisma.investmentWithdrawal.count({
       where: { investmentId: created.id },

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { getCurrencySymbol } from '#/lib/currency'
 import { useCreateSavings } from '#/hooks/useInvestments'
@@ -9,7 +10,7 @@ import type { SavingsCreateInput } from '#/lib/validators'
 export const Route = createFileRoute('/app/investments/savings/new')({
   staticData: {
     hideTabBar: true,
-    title: 'Add Savings Pot',
+    title: 'pageTitles.addSavings',
     backTo: '/app/investments',
   },
   component: AddSavingsScreen,
@@ -21,6 +22,8 @@ function todayIso(): string {
 }
 
 function AddSavingsScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
@@ -67,15 +70,17 @@ function AddSavingsScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Pot details</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('savings.section.details')}
+            </p>
             <TextField
               id="name"
-              label="Name"
-              placeholder="e.g. Emergency Fund, Vacation Fund"
+              label={tCommon('labels.name')}
+              placeholder={t('savings.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={fieldErrors.name}
@@ -83,7 +88,7 @@ function AddSavingsScreen() {
             />
             <TextField
               id="startDate"
-              label="Start date"
+              label={tCommon('labels.startDate')}
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -93,11 +98,11 @@ function AddSavingsScreen() {
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
             <p className="label-sm text-on-surface-variant">
-              Current balance (optional)
+              {t('savings.section.balance')}
             </p>
             <TextField
               id="currentValue"
-              label="Current balance"
+              label={t('savings.currentValue')}
               placeholder="0.00"
               inputMode="decimal"
               prefix={symbol}
@@ -106,16 +111,17 @@ function AddSavingsScreen() {
               error={fieldErrors.currentValue}
             />
             <p className="body-sm text-on-surface-variant/70">
-              Set this to your current account balance if you're tracking an
-              existing pot. You can update it anytime.
+              {t('savings.balanceHint')}
             </p>
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Notes (optional)</p>
+            <p className="label-sm text-on-surface-variant">
+              {tCommon('labels.notesOptional')}
+            </p>
             <TextArea
               id="notes"
-              placeholder="Bank name, account number, or any context"
+              placeholder={t('savings.notesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               maxLength={1000}
@@ -129,7 +135,9 @@ function AddSavingsScreen() {
             disabled={createSavings.isPending}
             className="btn-primary"
           >
-            {createSavings.isPending ? 'Creating…' : 'Create savings pot'}
+            {createSavings.isPending
+              ? tCommon('actions.creating')
+              : t('savings.submit')}
           </button>
         </div>
       </form>

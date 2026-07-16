@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { cn } from '#/lib/cn'
 import { getCurrencySymbol } from '#/lib/currency'
+import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useCreateDps } from '#/hooks/useInvestments'
 import { dpsCreateSchema } from '#/lib/validators'
 import type { DpsCreateInput, DpsInterestType } from '#/lib/validators'
@@ -10,7 +12,7 @@ import type { DpsCreateInput, DpsInterestType } from '#/lib/validators'
 export const Route = createFileRoute('/app/investments/dps/new')({
   staticData: {
     hideTabBar: true,
-    title: 'Add DPS Scheme',
+    title: 'pageTitles.addDps',
     backTo: '/app/investments',
   },
   component: AddDpsScreen,
@@ -22,10 +24,13 @@ function todayIso(): string {
 }
 
 function AddDpsScreen() {
+  const { t } = useTranslation('investments')
+  const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
   const symbol = getCurrencySymbol(currency)
+  const fmt = useFormatter()
 
   const createDps = useCreateDps()
 
@@ -85,15 +90,17 @@ function AddDpsScreen() {
   }
 
   return (
-    <main className="noir-bg min-h-dvh pb-32">
+    <main className="noir-bg min-h-dvh pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <form onSubmit={handleSubmit} className="px-5 pt-4" noValidate>
         <div className="space-y-6">
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Scheme details</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('dps.section.details')}
+            </p>
             <TextField
               id="name"
-              label="Scheme name"
-              placeholder="e.g. BRAC Bank DPS"
+              label={t('form.nameLabel')}
+              placeholder={t('dps.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={fieldErrors.name}
@@ -102,7 +109,7 @@ function AddDpsScreen() {
             <div className="grid grid-cols-2 gap-4">
               <TextField
                 id="monthlyDeposit"
-                label="Monthly deposit"
+                label={t('dps.monthlyLabel')}
                 placeholder="0.00"
                 inputMode="decimal"
                 prefix={symbol}
@@ -112,7 +119,7 @@ function AddDpsScreen() {
               />
               <TextField
                 id="tenureMonths"
-                label="Tenure (months)"
+                label={t('dps.tenureLabel')}
                 placeholder="36"
                 inputMode="numeric"
                 value={tenureMonths}
@@ -122,7 +129,7 @@ function AddDpsScreen() {
             </div>
             <TextField
               id="startDate"
-              label="Start date"
+              label={t('dps.startDateLabel')}
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -131,10 +138,12 @@ function AddDpsScreen() {
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Interest</p>
+            <p className="label-sm text-on-surface-variant">
+              {t('dps.section.terms')}
+            </p>
             <TextField
               id="interestRate"
-              label="Annual interest rate"
+              label={t('dps.interestRateLabel')}
               placeholder="0.00"
               inputMode="decimal"
               trailing="%"
@@ -144,20 +153,20 @@ function AddDpsScreen() {
             />
             <div>
               <p className="label-sm mb-3 text-on-surface-variant">
-                Interest type
+                {t('dps.interestTypeLabel')}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {(
                   [
                     {
                       value: 'simple' as DpsInterestType,
-                      label: 'Simple',
-                      desc: 'Flat rate on deposits',
+                      label: t('dps.interestSimple'),
+                      desc: t('dps.interestSimpleDesc'),
                     },
                     {
                       value: 'compound' as DpsInterestType,
-                      label: 'Compound',
-                      desc: 'Monthly compounding',
+                      label: t('dps.interestCompound'),
+                      desc: t('dps.interestCompoundDesc'),
                     },
                   ] as const
                 ).map((opt) => {
@@ -186,23 +195,15 @@ function AddDpsScreen() {
             {maturityPreview > 0 && (
               <div className="rounded-2xl bg-surface-container-lowest px-4 py-3">
                 <p className="label-sm text-on-surface-variant">
-                  Projected maturity value
+                  {t('dps.projectedMaturity')}
                 </p>
                 <p className="font-display mt-1 text-lg font-bold text-secondary">
-                  {symbol}
-                  {maturityPreview.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {fmt.currency(maturityPreview.toFixed(2), currency)}
                 </p>
                 <p className="body-sm mt-0.5 text-on-surface-variant/70">
-                  Total deposited:{' '}
+                  {t('dps.totalDepositedLabel')}{' '}
                   <span className="font-medium text-on-surface-variant">
-                    {symbol}
-                    {(D * T).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {fmt.currency((D * T).toFixed(2), currency)}
                   </span>
                 </p>
               </div>
@@ -210,10 +211,12 @@ function AddDpsScreen() {
           </section>
 
           <section className="space-y-4 rounded-3xl bg-surface-container-low p-6">
-            <p className="label-sm text-on-surface-variant">Notes (optional)</p>
+            <p className="label-sm text-on-surface-variant">
+              {tCommon('labels.notesOptional')}
+            </p>
             <TextArea
               id="notes"
-              placeholder="Bank name, account number, or any context"
+              placeholder={t('dps.notesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               maxLength={1000}
@@ -227,7 +230,9 @@ function AddDpsScreen() {
             disabled={createDps.isPending}
             className="btn-primary"
           >
-            {createDps.isPending ? 'Creating…' : 'Create DPS scheme'}
+            {createDps.isPending
+              ? tCommon('actions.creating')
+              : t('dps.submit')}
           </button>
         </div>
       </form>

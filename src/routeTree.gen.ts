@@ -13,15 +13,18 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CheckEmailRouteImport } from './routes/check-email'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppInvestmentsIndexRouteImport } from './routes/app/investments/index'
 import { Route as AppEmisIndexRouteImport } from './routes/app/emis/index'
+import { Route as AppActivityIndexRouteImport } from './routes/app/activity/index'
 import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
 import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
 import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
+import { Route as ApiCronSendRemindersRouteImport } from './routes/api/cron/send-reminders'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
 import { Route as AppInvestmentsSavingsIdRouteImport } from './routes/app/investments/savings/$id'
@@ -47,6 +50,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const CheckEmailRoute = CheckEmailRouteImport.update({
   id: '/check-email',
   path: '/check-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -79,6 +87,11 @@ const AppEmisIndexRoute = AppEmisIndexRouteImport.update({
   path: '/emis/',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppActivityIndexRoute = AppActivityIndexRouteImport.update({
+  id: '/activity/',
+  path: '/activity/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppInvestmentsNewRoute = AppInvestmentsNewRouteImport.update({
   id: '/investments/new',
   path: '/investments/new',
@@ -93,6 +106,11 @@ const AppEmisEmiIdRoute = AppEmisEmiIdRouteImport.update({
   id: '/emis/$emiId',
   path: '/emis/$emiId',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const ApiCronSendRemindersRoute = ApiCronSendRemindersRouteImport.update({
+  id: '/api/cron/send-reminders',
+  path: '/api/cron/send-reminders',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -129,6 +147,7 @@ const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/check-email': typeof CheckEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -136,9 +155,11 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
+  '/app/activity/': typeof AppActivityIndexRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
@@ -149,6 +170,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/changelog': typeof ChangelogRoute
   '/check-email': typeof CheckEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -156,9 +178,11 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
+  '/app/activity': typeof AppActivityIndexRoute
   '/app/emis': typeof AppEmisIndexRoute
   '/app/investments': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
@@ -171,6 +195,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/check-email': typeof CheckEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -178,9 +203,11 @@ export interface FileRoutesById {
   '/app/profile': typeof AppProfileRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
+  '/app/activity/': typeof AppActivityIndexRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
@@ -194,6 +221,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/changelog'
     | '/check-email'
     | '/forgot-password'
     | '/login'
@@ -201,9 +229,11 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/'
     | '/api/auth/$'
+    | '/api/cron/send-reminders'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
+    | '/app/activity/'
     | '/app/emis/'
     | '/app/investments/'
     | '/app/investments/$id/edit'
@@ -214,6 +244,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/changelog'
     | '/check-email'
     | '/forgot-password'
     | '/login'
@@ -221,9 +252,11 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app'
     | '/api/auth/$'
+    | '/api/cron/send-reminders'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
+    | '/app/activity'
     | '/app/emis'
     | '/app/investments'
     | '/app/investments/$id/edit'
@@ -235,6 +268,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/changelog'
     | '/check-email'
     | '/forgot-password'
     | '/login'
@@ -242,9 +276,11 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/'
     | '/api/auth/$'
+    | '/api/cron/send-reminders'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
+    | '/app/activity/'
     | '/app/emis/'
     | '/app/investments/'
     | '/app/investments/$id/edit'
@@ -257,11 +293,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  ChangelogRoute: typeof ChangelogRoute
   CheckEmailRoute: typeof CheckEmailRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiCronSendRemindersRoute: typeof ApiCronSendRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/check-email'
       fullPath: '/check-email'
       preLoaderRoute: typeof CheckEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -336,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/activity/': {
+      id: '/app/activity/'
+      path: '/activity'
+      fullPath: '/app/activity/'
+      preLoaderRoute: typeof AppActivityIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/investments/new': {
       id: '/app/investments/new'
       path: '/investments/new'
@@ -356,6 +408,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/emis/$emiId'
       preLoaderRoute: typeof AppEmisEmiIdRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/api/cron/send-reminders': {
+      id: '/api/cron/send-reminders'
+      path: '/api/cron/send-reminders'
+      fullPath: '/api/cron/send-reminders'
+      preLoaderRoute: typeof ApiCronSendRemindersRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -408,6 +467,7 @@ interface AppRouteRouteChildren {
   AppEmisEmiIdRoute: typeof AppEmisEmiIdRoute
   AppEmisNewRoute: typeof AppEmisNewRoute
   AppInvestmentsNewRoute: typeof AppInvestmentsNewRoute
+  AppActivityIndexRoute: typeof AppActivityIndexRoute
   AppEmisIndexRoute: typeof AppEmisIndexRoute
   AppInvestmentsIndexRoute: typeof AppInvestmentsIndexRoute
   AppInvestmentsIdEditRoute: typeof AppInvestmentsIdEditRoute
@@ -423,6 +483,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppEmisEmiIdRoute: AppEmisEmiIdRoute,
   AppEmisNewRoute: AppEmisNewRoute,
   AppInvestmentsNewRoute: AppInvestmentsNewRoute,
+  AppActivityIndexRoute: AppActivityIndexRoute,
   AppEmisIndexRoute: AppEmisIndexRoute,
   AppInvestmentsIndexRoute: AppInvestmentsIndexRoute,
   AppInvestmentsIdEditRoute: AppInvestmentsIdEditRoute,
@@ -439,11 +500,13 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
+  ChangelogRoute: ChangelogRoute,
   CheckEmailRoute: CheckEmailRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiCronSendRemindersRoute: ApiCronSendRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
