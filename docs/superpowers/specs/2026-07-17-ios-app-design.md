@@ -9,18 +9,18 @@ A native Swift/SwiftUI iOS app with full feature parity with the Phinio web app:
 
 ## Decisions
 
-| Decision | Choice |
-| --- | --- |
-| Stack | Swift 6 + SwiftUI, no third-party dependencies |
-| Target | iPhone-only, iOS 26+, built with Xcode 26 SDK (Liquid Glass) |
-| Scope | Full parity with web app |
-| API | New REST layer (`/api/v1/*`) in the existing TanStack Start app |
-| Auth | Existing Better Auth email/password + `bearer` plugin; token in Keychain |
-| Offline | Full offline writes — SwiftData is the app's source of truth, mutation outbox, last-write-wins |
-| Sync pull | Full-snapshot pull (no delta sync, no tombstones) |
-| Push | Native APNs in v1, extending the existing reminder cron |
-| Design | Fully native look — system light+dark, SF Symbols, stock controls, Liquid Glass |
-| Repo | `apps/ios/` in this repo; delete abandoned `apps/mobile`, `apps/web`, and empty `packages/` husks |
+| Decision  | Choice                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| Stack     | Swift 6 + SwiftUI, no third-party dependencies                                                    |
+| Target    | iPhone-only, iOS 26+, built with Xcode 26 SDK (Liquid Glass)                                      |
+| Scope     | Full parity with web app                                                                          |
+| API       | New REST layer (`/api/v1/*`) in the existing TanStack Start app                                   |
+| Auth      | Existing Better Auth email/password + `bearer` plugin; token in Keychain                          |
+| Offline   | Full offline writes — SwiftData is the app's source of truth, mutation outbox, last-write-wins    |
+| Sync pull | Full-snapshot pull (no delta sync, no tombstones)                                                 |
+| Push      | Native APNs in v1, extending the existing reminder cron                                           |
+| Design    | Fully native look — system light+dark, SF Symbols, stock controls, Liquid Glass                   |
+| Repo      | `apps/ios/` in this repo; delete abandoned `apps/mobile`, `apps/web`, and empty `packages/` husks |
 
 ## 1. Backend: REST API + auth
 

@@ -24,13 +24,40 @@ import { Route as AppActivityIndexRouteImport } from './routes/app/activity/inde
 import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
 import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
 import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
+import { Route as ApiV1ProfileRouteImport } from './routes/api/v1/profile'
+import { Route as ApiV1DeviceTokensRouteImport } from './routes/api/v1/device-tokens'
+import { Route as ApiV1DashboardRouteImport } from './routes/api/v1/dashboard'
+import { Route as ApiV1ActivityRouteImport } from './routes/api/v1/activity'
 import { Route as ApiCronSendRemindersRouteImport } from './routes/api/cron/send-reminders'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiV1NotificationsIndexRouteImport } from './routes/api/v1/notifications.index'
+import { Route as ApiV1InvestmentsIndexRouteImport } from './routes/api/v1/investments.index'
+import { Route as ApiV1EmisIndexRouteImport } from './routes/api/v1/emis.index'
 import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
 import { Route as AppInvestmentsSavingsIdRouteImport } from './routes/app/investments/savings/$id'
 import { Route as AppInvestmentsDpsNewRouteImport } from './routes/app/investments/dps/new'
 import { Route as AppInvestmentsDpsIdRouteImport } from './routes/app/investments/dps/$id'
 import { Route as AppInvestmentsIdEditRouteImport } from './routes/app/investments/$id.edit'
+import { Route as ApiV1SyncSnapshotRouteImport } from './routes/api/v1/sync.snapshot'
+import { Route as ApiV1NotificationsUnreadCountRouteImport } from './routes/api/v1/notifications.unread-count'
+import { Route as ApiV1NotificationsReadAllRouteImport } from './routes/api/v1/notifications.read-all'
+import { Route as ApiV1NotificationsClearReadRouteImport } from './routes/api/v1/notifications.clear-read'
+import { Route as ApiV1InvestmentsSavingsRouteImport } from './routes/api/v1/investments.savings'
+import { Route as ApiV1InvestmentsDpsRouteImport } from './routes/api/v1/investments.dps'
+import { Route as ApiV1InvestmentsIdRouteImport } from './routes/api/v1/investments.$id'
+import { Route as ApiV1EmisUpcomingRouteImport } from './routes/api/v1/emis.upcoming'
+import { Route as ApiV1EmisEmiIdRouteImport } from './routes/api/v1/emis.$emiId'
+import { Route as ApiV1DeviceTokensTokenRouteImport } from './routes/api/v1/device-tokens.$token'
+import { Route as ApiV1DepositsDepositIdRouteImport } from './routes/api/v1/deposits.$depositId'
+import { Route as ApiV1NotificationsIdReadRouteImport } from './routes/api/v1/notifications.$id.read'
+import { Route as ApiV1InvestmentsSavingsIdRouteImport } from './routes/api/v1/investments.savings.$id'
+import { Route as ApiV1InvestmentsDpsIdRouteImport } from './routes/api/v1/investments.dps.$id'
+import { Route as ApiV1InvestmentsIdWithdrawRouteImport } from './routes/api/v1/investments.$id.withdraw'
+import { Route as ApiV1EmisEmiIdCompleteRouteImport } from './routes/api/v1/emis.$emiId.complete'
+import { Route as ApiV1EmiPaymentsPaymentIdMarkPaidRouteImport } from './routes/api/v1/emi-payments.$paymentId.mark-paid'
+import { Route as ApiV1DepositsDepositIdMarkPaidRouteImport } from './routes/api/v1/deposits.$depositId.mark-paid'
+import { Route as ApiV1InvestmentsSavingsIdDepositsRouteImport } from './routes/api/v1/investments.savings.$id.deposits'
+import { Route as ApiV1InvestmentsDpsIdCloseRouteImport } from './routes/api/v1/investments.dps.$id.close'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -107,6 +134,26 @@ const AppEmisEmiIdRoute = AppEmisEmiIdRouteImport.update({
   path: '/emis/$emiId',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const ApiV1ProfileRoute = ApiV1ProfileRouteImport.update({
+  id: '/api/v1/profile',
+  path: '/api/v1/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1DeviceTokensRoute = ApiV1DeviceTokensRouteImport.update({
+  id: '/api/v1/device-tokens',
+  path: '/api/v1/device-tokens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1DashboardRoute = ApiV1DashboardRouteImport.update({
+  id: '/api/v1/dashboard',
+  path: '/api/v1/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ActivityRoute = ApiV1ActivityRouteImport.update({
+  id: '/api/v1/activity',
+  path: '/api/v1/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronSendRemindersRoute = ApiCronSendRemindersRouteImport.update({
   id: '/api/cron/send-reminders',
   path: '/api/cron/send-reminders',
@@ -115,6 +162,21 @@ const ApiCronSendRemindersRoute = ApiCronSendRemindersRouteImport.update({
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1NotificationsIndexRoute = ApiV1NotificationsIndexRouteImport.update({
+  id: '/api/v1/notifications/',
+  path: '/api/v1/notifications/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InvestmentsIndexRoute = ApiV1InvestmentsIndexRouteImport.update({
+  id: '/api/v1/investments/',
+  path: '/api/v1/investments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1EmisIndexRoute = ApiV1EmisIndexRouteImport.update({
+  id: '/api/v1/emis/',
+  path: '/api/v1/emis/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppInvestmentsSavingsNewRoute =
@@ -143,6 +205,116 @@ const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
   path: '/investments/$id/edit',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const ApiV1SyncSnapshotRoute = ApiV1SyncSnapshotRouteImport.update({
+  id: '/api/v1/sync/snapshot',
+  path: '/api/v1/sync/snapshot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1NotificationsUnreadCountRoute =
+  ApiV1NotificationsUnreadCountRouteImport.update({
+    id: '/api/v1/notifications/unread-count',
+    path: '/api/v1/notifications/unread-count',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiV1NotificationsReadAllRoute =
+  ApiV1NotificationsReadAllRouteImport.update({
+    id: '/api/v1/notifications/read-all',
+    path: '/api/v1/notifications/read-all',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiV1NotificationsClearReadRoute =
+  ApiV1NotificationsClearReadRouteImport.update({
+    id: '/api/v1/notifications/clear-read',
+    path: '/api/v1/notifications/clear-read',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiV1InvestmentsSavingsRoute = ApiV1InvestmentsSavingsRouteImport.update({
+  id: '/api/v1/investments/savings',
+  path: '/api/v1/investments/savings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InvestmentsDpsRoute = ApiV1InvestmentsDpsRouteImport.update({
+  id: '/api/v1/investments/dps',
+  path: '/api/v1/investments/dps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InvestmentsIdRoute = ApiV1InvestmentsIdRouteImport.update({
+  id: '/api/v1/investments/$id',
+  path: '/api/v1/investments/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1EmisUpcomingRoute = ApiV1EmisUpcomingRouteImport.update({
+  id: '/api/v1/emis/upcoming',
+  path: '/api/v1/emis/upcoming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1EmisEmiIdRoute = ApiV1EmisEmiIdRouteImport.update({
+  id: '/api/v1/emis/$emiId',
+  path: '/api/v1/emis/$emiId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1DeviceTokensTokenRoute = ApiV1DeviceTokensTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => ApiV1DeviceTokensRoute,
+} as any)
+const ApiV1DepositsDepositIdRoute = ApiV1DepositsDepositIdRouteImport.update({
+  id: '/api/v1/deposits/$depositId',
+  path: '/api/v1/deposits/$depositId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1NotificationsIdReadRoute =
+  ApiV1NotificationsIdReadRouteImport.update({
+    id: '/api/v1/notifications/$id/read',
+    path: '/api/v1/notifications/$id/read',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiV1InvestmentsSavingsIdRoute =
+  ApiV1InvestmentsSavingsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => ApiV1InvestmentsSavingsRoute,
+  } as any)
+const ApiV1InvestmentsDpsIdRoute = ApiV1InvestmentsDpsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1InvestmentsDpsRoute,
+} as any)
+const ApiV1InvestmentsIdWithdrawRoute =
+  ApiV1InvestmentsIdWithdrawRouteImport.update({
+    id: '/withdraw',
+    path: '/withdraw',
+    getParentRoute: () => ApiV1InvestmentsIdRoute,
+  } as any)
+const ApiV1EmisEmiIdCompleteRoute = ApiV1EmisEmiIdCompleteRouteImport.update({
+  id: '/complete',
+  path: '/complete',
+  getParentRoute: () => ApiV1EmisEmiIdRoute,
+} as any)
+const ApiV1EmiPaymentsPaymentIdMarkPaidRoute =
+  ApiV1EmiPaymentsPaymentIdMarkPaidRouteImport.update({
+    id: '/api/v1/emi-payments/$paymentId/mark-paid',
+    path: '/api/v1/emi-payments/$paymentId/mark-paid',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiV1DepositsDepositIdMarkPaidRoute =
+  ApiV1DepositsDepositIdMarkPaidRouteImport.update({
+    id: '/mark-paid',
+    path: '/mark-paid',
+    getParentRoute: () => ApiV1DepositsDepositIdRoute,
+  } as any)
+const ApiV1InvestmentsSavingsIdDepositsRoute =
+  ApiV1InvestmentsSavingsIdDepositsRouteImport.update({
+    id: '/deposits',
+    path: '/deposits',
+    getParentRoute: () => ApiV1InvestmentsSavingsIdRoute,
+  } as any)
+const ApiV1InvestmentsDpsIdCloseRoute =
+  ApiV1InvestmentsDpsIdCloseRouteImport.update({
+    id: '/close',
+    path: '/close',
+    getParentRoute: () => ApiV1InvestmentsDpsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -156,17 +328,44 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
+  '/api/v1/activity': typeof ApiV1ActivityRoute
+  '/api/v1/dashboard': typeof ApiV1DashboardRoute
+  '/api/v1/device-tokens': typeof ApiV1DeviceTokensRouteWithChildren
+  '/api/v1/profile': typeof ApiV1ProfileRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
   '/app/activity/': typeof AppActivityIndexRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
+  '/api/v1/deposits/$depositId': typeof ApiV1DepositsDepositIdRouteWithChildren
+  '/api/v1/device-tokens/$token': typeof ApiV1DeviceTokensTokenRoute
+  '/api/v1/emis/$emiId': typeof ApiV1EmisEmiIdRouteWithChildren
+  '/api/v1/emis/upcoming': typeof ApiV1EmisUpcomingRoute
+  '/api/v1/investments/$id': typeof ApiV1InvestmentsIdRouteWithChildren
+  '/api/v1/investments/dps': typeof ApiV1InvestmentsDpsRouteWithChildren
+  '/api/v1/investments/savings': typeof ApiV1InvestmentsSavingsRouteWithChildren
+  '/api/v1/notifications/clear-read': typeof ApiV1NotificationsClearReadRoute
+  '/api/v1/notifications/read-all': typeof ApiV1NotificationsReadAllRoute
+  '/api/v1/notifications/unread-count': typeof ApiV1NotificationsUnreadCountRoute
+  '/api/v1/sync/snapshot': typeof ApiV1SyncSnapshotRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
   '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
   '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
   '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
+  '/api/v1/emis/': typeof ApiV1EmisIndexRoute
+  '/api/v1/investments/': typeof ApiV1InvestmentsIndexRoute
+  '/api/v1/notifications/': typeof ApiV1NotificationsIndexRoute
+  '/api/v1/deposits/$depositId/mark-paid': typeof ApiV1DepositsDepositIdMarkPaidRoute
+  '/api/v1/emi-payments/$paymentId/mark-paid': typeof ApiV1EmiPaymentsPaymentIdMarkPaidRoute
+  '/api/v1/emis/$emiId/complete': typeof ApiV1EmisEmiIdCompleteRoute
+  '/api/v1/investments/$id/withdraw': typeof ApiV1InvestmentsIdWithdrawRoute
+  '/api/v1/investments/dps/$id': typeof ApiV1InvestmentsDpsIdRouteWithChildren
+  '/api/v1/investments/savings/$id': typeof ApiV1InvestmentsSavingsIdRouteWithChildren
+  '/api/v1/notifications/$id/read': typeof ApiV1NotificationsIdReadRoute
+  '/api/v1/investments/dps/$id/close': typeof ApiV1InvestmentsDpsIdCloseRoute
+  '/api/v1/investments/savings/$id/deposits': typeof ApiV1InvestmentsSavingsIdDepositsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -179,17 +378,44 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
+  '/api/v1/activity': typeof ApiV1ActivityRoute
+  '/api/v1/dashboard': typeof ApiV1DashboardRoute
+  '/api/v1/device-tokens': typeof ApiV1DeviceTokensRouteWithChildren
+  '/api/v1/profile': typeof ApiV1ProfileRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
   '/app/activity': typeof AppActivityIndexRoute
   '/app/emis': typeof AppEmisIndexRoute
   '/app/investments': typeof AppInvestmentsIndexRoute
+  '/api/v1/deposits/$depositId': typeof ApiV1DepositsDepositIdRouteWithChildren
+  '/api/v1/device-tokens/$token': typeof ApiV1DeviceTokensTokenRoute
+  '/api/v1/emis/$emiId': typeof ApiV1EmisEmiIdRouteWithChildren
+  '/api/v1/emis/upcoming': typeof ApiV1EmisUpcomingRoute
+  '/api/v1/investments/$id': typeof ApiV1InvestmentsIdRouteWithChildren
+  '/api/v1/investments/dps': typeof ApiV1InvestmentsDpsRouteWithChildren
+  '/api/v1/investments/savings': typeof ApiV1InvestmentsSavingsRouteWithChildren
+  '/api/v1/notifications/clear-read': typeof ApiV1NotificationsClearReadRoute
+  '/api/v1/notifications/read-all': typeof ApiV1NotificationsReadAllRoute
+  '/api/v1/notifications/unread-count': typeof ApiV1NotificationsUnreadCountRoute
+  '/api/v1/sync/snapshot': typeof ApiV1SyncSnapshotRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
   '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
   '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
   '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
+  '/api/v1/emis': typeof ApiV1EmisIndexRoute
+  '/api/v1/investments': typeof ApiV1InvestmentsIndexRoute
+  '/api/v1/notifications': typeof ApiV1NotificationsIndexRoute
+  '/api/v1/deposits/$depositId/mark-paid': typeof ApiV1DepositsDepositIdMarkPaidRoute
+  '/api/v1/emi-payments/$paymentId/mark-paid': typeof ApiV1EmiPaymentsPaymentIdMarkPaidRoute
+  '/api/v1/emis/$emiId/complete': typeof ApiV1EmisEmiIdCompleteRoute
+  '/api/v1/investments/$id/withdraw': typeof ApiV1InvestmentsIdWithdrawRoute
+  '/api/v1/investments/dps/$id': typeof ApiV1InvestmentsDpsIdRouteWithChildren
+  '/api/v1/investments/savings/$id': typeof ApiV1InvestmentsSavingsIdRouteWithChildren
+  '/api/v1/notifications/$id/read': typeof ApiV1NotificationsIdReadRoute
+  '/api/v1/investments/dps/$id/close': typeof ApiV1InvestmentsDpsIdCloseRoute
+  '/api/v1/investments/savings/$id/deposits': typeof ApiV1InvestmentsSavingsIdDepositsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,17 +430,44 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/send-reminders': typeof ApiCronSendRemindersRoute
+  '/api/v1/activity': typeof ApiV1ActivityRoute
+  '/api/v1/dashboard': typeof ApiV1DashboardRoute
+  '/api/v1/device-tokens': typeof ApiV1DeviceTokensRouteWithChildren
+  '/api/v1/profile': typeof ApiV1ProfileRoute
   '/app/emis/$emiId': typeof AppEmisEmiIdRoute
   '/app/emis/new': typeof AppEmisNewRoute
   '/app/investments/new': typeof AppInvestmentsNewRoute
   '/app/activity/': typeof AppActivityIndexRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
+  '/api/v1/deposits/$depositId': typeof ApiV1DepositsDepositIdRouteWithChildren
+  '/api/v1/device-tokens/$token': typeof ApiV1DeviceTokensTokenRoute
+  '/api/v1/emis/$emiId': typeof ApiV1EmisEmiIdRouteWithChildren
+  '/api/v1/emis/upcoming': typeof ApiV1EmisUpcomingRoute
+  '/api/v1/investments/$id': typeof ApiV1InvestmentsIdRouteWithChildren
+  '/api/v1/investments/dps': typeof ApiV1InvestmentsDpsRouteWithChildren
+  '/api/v1/investments/savings': typeof ApiV1InvestmentsSavingsRouteWithChildren
+  '/api/v1/notifications/clear-read': typeof ApiV1NotificationsClearReadRoute
+  '/api/v1/notifications/read-all': typeof ApiV1NotificationsReadAllRoute
+  '/api/v1/notifications/unread-count': typeof ApiV1NotificationsUnreadCountRoute
+  '/api/v1/sync/snapshot': typeof ApiV1SyncSnapshotRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
   '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
   '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
   '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
+  '/api/v1/emis/': typeof ApiV1EmisIndexRoute
+  '/api/v1/investments/': typeof ApiV1InvestmentsIndexRoute
+  '/api/v1/notifications/': typeof ApiV1NotificationsIndexRoute
+  '/api/v1/deposits/$depositId/mark-paid': typeof ApiV1DepositsDepositIdMarkPaidRoute
+  '/api/v1/emi-payments/$paymentId/mark-paid': typeof ApiV1EmiPaymentsPaymentIdMarkPaidRoute
+  '/api/v1/emis/$emiId/complete': typeof ApiV1EmisEmiIdCompleteRoute
+  '/api/v1/investments/$id/withdraw': typeof ApiV1InvestmentsIdWithdrawRoute
+  '/api/v1/investments/dps/$id': typeof ApiV1InvestmentsDpsIdRouteWithChildren
+  '/api/v1/investments/savings/$id': typeof ApiV1InvestmentsSavingsIdRouteWithChildren
+  '/api/v1/notifications/$id/read': typeof ApiV1NotificationsIdReadRoute
+  '/api/v1/investments/dps/$id/close': typeof ApiV1InvestmentsDpsIdCloseRoute
+  '/api/v1/investments/savings/$id/deposits': typeof ApiV1InvestmentsSavingsIdDepositsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,17 +483,44 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/auth/$'
     | '/api/cron/send-reminders'
+    | '/api/v1/activity'
+    | '/api/v1/dashboard'
+    | '/api/v1/device-tokens'
+    | '/api/v1/profile'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
     | '/app/activity/'
     | '/app/emis/'
     | '/app/investments/'
+    | '/api/v1/deposits/$depositId'
+    | '/api/v1/device-tokens/$token'
+    | '/api/v1/emis/$emiId'
+    | '/api/v1/emis/upcoming'
+    | '/api/v1/investments/$id'
+    | '/api/v1/investments/dps'
+    | '/api/v1/investments/savings'
+    | '/api/v1/notifications/clear-read'
+    | '/api/v1/notifications/read-all'
+    | '/api/v1/notifications/unread-count'
+    | '/api/v1/sync/snapshot'
     | '/app/investments/$id/edit'
     | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
     | '/app/investments/savings/$id'
     | '/app/investments/savings/new'
+    | '/api/v1/emis/'
+    | '/api/v1/investments/'
+    | '/api/v1/notifications/'
+    | '/api/v1/deposits/$depositId/mark-paid'
+    | '/api/v1/emi-payments/$paymentId/mark-paid'
+    | '/api/v1/emis/$emiId/complete'
+    | '/api/v1/investments/$id/withdraw'
+    | '/api/v1/investments/dps/$id'
+    | '/api/v1/investments/savings/$id'
+    | '/api/v1/notifications/$id/read'
+    | '/api/v1/investments/dps/$id/close'
+    | '/api/v1/investments/savings/$id/deposits'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -253,17 +533,44 @@ export interface FileRouteTypes {
     | '/app'
     | '/api/auth/$'
     | '/api/cron/send-reminders'
+    | '/api/v1/activity'
+    | '/api/v1/dashboard'
+    | '/api/v1/device-tokens'
+    | '/api/v1/profile'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
     | '/app/activity'
     | '/app/emis'
     | '/app/investments'
+    | '/api/v1/deposits/$depositId'
+    | '/api/v1/device-tokens/$token'
+    | '/api/v1/emis/$emiId'
+    | '/api/v1/emis/upcoming'
+    | '/api/v1/investments/$id'
+    | '/api/v1/investments/dps'
+    | '/api/v1/investments/savings'
+    | '/api/v1/notifications/clear-read'
+    | '/api/v1/notifications/read-all'
+    | '/api/v1/notifications/unread-count'
+    | '/api/v1/sync/snapshot'
     | '/app/investments/$id/edit'
     | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
     | '/app/investments/savings/$id'
     | '/app/investments/savings/new'
+    | '/api/v1/emis'
+    | '/api/v1/investments'
+    | '/api/v1/notifications'
+    | '/api/v1/deposits/$depositId/mark-paid'
+    | '/api/v1/emi-payments/$paymentId/mark-paid'
+    | '/api/v1/emis/$emiId/complete'
+    | '/api/v1/investments/$id/withdraw'
+    | '/api/v1/investments/dps/$id'
+    | '/api/v1/investments/savings/$id'
+    | '/api/v1/notifications/$id/read'
+    | '/api/v1/investments/dps/$id/close'
+    | '/api/v1/investments/savings/$id/deposits'
   id:
     | '__root__'
     | '/'
@@ -277,17 +584,44 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/auth/$'
     | '/api/cron/send-reminders'
+    | '/api/v1/activity'
+    | '/api/v1/dashboard'
+    | '/api/v1/device-tokens'
+    | '/api/v1/profile'
     | '/app/emis/$emiId'
     | '/app/emis/new'
     | '/app/investments/new'
     | '/app/activity/'
     | '/app/emis/'
     | '/app/investments/'
+    | '/api/v1/deposits/$depositId'
+    | '/api/v1/device-tokens/$token'
+    | '/api/v1/emis/$emiId'
+    | '/api/v1/emis/upcoming'
+    | '/api/v1/investments/$id'
+    | '/api/v1/investments/dps'
+    | '/api/v1/investments/savings'
+    | '/api/v1/notifications/clear-read'
+    | '/api/v1/notifications/read-all'
+    | '/api/v1/notifications/unread-count'
+    | '/api/v1/sync/snapshot'
     | '/app/investments/$id/edit'
     | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
     | '/app/investments/savings/$id'
     | '/app/investments/savings/new'
+    | '/api/v1/emis/'
+    | '/api/v1/investments/'
+    | '/api/v1/notifications/'
+    | '/api/v1/deposits/$depositId/mark-paid'
+    | '/api/v1/emi-payments/$paymentId/mark-paid'
+    | '/api/v1/emis/$emiId/complete'
+    | '/api/v1/investments/$id/withdraw'
+    | '/api/v1/investments/dps/$id'
+    | '/api/v1/investments/savings/$id'
+    | '/api/v1/notifications/$id/read'
+    | '/api/v1/investments/dps/$id/close'
+    | '/api/v1/investments/savings/$id/deposits'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -300,6 +634,25 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCronSendRemindersRoute: typeof ApiCronSendRemindersRoute
+  ApiV1ActivityRoute: typeof ApiV1ActivityRoute
+  ApiV1DashboardRoute: typeof ApiV1DashboardRoute
+  ApiV1DeviceTokensRoute: typeof ApiV1DeviceTokensRouteWithChildren
+  ApiV1ProfileRoute: typeof ApiV1ProfileRoute
+  ApiV1DepositsDepositIdRoute: typeof ApiV1DepositsDepositIdRouteWithChildren
+  ApiV1EmisEmiIdRoute: typeof ApiV1EmisEmiIdRouteWithChildren
+  ApiV1EmisUpcomingRoute: typeof ApiV1EmisUpcomingRoute
+  ApiV1InvestmentsIdRoute: typeof ApiV1InvestmentsIdRouteWithChildren
+  ApiV1InvestmentsDpsRoute: typeof ApiV1InvestmentsDpsRouteWithChildren
+  ApiV1InvestmentsSavingsRoute: typeof ApiV1InvestmentsSavingsRouteWithChildren
+  ApiV1NotificationsClearReadRoute: typeof ApiV1NotificationsClearReadRoute
+  ApiV1NotificationsReadAllRoute: typeof ApiV1NotificationsReadAllRoute
+  ApiV1NotificationsUnreadCountRoute: typeof ApiV1NotificationsUnreadCountRoute
+  ApiV1SyncSnapshotRoute: typeof ApiV1SyncSnapshotRoute
+  ApiV1EmisIndexRoute: typeof ApiV1EmisIndexRoute
+  ApiV1InvestmentsIndexRoute: typeof ApiV1InvestmentsIndexRoute
+  ApiV1NotificationsIndexRoute: typeof ApiV1NotificationsIndexRoute
+  ApiV1EmiPaymentsPaymentIdMarkPaidRoute: typeof ApiV1EmiPaymentsPaymentIdMarkPaidRoute
+  ApiV1NotificationsIdReadRoute: typeof ApiV1NotificationsIdReadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -409,6 +762,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisEmiIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/api/v1/profile': {
+      id: '/api/v1/profile'
+      path: '/api/v1/profile'
+      fullPath: '/api/v1/profile'
+      preLoaderRoute: typeof ApiV1ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/device-tokens': {
+      id: '/api/v1/device-tokens'
+      path: '/api/v1/device-tokens'
+      fullPath: '/api/v1/device-tokens'
+      preLoaderRoute: typeof ApiV1DeviceTokensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/dashboard': {
+      id: '/api/v1/dashboard'
+      path: '/api/v1/dashboard'
+      fullPath: '/api/v1/dashboard'
+      preLoaderRoute: typeof ApiV1DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/activity': {
+      id: '/api/v1/activity'
+      path: '/api/v1/activity'
+      fullPath: '/api/v1/activity'
+      preLoaderRoute: typeof ApiV1ActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/send-reminders': {
       id: '/api/cron/send-reminders'
       path: '/api/cron/send-reminders'
@@ -421,6 +802,27 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/': {
+      id: '/api/v1/notifications/'
+      path: '/api/v1/notifications'
+      fullPath: '/api/v1/notifications/'
+      preLoaderRoute: typeof ApiV1NotificationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/investments/': {
+      id: '/api/v1/investments/'
+      path: '/api/v1/investments'
+      fullPath: '/api/v1/investments/'
+      preLoaderRoute: typeof ApiV1InvestmentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/emis/': {
+      id: '/api/v1/emis/'
+      path: '/api/v1/emis'
+      fullPath: '/api/v1/emis/'
+      preLoaderRoute: typeof ApiV1EmisIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/investments/savings/new': {
@@ -457,6 +859,146 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/investments/$id/edit'
       preLoaderRoute: typeof AppInvestmentsIdEditRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/api/v1/sync/snapshot': {
+      id: '/api/v1/sync/snapshot'
+      path: '/api/v1/sync/snapshot'
+      fullPath: '/api/v1/sync/snapshot'
+      preLoaderRoute: typeof ApiV1SyncSnapshotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/unread-count': {
+      id: '/api/v1/notifications/unread-count'
+      path: '/api/v1/notifications/unread-count'
+      fullPath: '/api/v1/notifications/unread-count'
+      preLoaderRoute: typeof ApiV1NotificationsUnreadCountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/read-all': {
+      id: '/api/v1/notifications/read-all'
+      path: '/api/v1/notifications/read-all'
+      fullPath: '/api/v1/notifications/read-all'
+      preLoaderRoute: typeof ApiV1NotificationsReadAllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/clear-read': {
+      id: '/api/v1/notifications/clear-read'
+      path: '/api/v1/notifications/clear-read'
+      fullPath: '/api/v1/notifications/clear-read'
+      preLoaderRoute: typeof ApiV1NotificationsClearReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/investments/savings': {
+      id: '/api/v1/investments/savings'
+      path: '/api/v1/investments/savings'
+      fullPath: '/api/v1/investments/savings'
+      preLoaderRoute: typeof ApiV1InvestmentsSavingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/investments/dps': {
+      id: '/api/v1/investments/dps'
+      path: '/api/v1/investments/dps'
+      fullPath: '/api/v1/investments/dps'
+      preLoaderRoute: typeof ApiV1InvestmentsDpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/investments/$id': {
+      id: '/api/v1/investments/$id'
+      path: '/api/v1/investments/$id'
+      fullPath: '/api/v1/investments/$id'
+      preLoaderRoute: typeof ApiV1InvestmentsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/emis/upcoming': {
+      id: '/api/v1/emis/upcoming'
+      path: '/api/v1/emis/upcoming'
+      fullPath: '/api/v1/emis/upcoming'
+      preLoaderRoute: typeof ApiV1EmisUpcomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/emis/$emiId': {
+      id: '/api/v1/emis/$emiId'
+      path: '/api/v1/emis/$emiId'
+      fullPath: '/api/v1/emis/$emiId'
+      preLoaderRoute: typeof ApiV1EmisEmiIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/device-tokens/$token': {
+      id: '/api/v1/device-tokens/$token'
+      path: '/$token'
+      fullPath: '/api/v1/device-tokens/$token'
+      preLoaderRoute: typeof ApiV1DeviceTokensTokenRouteImport
+      parentRoute: typeof ApiV1DeviceTokensRoute
+    }
+    '/api/v1/deposits/$depositId': {
+      id: '/api/v1/deposits/$depositId'
+      path: '/api/v1/deposits/$depositId'
+      fullPath: '/api/v1/deposits/$depositId'
+      preLoaderRoute: typeof ApiV1DepositsDepositIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/$id/read': {
+      id: '/api/v1/notifications/$id/read'
+      path: '/api/v1/notifications/$id/read'
+      fullPath: '/api/v1/notifications/$id/read'
+      preLoaderRoute: typeof ApiV1NotificationsIdReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/investments/savings/$id': {
+      id: '/api/v1/investments/savings/$id'
+      path: '/$id'
+      fullPath: '/api/v1/investments/savings/$id'
+      preLoaderRoute: typeof ApiV1InvestmentsSavingsIdRouteImport
+      parentRoute: typeof ApiV1InvestmentsSavingsRoute
+    }
+    '/api/v1/investments/dps/$id': {
+      id: '/api/v1/investments/dps/$id'
+      path: '/$id'
+      fullPath: '/api/v1/investments/dps/$id'
+      preLoaderRoute: typeof ApiV1InvestmentsDpsIdRouteImport
+      parentRoute: typeof ApiV1InvestmentsDpsRoute
+    }
+    '/api/v1/investments/$id/withdraw': {
+      id: '/api/v1/investments/$id/withdraw'
+      path: '/withdraw'
+      fullPath: '/api/v1/investments/$id/withdraw'
+      preLoaderRoute: typeof ApiV1InvestmentsIdWithdrawRouteImport
+      parentRoute: typeof ApiV1InvestmentsIdRoute
+    }
+    '/api/v1/emis/$emiId/complete': {
+      id: '/api/v1/emis/$emiId/complete'
+      path: '/complete'
+      fullPath: '/api/v1/emis/$emiId/complete'
+      preLoaderRoute: typeof ApiV1EmisEmiIdCompleteRouteImport
+      parentRoute: typeof ApiV1EmisEmiIdRoute
+    }
+    '/api/v1/emi-payments/$paymentId/mark-paid': {
+      id: '/api/v1/emi-payments/$paymentId/mark-paid'
+      path: '/api/v1/emi-payments/$paymentId/mark-paid'
+      fullPath: '/api/v1/emi-payments/$paymentId/mark-paid'
+      preLoaderRoute: typeof ApiV1EmiPaymentsPaymentIdMarkPaidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/deposits/$depositId/mark-paid': {
+      id: '/api/v1/deposits/$depositId/mark-paid'
+      path: '/mark-paid'
+      fullPath: '/api/v1/deposits/$depositId/mark-paid'
+      preLoaderRoute: typeof ApiV1DepositsDepositIdMarkPaidRouteImport
+      parentRoute: typeof ApiV1DepositsDepositIdRoute
+    }
+    '/api/v1/investments/savings/$id/deposits': {
+      id: '/api/v1/investments/savings/$id/deposits'
+      path: '/deposits'
+      fullPath: '/api/v1/investments/savings/$id/deposits'
+      preLoaderRoute: typeof ApiV1InvestmentsSavingsIdDepositsRouteImport
+      parentRoute: typeof ApiV1InvestmentsSavingsIdRoute
+    }
+    '/api/v1/investments/dps/$id/close': {
+      id: '/api/v1/investments/dps/$id/close'
+      path: '/close'
+      fullPath: '/api/v1/investments/dps/$id/close'
+      preLoaderRoute: typeof ApiV1InvestmentsDpsIdCloseRouteImport
+      parentRoute: typeof ApiV1InvestmentsDpsIdRoute
     }
   }
 }
@@ -497,6 +1039,107 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
   AppRouteRouteChildren,
 )
 
+interface ApiV1DeviceTokensRouteChildren {
+  ApiV1DeviceTokensTokenRoute: typeof ApiV1DeviceTokensTokenRoute
+}
+
+const ApiV1DeviceTokensRouteChildren: ApiV1DeviceTokensRouteChildren = {
+  ApiV1DeviceTokensTokenRoute: ApiV1DeviceTokensTokenRoute,
+}
+
+const ApiV1DeviceTokensRouteWithChildren =
+  ApiV1DeviceTokensRoute._addFileChildren(ApiV1DeviceTokensRouteChildren)
+
+interface ApiV1DepositsDepositIdRouteChildren {
+  ApiV1DepositsDepositIdMarkPaidRoute: typeof ApiV1DepositsDepositIdMarkPaidRoute
+}
+
+const ApiV1DepositsDepositIdRouteChildren: ApiV1DepositsDepositIdRouteChildren =
+  {
+    ApiV1DepositsDepositIdMarkPaidRoute: ApiV1DepositsDepositIdMarkPaidRoute,
+  }
+
+const ApiV1DepositsDepositIdRouteWithChildren =
+  ApiV1DepositsDepositIdRoute._addFileChildren(
+    ApiV1DepositsDepositIdRouteChildren,
+  )
+
+interface ApiV1EmisEmiIdRouteChildren {
+  ApiV1EmisEmiIdCompleteRoute: typeof ApiV1EmisEmiIdCompleteRoute
+}
+
+const ApiV1EmisEmiIdRouteChildren: ApiV1EmisEmiIdRouteChildren = {
+  ApiV1EmisEmiIdCompleteRoute: ApiV1EmisEmiIdCompleteRoute,
+}
+
+const ApiV1EmisEmiIdRouteWithChildren = ApiV1EmisEmiIdRoute._addFileChildren(
+  ApiV1EmisEmiIdRouteChildren,
+)
+
+interface ApiV1InvestmentsIdRouteChildren {
+  ApiV1InvestmentsIdWithdrawRoute: typeof ApiV1InvestmentsIdWithdrawRoute
+}
+
+const ApiV1InvestmentsIdRouteChildren: ApiV1InvestmentsIdRouteChildren = {
+  ApiV1InvestmentsIdWithdrawRoute: ApiV1InvestmentsIdWithdrawRoute,
+}
+
+const ApiV1InvestmentsIdRouteWithChildren =
+  ApiV1InvestmentsIdRoute._addFileChildren(ApiV1InvestmentsIdRouteChildren)
+
+interface ApiV1InvestmentsDpsIdRouteChildren {
+  ApiV1InvestmentsDpsIdCloseRoute: typeof ApiV1InvestmentsDpsIdCloseRoute
+}
+
+const ApiV1InvestmentsDpsIdRouteChildren: ApiV1InvestmentsDpsIdRouteChildren = {
+  ApiV1InvestmentsDpsIdCloseRoute: ApiV1InvestmentsDpsIdCloseRoute,
+}
+
+const ApiV1InvestmentsDpsIdRouteWithChildren =
+  ApiV1InvestmentsDpsIdRoute._addFileChildren(
+    ApiV1InvestmentsDpsIdRouteChildren,
+  )
+
+interface ApiV1InvestmentsDpsRouteChildren {
+  ApiV1InvestmentsDpsIdRoute: typeof ApiV1InvestmentsDpsIdRouteWithChildren
+}
+
+const ApiV1InvestmentsDpsRouteChildren: ApiV1InvestmentsDpsRouteChildren = {
+  ApiV1InvestmentsDpsIdRoute: ApiV1InvestmentsDpsIdRouteWithChildren,
+}
+
+const ApiV1InvestmentsDpsRouteWithChildren =
+  ApiV1InvestmentsDpsRoute._addFileChildren(ApiV1InvestmentsDpsRouteChildren)
+
+interface ApiV1InvestmentsSavingsIdRouteChildren {
+  ApiV1InvestmentsSavingsIdDepositsRoute: typeof ApiV1InvestmentsSavingsIdDepositsRoute
+}
+
+const ApiV1InvestmentsSavingsIdRouteChildren: ApiV1InvestmentsSavingsIdRouteChildren =
+  {
+    ApiV1InvestmentsSavingsIdDepositsRoute:
+      ApiV1InvestmentsSavingsIdDepositsRoute,
+  }
+
+const ApiV1InvestmentsSavingsIdRouteWithChildren =
+  ApiV1InvestmentsSavingsIdRoute._addFileChildren(
+    ApiV1InvestmentsSavingsIdRouteChildren,
+  )
+
+interface ApiV1InvestmentsSavingsRouteChildren {
+  ApiV1InvestmentsSavingsIdRoute: typeof ApiV1InvestmentsSavingsIdRouteWithChildren
+}
+
+const ApiV1InvestmentsSavingsRouteChildren: ApiV1InvestmentsSavingsRouteChildren =
+  {
+    ApiV1InvestmentsSavingsIdRoute: ApiV1InvestmentsSavingsIdRouteWithChildren,
+  }
+
+const ApiV1InvestmentsSavingsRouteWithChildren =
+  ApiV1InvestmentsSavingsRoute._addFileChildren(
+    ApiV1InvestmentsSavingsRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
@@ -507,6 +1150,26 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCronSendRemindersRoute: ApiCronSendRemindersRoute,
+  ApiV1ActivityRoute: ApiV1ActivityRoute,
+  ApiV1DashboardRoute: ApiV1DashboardRoute,
+  ApiV1DeviceTokensRoute: ApiV1DeviceTokensRouteWithChildren,
+  ApiV1ProfileRoute: ApiV1ProfileRoute,
+  ApiV1DepositsDepositIdRoute: ApiV1DepositsDepositIdRouteWithChildren,
+  ApiV1EmisEmiIdRoute: ApiV1EmisEmiIdRouteWithChildren,
+  ApiV1EmisUpcomingRoute: ApiV1EmisUpcomingRoute,
+  ApiV1InvestmentsIdRoute: ApiV1InvestmentsIdRouteWithChildren,
+  ApiV1InvestmentsDpsRoute: ApiV1InvestmentsDpsRouteWithChildren,
+  ApiV1InvestmentsSavingsRoute: ApiV1InvestmentsSavingsRouteWithChildren,
+  ApiV1NotificationsClearReadRoute: ApiV1NotificationsClearReadRoute,
+  ApiV1NotificationsReadAllRoute: ApiV1NotificationsReadAllRoute,
+  ApiV1NotificationsUnreadCountRoute: ApiV1NotificationsUnreadCountRoute,
+  ApiV1SyncSnapshotRoute: ApiV1SyncSnapshotRoute,
+  ApiV1EmisIndexRoute: ApiV1EmisIndexRoute,
+  ApiV1InvestmentsIndexRoute: ApiV1InvestmentsIndexRoute,
+  ApiV1NotificationsIndexRoute: ApiV1NotificationsIndexRoute,
+  ApiV1EmiPaymentsPaymentIdMarkPaidRoute:
+    ApiV1EmiPaymentsPaymentIdMarkPaidRoute,
+  ApiV1NotificationsIdReadRoute: ApiV1NotificationsIdReadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -67,12 +67,14 @@ tests/lib/apns.test.ts                                 (new: JWT unit test)
 ### Task 1: Bearer plugin + API helpers + test harness
 
 **Files:**
+
 - Modify: `src/lib/auth.ts` (plugins array, line 114)
 - Create: `src/server/api-v1.ts`
 - Create: `tests/integration/helpers/rest.ts`
 - Test: `tests/integration/api-auth.test.ts`
 
 **Interfaces:**
+
 - Consumes: `auth` (`#/lib/auth`), `prisma` (`#/db`).
 - Produces (used by every later task):
   - `requireApiProfile(request: Request): Promise<{ profileId: string; userId: string }>` — throws `ApiError(401)` when unauthenticated.
@@ -364,10 +366,7 @@ export async function api(fn: () => Promise<unknown>): Promise<Response> {
       const message = error.issues
         .map((i) => `${i.path.join('.')}: ${i.message}`)
         .join('; ')
-      return jsonResponse(
-        { error: { code: 'validation_error', message } },
-        400,
-      )
+      return jsonResponse({ error: { code: 'validation_error', message } }, 400)
     }
     if (error instanceof Error) {
       if (error.constructor.name.startsWith('PrismaClient')) {
@@ -421,10 +420,12 @@ git commit -m "✨ feat(api): bearer auth plugin + /api/v1 helper layer"
 ### Task 2: EMI routes
 
 **Files:**
+
 - Create: `src/routes/api/v1/emis.index.ts`, `src/routes/api/v1/emis.upcoming.ts`, `src/routes/api/v1/emis.$emiId.ts`, `src/routes/api/v1/emis.$emiId.complete.ts`, `src/routes/api/v1/emi-payments.$paymentId.mark-paid.ts`
 - Test: `tests/integration/api-emis.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; `listEmisImpl`, `getEmiImpl`, `createEmiImpl`, `updateEmiImpl`, `deleteEmiImpl`, `markPaymentPaidImpl`, `completeEmiImpl`, `upcomingPaymentsImpl` from `#/server/emis.impl` (all `(profileId, data)` except `getEmiImpl(profileId, emiId)` and `upcomingPaymentsImpl(profileId)`); schemas from `#/lib/validators`.
 - Produces: HTTP endpoints `GET|POST /api/v1/emis`, `GET /api/v1/emis/upcoming`, `GET|PATCH|DELETE /api/v1/emis/:emiId`, `POST /api/v1/emis/:emiId/complete`, `POST /api/v1/emi-payments/:paymentId/mark-paid`. Exported handlers: `handleListEmis`, `handleCreateEmi`, `handleUpcomingPayments`, `handleGetEmi`, `handleUpdateEmi`, `handleDeleteEmi`, `handleCompleteEmi`, `handleMarkPaymentPaid` — each `(request: Request, <pathParam>?: string) => Promise<Response>`.
 
@@ -434,10 +435,7 @@ Create `tests/integration/api-emis.test.ts`:
 
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  handleCreateEmi,
-  handleListEmis,
-} from '#/routes/api/v1/emis.index'
+import { handleCreateEmi, handleListEmis } from '#/routes/api/v1/emis.index'
 import {
   handleDeleteEmi,
   handleGetEmi,
@@ -836,10 +834,12 @@ git commit -m "✨ feat(api): EMI REST routes under /api/v1"
 ### Task 3: Investment routes
 
 **Files:**
+
 - Create: `src/routes/api/v1/investments.index.ts`, `investments.$id.ts`, `investments.$id.withdraw.ts`, `investments.savings.ts`, `investments.savings.$id.ts`, `investments.savings.$id.deposits.ts`, `investments.dps.ts`, `investments.dps.$id.ts`, `investments.dps.$id.close.ts`, `deposits.$depositId.ts`, `deposits.$depositId.mark-paid.ts` (all under `src/routes/api/v1/`)
 - Test: `tests/integration/api-investments.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; from `#/server/investments.impl`: `listInvestmentsImpl(profileId, query)`, `getInvestmentImpl(profileId, id)`, `createInvestmentImpl`, `updateInvestmentImpl`, `deleteInvestmentImpl`, `createDpsInvestmentImpl`, `updateDpsInvestmentImpl`, `markDepositPaidImpl`, `createSavingsInvestmentImpl`, `updateSavingsInvestmentImpl`, `addDepositImpl`, `removeDepositImpl`, `withdrawImpl`, `closeDpsImpl` (all `(profileId, data)`). Note: savings delete uses `deleteInvestmentImpl` (same as the web's `deleteSavingsFn`).
 - Produces endpoints:
   - `GET|POST /api/v1/investments` (list w/ `status`,`type` query; POST = generic lump-sum create)
@@ -1491,10 +1491,12 @@ git commit -m "✨ feat(api): investment REST routes under /api/v1"
 ### Task 4: Profile routes
 
 **Files:**
+
 - Create: `src/routes/api/v1/profile.ts`
 - Test: `tests/integration/api-profile.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; from `#/server/profile.impl`: `getProfileImpl(userId)`, `updateProfileNameImpl(userId, { fullName, clientMutationId? })`, `updateProfileCurrencyImpl(userId, { preferredCurrency, clientMutationId? })`, `updateProfileLanguageImpl(userId, { preferredLanguage, clientMutationId? })`; `isLocale` from `#/lib/i18n/config`.
 - Produces: `GET /api/v1/profile`, `PATCH /api/v1/profile` (partial body: `fullName?`, `preferredCurrency?`, `preferredLanguage?`). Exported handlers `handleGetProfile(request)`, `handlePatchProfile(request)`.
 
@@ -1506,10 +1508,7 @@ Create `tests/integration/api-profile.test.ts`:
 
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  handleGetProfile,
-  handlePatchProfile,
-} from '#/routes/api/v1/profile'
+import { handleGetProfile, handlePatchProfile } from '#/routes/api/v1/profile'
 import { prisma, resetDb } from './helpers/db'
 import { apiRequest, createAuthedUser } from './helpers/rest'
 
@@ -1674,10 +1673,12 @@ git commit -m "✨ feat(api): profile REST routes under /api/v1"
 ### Task 5: Dashboard + activity routes
 
 **Files:**
+
 - Create: `src/routes/api/v1/dashboard.ts`, `src/routes/api/v1/activity.ts`
 - Test: `tests/integration/api-dashboard-activity.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; `getDashboardStatsImpl(profileId)` from `#/server/dashboard.impl`; `listActivityImpl(profileId, { cursor?, limit? })` from `#/server/activity-log.impl`.
 - Produces: `GET /api/v1/dashboard`; `GET /api/v1/activity?cursor=<id>&limit=<n>`. Exported handlers `handleDashboard(request)`, `handleListActivity(request)`.
 
@@ -1822,10 +1823,12 @@ git commit -m "✨ feat(api): dashboard + activity REST routes"
 ### Task 6: Notification routes
 
 **Files:**
+
 - Create: `src/routes/api/v1/notifications.index.ts`, `notifications.unread-count.ts`, `notifications.$id.read.ts`, `notifications.read-all.ts`, `notifications.clear-read.ts` (under `src/routes/api/v1/`)
 - Test: `tests/integration/api-notifications.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; from `#/server/notifications.impl`: `listNotificationsImpl(profileId)`, `unreadNotificationCountImpl(profileId)`, `markNotificationReadImpl(profileId, { id, clientMutationId? })`, `markAllNotificationsReadImpl(profileId, data)`, `clearReadNotificationsImpl(profileId, data)`, `createNotification({ profileId, type, title, body, link, dedupeKey })` (test seeding).
 - Produces: `GET /api/v1/notifications`, `GET /api/v1/notifications/unread-count`, `POST /api/v1/notifications/:id/read`, `POST /api/v1/notifications/read-all`, `POST /api/v1/notifications/clear-read`. Exported handlers: `handleListNotifications`, `handleUnreadCount`, `handleMarkRead`, `handleMarkAllRead`, `handleClearRead`.
 
@@ -2098,10 +2101,12 @@ git commit -m "✨ feat(api): notification REST routes under /api/v1"
 ### Task 7: Sync snapshot endpoint
 
 **Files:**
+
 - Create: `src/routes/api/v1/sync.snapshot.ts`
 - Test: `tests/integration/api-snapshot.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; `prisma` directly (raw rows — Prisma `Decimal.toJSON()` yields strings, `Date` yields ISO, so plain `JSON.stringify` satisfies the wire conventions).
 - Produces: `GET /api/v1/sync/snapshot` → `{ serverTime, profile, investments, investmentDeposits, investmentWithdrawals, emis, emiPayments, notifications }`, every collection scoped by `profileId`. Exported handler `handleSnapshot(request)`. This is the iOS SyncEngine's pull endpoint.
 
@@ -2251,12 +2256,14 @@ git commit -m "✨ feat(api): full-snapshot sync endpoint"
 ### Task 8: DeviceToken model + routes
 
 **Files:**
+
 - Modify: `prisma/schema.prisma` (add model + relation on `Profile`)
 - Modify: `tests/integration/helpers/db.ts` (truncate list)
 - Create: `src/routes/api/v1/device-tokens.ts`, `src/routes/api/v1/device-tokens.$token.ts`
 - Test: `tests/integration/api-device-tokens.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers; `prisma`.
 - Produces: Prisma model `DeviceToken` (`prisma.deviceToken`); `POST /api/v1/device-tokens` body `{ token: string, platform?: 'ios' }` (upsert on token — re-registering moves the token to the caller's profile); `DELETE /api/v1/device-tokens/:token` (scoped delete, used at logout). Exported handlers `handleRegisterDeviceToken(request)`, `handleDeleteDeviceToken(request, token)`. Task 10's cron branch reads `prisma.deviceToken.findMany({ where: { profileId: { in } } })`.
 
@@ -2403,9 +2410,7 @@ const registerSchema = z.object({
   platform: z.literal('ios').default('ios'),
 })
 
-export function handleRegisterDeviceToken(
-  request: Request,
-): Promise<Response> {
+export function handleRegisterDeviceToken(request: Request): Promise<Response> {
   return api(async () => {
     const { profileId } = await requireApiProfile(request)
     const input = registerSchema.parse(await readMutationInput(request))
@@ -2476,10 +2481,12 @@ git commit -m "✨ feat(api): DeviceToken model + registration routes for APNs"
 ### Task 9: APNs sender
 
 **Files:**
+
 - Create: `src/server/apns.ts`
 - Test: `tests/lib/apns.test.ts` (unit project — no DB needed)
 
 **Interfaces:**
+
 - Consumes: `node:http2`, `node:crypto` only. Env vars: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY` (p8 PEM; `\n` escapes allowed), `APNS_BUNDLE_ID`, optional `APNS_ENV=development`.
 - Produces (consumed by Task 10):
   - `buildApnsConfig(): ApnsConfig | null` (null when env unset — APNs silently disabled)
@@ -2692,10 +2699,12 @@ git commit -m "✨ feat(api): APNs HTTP/2 sender with ES256 provider JWT"
 ### Task 10: APNs branch in the reminder cron
 
 **Files:**
+
 - Modify: `src/routes/api/cron/send-reminders.ts` (after the web-push block, before the final `return json(...)` — currently lines 384-427)
 - Test: `tests/integration/api-apns-reminders.test.ts`
 
 **Interfaces:**
+
 - Consumes: `buildApnsConfig`, `sendApns` from `#/server/apns` (Task 9); `prisma.deviceToken` (Task 8); the cron's existing `pushJobs` array (`{ profileId, payload: { title, body, link } }`).
 - Produces: cron response gains `apnsPushed`, `apnsExpired`, `apnsFailed` counters. Reminders now reach iOS devices; `gone` tokens are deleted. Badge is set to the profile's unread notification count.
 
@@ -2846,80 +2855,80 @@ import { buildApnsConfig, sendApns } from '#/server/apns'
 After the web-push block (after the `if (pushJobs.length > 0) { ... }` closing brace) and before the final `return json(...)`, add:
 
 ```ts
-  // APNs branch — mirrors the web-push dispatch for native iOS devices.
-  // Skipped entirely when APNS_* env vars are not configured.
-  let apnsPushed = 0
-  let apnsExpired = 0
-  let apnsFailed = 0
-  const apnsConfig = buildApnsConfig()
-  if (apnsConfig && pushJobs.length > 0) {
-    const profileIds = [...new Set(pushJobs.map((j) => j.profileId))]
-    const [tokens, unreadCounts] = await Promise.all([
-      prisma.deviceToken.findMany({
-        where: { profileId: { in: profileIds } },
-      }),
-      prisma.notification.groupBy({
-        by: ['profileId'],
-        where: { profileId: { in: profileIds }, readAt: null },
-        _count: { _all: true },
-      }),
-    ])
-    const tokensByProfile = new Map<string, string[]>()
-    for (const t of tokens) {
-      const list = tokensByProfile.get(t.profileId) ?? []
-      list.push(t.token)
-      tokensByProfile.set(t.profileId, list)
-    }
-    const unreadByProfile = new Map(
-      unreadCounts.map((c) => [c.profileId, c._count._all]),
-    )
+// APNs branch — mirrors the web-push dispatch for native iOS devices.
+// Skipped entirely when APNS_* env vars are not configured.
+let apnsPushed = 0
+let apnsExpired = 0
+let apnsFailed = 0
+const apnsConfig = buildApnsConfig()
+if (apnsConfig && pushJobs.length > 0) {
+  const profileIds = [...new Set(pushJobs.map((j) => j.profileId))]
+  const [tokens, unreadCounts] = await Promise.all([
+    prisma.deviceToken.findMany({
+      where: { profileId: { in: profileIds } },
+    }),
+    prisma.notification.groupBy({
+      by: ['profileId'],
+      where: { profileId: { in: profileIds }, readAt: null },
+      _count: { _all: true },
+    }),
+  ])
+  const tokensByProfile = new Map<string, string[]>()
+  for (const t of tokens) {
+    const list = tokensByProfile.get(t.profileId) ?? []
+    list.push(t.token)
+    tokensByProfile.set(t.profileId, list)
+  }
+  const unreadByProfile = new Map(
+    unreadCounts.map((c) => [c.profileId, c._count._all]),
+  )
 
-    const goneTokens = new Set<string>()
-    const apnsResults = await Promise.all(
-      pushJobs.flatMap((job) => {
-        const deviceTokens = tokensByProfile.get(job.profileId) ?? []
-        return deviceTokens.map(async (deviceToken) => {
-          const result = await sendApns(apnsConfig, deviceToken, {
-            title: job.payload.title,
-            body: job.payload.body,
-            link: job.payload.link,
-            badge: unreadByProfile.get(job.profileId) ?? 0,
-          })
-          return { deviceToken, result }
+  const goneTokens = new Set<string>()
+  const apnsResults = await Promise.all(
+    pushJobs.flatMap((job) => {
+      const deviceTokens = tokensByProfile.get(job.profileId) ?? []
+      return deviceTokens.map(async (deviceToken) => {
+        const result = await sendApns(apnsConfig, deviceToken, {
+          title: job.payload.title,
+          body: job.payload.body,
+          link: job.payload.link,
+          badge: unreadByProfile.get(job.profileId) ?? 0,
         })
-      }),
-    )
-    for (const { deviceToken, result } of apnsResults) {
-      if (result.gone) {
-        goneTokens.add(deviceToken)
-      } else if (result.ok) {
-        apnsPushed += 1
-      } else {
-        apnsFailed += 1
-      }
-    }
-    if (goneTokens.size > 0) {
-      const del = await prisma.deviceToken.deleteMany({
-        where: { token: { in: [...goneTokens] } },
+        return { deviceToken, result }
       })
-      apnsExpired = del.count
+    }),
+  )
+  for (const { deviceToken, result } of apnsResults) {
+    if (result.gone) {
+      goneTokens.add(deviceToken)
+    } else if (result.ok) {
+      apnsPushed += 1
+    } else {
+      apnsFailed += 1
     }
   }
+  if (goneTokens.size > 0) {
+    const del = await prisma.deviceToken.deleteMany({
+      where: { token: { in: [...goneTokens] } },
+    })
+    apnsExpired = del.count
+  }
+}
 ```
 
 and change the final return to:
 
 ```ts
-  return json({
-    scanned,
-    created,
-    pushed,
-    expired,
-    failed,
-    apnsPushed,
-    apnsExpired,
-    apnsFailed,
-  })
+return json({
+  scanned,
+  created,
+  pushed,
+  expired,
+  failed,
+  apnsPushed,
+  apnsExpired,
+  apnsFailed,
+})
 ```
 
 - [ ] **Step 4: Run the new test and the existing cron test**
@@ -2953,6 +2962,7 @@ git commit -m "✨ feat(cron): send EMI/DPS reminders to iOS devices via APNs"
 ### Task 11: Full verification + route tree
 
 **Files:**
+
 - Modify (generated): `src/routeTree.gen.ts` (regenerated by the build — do not hand-edit)
 
 - [ ] **Step 1: Run the full test suite**
