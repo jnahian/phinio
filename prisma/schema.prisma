@@ -99,6 +99,7 @@ model Profile {
   activityLogs          ActivityLog[]
   pushSubscriptions     PushSubscription[]
   processedMutations    ProcessedMutation[]
+  deviceTokens          DeviceToken[]
 
   @@map("profiles")
 }
@@ -283,6 +284,22 @@ model PushSubscription {
 
   @@index([profileId])
   @@map("push_subscriptions")
+}
+
+// Native (APNs) push targets — one row per installed iOS app instance.
+// Separate from PushSubscription because Web Push and APNs payload/handshake
+// shapes share nothing but the profile relation.
+model DeviceToken {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String   @default("ios")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("device_tokens")
 }
 
 // Idempotency log for offline-replay safety. Every mutating server function
