@@ -40,17 +40,22 @@ struct RootView: View {
   @EnvironmentObject private var auth: AuthManager
   @EnvironmentObject private var sync: SyncEngine
   @Environment(\.modelContext) private var context
+  @AppStorage("hasOnboarded") private var hasOnboarded = false
 
   var body: some View {
-    if auth.isAuthenticated {
+    if auth.isAuthenticated && hasOnboarded {
       MainTabView()
         .onChange(of: sync.state) { _, state in
           if state == .unauthorized {
             auth.signOut(container: context.container)
           }
         }
+    } else if auth.isAuthenticated {
+      // Signed in mid-onboarding (or flag lost): resume at priming.
+      OnboardingView(startAt: .priming)
     } else {
-      LoginView()
+      // Post-sign-out relaunches skip the welcome pages.
+      OnboardingView(startAt: hasOnboarded ? .auth : .welcome)
     }
   }
 }

@@ -18,6 +18,10 @@ final class AuthManager: ObservableObject {
     isAuthenticated = true
   }
 
+  func signUp(name: String, email: String, password: String) async throws {
+    try await client.signUp(name: name, email: email, password: password)
+  }
+
   /// Explicit logout: drop the token and wipe local data (spec §2).
   func signOut(container: ModelContainer) {
     Keychain.deleteToken()
