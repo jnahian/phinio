@@ -96,4 +96,27 @@ final class APIClient: SyncTransport {
     }
     return token
   }
+
+  /// Built with URLComponents rather than `request(path:)` — `appending(path:)`
+  /// would percent-encode the `?` and break the query string.
+  func fetchActivity(cursor: String?) async throws -> ActivityPageDTO {
+    var comps = URLComponents(
+      url: baseURL.appending(path: "/api/v1/activity"),
+      resolvingAgainstBaseURL: false)!
+    comps.queryItems = [URLQueryItem(name: "limit", value: "30")]
+    if let cursor {
+      comps.queryItems!.append(URLQueryItem(name: "cursor", value: cursor))
+    }
+    var req = URLRequest(url: comps.url!)
+    req.httpMethod = "GET"
+    if let token = tokenProvider() {
+      req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+    let data = try await run(req)
+    do {
+      return try JSONDecoder().decode(ActivityPageDTO.self, from: data)
+    } catch {
+      throw APIError.decoding
+    }
+  }
 }

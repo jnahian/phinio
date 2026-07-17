@@ -99,3 +99,27 @@ struct SnapshotDTO: Decodable {
   let emiPayments: [EmiPaymentDTO]
   let notifications: [NotificationDTO]
 }
+
+/// Wire shapes for GET /api/v1/activity. Server-derived, not in the snapshot.
+struct ActivityChangeDTO: Decodable {
+  let field: String
+  let from: String?
+  let to: String?
+  let currency: String?
+}
+
+struct ActivityItemDTO: Decodable, Identifiable {
+  let id: String
+  let action: String
+  let entityType: String
+  let entityId: String?
+  let entityLabel: String
+  let summary: String
+  let changes: [ActivityChangeDTO]?
+  let createdAt: String
+}
+
+struct ActivityPageDTO: Decodable {
+  let items: [ActivityItemDTO]
+  let nextCursor: String?
+}
