@@ -1,0 +1,1462 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {},
+    "#%lld": {},
+    "#%lld · ": {},
+    "%": {},
+    "%@%%": {},
+    "%@%% %@": {},
+    "%lld of %lld installments paid": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld কিস্তির মধ্যে %1$lld টি পরিশোধিত"
+          }
+        }
+      }
+    },
+    "%lld of %lld payments made": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld টি পেমেন্টের মধ্যে %1$lld টি সম্পন্ন"
+          }
+        }
+      }
+    },
+    "%lld/%lld paid · %@": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld টির মধ্যে %1$lld টি পরিশোধিত · %3$@"
+          }
+        }
+      }
+    },
+    "Active": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সক্রিয়"
+          }
+        }
+      }
+    },
+    "Activity": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কার্যকলাপ"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "যোগ করুন"
+          }
+        }
+      }
+    },
+    "Add deposit": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "জমা যোগ করুন"
+          }
+        }
+      }
+    },
+    "Allocation": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বরাদ্দ"
+          }
+        }
+      }
+    },
+    "Amortization": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ঋণপরিশোধ"
+          }
+        }
+      }
+    },
+    "Amount": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরিমাণ"
+          }
+        }
+      }
+    },
+    "Amount received": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রাপ্ত পরিমাণ"
+          }
+        }
+      }
+    },
+    "An initial balance is recorded as your first deposit.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রারম্ভিক ব্যালেন্স আপনার প্রথম জমা হিসাবে রেকর্ড করা হয়।"
+          }
+        }
+      }
+    },
+    "Assets minus remaining EMI balance": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সম্পদ বিয়োগ অবশিষ্ট ইএমআই ব্যালেন্স"
+          }
+        }
+      }
+    },
+    "Available": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "উপলব্ধ"
+          }
+        }
+      }
+    },
+    "BDT": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাকা"
+          }
+        }
+      }
+    },
+    "Balance": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ব্যালেন্স"
+          }
+        }
+      }
+    },
+    "Bank loan": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ব্যাংক ঋণ"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বাতিল"
+          }
+        }
+      }
+    },
+    "Check your email": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনার ইমেল দেখুন"
+          }
+        }
+      }
+    },
+    "Checking…": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরীক্ষা করা হচ্ছে…"
+          }
+        }
+      }
+    },
+    "Clear read": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পঠিত মুছুন"
+          }
+        }
+      }
+    },
+    "Close DPS": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ডিপিএস বন্ধ করুন"
+          }
+        }
+      }
+    },
+    "Close early": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মেয়াদের আগে বন্ধ করুন"
+          }
+        }
+      }
+    },
+    "Close investment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ বন্ধ করুন"
+          }
+        }
+      }
+    },
+    "Closes on": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ হবে"
+          }
+        }
+      }
+    },
+    "Closing requires withdrawing the full current value.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ করতে হলে সম্পূর্ণ বর্তমান মূল্য প্রত্যাহার করতে হবে।"
+          }
+        }
+      }
+    },
+    "Closure date": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধের তারিখ"
+          }
+        }
+      }
+    },
+    "Complete EMI": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইএমআই সম্পন্ন করুন"
+          }
+        }
+      }
+    },
+    "Complete early": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগেভাগে সম্পন্ন করুন"
+          }
+        }
+      }
+    },
+    "Completed": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সম্পন্ন"
+          }
+        }
+      }
+    },
+    "Completed on": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সম্পন্ন হয়েছে"
+          }
+        }
+      }
+    },
+    "Completion": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সমাপ্তি"
+          }
+        }
+      }
+    },
+    "Compound": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চক্রবৃদ্ধি"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চালিয়ে যান"
+          }
+        }
+      }
+    },
+    "Couldn't reach the server — you can start offline.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সার্ভারে পৌঁছানো যায়নি — আপনি অফলাইনে শুরু করতে পারেন।"
+          }
+        }
+      }
+    },
+    "Create account": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অ্যাকাউন্ট তৈরি করুন"
+          }
+        }
+      }
+    },
+    "Credit card": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ক্রেডিট কার্ড"
+          }
+        }
+      }
+    },
+    "Currency": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মুদ্রা"
+          }
+        }
+      }
+    },
+    "Current value": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বর্তমান মূল্য"
+          }
+        }
+      }
+    },
+    "DPS": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ডিপিএস"
+          }
+        }
+      }
+    },
+    "Dashboard": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ড্যাশবোর্ড"
+          }
+        }
+      }
+    },
+    "Date": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "তারিখ"
+          }
+        }
+      }
+    },
+    "Date of investment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগের তারিখ"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মুছে ফেলুন"
+          }
+        }
+      }
+    },
+    "Delete EMI": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইএমআই মুছে ফেলুন"
+          }
+        }
+      }
+    },
+    "Delete investment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ মুছে ফেলুন"
+          }
+        }
+      }
+    },
+    "Delete savings": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সঞ্চয় মুছে ফেলুন"
+          }
+        }
+      }
+    },
+    "Delete this EMI and its schedule?": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই ইএমআই ও এর সময়সূচি মুছে ফেলবেন?"
+          }
+        }
+      }
+    },
+    "Delete this investment?": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই বিনিয়োগ মুছে ফেলবেন?"
+          }
+        }
+      }
+    },
+    "Delete this savings?": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই সঞ্চয় মুছে ফেলবেন?"
+          }
+        }
+      }
+    },
+    "Deposited so far": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এ পর্যন্ত জমা"
+          }
+        }
+      }
+    },
+    "Deposits": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "জমাসমূহ"
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বাতিল করুন"
+          }
+        }
+      }
+    },
+    "EMIs": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইএমআই"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সম্পাদনা"
+          }
+        }
+      }
+    },
+    "Edit DPS": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ডিপিএস সম্পাদনা"
+          }
+        }
+      }
+    },
+    "Edit EMI": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইএমআই সম্পাদনা"
+          }
+        }
+      }
+    },
+    "Edit investment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ সম্পাদনা"
+          }
+        }
+      }
+    },
+    "Edit savings": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সঞ্চয় সম্পাদনা"
+          }
+        }
+      }
+    },
+    "Email": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইমেল"
+          }
+        }
+      }
+    },
+    "Enable in Settings…": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সেটিংসে সক্রিয় করুন…"
+          }
+        }
+      }
+    },
+    "Enable reminders": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "রিমাইন্ডার সক্রিয় করুন"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইংরেজি"
+          }
+        }
+      }
+    },
+    "Estimated closure date": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আনুমানিক সমাপ্তির তারিখ"
+          }
+        }
+      }
+    },
+    "Exit value": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এক্সিট মূল্য"
+          }
+        }
+      }
+    },
+    "Filter": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ফিল্টার"
+          }
+        }
+      }
+    },
+    "First payment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রথম পেমেন্ট"
+          }
+        }
+      }
+    },
+    "Full name": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পূর্ণ নাম"
+          }
+        }
+      }
+    },
+    "Get notified before EMI payments and DPS installments are due, so nothing slips.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইএমআই পেমেন্ট ও ডিপিএস কিস্তি পরিশোধ্য হওয়ার আগে জানুন, যাতে কিছু হাতছাড়া না হয়।"
+          }
+        }
+      }
+    },
+    "Get started": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরু করুন"
+          }
+        }
+      }
+    },
+    "Getting your data…": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনার ডেটা আনা হচ্ছে…"
+          }
+        }
+      }
+    },
+    "Have an account? Sign in": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অ্যাকাউন্ট আছে? সাইন ইন করুন"
+          }
+        }
+      }
+    },
+    "I've verified — continue": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আমি যাচাই করেছি — চালিয়ে যান"
+          }
+        }
+      }
+    },
+    "Initial balance": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রারম্ভিক ব্যালেন্স"
+          }
+        }
+      }
+    },
+    "Installments": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কিস্তি"
+          }
+        }
+      }
+    },
+    "Interest": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সুদ"
+          }
+        }
+      }
+    },
+    "Interest rate (%)": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সুদের হার (%)"
+          }
+        }
+      }
+    },
+    "Interest type": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সুদের ধরন"
+          }
+        }
+      }
+    },
+    "Invested": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগকৃত"
+          }
+        }
+      }
+    },
+    "Invested amount": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগকৃত পরিমাণ"
+          }
+        }
+      }
+    },
+    "Invested on": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ করা হয়েছে"
+          }
+        }
+      }
+    },
+    "Investments": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ"
+          }
+        }
+      }
+    },
+    "Label": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "লেবেল"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ভাষা"
+          }
+        }
+      }
+    },
+    "Lump sum": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এককালীন"
+          }
+        }
+      }
+    },
+    "Mark all read": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সব পঠিত হিসাবে চিহ্নিত করুন"
+          }
+        }
+      }
+    },
+    "Mark all remaining payments as paid?": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অবশিষ্ট সব পেমেন্ট পরিশোধিত হিসাবে চিহ্নিত করবেন?"
+          }
+        }
+      }
+    },
+    "Maybe later": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরে দেখা যাবে"
+          }
+        }
+      }
+    },
+    "Monthly EMI": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মাসিক ইএমআই"
+          }
+        }
+      }
+    },
+    "Monthly deposit": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মাসিক জমা"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নাম"
+          }
+        }
+      }
+    },
+    "Net worth": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নেট সম্পদ"
+          }
+        }
+      }
+    },
+    "New DPS": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন ডিপিএস"
+          }
+        }
+      }
+    },
+    "New EMI": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন ইএমআই"
+          }
+        }
+      }
+    },
+    "New here? Create an account": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন? অ্যাকাউন্ট তৈরি করুন"
+          }
+        }
+      }
+    },
+    "New investment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন বিনিয়োগ"
+          }
+        }
+      }
+    },
+    "New savings": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন সঞ্চয়"
+          }
+        }
+      }
+    },
+    "No EMIs yet": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এখনো কোনো ইএমআই নেই"
+          }
+        }
+      }
+    },
+    "No deposits yet": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এখনো কোনো জমা নেই"
+          }
+        }
+      }
+    },
+    "No holdings": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কোনো হোল্ডিং নেই"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নোট"
+          }
+        }
+      }
+    },
+    "Nothing due in the next 30 days": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগামী ৩০ দিনে কিছু পরিশোধ্য নেই"
+          }
+        }
+      }
+    },
+    "Notifications": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নোটিফিকেশন"
+          }
+        }
+      }
+    },
+    "Paid": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরিশোধিত"
+          }
+        }
+      }
+    },
+    "Password": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পাসওয়ার্ড"
+          }
+        }
+      }
+    },
+    "Payment reminders": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পেমেন্ট রিমাইন্ডার"
+          }
+        }
+      }
+    },
+    "Phinio": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ফিনিও"
+          }
+        }
+      }
+    },
+    "Premature closure removes remaining installments. This can't be undone locally.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মেয়াদের আগে বন্ধ করলে অবশিষ্ট কিস্তিগুলো সরে যাবে। এটি এই ডিভাইসে ফিরিয়ে নেওয়া যাবে না।"
+          }
+        }
+      }
+    },
+    "Principal": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মূল"
+          }
+        }
+      }
+    },
+    "Processing fee": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রসেসিং ফি"
+          }
+        }
+      }
+    },
+    "Processing fee (optional)": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রসেসিং ফি (ঐচ্ছিক)"
+          }
+        }
+      }
+    },
+    "Profile": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রোফাইল"
+          }
+        }
+      }
+    },
+    "Reminders enabled": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "রিমাইন্ডার সক্রিয় হয়েছে"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সরান"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সংরক্ষণ"
+          }
+        }
+      }
+    },
+    "Save changes": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরিবর্তন সংরক্ষণ"
+          }
+        }
+      }
+    },
+    "Savings": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সঞ্চয়"
+          }
+        }
+      }
+    },
+    "Schedule appears after first sync": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রথম সিঙ্কের পর সময়সূচি দেখা যাবে"
+          }
+        }
+      }
+    },
+    "Schedule preview": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সময়সূচির পূর্বরূপ"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সেটিংস"
+          }
+        }
+      }
+    },
+    "Sign in": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সাইন ইন করুন"
+          }
+        }
+      }
+    },
+    "Sign out": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সাইন আউট"
+          }
+        }
+      }
+    },
+    "Sign out? Local data on this device will be erased.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সাইন আউট করবেন? এই ডিভাইসের স্থানীয় ডেটা মুছে ফেলা হবে।"
+          }
+        }
+      }
+    },
+    "Simple": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সরল"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এড়িয়ে যান"
+          }
+        }
+      }
+    },
+    "Start date": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরুর তারিখ"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্থিতি"
+          }
+        }
+      }
+    },
+    "Sync": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিঙ্ক"
+          }
+        }
+      }
+    },
+    "Sync now": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এখনই সিঙ্ক করুন"
+          }
+        }
+      }
+    },
+    "Tenure: %lld months": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মেয়াদ: %lld মাস"
+          }
+        }
+      }
+    },
+    "The installment schedule appears after the first sync.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কিস্তির সময়সূচি প্রথম সিঙ্কের পর দেখা যাবে।"
+          }
+        }
+      }
+    },
+    "These changes were rejected by the server and undone by the last sync.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই পরিবর্তনগুলো সার্ভার প্রত্যাখ্যান করেছে এবং সর্বশেষ সিঙ্কে ফিরিয়ে নেওয়া হয়েছে।"
+          }
+        }
+      }
+    },
+    "Total deposited": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মোট জমা"
+          }
+        }
+      }
+    },
+    "Total outflow": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মোট বহির্গমন"
+          }
+        }
+      }
+    },
+    "Type": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রকার"
+          }
+        }
+      }
+    },
+    "USD": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ডলার"
+          }
+        }
+      }
+    },
+    "Unpay": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরিশোধ বাতিল"
+          }
+        }
+      }
+    },
+    "Upcoming payments": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আসন্ন পেমেন্ট"
+          }
+        }
+      }
+    },
+    "Value": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মূল্য"
+          }
+        }
+      }
+    },
+    "We sent a verification link to %@. Tap it, then come back here.": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আমরা %@-এ একটি যাচাইকরণ লিঙ্ক পাঠিয়েছি। এতে ট্যাপ করুন, তারপর এখানে ফিরে আসুন।"
+          }
+        }
+      }
+    },
+    "Withdraw": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রত্যাহার"
+          }
+        }
+      }
+    },
+    "Withdrawals": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রত্যাহার"
+          }
+        }
+      }
+    },
+    "Working…": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কাজ চলছে…"
+          }
+        }
+      }
+    },
+    "বাংলা": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বাংলা"
+          }
+        }
+      }
+    },
+    "… and %lld more": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "… এবং আরও %lld টি"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
