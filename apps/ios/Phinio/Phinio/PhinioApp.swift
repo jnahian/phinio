@@ -6,6 +6,9 @@ struct PhinioApp: App {
   @Environment(\.scenePhase) private var scenePhase
 
   private let container: ModelContainer
+  /// Plain `let`, not @StateObject — Task 14's AppDelegate needs a reference
+  /// it can grab in `init()`.
+  private let deepLinkRouter = DeepLinkRouter()
   @StateObject private var auth: AuthManager
   @StateObject private var sync: SyncEngine
 
@@ -22,6 +25,7 @@ struct PhinioApp: App {
       RootView()
         .environmentObject(auth)
         .environmentObject(sync)
+        .environmentObject(deepLinkRouter)
     }
     .modelContainer(container)
     .onChange(of: scenePhase) { _, phase in
@@ -39,7 +43,7 @@ struct RootView: View {
 
   var body: some View {
     if auth.isAuthenticated {
-      DebugHomeView()
+      MainTabView()
         .onChange(of: sync.state) { _, state in
           if state == .unauthorized {
             auth.signOut(container: context.container)
