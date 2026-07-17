@@ -33,6 +33,9 @@ private func makeClient(token: String? = "tok") -> APIClient {
     tokenProvider: { token })
 }
 
+// Serialized: the URLProtocol stub is process-global static state, so
+// parallel tests would consume each other's queued responses.
+@Suite(.serialized)
 struct APIClientTests {
   init() {
     StubURLProtocol.responses = []

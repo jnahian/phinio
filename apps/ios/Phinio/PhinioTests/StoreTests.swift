@@ -32,13 +32,16 @@ struct ModelContainerTests {
 
 @MainActor
 struct StoreTests {
-  private func makeStore() throws -> (Store, ModelContext) {
+  // ModelContext does NOT retain its ModelContainer — the container must
+  // stay alive for the test's duration or SwiftData traps on first use.
+  private func makeStore() throws -> (Store, ModelContainer) {
     let container = try makeModelContainer(inMemory: true)
-    return (Store(context: container.mainContext), container.mainContext)
+    return (Store(context: container.mainContext), container)
   }
 
   @Test func createEmiGeneratesScheduleAndOneOutboxRow() throws {
-    let (store, context) = try makeStore()
+    let (store, container) = try makeStore()
+    let context = container.mainContext
     let emi = try store.createEmi(
       label: "Car loan", type: .bankLoan,
       principal: Money.decimal("100000")!, interestRate: Money.decimal("12")!,
@@ -62,7 +65,8 @@ struct StoreTests {
   }
 
   @Test func markPaymentPaidFlipsStatusAndEnqueues() throws {
-    let (store, context) = try makeStore()
+    let (store, container) = try makeStore()
+    let context = container.mainContext
     let emi = try store.createEmi(
       label: "Loan", type: .bankLoan,
       principal: Money.decimal("12000")!, interestRate: Money.decimal("10")!,
