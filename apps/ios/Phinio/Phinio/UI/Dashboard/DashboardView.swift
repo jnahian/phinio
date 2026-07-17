@@ -130,10 +130,7 @@ struct DashboardView: View {
           .font(.subheadline).foregroundStyle(.secondary)
       } else {
         ForEach(stats.upcoming) { item in
-          NavigationLink(value: destination(for: item)) {
-            UpcomingRow(item: item)
-          }
-          .buttonStyle(.plain)
+          upcomingLink(item)
           Divider()
         }
       }
@@ -142,10 +139,21 @@ struct DashboardView: View {
     .background(.fill.tertiary, in: .rect(cornerRadius: 20))
   }
 
-  private func destination(for item: UpcomingItem) -> AnyHashable {
+  // Typed NavigationLinks — a single AnyHashable-boxed value doesn't reliably
+  // match the tab's typed navigationDestination(for:), so the tap would no-op.
+  @ViewBuilder
+  private func upcomingLink(_ item: UpcomingItem) -> some View {
     switch item.kind {
-    case .emi: EmiRoute(id: item.parentId)
-    case .deposit: InvestmentRoute(id: item.parentId)
+    case .emi:
+      NavigationLink(value: EmiRoute(id: item.parentId)) {
+        UpcomingRow(item: item)
+      }
+      .buttonStyle(.plain)
+    case .deposit:
+      NavigationLink(value: InvestmentRoute(id: item.parentId)) {
+        UpcomingRow(item: item)
+      }
+      .buttonStyle(.plain)
     }
   }
 

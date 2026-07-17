@@ -16,6 +16,7 @@ struct SettingsView: View {
   @State private var language = "en"
   @State private var notifStatus: UNAuthorizationStatus = .notDetermined
   @State private var confirmSignOut = false
+  @State private var seeded = false
 
   private var profile: Profile? { profiles.first }
   private var dirty: Bool {
@@ -97,12 +98,16 @@ struct SettingsView: View {
       }
     }
     .navigationTitle("Settings")
-    .onAppear {
-      if let p = profile {
-        fullName = p.fullName
-        currency = p.preferredCurrency
-        language = p.preferredLanguage
-      }
+    // Seed exactly once, when the profile first becomes available — @Query
+    // loads async, so it may arrive after the view appears. Guarding on
+    // `seeded` (not just onAppear) avoids showing stale defaults, and firing
+    // once avoids clobbering in-progress edits when a later sync updates it.
+    .onChange(of: profile?.id, initial: true) { _, _ in
+      guard !seeded, let p = profile else { return }
+      seeded = true
+      fullName = p.fullName
+      currency = p.preferredCurrency
+      language = p.preferredLanguage
     }
     .task { await refreshNotifStatus() }
     .confirmationDialog(
