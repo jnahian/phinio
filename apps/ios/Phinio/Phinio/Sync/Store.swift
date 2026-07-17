@@ -28,7 +28,8 @@ struct Store {
   @discardableResult
   func createEmi(
     label: String, type: EmiMethod, principal: Decimal, interestRate: Decimal,
-    tenureMonths: Int, startDate: Date, notes: String?
+    tenureMonths: Int, startDate: Date, notes: String?,
+    processingFee: Decimal? = nil
   ) throws -> Emi {
     let rows = try EmiCalculator.amortization(
       principal: NSDecimalNumber(decimal: principal).doubleValue,
@@ -58,6 +59,18 @@ struct Store {
         status: "upcoming", paidAt: nil, updatedAt: now))
     }
 
+    var feeId: String? = nil
+    if let processingFee, processingFee > 0 {
+      let id = newId()
+      feeId = id
+      // Sentinel fee row, mirroring the server: paymentNumber 0, pre-paid.
+      context.insert(EmiPayment(
+        id: id, emiId: emiId, paymentNumber: 0, dueDate: startDate,
+        emiAmount: processingFee, principalComponent: 0, interestComponent: 0,
+        remainingBalance: principal, status: "paid", paidAt: now,
+        updatedAt: now))
+    }
+
     var body: [String: Any] = [
       "id": emiId,
       "label": label,
@@ -69,15 +82,37 @@ struct Store {
       "paymentIds": paymentIds,
     ]
     if let notes { body["notes"] = notes }
+    if let processingFee, processingFee > 0 {
+      body["processingFee"] = Money.string(processingFee)
+      body["processingFeeId"] = feeId!
+    }
     try enqueue(method: "POST", path: "/api/v1/emis", body: body)
     try context.save()
     return emi
   }
 
   func markPaymentPaid(_ payment: EmiPayment, paid: Bool) throws {
+    guard payment.paymentNumber > 0 else {
+      throw StoreError.validation("Processing fee cannot be modified")
+    }
     payment.status = paid ? "paid" : "upcoming"
     payment.paidAt = paid ? Date() : nil
     payment.updatedAt = Date()
+    // Auto-complete / reopen the parent EMI, mirroring markPaymentPaidImpl.
+    let emiId = payment.emiId
+    if let emi = try context.fetch(FetchDescriptor<Emi>(
+      predicate: #Predicate { $0.id == emiId })).first {
+      let unpaidRemain = try context.fetch(FetchDescriptor<EmiPayment>(
+        predicate: #Predicate { $0.emiId == emiId }))
+        .contains { $0.paymentNumber > 0 && $0.status != "paid" }
+      if paid && !unpaidRemain {
+        emi.status = "completed"
+        emi.updatedAt = Date()
+      } else if !paid && emi.status == "completed" {
+        emi.status = "active"
+        emi.updatedAt = Date()
+      }
+    }
     try enqueue(
       method: "POST",
       path: "/api/v1/emi-payments/\(payment.id)/mark-paid",
@@ -379,6 +414,90 @@ struct Store {
     if let notes { body["notes"] = notes }
     try enqueue(method: "POST", path: "/api/v1/investments/dps/\(inv.id)/close",
                 body: body)
+    try context.save()
+  }
+
+  // MARK: - EMI management
+
+  func updateEmi(_ emi: Emi, label: String, notes: String?) throws {
+    emi.label = label
+    emi.notes = notes
+    emi.updatedAt = Date()
+    var body: [String: Any] = ["label": label]
+    if let notes { body["notes"] = notes }
+    try enqueue(method: "PATCH", path: "/api/v1/emis/\(emi.id)", body: body)
+    try context.save()
+  }
+
+  func deleteEmi(_ emi: Emi) throws {
+    let emiId = emi.id
+    for p in try context.fetch(FetchDescriptor<EmiPayment>(
+      predicate: #Predicate { $0.emiId == emiId })) {
+      context.delete(p)
+    }
+    context.delete(emi)
+    try enqueue(method: "DELETE", path: "/api/v1/emis/\(emiId)", body: [:])
+    try context.save()
+  }
+
+  func completeEmi(_ emi: Emi) throws {
+    let emiId = emi.id
+    let now = Date()
+    for p in try context.fetch(FetchDescriptor<EmiPayment>(
+      predicate: #Predicate { $0.emiId == emiId }))
+    where p.paymentNumber > 0 && p.status != "paid" {
+      p.status = "paid"
+      p.paidAt = now
+      p.updatedAt = now
+    }
+    emi.status = "completed"
+    emi.updatedAt = now
+    try enqueue(method: "POST", path: "/api/v1/emis/\(emiId)/complete", body: [:])
+    try context.save()
+  }
+
+  // MARK: - Notifications
+
+  func markNotificationRead(_ n: AppNotification) throws {
+    n.readAt = Date()
+    try enqueue(method: "POST", path: "/api/v1/notifications/\(n.id)/read",
+                body: [:])
+    try context.save()
+  }
+
+  func markAllNotificationsRead() throws {
+    let now = Date()
+    for n in try context.fetch(FetchDescriptor<AppNotification>(
+      predicate: #Predicate { $0.readAt == nil })) {
+      n.readAt = now
+    }
+    try enqueue(method: "POST", path: "/api/v1/notifications/read-all", body: [:])
+    try context.save()
+  }
+
+  func clearReadNotifications() throws {
+    for n in try context.fetch(FetchDescriptor<AppNotification>(
+      predicate: #Predicate { $0.readAt != nil })) {
+      context.delete(n)
+    }
+    try enqueue(method: "POST", path: "/api/v1/notifications/clear-read",
+                body: [:])
+    try context.save()
+  }
+
+  // MARK: - Profile
+
+  func updateProfile(_ p: Profile, fullName: String, preferredCurrency: String,
+                     preferredLanguage: String) throws {
+    p.fullName = fullName
+    p.preferredCurrency = preferredCurrency
+    p.preferredLanguage = preferredLanguage
+    p.updatedAt = Date()
+    try enqueue(method: "PATCH", path: "/api/v1/profile", body: [
+      "fullName": fullName,
+      "preferredCurrency": preferredCurrency,
+      "preferredLanguage": preferredLanguage,
+    ])
     try context.save()
   }
 }
