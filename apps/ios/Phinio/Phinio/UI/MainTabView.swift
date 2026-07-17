@@ -14,7 +14,15 @@ struct MainTabView: View {
   var body: some View {
     TabView(selection: $tab) {
       SwiftUI.Tab("Dashboard", systemImage: "chart.pie", value: Tab.dashboard) {
-        NavigationStack { DashboardView() }
+        NavigationStack {
+          DashboardView()
+            .navigationDestination(for: EmiRoute.self) {
+              EmiDetailView(emiId: $0.id)
+            }
+            .navigationDestination(for: InvestmentRoute.self) {
+              InvestmentDetailRouter(investmentId: $0.id)
+            }
+        }
       }
       SwiftUI.Tab("Investments", systemImage: "banknote", value: Tab.investments) {
         NavigationStack(path: $investmentsPath) {
@@ -50,18 +58,3 @@ struct MainTabView: View {
     }
   }
 }
-
-// Placeholder stubs — replaced by Tasks 6–11 (each task deletes its stub here
-// and creates the real file).
-struct DashboardView: View { var body: some View { Text("Dashboard") } }
-struct InvestmentsListView: View { var body: some View { Text("Investments") } }
-struct InvestmentDetailRouter: View {
-  let investmentId: String
-  var body: some View { Text(investmentId) }
-}
-struct EmiListView: View { var body: some View { Text("EMIs") } }
-struct EmiDetailView: View {
-  let emiId: String
-  var body: some View { Text(emiId) }
-}
-struct ActivityView: View { var body: some View { Text("Activity") } }
