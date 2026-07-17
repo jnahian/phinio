@@ -2,7 +2,7 @@ import Foundation
 
 /// Wire shapes for GET /api/v1/sync/snapshot. Field names match the JSON
 /// exactly; money stays String here and becomes Decimal at model-apply time.
-struct ProfileDTO: Decodable {
+nonisolated struct ProfileDTO: Decodable {
   let id: String
   let fullName: String
   let preferredCurrency: String
@@ -10,7 +10,7 @@ struct ProfileDTO: Decodable {
   let updatedAt: String
 }
 
-struct InvestmentDTO: Decodable {
+nonisolated struct InvestmentDTO: Decodable {
   let id: String
   let name: String
   let type: String
@@ -31,7 +31,7 @@ struct InvestmentDTO: Decodable {
   let updatedAt: String
 }
 
-struct InvestmentDepositDTO: Decodable {
+nonisolated struct InvestmentDepositDTO: Decodable {
   let id: String
   let investmentId: String
   let amount: String
@@ -43,7 +43,7 @@ struct InvestmentDepositDTO: Decodable {
   let updatedAt: String
 }
 
-struct InvestmentWithdrawalDTO: Decodable {
+nonisolated struct InvestmentWithdrawalDTO: Decodable {
   let id: String
   let investmentId: String
   let amount: String
@@ -51,7 +51,7 @@ struct InvestmentWithdrawalDTO: Decodable {
   let notes: String?
 }
 
-struct EmiDTO: Decodable {
+nonisolated struct EmiDTO: Decodable {
   let id: String
   let label: String
   let type: String
@@ -65,7 +65,7 @@ struct EmiDTO: Decodable {
   let updatedAt: String
 }
 
-struct EmiPaymentDTO: Decodable {
+nonisolated struct EmiPaymentDTO: Decodable {
   let id: String
   let emiId: String
   let paymentNumber: Int
@@ -79,7 +79,7 @@ struct EmiPaymentDTO: Decodable {
   let updatedAt: String
 }
 
-struct NotificationDTO: Decodable {
+nonisolated struct NotificationDTO: Decodable {
   let id: String
   let type: String
   let title: String
@@ -89,7 +89,7 @@ struct NotificationDTO: Decodable {
   let createdAt: String
 }
 
-struct SnapshotDTO: Decodable {
+nonisolated struct SnapshotDTO: Decodable {
   let serverTime: String
   let profile: ProfileDTO
   let investments: [InvestmentDTO]
@@ -101,14 +101,14 @@ struct SnapshotDTO: Decodable {
 }
 
 /// Wire shapes for GET /api/v1/activity. Server-derived, not in the snapshot.
-struct ActivityChangeDTO: Decodable {
+nonisolated struct ActivityChangeDTO: Decodable {
   let field: String
   let from: String?
   let to: String?
   let currency: String?
 }
 
-struct ActivityItemDTO: Decodable, Identifiable {
+nonisolated struct ActivityItemDTO: Decodable, Identifiable {
   let id: String
   let action: String
   let entityType: String
@@ -119,7 +119,7 @@ struct ActivityItemDTO: Decodable, Identifiable {
   let createdAt: String
 }
 
-struct ActivityPageDTO: Decodable {
+nonisolated struct ActivityPageDTO: Decodable {
   let items: [ActivityItemDTO]
   let nextCursor: String?
 }

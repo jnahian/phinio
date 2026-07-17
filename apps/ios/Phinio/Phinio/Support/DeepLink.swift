@@ -3,7 +3,7 @@ import Foundation
 
 /// Parses the `link` field the reminder cron puts in notifications
 /// (send-reminders.ts): "/app/emis/<id>" and "/app/investments/dps/<id>".
-enum DeepLink: Equatable {
+nonisolated enum DeepLink: Equatable {
   case emi(String)
   case dps(String)
 
