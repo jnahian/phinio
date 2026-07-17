@@ -157,6 +157,3 @@ struct DashboardView: View {
     }
   }
 }
-
-// Placeholder — replaced by Task 12.
-struct SettingsView: View { var body: some View { Text("Settings") } }
