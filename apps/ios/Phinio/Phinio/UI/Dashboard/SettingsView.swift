@@ -138,9 +138,3 @@ struct SettingsView: View {
     auth.signOut(container: context.container)
   }
 }
-
-// Placeholder — Task 14 replaces this with the real PushManager file.
-enum PushManager {
-  static func requestAndRegister() async {}
-  static var deviceTokenForLogout: String? { nil }
-}
