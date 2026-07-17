@@ -105,15 +105,7 @@ struct InvestmentDetailRouter: View {
   }
 }
 
-// Stubs — Task 8 / Task 9 replace these with real files.
-struct SavingsDetailView: View {
-  let investment: Investment
-  var body: some View { Text(investment.name) }
-}
-struct SavingsFormView: View {
-  let existing: Investment?
-  var body: some View { Text("Savings form") }
-}
+// Stubs — Task 9 replaces these with real files.
 struct DpsDetailView: View {
   let investment: Investment
   var body: some View { Text(investment.name) }
