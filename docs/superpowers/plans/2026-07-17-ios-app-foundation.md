@@ -59,7 +59,7 @@ PhinioTests/
 
 **Files:** Delete: `apps/mobile/`, `apps/web/`, `packages/` (all untracked leftovers of an abandoned monorepo attempt — spec §7).
 
-- [ ] **Step 1: Delete**
+- [x] **Step 1: Delete**
 
 ```bash
 rm -rf apps packages
@@ -67,7 +67,7 @@ rm -rf apps packages
 
 This is the step the user already sanctioned in the spec; it also makes repo-wide `npm run check` green again (the 76 lint errors all came from `apps/web` build artifacts). Nothing to commit — the directories were untracked.
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Run: `npm run check`
 Expected: prettier + eslint finish with no errors.
@@ -83,7 +83,7 @@ Expected: prettier + eslint finish with no errors.
 
 This is the one step an agent cannot do headlessly — ask the user to create the project in Xcode with EXACTLY these settings, then verify from the CLI.
 
-- [ ] **Step 1: User creates the project**
+- [x] **Step 1: User creates the project**
 
 In Xcode 26: File → New → Project → iOS → App.
 
@@ -93,7 +93,7 @@ In Xcode 26: File → New → Project → iOS → App.
 - Save location: `apps/ios/` (so the project file is `apps/ios/Phinio.xcodeproj`)
 - Target settings after creation: iOS Deployment Target **26.0**; Devices **iPhone**; Swift Language Version 6. Delete the generated `PhinioUITests` target (no UI tests in v1, spec §6). In the test target, ensure the default is Swift Testing (Xcode 26 default).
 
-- [ ] **Step 2: Add Xcode ignores**
+- [x] **Step 2: Add Xcode ignores**
 
 Append to `.gitignore`:
 
@@ -104,7 +104,7 @@ apps/ios/**/*.xcuserstate
 apps/ios/DerivedData/
 ```
 
-- [ ] **Step 3: Verify it builds and tests run from the CLI**
+- [x] **Step 3: Verify it builds and tests run from the CLI**
 
 ```bash
 xcodebuild build -project apps/ios/Phinio.xcodeproj -scheme Phinio -destination 'platform=iOS Simulator,name=iPhone 17' -quiet
@@ -113,7 +113,7 @@ xcodebuild test -project apps/ios/Phinio.xcodeproj -scheme Phinio -destination '
 
 Expected: build succeeds; the template test passes.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .gitignore apps/ios
@@ -134,7 +134,7 @@ git commit -m "🎉 feat(ios): Xcode project skeleton (iOS 26, Swift 6)"
 - Consumes: `calculateEmi`, `generateAmortization` from `src/lib/emi-calculator.ts`.
 - Produces: `emi-fixtures.json` — array of `{ name, input: { principal, annualRate, tenureMonths, startDate, type }, breakdown: { emiAmount, totalPayment, totalInterest }, rows: [{ paymentNumber, dueDate, emiAmount, principalComponent, interestComponent, remainingBalance }] }` with `dueDate` as `YYYY-MM-DD`. Task 4's Swift tests consume this file as a test-bundle resource.
 
-- [ ] **Step 1: Write the generator**
+- [x] **Step 1: Write the generator**
 
 `scripts/generate-emi-fixtures.ts`:
 
@@ -236,7 +236,7 @@ writeFileSync(out, `${JSON.stringify(fixtures, null, 2)}\n`)
 console.log(`wrote ${fixtures.length} fixtures to ${out}`)
 ```
 
-- [ ] **Step 2: Run it and sanity-check**
+- [x] **Step 2: Run it and sanity-check**
 
 ```bash
 npx tsx scripts/generate-emi-fixtures.ts
@@ -245,11 +245,11 @@ node -e "const f=require('./apps/ios/PhinioTests/Fixtures/emi-fixtures.json'); c
 
 Expected: 7 fixtures; `standard reducing` breakdown shows `emiAmount: '8884.88'`-style strings; the Jan-31 case's dueDates show end-of-month clamping (`2026-01-31`, `2026-02-28`, `2026-03-31`, `2026-04-30`).
 
-- [ ] **Step 3: Add the fixture to the test target**
+- [x] **Step 3: Add the fixture to the test target**
 
 In Xcode: add `apps/ios/PhinioTests/Fixtures/emi-fixtures.json` to the `PhinioTests` target as a bundle resource (Target Membership → PhinioTests, "Copy Bundle Resources").
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 npm run check
@@ -272,7 +272,7 @@ git commit -m "✨ feat(ios): TS-generated EMI fixtures for the Swift port"
   - `enum Money { static func decimal(_ s: String) -> Decimal?; static func string(_ d: Decimal) -> String }` — parse/format wire money (`"12345.60"` ↔ `Decimal`), always 2 decimals, en_US_POSIX.
   - `enum WireDate { static func dayString(_ d: Date) -> String; static func day(_ s: String) -> Date?; static let iso: ISO8601DateFormatter }` — `YYYY-MM-DD` (UTC) and fractional-second ISO 8601 timestamps.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apps/ios/PhinioTests/MoneyTests.swift`:
 
@@ -303,12 +303,12 @@ struct MoneyTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run the xcodebuild test command from Global Constraints.
 Expected: FAIL — `Money`/`WireDate` unresolved.
 
-- [ ] **Step 3: Implement `Support/Money.swift`**
+- [x] **Step 3: Implement `Support/Money.swift`**
 
 ```swift
 import Foundation
@@ -368,7 +368,7 @@ enum WireDate {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS. Commit.**
+- [x] **Step 4: Run tests — expect PASS. Commit.**
 
 ```bash
 git add apps/ios
@@ -395,7 +395,7 @@ git commit -m "✨ feat(ios): money + wire-date helpers"
 
 **CRITICAL — arithmetic strategy:** the TS original computes in IEEE-754 doubles (`Math.round(x*100)/100`, `Math.pow`, final payment absorbs the residual). The Swift port MUST use `Double` with the same operations in the same order so fixtures match to the paisa; `Decimal` internally would diverge. `Double` is only ever converted to a 2-decimal `String` at the boundary (matching the TS module's own rule). JS `Math.round` is half-up for positive values → Swift `(x).rounded(.toNearestOrAwayFromZero)` is identical for the positive money values here.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apps/ios/PhinioTests/EmiCalculatorTests.swift`:
 
@@ -481,9 +481,9 @@ struct EmiCalculatorTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** (unresolved `EmiCalculator`).
+- [x] **Step 2: Run to verify failure** (unresolved `EmiCalculator`).
 
-- [ ] **Step 3: Implement `Domain/EmiCalculator.swift`**
+- [x] **Step 3: Implement `Domain/EmiCalculator.swift`**
 
 ```swift
 import Foundation
@@ -621,9 +621,9 @@ enum EmiCalculator {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS (paisa-exact against all 7 fixtures). If a single value diverges, diff the failing fixture case by hand — the fix belongs in the Swift port's operation ordering, never in the fixtures.**
+- [x] **Step 4: Run tests — expect PASS (paisa-exact against all 7 fixtures). If a single value diverges, diff the failing fixture case by hand — the fix belongs in the Swift port's operation ordering, never in the fixtures.**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/ios
@@ -654,7 +654,7 @@ git commit -m "✨ feat(ios): EMI calculator port, fixture-proven equal to TS"
   - `func makeModelContainer(inMemory: Bool = false) throws -> ModelContainer` registering all 9 models.
 - Relationships are by-id (no SwiftData relationship macros) — snapshot apply wholesale-replaces tables, and by-id lookups mirror the wire format 1:1. `// ponytail: by-id joins, add @Relationship if list queries get awkward in Plan 3`.
 
-- [ ] **Step 1: Write the failing smoke test**
+- [x] **Step 1: Write the failing smoke test**
 
 `apps/ios/PhinioTests/StoreTests.swift` (initial content):
 
@@ -692,9 +692,9 @@ struct ModelContainerTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement the models**
+- [x] **Step 3: Implement the models**
 
 `apps/ios/Phinio/Models/DomainModels.swift`:
 
@@ -960,7 +960,7 @@ final class SyncIssue {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS. Commit.**
+- [x] **Step 4: Run tests — expect PASS. Commit.**
 
 ```bash
 git add apps/ios
@@ -985,7 +985,7 @@ git commit -m "✨ feat(ios): SwiftData domain models + outbox"
 - `protocol SyncTransport: Sendable { func post(path: String, body: Data?, method: String, idempotencyKey: UUID) async throws; func fetchSnapshot() async throws -> SnapshotDTO }`
 - `final class APIClient: SyncTransport` — also `func signIn(email: String, password: String) async throws -> String` (returns the bearer token), `func signOut(deviceToken: String?) async`. Init takes `URLSession` (injectable for tests) and a token provider closure.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apps/ios/PhinioTests/DTOTests.swift`:
 
@@ -1107,9 +1107,9 @@ struct APIClientTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `Support/AppConfig.swift`:
 
@@ -1407,7 +1407,7 @@ final class APIClient: SyncTransport {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS. Commit.**
+- [x] **Step 4: Run tests — expect PASS. Commit.**
 
 ```bash
 git add apps/ios
@@ -1432,7 +1432,7 @@ git commit -m "✨ feat(ios): Keychain, APIClient with error mapping, snapshot D
   - Runs on the main actor with SwiftData's `mainContext` — dataset is personal-scale; `// ponytail: main-actor sync; move to a ModelActor if apply ever janks scrolling`.
   - Re-entrancy guard: `syncNow()` while `.syncing` returns immediately.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apps/ios/PhinioTests/SyncEngineTests.swift`:
 
@@ -1579,9 +1579,9 @@ struct SyncEngineTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `Sync/SyncEngine.swift`**
+- [x] **Step 3: Implement `Sync/SyncEngine.swift`**
 
 ```swift
 import Foundation
@@ -1741,7 +1741,7 @@ final class SyncEngine: ObservableObject {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS (all 5). Commit.**
+- [x] **Step 4: Run tests — expect PASS (all 5). Commit.**
 
 ```bash
 git add apps/ios
@@ -1765,7 +1765,7 @@ git commit -m "✨ feat(ios): SyncEngine — outbox drain + wholesale snapshot a
   - `func markPaymentPaid(_ payment: EmiPayment, paid: Bool) throws` — local status flip + `POST /api/v1/emi-payments/{id}/mark-paid` with `{"paid": <bool>}`.
 - Every mutation = exactly one SwiftData change-set + one outbox row, saved together.
 
-- [ ] **Step 1: Write the failing tests** (append to `StoreTests.swift`):
+- [x] **Step 1: Write the failing tests** (append to `StoreTests.swift`):
 
 ```swift
 @MainActor
@@ -1825,9 +1825,9 @@ struct StoreTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure.**
+- [x] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement `Sync/Store.swift`**
+- [x] **Step 3: Implement `Sync/Store.swift`**
 
 ```swift
 import Foundation
@@ -1911,7 +1911,7 @@ struct Store {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS. Commit.**
+- [x] **Step 4: Run tests — expect PASS. Commit.**
 
 ```bash
 git add apps/ios
@@ -1933,7 +1933,7 @@ git commit -m "✨ feat(ios): Store write API — offline EMI create + mark paid
 - `PhinioApp` wires: `makeModelContainer()`, `APIClient()`, `SyncEngine`, `AuthManager`; `RootView` shows `LoginView` when unauthenticated (or when `SyncEngine.state == .unauthorized`), else `DebugHomeView`. Sync triggers on foreground (`scenePhase == .active`).
 - `DebugHomeView` (throwaway; Plan 3 replaces it): shows sync state, row counts (`Emi`, `EmiPayment`, `Investment`, `PendingMutation`, `SyncIssue`), a "Sync now" button, and a "Create sample EMI" button calling `Store.createEmi` — enough to verify the whole loop by hand.
 
-- [ ] **Step 1: Implement the three files + app entry**
+- [x] **Step 1: Implement the three files + app entry**
 
 `Auth/AuthManager.swift`:
 
@@ -2143,12 +2143,12 @@ struct RootView: View {
 
 Note: `http://localhost:3000` is plain HTTP — add an App Transport Security exception for local dev in the target's Info settings: `NSAppTransportSecurity → NSAllowsLocalNetworking = YES` (DEBUG-only concern; production is HTTPS).
 
-- [ ] **Step 2: Run the full iOS test suite**
+- [x] **Step 2: Run the full iOS test suite**
 
 Run the xcodebuild test command.
 Expected: all suites pass (Money, EmiCalculator, DTO, APIClient, ModelContainer, Store, SyncEngine).
 
-- [ ] **Step 3: End-to-end checkpoint (manual, against the local backend)**
+- [x] **Step 3: End-to-end checkpoint (manual, against the local backend)**
 
 ```bash
 npm run dev   # backend on :3000 (in the web repo root)
@@ -2161,7 +2161,7 @@ Then run the app in the iOS 26 simulator from Xcode and verify, in order:
 3. Enable Airplane-mode-equivalent (Simulator: turn off Mac network or stop the dev server), tap "Create sample EMI" → counts bump, Outbox stays 1, state `offline`. Restart the server, tap "Sync now" → Outbox drains, web app shows the EMI. **This is the core offline promise — do not skip.**
 4. Sign out → all counts reset to 0, back at login.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/ios
