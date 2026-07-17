@@ -1097,8 +1097,10 @@ struct DashboardStatsTests {
     // (1500 + 100 − 1500) / 1500 = 6.67%
     #expect(s.gainLossPercent == 6.67)
     #expect(s.monthlyEmiOutflow == Money.decimal("879.16"))
-    // netWorth = 1500 − next-unpaid remainingBalance (9204.17)
-    #expect(s.netWorth == Money.decimal("-7704.17"))
+    // netWorth = 1500 − next-unpaid remainingBalance (9204.17). Negated from
+    // a positive: Money.decimal mirrors the server's unsigned money regex, so
+    // it returns nil for "-7704.17" — net worth may legitimately be negative.
+    #expect(s.netWorth == -Money.decimal("7704.17")!)
     #expect(s.allocation.first?.type == "gold")
     #expect(s.allocation.first?.percent == 80.0)
     // Only p1 is within 30 days (Aug 20 is 34 days out)
