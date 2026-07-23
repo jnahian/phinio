@@ -15,7 +15,7 @@ struct GetStartedView: View {
 
   var body: some View {
     ZStack {
-      Color.surface.ignoresSafeArea()
+      Color(.systemBackground).ignoresSafeArea()
       orb
       VStack(spacing: 0) {
         Spacer()
@@ -38,7 +38,7 @@ struct GetStartedView: View {
 
   private var orb: some View {
     Circle()
-      .fill(Color.primaryContainer.opacity(0.05))
+      .fill(Color.accentColor.opacity(0.05))
       .frame(width: 420, height: 420)
       .blur(radius: 120)
       .scaleEffect(breathing ? 1.12 : 0.92)
@@ -52,7 +52,7 @@ struct GetStartedView: View {
     ZStack(alignment: .topTrailing) {
       // Glow reads through from behind the tile.
       RoundedRectangle(cornerRadius: 32, style: .continuous)
-        .fill(Color.primaryContainer.opacity(0.20))
+        .fill(Color.accentColor.opacity(0.20))
         .frame(width: 144, height: 144)
         .blur(radius: 34)
         .scaleEffect(1.25)
@@ -67,13 +67,13 @@ struct GetStartedView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .overlay(
           RoundedRectangle(cornerRadius: 32, style: .continuous)
-            .strokeBorder(Color.onHero.opacity(0.05), lineWidth: 1))
+            .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1))
         .shadow(color: Color(white: 0).opacity(0.5), radius: 40, y: 18)
 
       Circle()
-        .fill(Color.brandSecondary)
+        .fill(Color.green)
         .frame(width: 18, height: 18)
-        .overlay(Circle().strokeBorder(Color.surface, lineWidth: 3))
+        .overlay(Circle().strokeBorder(Color(.systemBackground), lineWidth: 3))
         .offset(x: 5, y: -5)
         .scaleEffect(appeared ? 1 : 0.1)
         .animation(.spring(duration: 0.5, bounce: 0.45).delay(0.4), value: appeared)
@@ -87,18 +87,17 @@ struct GetStartedView: View {
   private var wordmark: some View {
     VStack(spacing: 12) {
       Text("Phinio")
-        .font(.custom("Manrope-ExtraBold", size: 48))
-        .tracking(-0.02 * 48)
-        .foregroundStyle(Color.onSurface)
+        .font(.system(size: 48, weight: .heavy))
+        .foregroundStyle(.primary)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 12)
         .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.5), value: appeared)
 
       Text("Digital private vault")
-        .font(.custom("Inter-SemiBold", size: 14))
-        .tracking(0.2 * 14)
+        .font(.footnote.weight(.semibold))
+        .tracking(2.8)
         .textCase(.uppercase)
-        .foregroundStyle(Color.onSurfaceVariant)
+        .foregroundStyle(.secondary)
         .opacity(appeared ? 1 : 0)
         .animation(.easeOut(duration: 0.4).delay(0.7), value: appeared)
     }
@@ -106,8 +105,17 @@ struct GetStartedView: View {
 
   private var actions: some View {
     VStack(spacing: 4) {
-      PrimaryButton("Get Started", action: onSignUp)
-      TextButton("I already have an account", action: onLogin)
+      Button {
+        onSignUp()
+      } label: {
+        Text("Get Started").frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.glassProminent)
+      .controlSize(.large)
+
+      Button("I already have an account", action: onLogin)
+        .buttonStyle(.borderless)
+        .controlSize(.large)
     }
     .frame(maxWidth: 320)
     .opacity(appeared ? 1 : 0)
@@ -117,8 +125,8 @@ struct GetStartedView: View {
 
   private var footer: some View {
     Text(versionLine)
-      .font(.meta)
-      .foregroundStyle(Color.onSurfaceMuted)
+      .font(.caption)
+      .foregroundStyle(.secondary)
       .opacity(appeared ? 1 : 0)
       .animation(.easeOut(duration: 0.4).delay(1.1), value: appeared)
   }

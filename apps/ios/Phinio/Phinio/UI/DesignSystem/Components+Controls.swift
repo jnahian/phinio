@@ -1,43 +1,8 @@
 import SwiftUI
 
-// Inputs, buttons, empty state, avatar, icon tile — continuation of
-// Components.swift (split at ~400 lines per the phase-1 brief). Same rules:
-// tokens only, no inline hex/radius/shadow.
-
-// MARK: - Inputs & buttons
-
-/// `surfaceLowest`-filled text field with a focus border and inline error.
-struct CarvedTextField: View {
-  let placeholder: String
-  @Binding var text: String
-  var errorText: String? = nil
-  var secure: Bool = false
-  @FocusState private var focused: Bool
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      Group {
-        if secure {
-          SecureField(placeholder, text: $text)
-        } else {
-          TextField(placeholder, text: $text)
-        }
-      }
-        .focused($focused)
-        .font(.body)
-        .foregroundStyle(Color.onSurface)
-        .padding(13)
-        .background(Color.surfaceLowest, in: RoundedRectangle(cornerRadius: Radii.input, style: .continuous))
-        .overlay(
-          RoundedRectangle(cornerRadius: Radii.input, style: .continuous)
-            .strokeBorder(focused ? Color.brandPrimary : .clear, lineWidth: 1.5)
-        )
-      if let errorText {
-        Text(errorText).font(.caption).foregroundStyle(Color.error)
-      }
-    }
-  }
-}
+// Empty state, avatar, icon tile — continuation of Components.swift (split
+// at ~400 lines per the phase-1 brief). Same rules: tokens only, no inline
+// hex/radius/shadow.
 
 // MARK: - Empty state, avatar, icon tile
 
@@ -72,66 +37,6 @@ struct IconTile<Icon: View>: View {
       .frame(width: size, height: size)
       .background(background, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
       .accessibilityHidden(true)
-  }
-}
-
-/// Full-width filled action (auth, forms). Shows a spinner in place of the
-/// label while `busy`, so the button keeps its size and the tap target never
-/// moves under the user's finger.
-struct PrimaryButton: View {
-  let title: String
-  var busy: Bool = false
-  var enabled: Bool = true
-  let action: () -> Void
-
-  init(_ title: String, busy: Bool = false, enabled: Bool = true,
-       action: @escaping () -> Void) {
-    self.title = title
-    self.busy = busy
-    self.enabled = enabled
-    self.action = action
-  }
-
-  var body: some View {
-    Button(action: action) {
-      Group {
-        if busy {
-          ProgressView().controlSize(.small).tint(Color.onHero)
-        } else {
-          Text(title).font(.rowLabel(15))
-        }
-      }
-      .foregroundStyle(Color.onHero)
-      .frame(maxWidth: .infinity, minHeight: 52)
-      .background(
-        Color.primaryContainer,
-        in: RoundedRectangle(cornerRadius: Radii.input, style: .continuous))
-    }
-    .buttonStyle(.plain)
-    .disabled(!enabled || busy)
-    .opacity(enabled && !busy ? 1 : 0.5)
-  }
-}
-
-/// Text-only secondary action ("I already have an account", "Back to login").
-struct TextButton: View {
-  let title: String
-  let action: () -> Void
-
-  init(_ title: String, action: @escaping () -> Void) {
-    self.title = title
-    self.action = action
-  }
-
-  var body: some View {
-    Button(action: action) {
-      Text(title)
-        .font(.rowLabel(14))
-        .foregroundStyle(Color.brandPrimary)
-        .frame(maxWidth: .infinity, minHeight: 44)
-        .contentShape(.rect)
-    }
-    .buttonStyle(.plain)
   }
 }
 
