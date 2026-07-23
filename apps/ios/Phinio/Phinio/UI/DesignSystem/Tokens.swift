@@ -50,6 +50,9 @@ extension Color {
   static let brandPrimary = Color(hex: 0xb4c5ff)
   static let primaryContainer = Color(hex: 0x2563eb)
   static let brandSecondary = Color(hex: 0x4edea3)
+  // Hero-placed gain pill text color (net-worth hero, savings-detail hero) —
+  // comp uses this brighter shade instead of brandSecondary at hero scale.
+  static let brandSecondaryHero = Color(hex: 0x7ff0c4)
   static let secondaryContainer = Color(hex: 0x00a572)
   static let tertiaryContainer = Color(hex: 0xcf2c30)
   static let tertiaryFixedDim = Color(hex: 0xffb3ad)

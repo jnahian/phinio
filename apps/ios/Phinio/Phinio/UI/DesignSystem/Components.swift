@@ -40,11 +40,16 @@ struct HeroCard<Content: View>: View {
   var radius: CGFloat = Radii.hero
   var orbSize: CGFloat = 200
   var orbTopOffset: CGFloat = -80
+  // Comp padding is uniform 22 on every hero except net-worth (22 22 24) —
+  // default keeps the common case a single value, net-worth passes 24.
+  var bottomPadding: CGFloat = 22
   @ViewBuilder let content: Content
 
   var body: some View {
     content
-      .padding(22)
+      .padding(.horizontal, 22)
+      .padding(.top, 22)
+      .padding(.bottom, bottomPadding)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(gradient)
       .background(alignment: .topTrailing) {
@@ -101,7 +106,11 @@ struct MoneyPill: View {
   var body: some View {
     Text("\(isPositive ? "▲" : "▼") \(valueText)")
       .font(.pillText(12))
-      .foregroundStyle(isPositive ? Color.brandSecondary : Color.tertiaryFixedDim)
+      .foregroundStyle(
+        isPositive
+          ? (size == .hero ? Color.brandSecondaryHero : Color.brandSecondary)
+          : Color.tertiaryFixedDim
+      )
       .padding(.horizontal, 9)
       .padding(.vertical, size == .hero ? 4 : 3)
       .background(
@@ -126,8 +135,8 @@ struct TypeBadge: View {
     Text(investmentTypeLabel(type))
       .font(.badgeLabel)
       .foregroundStyle(TypePalette.foreground(for: type))
-      .padding(.horizontal, 8)
-      .padding(.vertical, 4)
+      .padding(.horizontal, 9)
+      .padding(.vertical, 3)
       .background(
         TypePalette.background(for: type),
         in: RoundedRectangle(cornerRadius: Radii.badge, style: .continuous))
@@ -151,11 +160,15 @@ struct FilterPills: View {
             selection = i
           } label: {
             Text(titles[i])
-              .font(.caption)
+              .font(.rowLabel(13))
               .foregroundStyle(isSelected ? Color.surface : Color.onSurfaceVariant)
-              .padding(.horizontal, 14)
+              .padding(.horizontal, 15)
               .padding(.vertical, 8)
               .background(isSelected ? Color.brandPrimary : Color.pillIdle, in: Capsule())
+              // Drawn chip keeps comp size; frame only expands the tap target
+              // to >=44pt (same pattern as NoirToggleStyle/NavRow).
+              .frame(minWidth: 44, minHeight: 44)
+              .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
           .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -177,20 +190,34 @@ struct SegmentedTabs: View {
     HStack(spacing: 6) {
       ForEach(titles.indices, id: \.self) { i in
         let isSelected = i == selection
-        Button {
-          selection = i
-        } label: {
-          Text(titles[i])
-            .font(.rowLabel(13))
-            .foregroundStyle(isSelected ? Color.onSurface : Color.tabIdle)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 9)
-            .background(
-              isSelected ? Color.surfaceHighest : .clear,
-              in: RoundedRectangle(cornerRadius: Radii.segment, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        Text(titles[i])
+          .font(.rowLabel(14))
+          .foregroundStyle(isSelected ? Color.onSurface : Color.onSurfaceMuted)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 9)
+          .background(
+            isSelected ? Color.surfaceHighest : .clear,
+            in: RoundedRectangle(cornerRadius: Radii.segment, style: .continuous))
+          // The comp's track is ~43pt tall — a `.frame(minHeight: 44)` on the
+          // segment itself would grow the *shared* HStack row (and with it
+          // the surfaceLowest track all segments sit in), not just this one.
+          // `.overlay` is size-neutral for the parent's layout (the base
+          // Text's size, not the overlay's, is what's reported to the
+          // HStack), so a real 44pt Button dropped in via overlay grows only
+          // the tappable area — the drawn segment/track stay comp-sized.
+          .accessibilityHidden(true)  // the overlay Button below carries the accessible label/state
+          .overlay {
+            Button {
+              selection = i
+            } label: {
+              Color.clear
+            }
+            .buttonStyle(.plain)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .accessibilityLabel(titles[i])
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+          }
       }
     }
     .padding(4)

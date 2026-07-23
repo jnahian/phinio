@@ -70,7 +70,7 @@ struct NoirToggleStyle: ToggleStyle {
           .fill(configuration.isOn ? Color.secondaryContainer : Color.surfaceHighest)
           .frame(width: 50, height: 30)
         Circle()
-          .fill(Color.white)
+          .fill(Color.onHero)
           .frame(width: 24, height: 24)
           .padding(3)
       }
@@ -152,7 +152,7 @@ struct IconTile<Icon: View>: View {
     VStack(alignment: .leading, spacing: 20) {
       HeroCard(
         gradient: Gradients.netWorthHero, orbTint: Color.brandPrimary.opacity(0.18),
-        orbSize: 220, orbTopOffset: -90
+        orbSize: 220, orbTopOffset: -90, bottomPadding: 24
       ) {
         VStack(alignment: .leading, spacing: 8) {
           Text("NET WORTH")
