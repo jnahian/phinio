@@ -30,8 +30,9 @@ struct DpsDetailView: View {
   /// re-implementing it. Nil until the first sync.
   private var maturity: Decimal? { deposits.last?.accruedValue }
   private var interestEarned: Decimal? {
-    // Accrued through the leading contiguous paid run minus deposits over that
-    // run — out-of-order paid installments don't advance the figure.
+    // Mirrors dps/$id.tsx: accrued through the leading contiguous paid run
+    // minus deposits over that run — out-of-order paid installments don't
+    // advance the figure.
     let contiguousPaid = deposits.prefix { $0.status == "paid" }.count
     guard contiguousPaid > 0,
           let accrued = deposits[contiguousPaid - 1].accruedValue else { return nil }
