@@ -35,6 +35,7 @@ nonisolated struct InvestmentDepositDTO: Decodable {
   let id: String
   let investmentId: String
   let amount: String
+  let accruedValue: String?
   let dueDate: String?
   let depositDate: String?
   let installmentNumber: Int?

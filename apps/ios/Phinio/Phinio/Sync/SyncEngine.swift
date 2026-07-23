@@ -123,7 +123,8 @@ final class SyncEngine: ObservableObject {
         id: d.id, investmentId: d.investmentId, amount: money(d.amount),
         dueDate: ts(d.dueDate), depositDate: ts(d.depositDate),
         installmentNumber: d.installmentNumber, status: d.status,
-        notes: d.notes, updatedAt: ts(d.updatedAt) ?? now))
+        notes: d.notes, updatedAt: ts(d.updatedAt) ?? now,
+        accruedValue: d.accruedValue.map(money)))
     }
     for w in snap.investmentWithdrawals {
       context.insert(InvestmentWithdrawal(
