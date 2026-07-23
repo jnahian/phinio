@@ -60,7 +60,11 @@ struct FabMenu: View {
         }
       }
       .padding(.trailing, 20)
-      .padding(.bottom, 114)
+      // The overlay is inset above the tab bar (it's applied before the bar's
+      // safeAreaInset), so its bottom edge already sits at the bar's top — where
+      // the FAB is. A small gap places the lowest option just above the FAB,
+      // not 114pt of screen-bottom offset stacked on top of the inset.
+      .padding(.bottom, 14)
     }
     .onAppear { shown = true }
   }
