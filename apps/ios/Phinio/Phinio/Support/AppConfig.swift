@@ -14,7 +14,7 @@ enum AppConfig {
       }
       return URL(string: "http://localhost:3000")!
     #else
-      return URL(string: "https://phinio.vercel.app")!
+      return URL(string: "https://phinio.jnahian.me")!
     #endif
   }
 }
