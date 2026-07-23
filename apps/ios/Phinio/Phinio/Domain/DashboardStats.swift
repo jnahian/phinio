@@ -21,7 +21,7 @@ struct DashboardStats {
   let netWorth: Decimal
   let invested: Decimal
   let current: Decimal
-  let gainLossPercent: Double?
+  let gainLossPercent: Double
   let monthlyEmiOutflow: Decimal
   let upcoming: [UpcomingItem]
   let allocation: [(type: String, value: Decimal, percent: Double)]
@@ -46,11 +46,12 @@ struct DashboardStats {
       byType[inv.type, default: 0] += inv.currentValue
     }
 
-    let gainLossPercent: Double? = invested > 0
+    // 0 (not nil) when nothing is invested, matching dashboard.impl.ts.
+    let gainLossPercent: Double = invested > 0
       ? (Double(truncating: NSDecimalNumber(
           decimal: (current + withdrawn - invested) / invested)) * 10000)
           .rounded() / 100
-      : nil
+      : 0
 
     let activeEmis = emis.filter { $0.status == "active" }
     let paymentsByEmi = Dictionary(grouping: payments, by: \.emiId)

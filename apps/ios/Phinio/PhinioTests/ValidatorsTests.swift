@@ -23,6 +23,10 @@ struct ValidatorsTests {
     #expect(Validate.name("  Car loan  ") == "Car loan")
     #expect(Validate.name("   ") == nil)
     #expect(Validate.name(String(repeating: "x", count: 121)) == nil)
+    // Person-name fields: min 2 mirrors validators.ts fullName.
+    #expect(Validate.name("X", min: 2) == nil)
+    #expect(Validate.name(" Al ", min: 2) == "Al")
+    #expect(Validate.name("X") == "X")  // domain names keep min 1
     #expect(Validate.notes("") == .some(nil))  // empty → omit from body
     #expect(Validate.notes("hi") == "hi")
     #expect(Validate.notes(String(repeating: "x", count: 1001)) == nil)

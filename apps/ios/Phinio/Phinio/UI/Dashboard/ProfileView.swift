@@ -155,8 +155,7 @@ struct ProfileView: View {
   }
 
   private var nameIsValid: Bool {
-    Validate.name(fullName, max: 120) != nil
-      && fullName.trimmingCharacters(in: .whitespaces).count >= 2
+    Validate.name(fullName, min: 2) != nil
   }
 
   // MARK: Preferences

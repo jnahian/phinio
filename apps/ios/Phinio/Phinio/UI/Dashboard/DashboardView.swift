@@ -20,31 +20,30 @@ struct DashboardView: View {
   /// focused row again clears it (brief §5.6).
   @State private var focusedType: String?
 
-  private var stats: DashboardStats {
-    DashboardStats.compute(
-      investments: investments, emis: emis, payments: payments,
-      deposits: deposits, withdrawals: withdrawals, now: Date())
-  }
-
   private var currency: String { profiles.first?.preferredCurrency ?? "BDT" }
   private var activeInvestmentCount: Int { investments.count { $0.status == "active" } }
   private var activeEmiCount: Int { emis.count { $0.status == "active" } }
 
-  private var isEmptyPortfolio: Bool {
+  private func isEmptyPortfolio(_ stats: DashboardStats) -> Bool {
     stats.invested == 0 && stats.monthlyEmiOutflow == 0
       && stats.upcoming.isEmpty && stats.allocation.isEmpty
   }
 
   var body: some View {
+    // Computed once per body pass — the aggregation walks every model array
+    // and body reads it from a dozen places.
+    let stats = DashboardStats.compute(
+      investments: investments, emis: emis, payments: payments,
+      deposits: deposits, withdrawals: withdrawals, now: Date())
     ScrollView {
-      if isEmptyPortfolio {
+      if isEmptyPortfolio(stats) {
         emptyState
       } else {
         VStack(alignment: .leading, spacing: 0) {
-          netWorthHero
-          quickStats
-          upcomingSection
-          allocationSection
+          netWorthHero(stats)
+          quickStats(stats)
+          upcomingSection(stats)
+          allocationSection(stats)
         }
         .padding(.horizontal, Layout.screenHorizontalPadding)
       }
@@ -56,7 +55,7 @@ struct DashboardView: View {
 
   // MARK: - Net worth
 
-  private var netWorthHero: some View {
+  private func netWorthHero(_ stats: DashboardStats) -> some View {
     // Comp's home hero orb is larger and sits higher than the detail heroes'.
     HeroCard(
       gradient: Gradients.netWorthHero, orbTint: Color.brandPrimary.opacity(0.18),
@@ -76,9 +75,7 @@ struct DashboardView: View {
           .minimumScaleFactor(0.6)
           .padding(.top, 8)
         HStack(spacing: 8) {
-          if let gain = stats.gainLossPercent {
-            MoneyPill(percent: Decimal(gain), size: .hero)
-          }
+          MoneyPill(percent: Decimal(stats.gainLossPercent), size: .hero)
           Text(portfolioSummary)
             .font(.caption)
             .foregroundStyle(Color.onHeroVariant.opacity(0.72))
@@ -97,7 +94,7 @@ struct DashboardView: View {
 
   // MARK: - Quick stats
 
-  private var quickStats: some View {
+  private func quickStats(_ stats: DashboardStats) -> some View {
     HStack(spacing: Layout.cardGap) {
       NoirCard {
         VStack(alignment: .leading, spacing: 0) {
@@ -108,9 +105,7 @@ struct DashboardView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             .padding(.top, 7)
-          if let gain = stats.gainLossPercent {
-            MoneyPill(percent: Decimal(gain)).padding(.top, 9)
-          }
+          MoneyPill(percent: Decimal(stats.gainLossPercent)).padding(.top, 9)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
       }
@@ -141,7 +136,7 @@ struct DashboardView: View {
 
   // MARK: - Upcoming payments
 
-  private var upcomingSection: some View {
+  private func upcomingSection(_ stats: DashboardStats) -> some View {
     VStack(alignment: .leading, spacing: 0) {
       SectionHeader(title: "Upcoming Payments", trailing: "Next 30 days")
         .padding(.top, Layout.sectionGap)
@@ -182,14 +177,14 @@ struct DashboardView: View {
   // MARK: - Allocation
 
   @ViewBuilder
-  private var allocationSection: some View {
+  private func allocationSection(_ stats: DashboardStats) -> some View {
     if !stats.allocation.isEmpty {
       VStack(alignment: .leading, spacing: 0) {
         SectionHeader(title: "Investment Allocation")
           .padding(.top, Layout.sectionGap)
 
         HStack(spacing: 20) {
-          allocationDonut
+          allocationDonut(stats)
           VStack(spacing: 0) {
             // Comp legend lists the top 5 types; row padding carries the 9pt gap.
             ForEach(stats.allocation.prefix(5), id: \.type) { slice in
@@ -207,7 +202,7 @@ struct DashboardView: View {
     }
   }
 
-  private var allocationDonut: some View {
+  private func allocationDonut(_ stats: DashboardStats) -> some View {
     Chart(stats.allocation, id: \.type) { slice in
       SectorMark(
         angle: .value("Value", Double(truncating: NSDecimalNumber(decimal: slice.value))),
@@ -222,7 +217,7 @@ struct DashboardView: View {
     .frame(width: 120, height: 120)
     .overlay {
       VStack(spacing: 0) {
-        Text(focusedValue.currencyCompact(currency))
+        Text(focusedValue(stats).currencyCompact(currency))
           .font(.custom("Manrope-ExtraBold", size: 18))
           .foregroundStyle(Color.onSurface)
           .lineLimit(1)
@@ -237,7 +232,7 @@ struct DashboardView: View {
     .accessibilityHidden(true)  // the legend rows below carry the same data
   }
 
-  private var focusedValue: Decimal {
+  private func focusedValue(_ stats: DashboardStats) -> Decimal {
     guard let focusedType else { return stats.current }
     return stats.allocation.first { $0.type == focusedType }?.value ?? stats.current
   }

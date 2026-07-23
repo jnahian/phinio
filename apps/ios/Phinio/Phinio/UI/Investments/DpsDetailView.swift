@@ -8,6 +8,7 @@ struct DpsDetailView: View {
   @Query private var deposits: [InvestmentDeposit]
   @State private var editing = false
   @State private var closing = false
+  @State private var error: String?
 
   init(investment: Investment) {
     self.investment = investment
@@ -30,8 +31,13 @@ struct DpsDetailView: View {
   /// re-implementing it. Nil until the first sync.
   private var maturity: Decimal? { deposits.last?.accruedValue }
   private var interestEarned: Decimal? {
-    guard paidCount > 0, let accrued = deposits[paidCount - 1].accruedValue else { return nil }
-    return max(0, accrued - investment.investedAmount)
+    // Mirrors dps/$id.tsx: accrued through the leading contiguous paid run
+    // minus deposits over that run — out-of-order paid installments don't
+    // advance the figure.
+    let contiguousPaid = deposits.prefix { $0.status == "paid" }.count
+    guard contiguousPaid > 0,
+          let accrued = deposits[contiguousPaid - 1].accruedValue else { return nil }
+    return max(0, accrued - Decimal(contiguousPaid) * (investment.monthlyDeposit ?? 0))
   }
 
   private var subtitle: String {
@@ -81,6 +87,12 @@ struct DpsDetailView: View {
         SectionHeader(title: "Deposit Schedule")
           .padding(.top, Layout.sectionGap)
           .padding(.horizontal, Layout.screenHorizontalPadding)
+
+        if let error {
+          Text(error).font(.caption).foregroundStyle(Color.error)
+            .padding(.top, 8)
+            .padding(.horizontal, Layout.screenHorizontalPadding)
+        }
 
         scheduleCard
           .padding(.top, 12)
@@ -178,8 +190,13 @@ struct DpsDetailView: View {
     let canToggle = investment.status == "active" || investment.status == "matured"
     return Button {
       guard canToggle else { return }
-      try? Store(context: context).markDepositPaid(dep, investment: investment, paid: !paid)
-      Task { await sync.syncNow() }
+      do {
+        try Store(context: context).markDepositPaid(dep, investment: investment, paid: !paid)
+        error = nil
+        Task { await sync.syncNow() }
+      } catch {
+        self.error = error.localizedDescription
+      }
     } label: {
       HStack(spacing: 12) {
         Text("\(dep.installmentNumber ?? 0)")

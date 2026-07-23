@@ -61,10 +61,10 @@ struct DashboardStatsTests {
     #expect(!s.upcoming[0].isOverdue)
   }
 
-  @Test func emptyPortfolioHasNilGainAndZeroes() {
+  @Test func emptyPortfolioHasZeroGainAndZeroes() {
     let s = DashboardStats.compute(investments: [], emis: [], payments: [],
       deposits: [], withdrawals: [], now: now)
-    #expect(s.gainLossPercent == nil)
+    #expect(s.gainLossPercent == 0)  // 0, not nil — matches dashboard.impl.ts
     #expect(s.netWorth == 0 && s.upcoming.isEmpty && s.allocation.isEmpty)
   }
 

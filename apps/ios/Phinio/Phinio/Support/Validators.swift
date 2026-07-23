@@ -27,9 +27,11 @@ enum Validate {
     return d
   }
 
-  static func name(_ s: String, max: Int = 120) -> String? {
+  /// Person-name fields (signup/profile fullName) use min 2, matching
+  /// validators.ts; investment/EMI names use the default min 1.
+  static func name(_ s: String, min: Int = 1, max: Int = 120) -> String? {
     let t = s.trimmingCharacters(in: .whitespaces)
-    guard !t.isEmpty, t.count <= max else { return nil }
+    guard t.count >= min, t.count <= max else { return nil }
     return t
   }
 

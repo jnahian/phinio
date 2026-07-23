@@ -190,7 +190,7 @@ struct AuthStepView: View {
   private var canSubmit: Bool {
     guard !email.isEmpty, !password.isEmpty else { return false }
     if mode == .signUp {
-      return name.trimmingCharacters(in: .whitespaces).count >= 2 && password.count >= 8
+      return Validate.name(name, min: 2) != nil && password.count >= 8
     }
     return true
   }

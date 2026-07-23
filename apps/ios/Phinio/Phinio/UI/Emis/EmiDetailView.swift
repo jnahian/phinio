@@ -48,8 +48,13 @@ struct EmiDetailView: View {
           titleVisibility: .visible
         ) {
           Button("Complete EMI") {
-            try? Store(context: context).completeEmi(emi)
-            Task { await sync.syncNow() }
+            do {
+              try Store(context: context).completeEmi(emi)
+              error = nil
+              Task { await sync.syncNow() }
+            } catch {
+              self.error = error.localizedDescription
+            }
           }
         }
         .confirmationDialog(
