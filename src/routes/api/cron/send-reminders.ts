@@ -4,6 +4,7 @@ import { prisma } from '#/db'
 import { createNotification } from '#/server/notifications.impl'
 import type { Currency } from '#/lib/currency'
 import { FEE_PAYMENT_NUMBER } from '#/lib/emi-calculator'
+import { buildApnsConfig, sendApns } from '#/server/apns'
 import { buildWebPushConfig, sendWebPush } from '#/server/web-push'
 import type { PushPayload, PushSubscriptionRow } from '#/server/web-push'
 import { createI18n } from '#/lib/i18n/instance'
@@ -424,7 +425,76 @@ export async function handleCron(request: Request): Promise<Response> {
     }
   }
 
-  return json({ scanned, created, pushed, expired, failed })
+  // APNs branch — mirrors the web-push dispatch for native iOS devices.
+  // Skipped entirely when APNS_* env vars are not configured.
+  let apnsPushed = 0
+  let apnsExpired = 0
+  let apnsFailed = 0
+  const apnsConfig = buildApnsConfig()
+  if (apnsConfig && pushJobs.length > 0) {
+    const profileIds = [...new Set(pushJobs.map((j) => j.profileId))]
+    const [tokens, unreadCounts] = await Promise.all([
+      prisma.deviceToken.findMany({
+        where: { profileId: { in: profileIds } },
+      }),
+      prisma.notification.groupBy({
+        by: ['profileId'],
+        where: { profileId: { in: profileIds }, readAt: null },
+        _count: { _all: true },
+      }),
+    ])
+    const tokensByProfile = new Map<string, Array<string>>()
+    for (const t of tokens) {
+      const list = tokensByProfile.get(t.profileId) ?? []
+      list.push(t.token)
+      tokensByProfile.set(t.profileId, list)
+    }
+    const unreadByProfile = new Map(
+      unreadCounts.map((c) => [c.profileId, c._count._all]),
+    )
+
+    const goneTokens = new Set<string>()
+    const apnsResults = await Promise.all(
+      pushJobs.flatMap((job) => {
+        const deviceTokens = tokensByProfile.get(job.profileId) ?? []
+        return deviceTokens.map(async (deviceToken) => {
+          const result = await sendApns(apnsConfig, deviceToken, {
+            title: job.payload.title,
+            body: job.payload.body,
+            link: job.payload.link,
+            badge: unreadByProfile.get(job.profileId) ?? 0,
+          })
+          return { deviceToken, result }
+        })
+      }),
+    )
+    for (const { deviceToken, result } of apnsResults) {
+      if (result.gone) {
+        goneTokens.add(deviceToken)
+      } else if (result.ok) {
+        apnsPushed += 1
+      } else {
+        apnsFailed += 1
+      }
+    }
+    if (goneTokens.size > 0) {
+      const del = await prisma.deviceToken.deleteMany({
+        where: { token: { in: [...goneTokens] } },
+      })
+      apnsExpired = del.count
+    }
+  }
+
+  return json({
+    scanned,
+    created,
+    pushed,
+    expired,
+    failed,
+    apnsPushed,
+    apnsExpired,
+    apnsFailed,
+  })
 }
 
 function json(body: unknown, status = 200): Response {

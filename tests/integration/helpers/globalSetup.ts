@@ -31,7 +31,9 @@ export async function setup() {
     db,
     host: '127.0.0.1',
     port: 0,
-    maxConnections: 10,
+    // One PrismaClient (with its own pg pool) per test-file registry — see
+    // src/db.ts. Keep headroom so sequential files never exhaust the cap.
+    maxConnections: 100,
   })
   await server.start()
 
