@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // Modern Noir design tokens — exact values from the comp
 // (docs/superpowers/specs/2026-07-23-phinio-ios-comp.dc.html).
@@ -60,15 +61,34 @@ extension Color {
   static let outlineVariant = Color(hex: 0x434655)
 }
 
+private extension UIColor {
+  convenience init(hex: UInt32) {
+    self.init(
+      red: CGFloat((hex >> 16) & 0xFF) / 255,
+      green: CGFloat((hex >> 8) & 0xFF) / 255,
+      blue: CGFloat(hex & 0xFF) / 255,
+      alpha: 1)
+  }
+}
+
+private extension Color {
+  /// Adaptive brand color: `light` in light appearance, `dark` in dark.
+  init(light: UInt32, dark: UInt32) {
+    self.init(uiColor: UIColor { trait in
+      trait.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light)
+    })
+  }
+}
+
 /// Drives investment-type badge bg/fg, donut slice, and legend swatch — one source
 /// of truth so the three never disagree (comp badge map, not the legend, wins per
 /// decision #6 in _shared-constraints.md). Background is foreground at 16% alpha.
 enum TypePalette {
-  static let stock = Color(hex: 0xb4c5ff)
-  static let mutualFund = Color(hex: 0x4edea3)
-  static let gold = Color(hex: 0xffcf70)
-  static let crypto = Color(hex: 0xc79bff)
-  static let fd = Color(hex: 0x6fd0ff)
+  static let stock = Color(light: 0x3D5AC8, dark: 0xB4C5FF)
+  static let mutualFund = Color(light: 0x0E8F5F, dark: 0x4EDEA3)
+  static let gold = Color(light: 0xA1720E, dark: 0xFFCF70)
+  static let crypto = Color(light: 0x7C3AED, dark: 0xC79BFF)
+  static let fd = Color(light: 0x0A7EA4, dark: 0x6FD0FF)
   /// NOT from the comp. The comp's badge map gives DPS the same #4edea3 as
   /// Mutual Fund, which is survivable on a badge (the label differs) but makes
   /// two allocation-donut slices identical. The comp's own legend works around
@@ -78,9 +98,9 @@ enum TypePalette {
   /// error/overdue tints (~4°), which never share a surface with a type swatch.
   /// This supersedes the brief §5.7 "green DPS badge" — the badge follows the
   /// palette so badge, slice and legend can never disagree (decision #6).
-  static let dps = Color(hex: 0xff9ecd)
-  static let savings = Color(hex: 0x7fa0ff)
-  static let other = Color(hex: 0xc3c6d7)
+  static let dps = Color(light: 0xC2447E, dark: 0xFF9ECD)
+  static let savings = Color(light: 0x3554C9, dark: 0x7FA0FF)
+  static let other = Color(light: 0x6B7280, dark: 0xC3C6D7)
 
   /// Maps `Investment.type` raw values (see Support/Formatting.swift) onto the
   /// 8 hues above. The comp never drew swatches for sanchayapatra/real_estate/

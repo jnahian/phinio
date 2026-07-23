@@ -28,7 +28,6 @@ struct PhinioApp: App {
         .environmentObject(auth)
         .environmentObject(sync)
         .environmentObject(deepLinkRouter)
-        .preferredColorScheme(.dark)
     }
     .modelContainer(container)
     .onChange(of: scenePhase) { _, phase in
