@@ -23,6 +23,9 @@ extension Font {
   /// Comp uses 11 or 12 depending on pill placement (list row vs. detail hero).
   static func pillText(_ size: CGFloat) -> Font { .custom("Manrope-Bold", size: size) }
   static let tableRow = Font.custom("Manrope-SemiBold", size: 10.5)
+  /// Avatar initials (AvatarView). Comp: 15px at 42pt avatar, 30px at 88pt avatar —
+  /// pass the size scaled from the avatar's diameter at the call site.
+  static func avatarInitials(_ size: CGFloat) -> Font { .custom("Manrope-Bold", size: size) }
 
   // MARK: Inter — body & UI chrome
   /// Comp uses 14 for most list rows, 15 for destructive row labels (e.g. Sign out).
@@ -33,6 +36,10 @@ extension Font {
   static let sectionLabel = Font.custom("Inter-SemiBold", size: 12)  // uppercase, tracking 0.1em
   static let heroLabel = Font.custom("Inter-SemiBold", size: 12)  // uppercase, tracking 0.14em
   static let tabLabel = Font.custom("Inter-SemiBold", size: 10)
+  /// TypeBadge label. Comp: `font:600 11px 'Inter'` on the investment type badge.
+  static let badgeLabel = Font.custom("Inter-SemiBold", size: 11)
+  /// NavRow title. Comp Profile rows (Activity history, Change password): `font:500 15px 'Inter'`.
+  static let navRowLabel = Font.custom("Inter-Medium", size: 15)
 }
 
 /// SwiftUI's `.tracking(_:)` view modifier takes points, not em; these are the

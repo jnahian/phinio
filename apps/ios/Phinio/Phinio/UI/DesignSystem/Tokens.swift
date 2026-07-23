@@ -115,6 +115,9 @@ enum Radii {
   static let currencyTile: CGFloat = 13
   static let input: CGFloat = 11
   static let iconTile: CGFloat = 11
+  // Comp's segmented-tabs track (Investments "Status tabs") and the 42pt EMI
+  // icon tile both use this value — missing from Phase 0, added here.
+  static let segmentTrack: CGFloat = 12
   static let segment: CGFloat = 9
   static let badge: CGFloat = 8
   static let tabPill: CGFloat = 32
