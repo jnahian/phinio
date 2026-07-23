@@ -6,6 +6,36 @@ struct InvestmentRoute: Hashable { let id: String }
 struct ProfileRoute: Hashable {}
 struct ActivityRoute: Hashable {}
 
+enum AppTab: Hashable { case home, invest, emis, create }
+
+/// The four global create flows behind the tab bar's + slot.
+enum CreateSheet: String, Identifiable, CaseIterable {
+  case investment, dps, savings, emi
+  var id: String { rawValue }
+
+  var label: LocalizedStringKey {
+    switch self {
+    case .investment: "Investment"
+    case .dps: "DPS Scheme"
+    case .savings: "Savings Pot"
+    case .emi: "EMI"
+    }
+  }
+
+  var symbol: String {
+    switch self {
+    case .investment: "chart.line.uptrend.xyaxis"
+    case .dps: "calendar"
+    case .savings: "banknote"
+    case .emi: "creditcard"
+    }
+  }
+
+  /// Tab that owns the created record — selected on create so the form sheet
+  /// dismisses onto the right list.
+  var owningTab: AppTab { self == .emi ? .emis : .invest }
+}
+
 struct MainTabView: View {
   @EnvironmentObject private var deepLink: DeepLinkRouter
   @EnvironmentObject private var sync: SyncEngine
@@ -13,39 +43,69 @@ struct MainTabView: View {
   @State private var homePath = NavigationPath()
   @State private var investmentsPath = NavigationPath()
   @State private var emisPath = NavigationPath()
-  @State private var fabOpen = false
+  @State private var showCreateMenu = false
   @State private var creating: CreateSheet?
   @State private var showNotifications = false
 
   var body: some View {
-    // Three always-instantiated stacks switched by opacity/zIndex — `if tab == …`
-    // would tear each stack down and lose its back stack on every switch.
-    ZStack {
-      stack(.home, path: $homePath) {
-        VStack(spacing: 0) {
-          HomeTopBar(showNotifications: $showNotifications)
-          if sync.state == .offline { OfflineBanner() }
-          DashboardView { creating = $0 }
+    TabView(selection: Binding(
+      get: { tab },
+      // Selecting Create never navigates: present the menu and leave `tab`
+      // untouched, so the previous selection is restored automatically.
+      set: { selected in
+        if selected == .create {
+          showCreateMenu = true
+        } else {
+          tab = selected
         }
-        .toolbar(.hidden, for: .navigationBar)
-        .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }
-        .navigationDestination(for: InvestmentRoute.self) {
-          InvestmentDetailRouter(investmentId: $0.id)
-        }
-        .navigationDestination(for: ProfileRoute.self) { _ in ProfileView() }
-        .navigationDestination(for: ActivityRoute.self) { _ in ActivityView() }
       }
-
-      stack(.invest, path: $investmentsPath) {
-        InvestmentsListView()
+    )) {
+      Tab("Home", systemImage: "house", value: AppTab.home) {
+        NavigationStack(path: $homePath) {
+          VStack(spacing: 0) {
+            HomeTopBar(showNotifications: $showNotifications)
+            if sync.state == .offline { OfflineBanner() }
+            DashboardView { creating = $0 }
+          }
+          .toolbar(.hidden, for: .navigationBar)
+          .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }
           .navigationDestination(for: InvestmentRoute.self) {
             InvestmentDetailRouter(investmentId: $0.id)
           }
+          .navigationDestination(for: ProfileRoute.self) { _ in ProfileView() }
+          .navigationDestination(for: ActivityRoute.self) { _ in ActivityView() }
+        }
       }
 
-      stack(.emis, path: $emisPath) {
-        EmiListView()
-          .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }
+      Tab("Invest", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.invest) {
+        NavigationStack(path: $investmentsPath) {
+          InvestmentsListView()
+            .navigationDestination(for: InvestmentRoute.self) {
+              InvestmentDetailRouter(investmentId: $0.id)
+            }
+        }
+      }
+
+      Tab("EMIs", systemImage: "creditcard", value: AppTab.emis) {
+        NavigationStack(path: $emisPath) {
+          EmiListView()
+            .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }
+        }
+      }
+
+      // Off-label (spec §2): the search role renders as the separated circular
+      // trailing slot; plus icon + "Add" label restyle it as Create. Fallback if
+      // the icon/label overrides don't take: delete `role: .search` — same
+      // interception UX, loses the separated styling.
+      Tab("Add", systemImage: "plus", value: AppTab.create, role: .search) {
+        Color.clear
+      }
+    }
+    .sheet(isPresented: $showCreateMenu) {
+      CreateMenuSheet { option in
+        showCreateMenu = false
+        tab = option.owningTab
+        creating = option
       }
     }
     .sheet(isPresented: $showNotifications) {
@@ -73,59 +133,49 @@ struct MainTabView: View {
       }
     }
   }
-
-  @ViewBuilder
-  private func stack<Root: View>(
-    _ which: AppTab, path: Binding<NavigationPath>, @ViewBuilder root: () -> Root
-  ) -> some View {
-    let active = tab == which
-    // The ZStack wrapper is load-bearing: `.accessibilityHidden` applied
-    // directly to a NavigationStack does not hide its subtree, so VoiceOver
-    // (and XCUITest) still walked all three tabs' chrome.
-    ZStack {
-      NavigationStack(path: path) {
-        root()
-          // Applied before the bar's safeAreaInset so the bar and FAB draw above
-          // the scrim, matching the comp's z-order (scrim 44, bar 45).
-          .overlay {
-            if fabOpen {
-              FabMenu(isOpen: $fabOpen) { option in
-                fabOpen = false
-                tab = option.owningTab
-                creating = option
-              }
-            }
-          }
-          .safeAreaInset(edge: .bottom) {
-            NoirTabBar(selection: $tab, fabOpen: $fabOpen)
-          }
-          .animation(.easeOut(duration: 0.18), value: fabOpen)
-          .accessibilityHidden(!active)
-      }
-    }
-    .modifier(InactiveStack(inactive: !active))
-    .zIndex(active ? 1 : 0)
-  }
 }
 
-/// Hides an inactive tab's stack without unmounting it. `.hidden()` is the only
-/// modifier that actually drops the subtree from the accessibility tree —
-/// `.accessibilityHidden(true)` on a NavigationStack (or a wrapper around one)
-/// is silently ignored, leaving all three tabs' content visible to VoiceOver.
-private struct InactiveStack: ViewModifier {
-  let inactive: Bool
+/// Native replacement for FabMenu: the four create flows in a grouped list,
+/// presented as a medium-detent sheet from the tab bar's + slot.
+struct CreateMenuSheet: View {
+  @Environment(\.dismiss) private var dismiss
+  let onSelect: (CreateSheet) -> Void
 
-  func body(content: Content) -> some View {
-    if inactive {
-      content.hidden()
-    } else {
-      content
+  var body: some View {
+    NavigationStack {
+      List {
+        Section("New investment") {
+          row(.investment)
+          row(.dps)
+          row(.savings)
+        }
+        Section("New EMI") {
+          row(.emi)
+        }
+      }
+      .navigationTitle("Create")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Cancel") { dismiss() }
+        }
+      }
+    }
+    .presentationDetents([.medium])
+  }
+
+  private func row(_ option: CreateSheet) -> some View {
+    Button {
+      onSelect(option)
+    } label: {
+      Label(option.label, systemImage: option.symbol)
     }
   }
 }
 
 /// Greeting + name, notification bell with unread badge, avatar → Profile.
-/// Part of the shell (comp has no nav bar on Home); Phase 3 owns what sits below.
+/// Kept verbatim from the Modern Noir shell — Task 3 dissolves it into the
+/// Dashboard's native toolbar.
 private struct HomeTopBar: View {
   @EnvironmentObject private var sync: SyncEngine
   @Query private var profiles: [Profile]
@@ -196,11 +246,9 @@ private struct HomeTopBar: View {
     .accessibilityLabel("Notifications")
   }
 
-  // Kept from DashboardView's old toolbar, which the custom top bar replaces.
   @ViewBuilder private var syncBadge: some View {
     switch sync.state {
     case .syncing: ProgressView().controlSize(.small)
-    // Offline is announced by the banner below the bar, not duplicated here.
     case .offline, .idle, .unauthorized: EmptyView()
     }
   }
