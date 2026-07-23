@@ -41,26 +41,6 @@ struct CarvedTextField: View {
 
 // MARK: - Empty state, avatar, icon tile
 
-/// Replaces `EmptyStateView`'s `ContentUnavailableView` — system chrome can't
-/// take the design tokens. `UI/SharedViews.swift`'s `EmptyStateView` is left in
-/// place until its call sites migrate in Phases 3-8.
-struct NoirEmptyState: View {
-  let title: String
-  let message: String
-
-  var body: some View {
-    VStack(spacing: 8) {
-      Text(title).font(.sectionTitle).foregroundStyle(Color.onSurface)
-      Text(message).font(.body).foregroundStyle(Color.onSurfaceVariant)
-    }
-    .multilineTextAlignment(.center)
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 48)
-    .padding(.horizontal, 24)
-    .accessibilityElement(children: .combine)
-  }
-}
-
 /// Circular gradient avatar with initials (top bar 42pt, Profile 88pt).
 struct AvatarView: View {
   let initials: String
@@ -155,68 +135,17 @@ struct TextButton: View {
   }
 }
 
-/// Connectivity strip under the top bar (brief §3, §6).
+/// Connectivity capsule under the nav bar, on system material so it reads in
+/// both appearances.
 struct OfflineBanner: View {
   var body: some View {
-    HStack(spacing: 8) {
-      Image(systemName: "wifi.slash").font(.system(size: 12))
-      Text("Offline — changes sync when you reconnect.").font(.meta)
-    }
-    .foregroundStyle(Color.tertiaryFixedDim)
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 8)
-    .background(Color.tertiaryContainer.opacity(0.12))
-    .accessibilityElement(children: .combine)
-  }
-}
-
-/// Sub-screen header: 40pt circular back button, title with optional subtitle,
-/// optional trailing accessory (type badge / edit pencil / "Edit"). Pushed
-/// screens hide the system nav bar and use this instead; the custom tab bar
-/// needs no hiding modifier because it is attached to each stack's root.
-struct DetailHeader<Trailing: View>: View {
-  let title: String
-  var subtitle: String? = nil
-  let onBack: () -> Void
-  @ViewBuilder var trailing: Trailing
-
-  var body: some View {
-    HStack(spacing: 12) {
-      Button(action: onBack) {
-        Image(systemName: "chevron.left")
-          .font(.system(size: 18, weight: .bold))
-          .foregroundStyle(Color.brandPrimary)
-          .frame(width: 40, height: 40)
-          .background(Color.brandPrimary.opacity(0.08), in: .circle)
-          .contentShape(.circle)
-      }
-      .buttonStyle(.plain)
-      .accessibilityLabel("Back")
-
-      VStack(alignment: .leading, spacing: 2) {
-        Text(title)
-          .font(.detailTitle)
-          .foregroundStyle(Color.onSurface)
-          .lineLimit(1)
-        if let subtitle {
-          Text(subtitle)
-            .font(.custom("Inter-Medium", size: 11.5))
-            .foregroundStyle(Color.onSurfaceVariant)
-            .lineLimit(1)
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-
-      trailing
-    }
-    .padding(.horizontal, Layout.screenHorizontalPadding)
-    .padding(.top, 6)
-    .padding(.bottom, 18)
-  }
-}
-
-extension DetailHeader where Trailing == EmptyView {
-  init(title: String, subtitle: String? = nil, onBack: @escaping () -> Void) {
-    self.init(title: title, subtitle: subtitle, onBack: onBack) { EmptyView() }
+    Label("Offline — changes sync when you reconnect.", systemImage: "wifi.slash")
+      .font(.footnote)
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 8)
+      .background(.regularMaterial, in: .capsule)
+      .padding(.top, 4)
+      .accessibilityElement(children: .combine)
   }
 }

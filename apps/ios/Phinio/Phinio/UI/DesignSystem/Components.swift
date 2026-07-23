@@ -6,18 +6,6 @@ import SwiftUI
 
 // MARK: - Surfaces
 
-/// Grouped row list container — `surfaceLow`, radius 16. Rows bring their own
-/// padding/hairlines; this just clips them to the card shape.
-struct SectionGroup<Content: View>: View {
-  @ViewBuilder let content: Content
-
-  var body: some View {
-    VStack(spacing: 0) { content }
-      .background(Color.surfaceLow, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
-      .clipShape(RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
-  }
-}
-
 /// Gradient hero (net worth, EMI/DPS/savings detail heroes). Orb size/offset
 /// vary per hero in the comp (200-220pt, top -80/-90) — only the constant blur
 /// radius and trailing offset are tokenized (`AmbientOrb`), the rest are params.

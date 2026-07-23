@@ -2,7 +2,6 @@ import SwiftUI
 
 /// Online-only: the activity log is server-derived and not in the snapshot.
 struct ActivityView: View {
-  @Environment(\.dismiss) private var dismiss
   @State private var items: [ActivityItemDTO] = []
   @State private var nextCursor: String?
   @State private var loading = false
@@ -10,98 +9,87 @@ struct ActivityView: View {
   private let client = APIClient()
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        DetailHeader(title: "Activity", onBack: { dismiss() })
-
-        if offline && items.isEmpty {
-          NoirEmptyState(title: "Offline", message: "Activity needs a connection.")
-        } else if loading && items.isEmpty {
-          skeleton
-        } else if items.isEmpty {
-          NoirEmptyState(
-            title: "No activity", message: "Changes you make will show up here.")
-        } else {
-          SectionGroup {
-            VStack(spacing: 0) {
-              ForEach(items) { row($0) }
-            }
-            .padding(.vertical, 6)
-          }
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-
+    List {
+      if offline && items.isEmpty {
+        ContentUnavailableView(
+          "Offline", systemImage: "wifi.slash",
+          description: Text("Activity needs a connection."))
+          .listRowBackground(Color.clear)
+      } else if loading && items.isEmpty {
+        skeleton
+      } else if items.isEmpty {
+        ContentUnavailableView(
+          "No activity", systemImage: "clock.arrow.circlepath",
+          description: Text("Changes you make will show up here."))
+          .listRowBackground(Color.clear)
+      } else {
+        Section {
+          ForEach(items) { row($0) }
           if nextCursor != nil {
-            Button { Task { await loadMore() } } label: {
-              Group {
-                if loading {
-                  ProgressView().controlSize(.small).tint(Color.brandPrimary)
-                } else {
-                  Text("Load more").font(.rowLabel(14))
-                }
-              }
-              .foregroundStyle(Color.brandPrimary)
-              .frame(maxWidth: .infinity, minHeight: 48)
-              .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            .disabled(loading)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
-            .padding(.top, 8)
+            loadMoreRow
           }
         }
       }
-      .padding(.bottom, 40)
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
-    .toolbar(.hidden, for: .navigationBar)
+    .navigationTitle("Activity")
+    .navigationBarTitleDisplayMode(.inline)
     .task { await reload() }
     .refreshable { await reload() }
   }
 
-  /// Shimmer on first load rather than a bare full-screen spinner (brief §6).
+  /// Placeholder shimmer on first load rather than a bare full-screen spinner.
   private var skeleton: some View {
-    SectionGroup {
-      VStack(spacing: 0) {
-        ForEach(0..<5, id: \.self) { _ in
-          HStack(spacing: 12) {
-            IconTile(size: 38, radius: Radii.iconTile) { Color.clear }
-            VStack(alignment: .leading, spacing: 6) {
-              Text("Placeholder summary text")
-                .font(.rowLabel(14)).foregroundStyle(Color.onSurface)
-              Text("Entity · moments ago")
-                .font(.meta).foregroundStyle(Color.onSurfaceMuted)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+    Section {
+      ForEach(0..<5, id: \.self) { _ in
+        HStack(spacing: 12) {
+          IconTile(size: 38, radius: 11) { Color.clear }
+          VStack(alignment: .leading, spacing: 6) {
+            Text("Placeholder summary text")
+              .font(.body)
+            Text("Entity · moments ago")
+              .font(.caption).foregroundStyle(.secondary)
           }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 14)
+          .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      .padding(.vertical, 6)
     }
     .redacted(reason: .placeholder)
-    .padding(.horizontal, Layout.screenHorizontalPadding)
     .accessibilityHidden(true)
+  }
+
+  private var loadMoreRow: some View {
+    Button {
+      Task { await loadMore() }
+    } label: {
+      Group {
+        if loading {
+          ProgressView().controlSize(.small)
+        } else {
+          Text("Load more")
+        }
+      }
+      .frame(maxWidth: .infinity)
+    }
+    .disabled(loading)
   }
 
   private func row(_ item: ActivityItemDTO) -> some View {
     HStack(alignment: .top, spacing: 12) {
-      IconTile(size: 38, radius: Radii.iconTile, background: tint(item.action).opacity(0.12)) {
+      IconTile(size: 38, radius: 11, background: tint(item.action).opacity(0.12)) {
         Image(systemName: symbol(item.action))
           .font(.system(size: 16, weight: .semibold))
           .foregroundStyle(tint(item.action))
       }
       VStack(alignment: .leading, spacing: 3) {
         Text(item.summary)
-          .font(.rowLabel(14)).foregroundStyle(Color.onSurface)
+          .font(.body)
           .fixedSize(horizontal: false, vertical: true)
         HStack(spacing: 6) {
-          Text(item.entityLabel).font(.meta).foregroundStyle(Color.onSurfaceVariant)
+          Text(item.entityLabel).font(.caption).foregroundStyle(.secondary)
           if let date = WireDate.timestamp(item.createdAt) {
-            Text("·").font(.meta).foregroundStyle(Color.onSurfaceMuted)
+            Text("·").font(.caption).foregroundStyle(.secondary)
             Text(date, format: .relative(presentation: .named))
-              .font(.meta).foregroundStyle(Color.onSurfaceMuted)
+              .font(.caption).foregroundStyle(.secondary)
           }
         }
         // Updates carry a field-level diff (old → new).
@@ -116,8 +104,6 @@ struct ActivityView: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 14)
     .accessibilityElement(children: .combine)
     .onAppear {
       if item.id == items.last?.id, nextCursor != nil {
@@ -128,13 +114,13 @@ struct ActivityView: View {
 
   private func diffLine(_ change: ActivityChangeDTO) -> some View {
     HStack(spacing: 4) {
-      Text(change.field).foregroundStyle(Color.onSurfaceMuted)
-      Text(format(change.from, change.currency)).foregroundStyle(Color.onSurfaceFaint)
+      Text(change.field).foregroundStyle(.secondary)
+      Text(format(change.from, change.currency)).foregroundStyle(.tertiary)
       Image(systemName: "arrow.right").font(.system(size: 8))
-        .foregroundStyle(Color.onSurfaceFaint)
-      Text(format(change.to, change.currency)).foregroundStyle(Color.onSurfaceVariant)
+        .foregroundStyle(.tertiary)
+      Text(format(change.to, change.currency)).foregroundStyle(.secondary)
     }
-    .font(.meta)
+    .font(.caption)
   }
 
   private func format(_ value: String?, _ currency: String?) -> String {
@@ -145,9 +131,9 @@ struct ActivityView: View {
 
   private func tint(_ action: String) -> Color {
     switch action {
-    case "create": Color.brandSecondary
-    case "delete": Color.error
-    default: Color.brandPrimary
+    case "create": .green
+    case "delete": .red
+    default: .accentColor
     }
   }
 
