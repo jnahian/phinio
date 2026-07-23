@@ -145,6 +145,57 @@ struct IconTile<Icon: View>: View {
   }
 }
 
+/// Sub-screen header: 40pt circular back button, title with optional subtitle,
+/// optional trailing accessory (type badge / edit pencil / "Edit"). Pushed
+/// screens hide the system nav bar and use this instead; the custom tab bar
+/// needs no hiding modifier because it is attached to each stack's root.
+struct DetailHeader<Trailing: View>: View {
+  let title: String
+  var subtitle: String? = nil
+  let onBack: () -> Void
+  @ViewBuilder var trailing: Trailing
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Button(action: onBack) {
+        Image(systemName: "chevron.left")
+          .font(.system(size: 18, weight: .bold))
+          .foregroundStyle(Color.brandPrimary)
+          .frame(width: 40, height: 40)
+          .background(Color.brandPrimary.opacity(0.08), in: .circle)
+          .contentShape(.circle)
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel("Back")
+
+      VStack(alignment: .leading, spacing: 2) {
+        Text(title)
+          .font(.detailTitle)
+          .foregroundStyle(Color.onSurface)
+          .lineLimit(1)
+        if let subtitle {
+          Text(subtitle)
+            .font(.custom("Inter-Medium", size: 11.5))
+            .foregroundStyle(Color.onSurfaceVariant)
+            .lineLimit(1)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      trailing
+    }
+    .padding(.horizontal, Layout.screenHorizontalPadding)
+    .padding(.top, 6)
+    .padding(.bottom, 18)
+  }
+}
+
+extension DetailHeader where Trailing == EmptyView {
+  init(title: String, subtitle: String? = nil, onBack: @escaping () -> Void) {
+    self.init(title: title, subtitle: subtitle, onBack: onBack) { EmptyView() }
+  }
+}
+
 // MARK: - Preview gallery
 
 #Preview("Component Kit") {
