@@ -11,11 +11,18 @@ struct CarvedTextField: View {
   let placeholder: String
   @Binding var text: String
   var errorText: String? = nil
+  var secure: Bool = false
   @FocusState private var focused: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      TextField(placeholder, text: $text)
+      Group {
+        if secure {
+          SecureField(placeholder, text: $text)
+        } else {
+          TextField(placeholder, text: $text)
+        }
+      }
         .focused($focused)
         .font(.body)
         .foregroundStyle(Color.onSurface)
@@ -142,6 +149,112 @@ struct IconTile<Icon: View>: View {
       .frame(width: size, height: size)
       .background(background, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
       .accessibilityHidden(true)
+  }
+}
+
+/// Full-width filled action (auth, forms). Shows a spinner in place of the
+/// label while `busy`, so the button keeps its size and the tap target never
+/// moves under the user's finger.
+struct PrimaryButton: View {
+  let title: String
+  var busy: Bool = false
+  var enabled: Bool = true
+  let action: () -> Void
+
+  init(_ title: String, busy: Bool = false, enabled: Bool = true,
+       action: @escaping () -> Void) {
+    self.title = title
+    self.busy = busy
+    self.enabled = enabled
+    self.action = action
+  }
+
+  var body: some View {
+    Button(action: action) {
+      Group {
+        if busy {
+          ProgressView().controlSize(.small).tint(Color.onHero)
+        } else {
+          Text(title).font(.rowLabel(15))
+        }
+      }
+      .foregroundStyle(Color.onHero)
+      .frame(maxWidth: .infinity, minHeight: 52)
+      .background(
+        Color.primaryContainer,
+        in: RoundedRectangle(cornerRadius: Radii.input, style: .continuous))
+    }
+    .buttonStyle(.plain)
+    .disabled(!enabled || busy)
+    .opacity(enabled && !busy ? 1 : 0.5)
+  }
+}
+
+/// Text-only secondary action ("I already have an account", "Back to login").
+struct TextButton: View {
+  let title: String
+  let action: () -> Void
+
+  init(_ title: String, action: @escaping () -> Void) {
+    self.title = title
+    self.action = action
+  }
+
+  var body: some View {
+    Button(action: action) {
+      Text(title)
+        .font(.rowLabel(14))
+        .foregroundStyle(Color.brandPrimary)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+/// Puts a stock `Form` on the Modern Noir palette.
+///
+/// ponytail: the forms keep SwiftUI's `Picker`, `DatePicker` and `Toggle`
+/// rather than hand-rolled equivalents — those controls carry a lot of
+/// behaviour (wheels, calendars, VoiceOver rotors, Dynamic Type) that a custom
+/// version would have to re-earn, and `Form` accepts the palette through these
+/// four modifiers. Only inputs where stock chrome genuinely refuses the tokens
+/// (the auth screens' carved fields) are hand-built.
+struct NoirFormStyle: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .scrollContentBackground(.hidden)
+      .background(Color.surface)
+      // Applied at the Form level so every Section inherits it — otherwise rows
+      // keep the system grouped-background grey, which reads as a different
+      // surface from SectionGroup elsewhere in the app.
+      .listRowBackground(Color.surfaceLow)
+      .tint(Color.brandPrimary)
+      .foregroundStyle(Color.onSurface)
+      .toolbarBackground(Color.surface, for: .navigationBar)
+      .toolbarBackground(.visible, for: .navigationBar)
+  }
+}
+
+extension View {
+  func noirForm() -> some View { modifier(NoirFormStyle()) }
+
+  /// Section rows sit on `surfaceLow`, matching SectionGroup elsewhere.
+  func noirFormRow() -> some View { listRowBackground(Color.surfaceLow) }
+}
+
+/// Connectivity strip under the top bar (brief §3, §6).
+struct OfflineBanner: View {
+  var body: some View {
+    HStack(spacing: 8) {
+      Image(systemName: "wifi.slash").font(.system(size: 12))
+      Text("Offline — changes sync when you reconnect.").font(.meta)
+    }
+    .foregroundStyle(Color.tertiaryFixedDim)
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, 8)
+    .background(Color.tertiaryContainer.opacity(0.12))
+    .accessibilityElement(children: .combine)
   }
 }
 

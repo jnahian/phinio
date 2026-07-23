@@ -48,6 +48,7 @@ struct EmiFormView: View {
             .keyboardType(.decimalPad)
           TextField("Notes", text: $notes, axis: .vertical)
         }
+        .noirFormRow()
         if let rows = preview, let first = rows.first {
           Section("Schedule preview") {
             LabeledContent("Monthly EMI") {
@@ -58,21 +59,24 @@ struct EmiFormView: View {
               HStack {
                 Text("#\(row.paymentNumber)")
                 Text(row.dueDate, style: .date)
-                  .font(.caption).foregroundStyle(.secondary)
+                  .font(.caption).foregroundStyle(Color.onSurfaceVariant)
                 Spacer()
                 MoneyText(amount: Money.decimal(row.emiAmount) ?? 0)
-                  .font(.callout.monospacedDigit())
+                  .font(.amountSecondary)
               }
             }
             if rows.count > 3 {
               Text("… and \(rows.count - 3) more")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Color.onSurfaceVariant)
             }
           }
+        .noirFormRow()
           .listRowBackground(Color.clear.glassEffect(in: .rect(cornerRadius: 12)))
         }
-        if let error { Section { Text(error).foregroundStyle(.red) } }
+        if let error { Section { Text(error).foregroundStyle(Color.error) }
+        .noirFormRow() }
       }
+      .noirForm()
       .navigationTitle("New EMI")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

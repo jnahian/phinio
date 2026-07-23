@@ -8,6 +8,7 @@ struct ActivityRoute: Hashable {}
 
 struct MainTabView: View {
   @EnvironmentObject private var deepLink: DeepLinkRouter
+  @EnvironmentObject private var sync: SyncEngine
   @State private var tab: AppTab = .home
   @State private var homePath = NavigationPath()
   @State private var investmentsPath = NavigationPath()
@@ -23,6 +24,7 @@ struct MainTabView: View {
       stack(.home, path: $homePath) {
         VStack(spacing: 0) {
           HomeTopBar(showNotifications: $showNotifications)
+          if sync.state == .offline { OfflineBanner() }
           DashboardView { creating = $0 }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -198,8 +200,8 @@ private struct HomeTopBar: View {
   @ViewBuilder private var syncBadge: some View {
     switch sync.state {
     case .syncing: ProgressView().controlSize(.small)
-    case .offline: Image(systemName: "wifi.slash").foregroundStyle(Color.onSurfaceMuted)
-    case .idle, .unauthorized: EmptyView()
+    // Offline is announced by the banner below the bar, not duplicated here.
+    case .offline, .idle, .unauthorized: EmptyView()
     }
   }
 }

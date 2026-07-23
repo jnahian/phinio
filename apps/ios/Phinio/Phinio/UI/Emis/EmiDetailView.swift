@@ -367,6 +367,7 @@ struct EmiEditSheet: View {
         TextField("Label", text: $label)
         TextField("Notes", text: $notes, axis: .vertical)
       }
+      .noirForm()
       .navigationTitle("Edit EMI")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

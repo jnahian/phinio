@@ -240,8 +240,9 @@ struct AddDepositSheet: View {
         TextField("Amount", text: $amount).keyboardType(.decimalPad)
         DatePicker("Date", selection: $depositDate, displayedComponents: .date)
         TextField("Notes", text: $notes, axis: .vertical)
-        if let error { Text(error).foregroundStyle(.red) }
+        if let error { Text(error).foregroundStyle(Color.error) }
       }
+      .noirForm()
       .navigationTitle("Add deposit")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

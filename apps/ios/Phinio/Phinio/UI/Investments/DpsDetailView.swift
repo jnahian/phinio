@@ -257,6 +257,7 @@ struct DpsEditSheet: View {
         TextField("Name", text: $name)
         TextField("Notes", text: $notes, axis: .vertical)
       }
+      .noirForm()
       .navigationTitle("Edit DPS")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -303,8 +304,11 @@ struct DpsCloseSheet: View {
         } footer: {
           Text("Premature closure removes remaining installments. This can't be undone locally.")
         }
-        if let error { Section { Text(error).foregroundStyle(.red) } }
+        .noirFormRow()
+        if let error { Section { Text(error).foregroundStyle(Color.error) }
+        .noirFormRow() }
       }
+      .noirForm()
       .navigationTitle("Close DPS")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

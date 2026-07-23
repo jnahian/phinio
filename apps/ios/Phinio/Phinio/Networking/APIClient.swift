@@ -99,11 +99,13 @@ final class APIClient: SyncTransport {
 
   /// Create an account. Better Auth requires email verification before
   /// sign-in succeeds, so no token comes back here.
-  func signUp(name: String, email: String, password: String) async throws {
+  func signUp(name: String, email: String, password: String,
+              preferredCurrency: String) async throws {
     var req = request(path: "/api/auth/sign-up/email", method: "POST")
     req.setValue("application/json", forHTTPHeaderField: "Content-Type")
     req.httpBody = try JSONEncoder().encode(
-      ["name": name, "email": email, "password": password])
+      ["name": name, "email": email, "password": password,
+       "preferredCurrency": preferredCurrency])
     let (data, response): (Data, URLResponse)
     do {
       (data, response) = try await session.data(for: req)

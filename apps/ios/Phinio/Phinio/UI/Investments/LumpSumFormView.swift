@@ -47,6 +47,7 @@ struct LumpSumFormView: View {
           }
           TextField("Notes", text: $notes, axis: .vertical)
         }
+        .noirFormRow()
         if existing != nil {
           Section("Completion") {
             Toggle("Completed", isOn: $completed)
@@ -57,11 +58,14 @@ struct LumpSumFormView: View {
                          displayedComponents: .date)
             }
           }
+        .noirFormRow()
         }
         if let error {
-          Section { Text(error).foregroundStyle(.red) }
+          Section { Text(error).foregroundStyle(Color.error) }
+        .noirFormRow()
         }
       }
+      .noirForm()
       .navigationTitle(existing == nil ? "New investment" : "Edit investment")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

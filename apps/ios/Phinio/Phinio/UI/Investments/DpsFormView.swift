@@ -17,6 +17,17 @@ struct DpsFormView: View {
   @State private var notes = ""
   @State private var error: String?
 
+  /// Brief §5.12 asks for a live *maturity* preview, but maturity is the last
+  /// installment's server-computed accruedValue and the schedule is generated
+  /// server-side — deriving it here would mean re-implementing that formula and
+  /// risking drift. Previewing total deposits is the honest subset: it is
+  /// exactly derivable from what the user has typed. Maturity shows on the
+  /// detail screen once the first sync returns the schedule.
+  private var totalDeposits: Decimal? {
+    guard let monthly = Validate.positiveMoney(monthlyDeposit) else { return nil }
+    return monthly * Decimal(tenureMonths)
+  }
+
   var body: some View {
     NavigationStack {
       Form {
@@ -38,8 +49,18 @@ struct DpsFormView: View {
         } footer: {
           Text("The installment schedule appears after the first sync.")
         }
-        if let error { Section { Text(error).foregroundStyle(.red) } }
+        .noirFormRow()
+        if let total = totalDeposits {
+          Section("Preview") {
+            LabeledContent("Total deposits") { MoneyText(amount: total) }
+            LabeledContent("Over") { Text("\(tenureMonths) months") }
+          }
+          .noirFormRow()
+        }
+        if let error { Section { Text(error).foregroundStyle(Color.error) }
+        .noirFormRow() }
       }
+      .noirForm()
       .navigationTitle("New DPS")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
