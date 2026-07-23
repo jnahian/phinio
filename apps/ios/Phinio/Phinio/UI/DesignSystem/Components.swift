@@ -101,12 +101,12 @@ struct MoneyPill: View {
   var body: some View {
     Text("\(isPositive ? "▲" : "▼") \(valueText)")
       .font(.pillText(12))
-      .foregroundStyle(isPositive ? Color.secondary : Color.tertiaryFixedDim)
+      .foregroundStyle(isPositive ? Color.brandSecondary : Color.tertiaryFixedDim)
       .padding(.horizontal, 9)
       .padding(.vertical, size == .hero ? 4 : 3)
       .background(
         isPositive
-          ? Color.secondary.opacity(size == .hero ? 0.20 : 0.14)
+          ? Color.brandSecondary.opacity(size == .hero ? 0.20 : 0.14)
           : Color.tertiaryContainer.opacity(0.18),
         in: Capsule()
       )
@@ -155,7 +155,7 @@ struct FilterPills: View {
               .foregroundStyle(isSelected ? Color.surface : Color.onSurfaceVariant)
               .padding(.horizontal, 14)
               .padding(.vertical, 8)
-              .background(isSelected ? Color.primary : Color.pillIdle, in: Capsule())
+              .background(isSelected ? Color.brandPrimary : Color.pillIdle, in: Capsule())
           }
           .buttonStyle(.plain)
           .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -227,7 +227,7 @@ struct SectionHeader: View {
       Text(title).font(.sectionTitle).foregroundStyle(Color.onSurface)
       Spacer()
       if let trailing {
-        Text(trailing).font(.caption).foregroundStyle(Color.primary)
+        Text(trailing).font(.caption).foregroundStyle(Color.brandPrimary)
       }
     }
     .accessibilityElement(children: .combine)

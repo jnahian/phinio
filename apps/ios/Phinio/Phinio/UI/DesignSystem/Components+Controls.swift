@@ -23,7 +23,7 @@ struct CarvedTextField: View {
         .background(Color.surfaceLowest, in: RoundedRectangle(cornerRadius: Radii.input, style: .continuous))
         .overlay(
           RoundedRectangle(cornerRadius: Radii.input, style: .continuous)
-            .strokeBorder(focused ? Color.primary : .clear, lineWidth: 1.5)
+            .strokeBorder(focused ? Color.brandPrimary : .clear, lineWidth: 1.5)
         )
       if let errorText {
         Text(errorText).font(.caption).foregroundStyle(Color.error)
@@ -151,7 +151,7 @@ struct IconTile<Icon: View>: View {
   ScrollView {
     VStack(alignment: .leading, spacing: 20) {
       HeroCard(
-        gradient: Gradients.netWorthHero, orbTint: Color.primary.opacity(0.18),
+        gradient: Gradients.netWorthHero, orbTint: Color.brandPrimary.opacity(0.18),
         orbSize: 220, orbTopOffset: -90
       ) {
         VStack(alignment: .leading, spacing: 8) {
@@ -177,7 +177,7 @@ struct IconTile<Icon: View>: View {
             TypeBadge(type: "stock")
             MoneyPill(percent: -4.5)
           }
-          NoirProgressBar(fraction: 0.6, tint: Color.secondary).frame(height: 5)
+          NoirProgressBar(fraction: 0.6, tint: Color.brandSecondary).frame(height: 5)
         }
       }
 
@@ -208,10 +208,10 @@ struct IconTile<Icon: View>: View {
       HStack(spacing: 12) {
         AvatarView(initials: "RA", size: 42)
         IconTile(size: 38, radius: Radii.iconTile) {
-          Image(systemName: "doc.text").foregroundStyle(Color.primary)
+          Image(systemName: "doc.text").foregroundStyle(Color.brandPrimary)
         }
         IconTile(size: 42, radius: Radii.segmentTrack, background: .surfaceHighest) {
-          Image(systemName: "house").foregroundStyle(Color.primary)
+          Image(systemName: "house").foregroundStyle(Color.brandPrimary)
         }
       }
     }

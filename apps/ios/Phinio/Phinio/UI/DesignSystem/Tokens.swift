@@ -20,13 +20,17 @@ extension Color {
   static let surfaceLow = Color(hex: 0x131b2e)  // section group
   static let surfaceHigh = Color(hex: 0x222a3d)  // card body
   static let surfaceHighest = Color(hex: 0x2d3449)  // icon tile, active segment
+  // Comp-only — not in docs/IOS_DESIGN_BRIEF.md's palette table.
   static let pillIdle = Color(hex: 0x1c2438)
 
   // MARK: Text
   static let onSurface = Color(hex: 0xdae2fd)
   static let onSurfaceVariant = Color(hex: 0xc3c6d7)
+  // Comp-only — not in docs/IOS_DESIGN_BRIEF.md's palette table.
   static let onSurfaceMuted = Color(hex: 0x8a92a8)  // metadata, dates
+  // Comp-only — not in docs/IOS_DESIGN_BRIEF.md's palette table.
   static let onSurfaceFaint = Color(hex: 0x6b7288)  // table headers, paid rows
+  // Comp-only — not in docs/IOS_DESIGN_BRIEF.md's palette table.
   static let tabIdle = Color(hex: 0x5a6178)  // idle tab label, chevrons
   // Brief lists "onHero #ffffff / #f2f5ff" as one entry. The comp uses #fff for
   // detailHeroNumeric (EMI/DPS/Savings heroes) and #f2f5ff only for the net-worth
@@ -36,9 +40,16 @@ extension Color {
   static let avatarText = Color(hex: 0xeaf0ff)
 
   // MARK: Accent / semantic
-  static let primary = Color(hex: 0xb4c5ff)
+  // Named `brandPrimary`/`brandSecondary`, not `primary`/`secondary` — those
+  // names shadow SwiftUI's own `Color.primary`/`.secondary` (and
+  // `ShapeStyle.primary`/`.secondary`). In a generic ShapeStyle context —
+  // which is how `.foregroundStyle(...)`, `.tint(...)`, `.background(...)`
+  // resolve implicit-member syntax like `.primary` — the bare shorthand binds
+  // to SwiftUI's HierarchicalShapeStyle, not this color, and silently falls
+  // back to system gray while still compiling and building green.
+  static let brandPrimary = Color(hex: 0xb4c5ff)
   static let primaryContainer = Color(hex: 0x2563eb)
-  static let secondary = Color(hex: 0x4edea3)
+  static let brandSecondary = Color(hex: 0x4edea3)
   static let secondaryContainer = Color(hex: 0x00a572)
   static let tertiaryContainer = Color(hex: 0xcf2c30)
   static let tertiaryFixedDim = Color(hex: 0xffb3ad)
@@ -100,8 +111,11 @@ enum Gradients {
     colors: [Color(hex: 0x00a572), Color(hex: 0x0d2a26)], startPoint: .topLeading, endPoint: .bottomTrailing)
   static let savingsHero = LinearGradient(
     colors: [Color(hex: 0x2563eb), Color(hex: 0x141d38)], startPoint: .topLeading, endPoint: .bottomTrailing)
-  // Comp specifies 135° for the avatar only; close enough to the other heroes'
-  // 140° that the same UnitPoint pair is used rather than a bespoke angle.
+  // `.topLeading -> .bottomTrailing` is a fixed 135° diagonal — all seven
+  // gradients above carry the same 5° deviation from the comp's 140°, not
+  // just this one; SwiftUI has no built-in way to express an arbitrary angle
+  // via UnitPoint without a bespoke angle-to-point conversion, judged not
+  // worth it for a 5° difference.
   static let avatar = LinearGradient(
     colors: [Color(hex: 0x2563eb), Color(hex: 0x00a572)], startPoint: .topLeading, endPoint: .bottomTrailing)
 }
@@ -147,13 +161,13 @@ enum Glass {
   static let fill = Color(hex: 0x131b2e).opacity(0.82)
   static let backdrop: Material = .regularMaterial
   // Comp gives a range (8-10%); midpoint used.
-  static let border = Color.primary.opacity(0.09)
+  static let border = Color.brandPrimary.opacity(0.09)
 }
 
 /// Blurred ambient circle behind every hero. Size (200-220pt) and top offset
 /// (-80/-90) vary per hero in the comp; only the constant parts are tokenized here.
 /// Tint color/opacity also vary per hero and are composed from existing tokens
-/// (e.g. `Color.primary.opacity(0.18)`) at the call site — Phase 3+.
+/// (e.g. `Color.brandPrimary.opacity(0.18)`) at the call site — Phase 3+.
 enum AmbientOrb {
   static let blurRadius: CGFloat = 46
   static let trailingOffset: CGFloat = -40
