@@ -39,10 +39,8 @@ struct ActivityView: View {
           message: "Changes you make will show up here.")
       }
     }
+    // Notifications are reached from the shell's Home bell now, not from here.
     .navigationTitle("Activity")
-    .toolbar {
-      NavigationLink { NotificationsView() } label: { NotificationBell() }
-    }
     .task { await reload() }
     .refreshable { await reload() }
   }

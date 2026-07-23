@@ -5,12 +5,6 @@ struct InvestmentsListView: View {
   @Query(sort: \Investment.updatedAt, order: .reverse)
   private var investments: [Investment]
   @State private var showCompleted = false
-  @State private var creating: CreateKind?
-
-  enum CreateKind: String, Identifiable {
-    case lumpSum, savings, dps
-    var id: String { rawValue }
-  }
 
   private var filtered: [Investment] {
     // Web filter: active = ['active']; completed = ['completed','matured','closed']
@@ -60,23 +54,8 @@ struct InvestmentsListView: View {
                                  : "Add your first investment.")
       }
     }
+    // Creation moved to the shell's global FAB (comp decision #4).
     .navigationTitle("Investments")
-    .toolbar {
-      Menu {
-        Button("Lump sum") { creating = .lumpSum }
-        Button("Savings") { creating = .savings }
-        Button("DPS") { creating = .dps }
-      } label: {
-        Image(systemName: "plus")
-      }
-    }
-    .sheet(item: $creating) { kind in
-      switch kind {
-      case .lumpSum: LumpSumFormView(existing: nil)
-      case .savings: SavingsFormView(existing: nil)
-      case .dps: DpsFormView()
-      }
-    }
   }
 }
 

@@ -57,6 +57,16 @@
         }
       }
     },
+    "Activity history": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কার্যকলাপ ইতিহাস"
+          }
+        }
+      }
+    },
     "Add": {
       "localizations": {
         "bn": {
@@ -407,6 +417,16 @@
         }
       }
     },
+    "DPS Scheme": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ডিপিএস স্কিম"
+          }
+        }
+      }
+    },
     "Dashboard": {
       "localizations": {
         "bn": {
@@ -533,6 +553,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "বাতিল করুন"
+          }
+        }
+      }
+    },
+    "EMI": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইএমআই"
           }
         }
       }
@@ -717,12 +747,52 @@
         }
       }
     },
+    "Good afternoon": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুভ অপরাহ্ন"
+          }
+        }
+      }
+    },
+    "Good evening": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুভ সন্ধ্যা"
+          }
+        }
+      }
+    },
+    "Good morning": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুভ সকাল"
+          }
+        }
+      }
+    },
     "Have an account? Sign in": {
       "localizations": {
         "bn": {
           "stringUnit": {
             "state": "translated",
             "value": "অ্যাকাউন্ট আছে? সাইন ইন করুন"
+          }
+        }
+      }
+    },
+    "Home": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "হোম"
           }
         }
       }
@@ -787,6 +857,16 @@
         }
       }
     },
+    "Invest": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ"
+          }
+        }
+      }
+    },
     "Invested": {
       "localizations": {
         "bn": {
@@ -813,6 +893,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "বিনিয়োগ করা হয়েছে"
+          }
+        }
+      }
+    },
+    "Investment": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিনিয়োগ"
           }
         }
       }
@@ -1173,6 +1263,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "সঞ্চয়"
+          }
+        }
+      }
+    },
+    "Savings Pot": {
+      "localizations": {
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সঞ্চয় পট"
           }
         }
       }

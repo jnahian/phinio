@@ -38,15 +38,8 @@ struct DashboardView: View {
         .padding()
       }
     }
-    .navigationTitle("Dashboard")
-    .toolbar {
-      ToolbarItem(placement: .topBarLeading) { syncBadge }
-      ToolbarItem(placement: .topBarTrailing) {
-        NavigationLink { SettingsView() } label: {
-          Image(systemName: "gearshape")
-        }
-      }
-    }
+    // Nav bar is hidden on Home — the shell's HomeTopBar replaces it, and owns
+    // the sync badge that used to live in this toolbar.
     .refreshable { await sync.syncNow() }
   }
 
@@ -154,14 +147,6 @@ struct DashboardView: View {
         UpcomingRow(item: item)
       }
       .buttonStyle(.plain)
-    }
-  }
-
-  @ViewBuilder private var syncBadge: some View {
-    switch sync.state {
-    case .syncing: ProgressView().controlSize(.small)
-    case .offline: Image(systemName: "wifi.slash").foregroundStyle(.secondary)
-    case .idle, .unauthorized: EmptyView()
     }
   }
 }

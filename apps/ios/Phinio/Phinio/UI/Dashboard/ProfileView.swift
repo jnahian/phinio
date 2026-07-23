@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-struct SettingsView: View {
+struct ProfileView: View {
   @Environment(\.modelContext) private var context
   @EnvironmentObject private var auth: AuthManager
   @EnvironmentObject private var sync: SyncEngine
@@ -94,10 +94,15 @@ struct SettingsView: View {
       }
 
       Section {
+        // The Activity tab is gone (comp has 3 tabs) — reached from here now.
+        NavigationLink(value: ActivityRoute()) { Text("Activity history") }
+      }
+
+      Section {
         Button("Sign out", role: .destructive) { confirmSignOut = true }
       }
     }
-    .navigationTitle("Settings")
+    .navigationTitle("Profile")
     // Seed exactly once, when the profile first becomes available — @Query
     // loads async, so it may arrive after the view appears. Guarding on
     // `seeded` (not just onAppear) avoids showing stale defaults, and firing

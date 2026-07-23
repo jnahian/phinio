@@ -5,7 +5,6 @@ struct EmiListView: View {
   @Query(sort: \Emi.updatedAt, order: .reverse) private var emis: [Emi]
   @Query private var payments: [EmiPayment]
   @State private var showCompleted = false
-  @State private var creating = false
 
   private var filtered: [Emi] {
     emis.filter { showCompleted ? $0.status == "completed"
@@ -49,10 +48,7 @@ struct EmiListView: View {
                                  : "Add your first EMI.")
       }
     }
+    // Creation moved to the shell's global FAB (comp decision #4).
     .navigationTitle("EMIs")
-    .toolbar {
-      Button { creating = true } label: { Image(systemName: "plus") }
-    }
-    .sheet(isPresented: $creating) { EmiFormView() }
   }
 }

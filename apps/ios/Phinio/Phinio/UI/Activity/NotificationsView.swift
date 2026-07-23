@@ -1,22 +1,6 @@
 import SwiftData
 import SwiftUI
 
-/// Bell icon with the local unread count — reused by the Activity toolbar.
-struct NotificationBell: View {
-  @Query(filter: #Predicate<AppNotification> { $0.readAt == nil })
-  private var unread: [AppNotification]
-
-  var body: some View {
-    Image(systemName: "bell")
-      .badge(unread.count) // falls back gracefully outside a List
-      .overlay(alignment: .topTrailing) {
-        if !unread.isEmpty {
-          Circle().fill(.red).frame(width: 8, height: 8).offset(x: 2, y: -2)
-        }
-      }
-  }
-}
-
 struct NotificationsView: View {
   @Environment(\.modelContext) private var context
   @EnvironmentObject private var sync: SyncEngine
