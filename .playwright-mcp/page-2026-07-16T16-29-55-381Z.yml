@@ -1,0 +1,43 @@
+- generic [active] [ref=f3e1]:
+    - main [ref=f3e2]:
+        - generic [ref=f3e3]:
+            - generic [ref=f3e4]: Phinio
+            - generic [ref=f3e8]:
+                - heading "Create your vault" [level=1] [ref=f3e9]
+                - paragraph [ref=f3e10]: Start tracking your finances in minutes
+            - generic [ref=f3e11]:
+                - generic [ref=f3e12]:
+                    - text: Full name
+                    - textbox "Full name" [ref=f3e14]:
+                        - /placeholder: Jane Doe
+                - generic [ref=f3e15]:
+                    - text: Email address
+                    - textbox "Email address" [ref=f3e17]:
+                        - /placeholder: name@company.com
+                - generic [ref=f3e18]:
+                    - text: Password
+                    - generic [ref=f3e19]:
+                        - textbox "Password" [ref=f3e20]:
+                            - /placeholder: At least 8 characters
+                        - button "Show password" [ref=f3e21]
+                - generic [ref=f3e25]:
+                    - text: Preferred currency
+                    - generic [ref=f3e26]:
+                        - button "৳ BDT Bangladeshi Taka" [pressed] [ref=f3e27]:
+                            - generic [ref=f3e28]:
+                                - generic [ref=f3e29]: ৳
+                                - generic [ref=f3e30]: BDT
+                            - text: Bangladeshi Taka
+                        - button "$ USD US Dollar" [ref=f3e31]:
+                            - generic [ref=f3e32]:
+                                - generic [ref=f3e33]: $
+                                - generic [ref=f3e34]: USD
+                            - text: US Dollar
+                - button "Create vault" [ref=f3e35]
+            - paragraph [ref=f3e37]:
+                - text: Already have an account?
+                - link "Sign in" [ref=f3e38] [cursor=pointer]:
+                    - /url: /login
+    - region "Notifications alt+T"
+    - button "Open TanStack Devtools" [ref=f3e39] [cursor=pointer]:
+        - img "TanStack Devtools" [ref=f3e40]

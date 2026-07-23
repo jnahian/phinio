@@ -1,0 +1,199 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - navigation [ref=e3]:
+            - generic [ref=e4]:
+                - link "Phinio home" [ref=e5] [cursor=pointer]:
+                    - /url: /
+                    - generic [ref=e6]: Phinio
+                - generic [ref=e10]:
+                    - button "English" [ref=e12]
+                    - link "Get started" [ref=e19] [cursor=pointer]:
+                        - /url: /signup
+        - generic [ref=e21]:
+            - generic [ref=e22]:
+                - generic [ref=e23]: Your private financial vault
+                - heading "Every taka you own and owe, in one encrypted dashboard." [level=1] [ref=e26]
+                - paragraph [ref=e27]: Phinio unifies your investment portfolio and loan EMIs into a single, beautifully private view — end-to-end secured and scoped to you alone.
+                - generic [ref=e28]:
+                    - link "Create your vault" [ref=e29] [cursor=pointer]:
+                        - /url: /signup
+                    - link "See how it works" [ref=e32] [cursor=pointer]:
+                        - /url: '#how'
+                - generic [ref=e35]:
+                    - generic [ref=e37]:
+                        - generic [ref=e38]: 256-bit
+                        - generic [ref=e39]: encrypted at rest
+                    - generic [ref=e42]:
+                        - generic [ref=e43]: 11 types
+                        - generic [ref=e44]: of assets tracked
+                    - generic [ref=e47]:
+                        - generic [ref=e48]: Zero
+                        - generic [ref=e49]: cross-user leakage
+            - generic [ref=e55]:
+                - generic [ref=e57]:
+                    - generic [ref=e58]: Good evening,
+                    - generic [ref=e59]: Arif
+                - generic [ref=e64]:
+                    - generic [ref=e65]:
+                        - text: Net worth
+                        - generic [ref=e66]: ▲ 8.4%
+                    - generic [ref=e67]: ৳48,20,640
+                    - generic [ref=e68]: Assets ৳62,40,000 · Liabilities ৳14,19,360
+                - generic [ref=e69]:
+                    - generic [ref=e70]: Allocation
+                    - generic [ref=e71]:
+                        - generic [ref=e73]:
+                            - generic [ref=e74]: ৳62.4L
+                            - generic [ref=e75]: invested
+                        - generic [ref=e76]:
+                            - generic [ref=e77]:
+                                - generic [ref=e79]: Stocks
+                                - generic [ref=e80]: 32%
+                            - generic [ref=e81]:
+                                - generic [ref=e83]: Mutual funds
+                                - generic [ref=e84]: 24%
+                            - generic [ref=e85]:
+                                - generic [ref=e87]: Gold
+                                - generic [ref=e88]: 18%
+                            - generic [ref=e89]:
+                                - generic [ref=e91]: Real estate
+                                - generic [ref=e92]: 14%
+                            - generic [ref=e93]:
+                                - generic [ref=e95]: Crypto
+                                - generic [ref=e96]: 12%
+                - generic [ref=e97]:
+                    - generic [ref=e101]:
+                        - generic [ref=e102]: Car Loan · EMI 14/60
+                        - generic [ref=e103]: Due in 3 days
+                    - generic [ref=e104]: ৳24,180
+        - generic [ref=e115]:
+            - generic [ref=e116]: One vault for every asset class
+            - generic [ref=e117]:
+                - generic [ref=e118]: Stocks
+                - generic [ref=e119]: Mutual funds
+                - generic [ref=e120]: DPS
+                - generic [ref=e121]: Sanchayapatra
+                - generic [ref=e122]: Gold
+                - generic [ref=e123]: Crypto
+                - generic [ref=e124]: Real estate
+                - generic [ref=e125]: Agro farms
+                - generic [ref=e126]: Savings pots
+        - generic [ref=e127]:
+            - generic [ref=e128]:
+                - generic [ref=e129]: What's inside
+                - heading "Two halves of your money, finally in one place." [level=2] [ref=e130]
+                - paragraph [ref=e131]: What you own and what you owe have always lived in different apps. Phinio holds both — and shows you the number that actually matters.
+            - generic [ref=e132]:
+                - generic [ref=e133]:
+                    - heading "Investment portfolio" [level=3] [ref=e138]
+                    - paragraph [ref=e139]: Lump-sum, scheduled DPS, and flexible savings pots under one schema. Returns are computed automatically; exit values record realised P&L.
+                    - generic [ref=e140]:
+                        - generic [ref=e141]:
+                            - generic [ref=e142]: ✓
+                            - text: Auto-generated DPS installment schedules
+                        - generic [ref=e143]:
+                            - generic [ref=e144]: ✓
+                            - text: Partial withdrawals & premature closure
+                        - generic [ref=e145]:
+                            - generic [ref=e146]: ✓
+                            - text: Per-investment activity log
+                - generic [ref=e147]:
+                    - heading "EMI management" [level=3] [ref=e152]
+                    - paragraph [ref=e153]: Bank loans and credit-card EMIs with a full reducing-balance amortization schedule generated upfront — every row stored, never guessed.
+                    - generic [ref=e154]:
+                        - generic [ref=e155]:
+                            - generic [ref=e156]: ✓
+                            - text: Principal / interest split per payment
+                        - generic [ref=e157]:
+                            - generic [ref=e158]: ✓
+                            - text: Upcoming · paid · overdue tracking
+                        - generic [ref=e159]:
+                            - generic [ref=e160]: ✓
+                            - text: Push reminders before every due date
+                - generic [ref=e161]:
+                    - heading "Unified dashboard" [level=3] [ref=e166]
+                    - paragraph [ref=e167]: One net-worth snapshot — active investment values minus EMI balances — with an interactive allocation donut and upcoming dues at a glance.
+                    - generic [ref=e168]:
+                        - generic [ref=e169]:
+                            - generic [ref=e170]: ✓
+                            - text: Live net worth & overall return %
+                        - generic [ref=e171]:
+                            - generic [ref=e172]: ✓
+                            - text: Tap a slice to isolate an asset type
+                        - generic [ref=e173]:
+                            - generic [ref=e174]: ✓
+                            - text: Installable PWA, works offline
+        - generic [ref=e176]:
+            - generic [ref=e177]:
+                - generic [ref=e178]: How it works
+                - heading "From scattered to settled in three steps." [level=2] [ref=e179]
+                - generic [ref=e180]:
+                    - generic [ref=e181]:
+                        - generic [ref=e182]: '1'
+                        - generic [ref=e183]:
+                            - generic [ref=e184]: Create your encrypted vault
+                            - generic [ref=e185]: Sign up with verified email. Sessions are httpOnly and every query is scoped to you alone.
+                    - generic [ref=e186]:
+                        - generic [ref=e187]: '2'
+                        - generic [ref=e188]:
+                            - generic [ref=e189]: Log what you own & owe
+                            - generic [ref=e190]: Add investments and EMIs once — Phinio builds the schedules and computes returns for you.
+                    - generic [ref=e191]:
+                        - generic [ref=e192]: '3'
+                        - generic [ref=e193]:
+                            - generic [ref=e194]: Watch one number that matters
+                            - generic [ref=e195]: Your net worth updates live, with reminders so a due date never slips past you again.
+            - generic [ref=e196]:
+                - generic [ref=e197]:
+                    - generic [ref=e198]:
+                        - generic [ref=e199]: DPS · Monthly deposit
+                        - generic [ref=e200]: ৳5,000 / 60 mo
+                    - generic [ref=e201]:
+                        - generic [ref=e202]: Matures at
+                        - generic [ref=e203]: ৳3,86,400
+                - generic [ref=e204]:
+                    - generic [ref=e205]:
+                        - generic [ref=e206]: Home Loan amortization
+                        - generic [ref=e207]: 42 / 120 paid
+                    - generic [ref=e210]:
+                        - generic [ref=e211]: Principal ৳18,40,000
+                        - generic [ref=e212]: Remaining ৳11,96,000
+                - generic [ref=e213]:
+                    - generic [ref=e215]: Stocks position up +12.6% since entry
+                    - generic [ref=e216]: ৳1,98,400
+        - generic [ref=e218]:
+            - generic [ref=e219]:
+                - generic [ref=e220]: Privacy by architecture
+                - heading "A vault, not a feed." [level=2] [ref=e221]
+                - paragraph [ref=e222]: Phinio never sells, shares, or aggregates your data. Authorization isn't a setting — it's enforced on every single database query, so cross-user leakage is structurally impossible.
+            - generic [ref=e223]:
+                - generic [ref=e224]:
+                    - generic [ref=e229]: Per-query scoping
+                    - generic [ref=e230]: Every read filters on your profile ID. No exceptions.
+                - generic [ref=e231]:
+                    - generic [ref=e236]: Encrypted sessions
+                    - generic [ref=e237]: httpOnly, secure cookies via Better Auth.
+                - generic [ref=e238]:
+                    - generic [ref=e243]: Verified identity
+                    - generic [ref=e244]: Mandatory email verification on sign-up.
+                - generic [ref=e245]:
+                    - generic [ref=e249]: Full audit trail
+                    - generic [ref=e250]: Every create, update & delete is logged.
+        - generic [ref=e253]:
+            - heading "Take your money private." [level=2] [ref=e254]
+            - paragraph [ref=e255]: Open your vault in under a minute. Free to start — your data never leaves your scope.
+            - link "Create your vault" [ref=e256] [cursor=pointer]:
+                - /url: /signup
+        - contentinfo [ref=e259]:
+            - generic [ref=e260]:
+                - generic [ref=e261]:
+                    - link "Phinio home" [ref=e262] [cursor=pointer]:
+                        - /url: /
+                        - generic [ref=e263]: Phinio
+                    - generic [ref=e267]: —
+                    - generic [ref=e268]: Your private financial vault.
+                - generic [ref=e269]:
+                    - link "Changelog" [ref=e270] [cursor=pointer]:
+                        - /url: /changelog
+                    - paragraph [ref=e271]: © 2026 Phinio
+    - region "Notifications alt+T"

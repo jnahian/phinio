@@ -1,0 +1,9 @@
+[     619ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://192.168.0.222:3000/node_modules/.vite/deps/react-dom_client.js?v=9c1a6b7d:14337
+[     841ms] [LOG] %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit @ http://192.168.0.222:3000/src/lib/i18n/runtime.ts:63
+[     841ms] [LOG] %c[Vercel Web Analytics]%c [view] http://192.168.0.222:3000/signup color: rgb(120, 120, 120) color: inherit {o: http://192.168.0.222:3000/signup, sv: 0.1.3, sdkn: @vercel/analytics/react, sdkv: 2.0.1, ts: 1784219395354} /_vercel/insights/view @ http://192.168.0.222:3000/src/lib/i18n/runtime.ts:63
+[     845ms] [LOG] %c[Vercel Speed Insights]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit @ http://192.168.0.222:3000/src/lib/i18n/runtime.ts:63
+[   20172ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://192.168.0.222:3000/__tsd/console-pipe/sse:0
+[   20174ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://192.168.0.222:3000/src/styles.css?t=1784219414647:0
+[   20174ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://192.168.0.222:3000/src/components/Logo.tsx?t=1784219414647:0
+[   20174ms] [ERROR] [vite] Failed to reload /src/components/Logo.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://192.168.0.222:3000/@vite/client:509
+[   21252ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ chrome-error://chromewebdata/:0
