@@ -30,13 +30,10 @@ struct WithdrawSheet: View {
         } footer: {
           Text("Closing requires withdrawing the full current value.")
         }
-        .noirFormRow()
         if let error {
-          Section { Text(error).foregroundStyle(Color.error) }
-        .noirFormRow()
+          Section { Text(error).foregroundStyle(.red) }
         }
       }
-      .noirForm()
       .navigationTitle("Withdraw")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

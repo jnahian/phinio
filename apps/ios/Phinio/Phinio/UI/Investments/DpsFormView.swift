@@ -49,18 +49,14 @@ struct DpsFormView: View {
         } footer: {
           Text("The installment schedule appears after the first sync.")
         }
-        .noirFormRow()
         if let total = totalDeposits {
           Section("Preview") {
             LabeledContent("Total deposits") { MoneyText(amount: total) }
             LabeledContent("Over") { Text("\(tenureMonths) months") }
           }
-          .noirFormRow()
         }
-        if let error { Section { Text(error).foregroundStyle(Color.error) }
-        .noirFormRow() }
+        if let error { Section { Text(error).foregroundStyle(.red) } }
       }
-      .noirForm()
       .navigationTitle("New DPS")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

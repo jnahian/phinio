@@ -18,8 +18,8 @@ struct InvestmentsListView: View {
     investments.filter { showCompleted ? $0.status != "active" : $0.status == "active" }
   }
 
-  /// Pills are derived from the types actually present, so no pill ever filters
-  /// to an empty list. "All" is always first.
+  /// Filter options are derived from the types actually present, so no option
+  /// ever filters to an empty list. "All" is always first.
   private var pillTypes: [String] {
     var seen: [String] = []
     for inv in byStatus where !seen.contains(inv.type) { seen.append(inv.type) }
@@ -44,111 +44,102 @@ struct InvestmentsListView: View {
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        header
-        summaryCard.padding(.top, 4)
-        SegmentedTabs(titles: ["Active", "Completed"], selection: $statusIndex)
-          .padding(.top, 16)
-          .onChange(of: statusIndex) { _, _ in typeIndex = 0 }
-        FilterPills(titles: pillTitles, selection: $typeIndex)
-          .padding(.top, 14)
+    List {
+      Section {
+        Picker("Status", selection: $statusIndex) {
+          Text("Active").tag(0)
+          Text("Completed").tag(1)
+        }
+        .pickerStyle(.segmented)
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+        .onChange(of: statusIndex) { _, _ in typeIndex = 0 }
+      }
 
-        if filtered.isEmpty {
-          NoirEmptyState(
-            title: "Nothing here yet",
-            message: showCompleted
-              ? "No completed investments match this filter."
-              : "No investments match this filter.")
-        } else {
-          VStack(spacing: Layout.cardGap) {
-            ForEach(filtered) { inv in
-              NavigationLink(value: InvestmentRoute(id: inv.id)) {
-                InvestmentCard(
-                  investment: inv, deposits: deposits(for: inv), currency: currency)
-              }
-              .buttonStyle(.plain)
+      Section { summaryRow }
+
+      if filtered.isEmpty {
+        Section {
+          ContentUnavailableView(
+            "Nothing here yet",
+            systemImage: "chart.line.uptrend.xyaxis",
+            description: Text(
+              showCompleted
+                ? "No completed investments match this filter."
+                : "No investments match this filter."))
+            .listRowBackground(Color.clear)
+        }
+      } else {
+        Section {
+          ForEach(filtered) { inv in
+            NavigationLink(value: InvestmentRoute(id: inv.id)) {
+              InvestmentRow(
+                investment: inv, deposits: deposits(for: inv), currency: currency)
             }
           }
-          .padding(.top, 14)
         }
       }
-      .padding(.horizontal, Layout.screenHorizontalPadding)
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
-    .toolbar(.hidden, for: .navigationBar)
+    .navigationTitle("Investments")
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Picker("Type", selection: $typeIndex) {
+            ForEach(Array(pillTitles.enumerated()), id: \.offset) { i, title in
+              Text(title).tag(i)
+            }
+          }
+        } label: {
+          Label(
+            "Filter by type",
+            systemImage: typeIndex == 0
+              ? "line.3.horizontal.decrease.circle"
+              : "line.3.horizontal.decrease.circle.fill")
+        }
+      }
+    }
   }
 
   private func deposits(for inv: Investment) -> [InvestmentDeposit] {
     deposits.filter { $0.investmentId == inv.id }
   }
 
-  private var header: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("Investments")
-        .font(.screenTitle)
-        .tracking(Tracking.screenTitle)
-        .foregroundStyle(Color.onSurface)
-      Text(countLabel)
-        .font(.body)
-        .foregroundStyle(Color.onSurfaceVariant)
-    }
-    .padding(.top, 4)
-  }
-
-  private var countLabel: LocalizedStringKey {
-    let active = investments.count { $0.status == "active" }
-    let done = investments.count - active
-    return "\(active) active · \(done) completed"
-  }
-
-  private var summaryCard: some View {
+  private var summaryRow: some View {
     HStack(spacing: 0) {
-      // Comp rounds the summary row (its fmt() drops cents); full precision here
-      // just forces every column to shrink to fit.
-      summaryColumn("Invested", totalInvested.currencyCompact(currency), Color.onSurface)
-      // Comp separates the three columns with hairlines, not full dividers.
-      hairline
-      summaryColumn("Value", totalCurrent.currencyCompact(currency), Color.onSurface)
-      hairline
+      // Compact figures — full precision just forces every column to shrink.
+      summaryColumn("Invested", totalInvested.currencyCompact(currency), .primary)
+      Divider()
+      summaryColumn("Value", totalCurrent.currencyCompact(currency), .primary)
+      Divider()
       summaryColumn(
         "Return",
-        returnPercent.map { $0.formatted(.number.sign(strategy: .always()).precision(.fractionLength(1))) + "%" } ?? "—",
-        (returnPercent ?? 0) >= 0 ? Color.brandSecondary : Color.tertiaryFixedDim)
+        returnPercent.map {
+          $0.formatted(.number.sign(strategy: .always()).precision(.fractionLength(1))) + "%"
+        } ?? "—",
+        (returnPercent ?? 0) >= 0 ? Color.green : Color.red)
     }
-    .padding(.vertical, 18)
-    .padding(.horizontal, 8)
-    .background(
-      Gradients.summaryCard,
-      in: RoundedRectangle(cornerRadius: Radii.summary, style: .continuous))
+    .padding(.vertical, 6)
   }
 
-  private var hairline: some View {
-    Rectangle()
-      .fill(Color.outlineVariant.opacity(0.6))
-      .frame(width: 0.5)
-      .frame(maxHeight: .infinity)
-  }
-
-  private func summaryColumn(_ label: String, _ value: String, _ tint: Color) -> some View {
-    VStack(spacing: 6) {
-      Text(label).font(.meta).foregroundStyle(Color.onSurfaceVariant)
+  private func summaryColumn(
+    _ label: LocalizedStringKey, _ value: String, _ tint: Color
+  ) -> some View {
+    VStack(spacing: 5) {
+      Text(label).font(.caption).foregroundStyle(.secondary)
       Text(value)
-        .font(.custom("Manrope-Bold", size: 17))
+        .font(.headline.monospacedDigit())
         .foregroundStyle(tint)
         .lineLimit(1)
         .minimumScaleFactor(0.6)
     }
     .frame(maxWidth: .infinity)
-    .padding(.horizontal, 4)
     .accessibilityElement(children: .combine)
   }
 }
 
-/// One card per investment, switched on `mode`. Lump-sum, DPS and savings each
-/// surface different figures (comp INVEST block).
-private struct InvestmentCard: View {
+/// One row per investment, switched on `mode`. Lump-sum, DPS and savings each
+/// surface different figures.
+private struct InvestmentRow: View {
   let investment: Investment
   let deposits: [InvestmentDeposit]
   let currency: String
@@ -156,23 +147,21 @@ private struct InvestmentCard: View {
   private var paidCount: Int { deposits.count { $0.status == "paid" } }
 
   var body: some View {
-    NoirCard {
-      VStack(alignment: .leading, spacing: 0) {
-        HStack(spacing: 10) {
-          Text(investment.name)
-            .font(.cardTitle)
-            .foregroundStyle(Color.onSurface)
-            .lineLimit(1)
-          Spacer(minLength: 0)
-          TypeBadge(type: investment.type)
-        }
-        switch investment.mode {
-        case "scheduled": dpsBody
-        case "flexible": savingsBody
-        default: lumpBody
-        }
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(spacing: 10) {
+        Text(investment.name)
+          .font(.headline)
+          .lineLimit(1)
+        Spacer(minLength: 0)
+        TypeBadge(type: investment.type)
+      }
+      switch investment.mode {
+      case "scheduled": dpsBody
+      case "flexible": savingsBody
+      default: lumpBody
       }
     }
+    .padding(.vertical, 4)
   }
 
   // MARK: Lump sum
@@ -180,25 +169,27 @@ private struct InvestmentCard: View {
   private var lumpBody: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .bottom) {
-        figure("Invested", investment.investedAmount.currency(currency),
-               font: .amountSecondary, tint: Color.onSurfaceVariant)
+        figure(
+          "Invested", investment.investedAmount.currency(currency),
+          font: .subheadline.monospacedDigit(), tint: .secondary)
         Spacer()
         figure(
           investment.status == "active" ? "Current value" : "Exit value",
           (investment.exitValue ?? investment.currentValue).currency(currency),
-          font: .amountLarge(20), tint: Color.onSurface, alignment: .trailing)
+          font: .title3.weight(.bold).monospacedDigit(), tint: .primary,
+          alignment: .trailing)
       }
-      .padding(.top, 14)
+      .padding(.top, 12)
 
       HStack {
         if let date = investment.dateOfInvestment {
           Text(date, format: .dateTime.day().month(.abbreviated).year())
-            .font(.meta).foregroundStyle(Color.onSurfaceMuted)
+            .font(.caption).foregroundStyle(.secondary)
         }
         Spacer()
         if let pct = returnPercent { MoneyPill(percent: pct) }
       }
-      .padding(.top, 12)
+      .padding(.top, 10)
     }
   }
 
@@ -213,21 +204,25 @@ private struct InvestmentCard: View {
   private var dpsBody: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .bottom) {
-        figure("Deposited", investment.investedAmount.currency(currency),
-               font: .amountLarge(20), tint: Color.onSurface)
+        figure(
+          "Deposited", investment.investedAmount.currency(currency),
+          font: .title3.weight(.bold).monospacedDigit(), tint: .primary)
         Spacer()
-        figure("Maturity", maturityLabel,
-               font: .amountSecondary, tint: Color.brandSecondary, alignment: .trailing)
+        figure(
+          "Maturity", maturityLabel,
+          font: .subheadline.monospacedDigit(), tint: .green, alignment: .trailing)
       }
-      .padding(.top, 14)
+      .padding(.top, 12)
 
-      Text("\(paidCount) / \(investment.tenureMonths ?? deposits.count) months")
-        .font(.custom("Manrope-SemiBold", size: 11))
-        .foregroundStyle(Color.onSurfaceVariant)
-        .padding(.top, 14)
-
-      NoirProgressBar(fraction: progress, tint: .brandSecondary)
-        .padding(.top, 7)
+      ProgressView(
+        value: progress
+      ) {
+        Text("\(paidCount) / \(investment.tenureMonths ?? deposits.count) months")
+          .font(.caption2.weight(.semibold))
+          .foregroundStyle(.secondary)
+      }
+      .tint(.green)
+      .padding(.top, 10)
 
       HStack {
         if let monthly = investment.monthlyDeposit {
@@ -242,9 +237,9 @@ private struct InvestmentCard: View {
           Text("Next ") + Text(next, format: .dateTime.day().month(.abbreviated))
         }
       }
-      .font(.meta)
-      .foregroundStyle(Color.onSurfaceMuted)
-      .padding(.top, 12)
+      .font(.caption)
+      .foregroundStyle(.secondary)
+      .padding(.top, 10)
     }
   }
 
@@ -273,27 +268,29 @@ private struct InvestmentCard: View {
 
   private var savingsBody: some View {
     HStack(alignment: .bottom) {
-      VStack(alignment: .leading, spacing: 6) {
+      VStack(alignment: .leading, spacing: 5) {
         Text("^[\(deposits.count) deposit](inflect: true)")
-          .font(.meta).foregroundStyle(Color.onSurfaceVariant)
+          .font(.caption).foregroundStyle(.secondary)
         Text("Deposited \(investment.investedAmount.currency(currency))")
-          .font(.meta).foregroundStyle(Color.onSurfaceMuted)
+          .font(.caption).foregroundStyle(.secondary)
       }
       Spacer()
-      figure("Balance", investment.currentValue.currency(currency),
-             font: .amountLarge(20), tint: Color.onSurface, alignment: .trailing)
+      figure(
+        "Balance", investment.currentValue.currency(currency),
+        font: .title3.weight(.bold).monospacedDigit(), tint: .primary,
+        alignment: .trailing)
     }
-    .padding(.top, 14)
+    .padding(.top, 12)
   }
 
   // MARK: Shared
 
   private func figure(
-    _ label: String, _ value: String, font: Font, tint: Color,
+    _ label: LocalizedStringKey, _ value: String, font: Font, tint: Color,
     alignment: HorizontalAlignment = .leading
   ) -> some View {
     VStack(alignment: alignment, spacing: 3) {
-      Text(label).font(.meta).foregroundStyle(Color.onSurfaceVariant)
+      Text(label).font(.caption).foregroundStyle(.secondary)
       Text(value).font(font).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.6)
     }
     .accessibilityElement(children: .combine)
