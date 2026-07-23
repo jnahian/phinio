@@ -78,6 +78,11 @@ final class InvestmentDeposit {
   @Attribute(.unique) var id: String
   var investmentId: String
   var amount: Decimal
+  /// Running balance after this installment, INCLUDING accrued interest. The
+  /// server computes it (investments.impl.ts) — the DPS maturity value is the
+  /// last installment's accruedValue, so it cannot be derived on-device without
+  /// re-implementing the schedule. Nil on locally-created rows until first sync.
+  var accruedValue: Decimal?
   var dueDate: Date?
   var depositDate: Date?
   var installmentNumber: Int?
@@ -87,10 +92,11 @@ final class InvestmentDeposit {
 
   init(id: String, investmentId: String, amount: Decimal, dueDate: Date?,
        depositDate: Date?, installmentNumber: Int?, status: String,
-       notes: String?, updatedAt: Date) {
+       notes: String?, updatedAt: Date, accruedValue: Decimal? = nil) {
     self.id = id
     self.investmentId = investmentId
     self.amount = amount
+    self.accruedValue = accruedValue
     self.dueDate = dueDate
     self.depositDate = depositDate
     self.installmentNumber = installmentNumber

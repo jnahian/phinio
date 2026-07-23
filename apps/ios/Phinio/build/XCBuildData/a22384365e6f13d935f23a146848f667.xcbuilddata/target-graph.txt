@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'Phinio' in project 'Phinio' (no dependencies)

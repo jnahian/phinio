@@ -48,7 +48,7 @@
 - Consumes: `Money.decimal(String) -> Decimal?`.
 - Produces: `Validate.money/positiveMoney/nonNegativeMoney/rate(_ s: String) -> Decimal?`, `Validate.name(_ s: String, max: Int = 120) -> String?`, `Validate.notes(_ s: String, max: Int = 1000) -> String??` (nil = invalid, `.some(nil)` = empty→omit); `Decimal.currency(_ code: String) -> String`; `investmentTypeLabel(_ raw: String) -> String`; `dueLabel(daysUntil: Int) -> String`; `utcDaysUntil(_ target: Date, from now: Date) -> Int`. Every form task and the dashboard rely on these exact names.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```swift
 // apps/ios/Phinio/PhinioTests/ValidatorsTests.swift
@@ -90,9 +90,9 @@ struct ValidatorsTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** (unresolved `Validate`). Command from Global Constraints with `-only-testing:PhinioTests/ValidatorsTests`. Expected: BUILD FAILED, "cannot find 'Validate' in scope".
+- [x] **Step 2: Run to verify failure** (unresolved `Validate`). Command from Global Constraints with `-only-testing:PhinioTests/ValidatorsTests`. Expected: BUILD FAILED, "cannot find 'Validate' in scope".
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/Support/Validators.swift
@@ -190,9 +190,9 @@ func dueLabel(daysUntil d: Int) -> String {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS.**
+- [x] **Step 4: Run tests — expect PASS.**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/ios/Phinio/Phinio/Support/Validators.swift apps/ios/Phinio/Phinio/Support/Formatting.swift apps/ios/Phinio/PhinioTests/ValidatorsTests.swift
@@ -226,7 +226,7 @@ git commit -m "✨ feat(ios): form validators + display formatting helpers"
 
 Every op mutates SwiftData first (mirroring `src/server/investments.impl.ts` rules exactly), then enqueues one outbox row, then `context.save()`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```swift
 // apps/ios/Phinio/PhinioTests/StoreInvestmentTests.swift
@@ -381,9 +381,9 @@ struct StoreInvestmentTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** (`-only-testing:PhinioTests/StoreInvestmentTests`). Expected: BUILD FAILED — `createSavings` etc. not members of `Store`.
+- [x] **Step 2: Run to verify failure** (`-only-testing:PhinioTests/StoreInvestmentTests`). Expected: BUILD FAILED — `createSavings` etc. not members of `Store`.
 
-- [ ] **Step 3: Implement — append to `Store.swift`**
+- [x] **Step 3: Implement — append to `Store.swift`**
 
 Add above the `Store` struct:
 
@@ -698,9 +698,9 @@ Append inside `Store` (after `markPaymentPaid`):
   }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS.**
+- [x] **Step 4: Run tests — expect PASS.**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/ios/Phinio/Phinio/Sync/Store.swift apps/ios/Phinio/PhinioTests/StoreInvestmentTests.swift
@@ -728,7 +728,7 @@ git commit -m "✨ feat(ios): Store investment writes — savings, deposits, wit
   - `clearReadNotifications()`
   - `updateProfile(_ p:Profile, fullName:String, preferredCurrency:String, preferredLanguage:String)`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```swift
 // apps/ios/Phinio/PhinioTests/StoreEmiTests.swift
@@ -848,9 +848,9 @@ struct StoreEmiTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** (`-only-testing:PhinioTests/StoreEmiTests`). Expected: BUILD FAILED — extra argument `processingFee`, missing members.
+- [x] **Step 2: Run to verify failure** (`-only-testing:PhinioTests/StoreEmiTests`). Expected: BUILD FAILED — extra argument `processingFee`, missing members.
 
-- [ ] **Step 3: Implement in `Store.swift`**
+- [x] **Step 3: Implement in `Store.swift`**
 
 In `createEmi`, add the parameter `processingFee: Decimal? = nil` (after `notes`), and before the `body` dictionary is built insert:
 
@@ -998,9 +998,9 @@ Append the remaining ops inside `Store`:
   }
 ```
 
-- [ ] **Step 4: Run ALL Store tests — expect PASS** (`-only-testing:PhinioTests/StoreEmiTests -only-testing:PhinioTests/StoreTests -only-testing:PhinioTests/StoreInvestmentTests`). The pre-existing `StoreTests.markPaymentPaidFlipsStatusAndEnqueues` must still pass (it marks a regular payment — unaffected by the fee guard).
+- [x] **Step 4: Run ALL Store tests — expect PASS** (`-only-testing:PhinioTests/StoreEmiTests -only-testing:PhinioTests/StoreTests -only-testing:PhinioTests/StoreInvestmentTests`). The pre-existing `StoreTests.markPaymentPaidFlipsStatusAndEnqueues` must still pass (it marks a regular payment — unaffected by the fee guard).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/ios/Phinio/Phinio/Sync/Store.swift apps/ios/Phinio/PhinioTests/StoreEmiTests.swift
@@ -1041,7 +1041,7 @@ git commit -m "✨ feat(ios): Store EMI management, notifications + profile writ
 
 This is a pure-function port of `src/server/dashboard.impl.ts` (lines 122–216). Rules, verbatim from the server: totals over **active** investments only; `gainLossPercent = (current + withdrawn − invested) / invested × 100` rounded to 2 dp; remaining EMI balance = each active EMI's **next-unpaid** payment's `remainingBalance` (NOT a sum of emiAmounts); `netWorth = current − remainingEmiBalance`; allocation = share of `current` by type, sorted desc; upcoming = unpaid EMI payments (`paymentNumber > 0`, due ≤ now+30d, take 5) merged with upcoming DPS deposits (dueDate non-nil ≤ 30d, parent `mode == "scheduled" && status == "active"`, take 5), sorted by dueDate, take 5 overall; overdue/daysUntil by UTC day.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```swift
 // apps/ios/Phinio/PhinioTests/DashboardStatsTests.swift
@@ -1097,8 +1097,10 @@ struct DashboardStatsTests {
     // (1500 + 100 − 1500) / 1500 = 6.67%
     #expect(s.gainLossPercent == 6.67)
     #expect(s.monthlyEmiOutflow == Money.decimal("879.16"))
-    // netWorth = 1500 − next-unpaid remainingBalance (9204.17)
-    #expect(s.netWorth == Money.decimal("-7704.17"))
+    // netWorth = 1500 − next-unpaid remainingBalance (9204.17). Negated from
+    // a positive: Money.decimal mirrors the server's unsigned money regex, so
+    // it returns nil for "-7704.17" — net worth may legitimately be negative.
+    #expect(s.netWorth == -Money.decimal("7704.17")!)
     #expect(s.allocation.first?.type == "gold")
     #expect(s.allocation.first?.percent == 80.0)
     // Only p1 is within 30 days (Aug 20 is 34 days out)
@@ -1131,9 +1133,9 @@ struct DashboardStatsTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** (`-only-testing:PhinioTests/DashboardStatsTests`). Expected: BUILD FAILED, `DashboardStats` unresolved.
+- [x] **Step 2: Run to verify failure** (`-only-testing:PhinioTests/DashboardStatsTests`). Expected: BUILD FAILED, `DashboardStats` unresolved.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/Domain/DashboardStats.swift
@@ -1259,9 +1261,9 @@ struct DashboardStats {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS.**
+- [x] **Step 4: Run tests — expect PASS.**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/ios/Phinio/Phinio/Domain/DashboardStats.swift apps/ios/Phinio/PhinioTests/DashboardStatsTests.swift
@@ -1288,7 +1290,7 @@ git commit -m "✨ feat(ios): local dashboard stats — port of getDashboardStat
   - Shared atoms in `SharedViews.swift`: `MoneyText(amount: Decimal)` (queries the profile for currency, defaults `BDT`), `EmptyStateView(symbol: String, title: String, message: String)`, `UpcomingRow(item: UpcomingItem)`
 - Consumes: placeholder screens — this task stubs `DashboardView`, `InvestmentsListView`, `EmiListView`, `ActivityView` as `Text` placeholders IN `MainTabView.swift`; Tasks 6–11 replace them with real files and delete the stubs.
 
-- [ ] **Step 1: Write the failing deep-link test**
+- [x] **Step 1: Write the failing deep-link test**
 
 ```swift
 // apps/ios/Phinio/PhinioTests/DeepLinkTests.swift
@@ -1305,7 +1307,7 @@ struct DeepLinkTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure**, then implement:
+- [x] **Step 2: Run to verify failure**, then implement:
 
 ```swift
 // apps/ios/Phinio/Phinio/Support/DeepLink.swift
@@ -1457,9 +1459,9 @@ struct ActivityView: View { var body: some View { Text("Activity") } }
 
 In `PhinioApp.swift`: add `private let deepLinkRouter = DeepLinkRouter()` as a stored property of `PhinioApp` (a plain `let`, NOT `@StateObject` — the App struct lives for the process, and Task 14's AppDelegate needs a reference it can grab in `init()`), pass `.environmentObject(deepLinkRouter)` alongside the existing environment objects, and in `RootView` replace `DebugHomeView()` with `MainTabView()`. Delete `UI/DebugHomeView.swift`.
 
-- [ ] **Step 3: Run the full suite — expect PASS** (DeepLinkTests green; nothing else regressed). Build the app target too.
+- [x] **Step 3: Run the full suite — expect PASS** (DeepLinkTests green; nothing else regressed). Build the app target too.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -1480,7 +1482,7 @@ git commit -m "✨ feat(ios): 4-tab shell, deep-link router + shared UI atoms"
 
 No unit test (pure SwiftUI over an already-tested pure function); verification is build + manual, per spec.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Dashboard/DashboardView.swift
@@ -1666,11 +1668,11 @@ Dashboard tab's `NavigationStack` needs the same destinations as the other tabs 
 
 and delete the `DashboardView` stub from `MainTabView.swift`.
 
-- [ ] **Step 2: Build — expect SUCCESS.** `AnyHashable` in `NavigationLink(value:)` requires the destinations registered above; if the compiler rejects `AnyHashable`, split the row into two `NavigationLink`s inside a `switch item.kind` instead.
+- [x] **Step 2: Build — expect SUCCESS.** `AnyHashable` in `NavigationLink(value:)` requires the destinations registered above; if the compiler rejects `AnyHashable`, split the row into two `NavigationLink`s inside a `switch item.kind` instead.
 
-- [ ] **Step 3: Manual check** — run in the simulator against `npm run dev`, sign in with an account that has data (or create a sample EMI from the EMIs tab once Task 10 lands). Fresh accounts must show the welcome empty state, not zeroed cards.
+- [x] **Step 3: Manual check** — run in the simulator against `npm run dev`, sign in with an account that has data (or create a sample EMI from the EMIs tab once Task 10 lands). Fresh accounts must show the welcome empty state, not zeroed cards.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -1693,7 +1695,7 @@ git commit -m "✨ feat(ios): dashboard — glass stat cards, allocation donut, 
 - Produces: `InvestmentsListView`; `InvestmentDetailRouter(investmentId:)` which dispatches on `mode` — `lump_sum` → `LumpSumDetailView`, `flexible` → `SavingsDetailView` (Task 8), `scheduled` → `DpsDetailView` (Task 9). Until Tasks 8/9 land, the router shows `Text("…")` for those modes — this task creates the router with those two arms as placeholders and Tasks 8/9 fill them in.
 - Produces: `WithdrawSheet(investment:)` — reused by Task 8's savings detail.
 
-- [ ] **Step 1: Implement the list + router**
+- [x] **Step 1: Implement the list + router**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Investments/InvestmentsListView.swift
@@ -1824,7 +1826,7 @@ struct DpsDetailView: View {
 struct DpsFormView: View { var body: some View { Text("DPS form") } }
 ```
 
-- [ ] **Step 2: Implement the lump-sum form**
+- [x] **Step 2: Implement the lump-sum form**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Investments/LumpSumFormView.swift
@@ -1960,7 +1962,7 @@ struct LumpSumFormView: View {
 }
 ```
 
-- [ ] **Step 3: Implement the detail + withdraw sheet**
+- [x] **Step 3: Implement the detail + withdraw sheet**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Investments/LumpSumDetailView.swift
@@ -2115,11 +2117,11 @@ struct WithdrawSheet: View {
 
 Delete the `InvestmentsListView` and `InvestmentDetailRouter` stubs from `MainTabView.swift`.
 
-- [ ] **Step 4: Build + run tests — expect SUCCESS / all green.**
+- [x] **Step 4: Build + run tests — expect SUCCESS / all green.**
 
-- [ ] **Step 5: Manual check** — create a lump-sum investment offline (airplane mode in the sim: Settings app, or just stop `npm run dev`), verify it appears instantly and the outbox drains once the server is reachable. Try withdrawing more than the current value — the inline error must read "Withdrawal amount exceeds current value" without touching the network.
+- [x] **Step 5: Manual check** — create a lump-sum investment offline (airplane mode in the sim: Settings app, or just stop `npm run dev`), verify it appears instantly and the outbox drains once the server is reachable. Try withdrawing more than the current value — the inline error must read "Withdrawal amount exceeds current value" without touching the network.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -2139,7 +2141,7 @@ git commit -m "✨ feat(ios): investments list, lump-sum form/detail + withdraw"
 - Consumes: `Store.createSavings/updateSavings/addDeposit/removeDeposit`, `WithdrawSheet` (Task 7), `Validate`, `MoneyText`.
 - Produces: `SavingsDetailView(investment:)`, `SavingsFormView(existing:)` — names must match the stubs being deleted.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Investments/SavingsFormView.swift
@@ -2375,11 +2377,11 @@ struct AddDepositSheet: View {
 
 Delete the `SavingsDetailView` and `SavingsFormView` stubs from `InvestmentsListView.swift`.
 
-- [ ] **Step 2: Build + full test suite — expect green.**
+- [x] **Step 2: Build + full test suite — expect green.**
 
-- [ ] **Step 3: Manual check** — create a savings with an initial balance (initial deposit appears), add and swipe-remove a deposit (totals update instantly), withdraw fully with "Close investment" (status flips to Completed and it moves to the Completed filter).
+- [x] **Step 3: Manual check** — create a savings with an initial balance (initial deposit appears), add and swipe-remove a deposit (totals update instantly), withdraw fully with "Close investment" (status flips to Completed and it moves to the Completed filter).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -2399,7 +2401,7 @@ git commit -m "✨ feat(ios): savings detail + form with deposits"
 - Consumes: `Store.createDps/updateDps/markDepositPaid/closeDps`, `Validate`, `MoneyText`, `dueLabel`/`utcDaysUntil`.
 - Produces: `DpsDetailView(investment:)`, `DpsFormView()` (create-only; editing name/notes happens via an edit sheet inside the detail view using `updateDps`).
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Investments/DpsFormView.swift
@@ -2673,11 +2675,11 @@ struct DpsCloseSheet: View {
 
 Delete the `DpsDetailView` and `DpsFormView` stubs from `InvestmentsListView.swift`.
 
-- [ ] **Step 2: Build + full test suite — expect green.**
+- [x] **Step 2: Build + full test suite — expect green.**
 
-- [ ] **Step 3: Manual check** — create a DPS, sync, confirm installments appear; swipe an installment paid (totals resync); close early and confirm upcoming installments vanish and status shows Closed.
+- [x] **Step 3: Manual check** — create a DPS, sync, confirm installments appear; swipe an installment paid (totals resync); close early and confirm upcoming installments vanish and status shows Closed.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -2698,7 +2700,7 @@ git commit -m "✨ feat(ios): DPS form, installment schedule + premature close"
 - Consumes: `Store.createEmi(...processingFee:)`, `markPaymentPaid`, `updateEmi`, `deleteEmi`, `completeEmi` (Task 3); `EmiCalculator.amortization` for the live preview; `Validate`, `MoneyText`, `dueLabel`.
 - Produces: `EmiListView`, `EmiDetailView(emiId: String)` (id-based — deep-link target), `EmiFormView`.
 
-- [ ] **Step 1: Implement the list**
+- [x] **Step 1: Implement the list**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Emis/EmiListView.swift
@@ -2762,7 +2764,7 @@ struct EmiListView: View {
 }
 ```
 
-- [ ] **Step 2: Implement the create form with live preview**
+- [x] **Step 2: Implement the create form with live preview**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Emis/EmiFormView.swift
@@ -2884,7 +2886,7 @@ struct EmiFormView: View {
 
 Note: `EmiMethod` must be `Hashable` for the `Picker` tags — it is a plain two-case enum in `EmiCalculator.swift`; add `Hashable` conformance there if the compiler asks.
 
-- [ ] **Step 3: Implement the detail**
+- [x] **Step 3: Implement the detail**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Emis/EmiDetailView.swift
@@ -3057,11 +3059,11 @@ struct EmiEditSheet: View {
 
 Delete the `EmiListView` and `EmiDetailView` stubs from `MainTabView.swift`.
 
-- [ ] **Step 4: Build + full test suite — expect green.**
+- [x] **Step 4: Build + full test suite — expect green.**
 
-- [ ] **Step 5: Manual check** — the form preview's monthly EMI must equal the created EMI's `emiAmount` exactly (same calculator); mark the last unpaid payment paid and confirm the EMI auto-flips to Completed; swipe-unpay it and confirm it reopens.
+- [x] **Step 5: Manual check** — the form preview's monthly EMI must equal the created EMI's `emiAmount` exactly (same calculator); mark the last unpaid payment paid and confirm the EMI auto-flips to Completed; swipe-unpay it and confirm it reopens.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -3095,7 +3097,7 @@ git commit -m "✨ feat(ios): EMI list, create with live preview + amortization 
   func fetchActivity(cursor: String?) async throws -> ActivityPageDTO
   ```
 
-- [ ] **Step 1: Write the failing DTO test**
+- [x] **Step 1: Write the failing DTO test**
 
 ```swift
 // apps/ios/Phinio/PhinioTests/ActivityDTOTests.swift
@@ -3127,7 +3129,7 @@ struct ActivityDTOTests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure, then implement.** Append the three DTO structs above to `DTOs.swift` verbatim. Add to `APIClient` (the private `request(path:)` helper uses `baseURL.appending(path:)`, which would percent-encode a `?`, so build this URL with `URLComponents` instead):
+- [x] **Step 2: Run to verify failure, then implement.** Append the three DTO structs above to `DTOs.swift` verbatim. Add to `APIClient` (the private `request(path:)` helper uses `baseURL.appending(path:)`, which would percent-encode a `?`, so build this URL with `URLComponents` instead):
 
 ```swift
   func fetchActivity(cursor: String?) async throws -> ActivityPageDTO {
@@ -3152,7 +3154,7 @@ struct ActivityDTOTests {
   }
 ```
 
-- [ ] **Step 3: Implement the screens**
+- [x] **Step 3: Implement the screens**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Activity/ActivityView.swift
@@ -3315,11 +3317,11 @@ struct NotificationsView: View {
 
 Delete the `ActivityView` stub from `MainTabView.swift`.
 
-- [ ] **Step 4: Build + full test suite — expect green** (`ActivityDTOTests` passes).
+- [x] **Step 4: Build + full test suite — expect green** (`ActivityDTOTests` passes).
 
-- [ ] **Step 5: Manual check** — Activity lists server-side log entries after making changes; scrolling paginates; airplane mode shows the offline state. Notifications: mark one read (dot disappears), tapping a reminder with a link jumps to the EMI detail.
+- [x] **Step 5: Manual check** — Activity lists server-side log entries after making changes; scrolling paginates; airplane mode shows the offline state. Notifications: mark one read (dot disappears), tapping a reminder with a link jumps to the EMI detail.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -3338,7 +3340,7 @@ git commit -m "✨ feat(ios): activity log + notifications with unread badge"
 - Consumes: `Store.updateProfile` (Task 3), `SyncIssue` model, `AuthManager.signOut(container:)`, `sync.state`, `UNUserNotificationCenter` (permission status; full APNs wiring is Task 14 — this task calls `PushManager.registerIfAuthorized()` which Task 14 provides; until then, add a placeholder `enum PushManager { static func requestAndRegister() async {} static var deviceTokenForLogout: String? { nil } }` in THIS file and Task 14 replaces it).
 - Produces: `SettingsView`.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Dashboard/SettingsView.swift
@@ -3489,11 +3491,11 @@ enum PushManager {
 
 Delete the `SettingsView` stub from `DashboardView.swift`.
 
-- [ ] **Step 2: Build + full test suite — expect green.**
+- [x] **Step 2: Build + full test suite — expect green.**
 
-- [ ] **Step 3: Manual check** — edit the name, Save, confirm the PATCH drains (server profile updates); currency switch immediately reformats every money value (MoneyText reads the profile); force a sync issue (create an EMI offline with a tenure of 601 by temporarily bypassing the form validator — or just trust the SyncEngine unit tests) and confirm the issues list renders; sign out wipes data and returns to login.
+- [x] **Step 3: Manual check** — edit the name, Save, confirm the PATCH drains (server profile updates); currency switch immediately reformats every money value (MoneyText reads the profile); force a sync issue (create an EMI offline with a tenure of 601 by temporarily bypassing the form validator — or just trust the SyncEngine unit tests) and confirm the issues list renders; sign out wipes data and returns to login.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -3520,7 +3522,7 @@ git commit -m "✨ feat(ios): settings — profile, notifications, sync issues, 
   - `OnboardingView` — full-screen flow; sets `@AppStorage("hasOnboarded") = true` when finished.
   - `RootView` logic: `!auth.isAuthenticated` → `OnboardingView` (starts at welcome on first launch, straight at auth after a sign-out); `auth.isAuthenticated && !hasOnboarded` → `OnboardingView` (resumes at the priming step); else `MainTabView`.
 
-- [ ] **Step 1: Add `signUp` to `APIClient`** (below `signIn`; same shape, but any 2xx passes and no token is read):
+- [x] **Step 1: Add `signUp` to `APIClient`** (below `signIn`; same shape, but any 2xx passes and no token is read):
 
 ```swift
   /// Create an account. Better Auth requires email verification before
@@ -3557,7 +3559,7 @@ And in `AuthManager`:
   }
 ```
 
-- [ ] **Step 2: Implement the flow container**
+- [x] **Step 2: Implement the flow container**
 
 ```swift
 // apps/ios/Phinio/Phinio/UI/Onboarding/OnboardingView.swift
@@ -3786,7 +3788,7 @@ struct AuthStepView: View {
 }
 ```
 
-- [ ] **Step 3: Rewire `RootView`** in `PhinioApp.swift`:
+- [x] **Step 3: Rewire `RootView`** in `PhinioApp.swift`:
 
 ```swift
 struct RootView: View {
@@ -3816,11 +3818,11 @@ struct RootView: View {
 
 Note the sign-out case: `AuthManager.signOut` flips `isAuthenticated`; `hasOnboarded` deliberately stays true so a returning user lands on the auth step directly. Delete `UI/LoginView.swift`.
 
-- [ ] **Step 4: Build + full test suite — expect green.**
+- [x] **Step 4: Build + full test suite — expect green.**
 
-- [ ] **Step 5: Manual check** — delete the app from the simulator (clears UserDefaults), reinstall: welcome pages → sign in → priming ("Maybe later") → sync spinner → dashboard. Sign out from Settings → lands on the auth step, no welcome pages. Create a fresh account against dev (`npm run dev` prints the verification link to the console — open it, then "I've verified").
+- [x] **Step 5: Manual check** — delete the app from the simulator (clears UserDefaults), reinstall: welcome pages → sign in → priming ("Maybe later") → sync spinner → dashboard. Sign out from Settings → lands on the auth step, no welcome pages. Create a fresh account against dev (`npm run dev` prints the verification link to the console — open it, then "I've verified").
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -3844,7 +3846,7 @@ git commit -m "✨ feat(ios): onboarding — welcome, signup + verification, pri
   - `final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate` with `static weak var router: DeepLinkRouter?` (set by `PhinioApp.init`).
 - APNs payload from the server (`src/server/apns.ts`): `{"aps": {"alert": {"title", "body"}, "badge": n}, "link": "/app/emis/<id>" | "/app/investments/dps/<id>"}` — the badge is server-computed (unread count), so the client never sets it. ponytail: no local badge bookkeeping; the next server push corrects it.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```swift
 // apps/ios/Phinio/Phinio/Support/PushManager.swift
@@ -3947,7 +3949,7 @@ and at the end of `init()` (Task 5 already made the router a plain `let deepLink
 
 Delete the placeholder `PushManager` enum from `SettingsView.swift`.
 
-- [ ] **Step 2: Entitlements.** Create `apps/ios/Phinio/Phinio/Phinio.entitlements`:
+- [x] **Step 2: Entitlements.** Create `apps/ios/Phinio/Phinio/Phinio.entitlements`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -3969,11 +3971,11 @@ grep -c CODE_SIGN_ENTITLEMENTS apps/ios/Phinio/Phinio.xcodeproj/project.pbxproj
 
 Expected count: 2 (Debug + Release of the app target). If the sed also hit the test target's configs (count > 2), revert (`git checkout -- '*.pbxproj'`) and add the setting in the Xcode GUI instead (Signing & Capabilities → + Capability → Push Notifications), which is a 30-second user step.
 
-- [ ] **Step 3: Build + full test suite — expect green.** Simulator builds fine with the entitlement; real APNs delivery needs the physical device.
+- [x] **Step 3: Build + full test suite — expect green.** Simulator builds fine with the entitlement; real APNs delivery needs the physical device.
 
-- [ ] **Step 4: Manual check (device, best-effort)** — on the physical iPhone with the dev server reachable: enable reminders in onboarding/Settings, confirm a `device_tokens` row appears in the DB (`npm run db:studio`). Full push delivery also needs `APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY` configured server-side and the reminder cron to fire — verify via the cron's `apnsPushed` count if configured, otherwise defer to TestFlight.
+- [x] **Step 4: Manual check (device, best-effort)** — on the physical iPhone with the dev server reachable: enable reminders in onboarding/Settings, confirm a `device_tokens` row appears in the DB (`npm run db:studio`). Full push delivery also needs `APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY` configured server-side and the reminder cron to fire — verify via the cron's `apnsPushed` count if configured, otherwise defer to TestFlight.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A apps/ios/Phinio
@@ -3992,7 +3994,7 @@ git commit -m "✨ feat(ios): APNs registration, notification deep links + entit
 
 Translation source: the web app's Bengali resources at `src/lib/i18n/resources/bn/*.json` (namespaces: common, dashboard, investments, emis, profile, notifications, validation, activity, withdraw). Match by meaning, not key — e.g. the iOS literal `"Net worth"` takes the value of `dashboard.json`'s `netWorth.label` bn entry. Where no web equivalent exists (e.g. "Schedule appears after first sync"), translate consistently with the web tone.
 
-- [ ] **Step 1: Register the language.**
+- [x] **Step 1: Register the language.**
 
 ```bash
 sed -i '' 's/knownRegions = (/knownRegions = (\n\t\t\t\tbn,/' apps/ios/Phinio/Phinio.xcodeproj/project.pbxproj
@@ -4001,7 +4003,7 @@ grep -A4 "knownRegions" apps/ios/Phinio/Phinio.xcodeproj/project.pbxproj
 
 Expected: `bn` listed alongside `en` and `Base`.
 
-- [ ] **Step 2: Create the catalog and extract.** Create an empty catalog file:
+- [x] **Step 2: Create the catalog and extract.** Create an empty catalog file:
 
 ```bash
 cat > apps/ios/Phinio/Phinio/Localizable.xcstrings <<'EOF'
@@ -4023,7 +4025,7 @@ python3 -c "import json;d=json.load(open('apps/ios/Phinio/Phinio/Localizable.xcs
 
 Expected: on the order of 100–150 strings.
 
-- [ ] **Step 3: Add bn translations.** For every key in the catalog, add a `"bn"` localization sourced from the web bn resources. The catalog entry format is:
+- [x] **Step 3: Add bn translations.** For every key in the catalog, add a `"bn"` localization sourced from the web bn resources. The catalog entry format is:
 
 ```json
 "Net worth" : {
@@ -4035,7 +4037,7 @@ Expected: on the order of 100–150 strings.
 
 Work through the catalog key-by-key with the web bn JSONs open (`src/lib/i18n/resources/bn/dashboard.json` etc.). Keys with interpolation (`\(count)`) become format strings (`%lld`) in the catalog — keep the placeholder in the bn value. Strings with no web counterpart get a fresh translation matching the web's Bengali register (the web files show the tone — e.g. "সিঙ্ক" for sync-related terms).
 
-- [ ] **Step 4: Verify.** Run with Bengali:
+- [x] **Step 4: Verify.** Run with Bengali:
 
 ```bash
 xcrun simctl launch $UDID com.phinio.app -AppleLanguages "(bn)"
@@ -4043,7 +4045,7 @@ xcrun simctl launch $UDID com.phinio.app -AppleLanguages "(bn)"
 
 (or set the scheme's App Language to Bengali in Xcode). Dashboard, tab labels, and forms must render in Bengali; numbers stay Latin (the web pins Bengali numerals via locale — iOS `Decimal.FormatStyle` with the device locale handles digits automatically; accept the system default).
 
-- [ ] **Step 5: Run the full test suite — expect green** (localization changes no logic). Commit:
+- [x] **Step 5: Run the full test suite — expect green** (localization changes no logic). Commit:
 
 ```bash
 git add -A apps/ios/Phinio
@@ -4056,20 +4058,20 @@ git commit -m "🌐 feat(ios): Bengali localization via String Catalog"
 
 **Files:** none new — verification + plan bookkeeping only.
 
-- [ ] **Step 1: Full test suite** — all suites green:
+- [x] **Step 1: Full test suite** — all suites green:
 
 ```bash
 xcodebuild test -project apps/ios/Phinio/Phinio.xcodeproj -scheme Phinio -destination "id=$UDID" -only-testing:PhinioTests 2>&1 | grep -E "Test case|TEST "
 ```
 
-- [ ] **Step 2: Manual end-to-end pass** against `npm run dev` (fresh simulator install):
+- [x] **Step 2: Manual end-to-end pass** against `npm run dev` (fresh simulator install):
   1. Onboarding: welcome → create account → verify via dev-console link → "I've verified" → priming (Maybe later) → initial sync → empty-state dashboard.
   2. Create one of each: lump-sum investment, savings (with initial balance), DPS, EMI (with processing fee). All appear instantly; dashboard populates.
   3. Offline round-trip: stop the dev server, mark an EMI payment paid + add a savings deposit, restart the server, sync — both mutations land (check the web app or `npm run db:studio`).
   4. Server-rejection path: verified by SyncEngine unit tests (rejected mutation → SyncIssue row + local state reverted by next snapshot) — spot-check the Settings sync-issues list renders it if one occurs naturally.
   5. Currency switch BDT→USD in Settings reformats all amounts; language switch works after Task 15.
   6. Sign out → data wiped → auth step (no welcome pages).
-- [ ] **Step 3: Tick all checkboxes in this plan**, then commit and push:
+- [x] **Step 3: Tick all checkboxes in this plan**, then commit and push:
 
 ```bash
 git add docs/superpowers/plans/2026-07-17-ios-screens.md

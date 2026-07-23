@@ -29,9 +29,22 @@
 		0FA9FF6530096D49003F6449 /* PhinioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhinioUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CBDF8BDEB79E4C860FF3B8A8 /* Exceptions for "Phinio" folder in "Phinio" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0FA9FF4D30096D47003F6449 /* Phinio */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0FA9FF5030096D47003F6449 /* Phinio */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CBDF8BDEB79E4C860FF3B8A8 /* Exceptions for "Phinio" folder in "Phinio" target */,
+			);
 			path = Phinio;
 			sourceTree = "<group>";
 		};
@@ -190,6 +203,7 @@
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				bn,
 				en,
 				Base,
 			);
@@ -400,6 +414,7 @@
 				DEVELOPMENT_TEAM = NGG3V798G3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Phinio/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -410,6 +425,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				CODE_SIGN_ENTITLEMENTS = Phinio/Phinio.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = com.phinio.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -432,6 +448,7 @@
 				DEVELOPMENT_TEAM = NGG3V798G3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Phinio/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -442,6 +459,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				CODE_SIGN_ENTITLEMENTS = Phinio/Phinio.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = com.phinio.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

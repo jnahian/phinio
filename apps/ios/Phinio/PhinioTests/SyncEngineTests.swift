@@ -9,7 +9,11 @@ final class MockTransport: SyncTransport, @unchecked Sendable {
   var postedPaths: [String] = []
   var postedKeys: [UUID] = []
   var snapshot: SnapshotDTO?
+  var snapshotError: APIError?
   var snapshotFetchCount = 0
+  /// Runs mid-fetch, before the snapshot is returned — simulates a user
+  /// write landing during the network round-trip.
+  var onFetchSnapshot: (@MainActor @Sendable () -> Void)?
 
   func post(path: String, body: Data?, method: String, idempotencyKey: UUID) async throws {
     postedPaths.append(path)
@@ -20,6 +24,8 @@ final class MockTransport: SyncTransport, @unchecked Sendable {
 
   func fetchSnapshot() async throws -> SnapshotDTO {
     snapshotFetchCount += 1
+    if let onFetchSnapshot { await onFetchSnapshot() }
+    if let snapshotError { throw snapshotError }
     guard let snapshot else { throw APIError.retryable }
     return snapshot
   }
@@ -117,6 +123,65 @@ struct SyncEngineTests {
 
     #expect(engine.state == .unauthorized)
     #expect(try context.fetchCount(FetchDescriptor<PendingMutation>()) == 1)
+  }
+
+  @Test func poisonMutationDroppedToSyncIssueAfterMaxAttempts() async throws {
+    let transport = MockTransport()
+    transport.postResults = [.failure(.retryable), .success(())]
+    transport.snapshot = emptySnapshot()
+    let (engine, context) = try makeEngine(transport)
+    let poison = enqueue(context, path: "/poison", at: Date(timeIntervalSince1970: 1))
+    poison.attemptCount = SyncEngine.maxAttempts - 1 // final strike this sync
+    try context.save()
+    _ = enqueue(context, path: "/behind", at: Date(timeIntervalSince1970: 2))
+
+    await engine.syncNow()
+
+    // Poison dropped + recorded; the queued mutation behind it drains.
+    #expect(transport.postedPaths == ["/poison", "/behind"])
+    #expect(try context.fetchCount(FetchDescriptor<PendingMutation>()) == 0)
+    let issues = try context.fetch(FetchDescriptor<SyncIssue>())
+    #expect(issues.count == 1)
+    #expect(issues.first?.path == "/poison")
+    #expect(transport.snapshotFetchCount == 1)
+    #expect(engine.state == .idle)
+  }
+
+  @Test func snapshotSkippedWhenWriteLandsDuringFetch() async throws {
+    let transport = MockTransport()
+    transport.snapshot = emptySnapshot()
+    let (engine, context) = try makeEngine(transport)
+    context.insert(Emi(
+      id: "local", label: "Optimistic", type: "bank_loan",
+      principal: 1, interestRate: 1, tenureMonths: 1, emiAmount: 1,
+      startDate: Date(), status: "active", notes: nil, updatedAt: Date()))
+    try context.save()
+    transport.onFetchSnapshot = {
+      _ = enqueue(context, path: "/late-write", at: Date())
+    }
+
+    await engine.syncNow()
+
+    // Apply skipped: the optimistic row survives, the late mutation is queued.
+    #expect(try context.fetchCount(FetchDescriptor<Emi>()) == 1)
+    #expect(try context.fetchCount(FetchDescriptor<PendingMutation>()) == 1)
+    #expect(engine.state == .idle)
+  }
+
+  @Test func snapshotFailurePreservesLocalDataAndGoesOffline() async throws {
+    let transport = MockTransport()
+    transport.snapshotError = .decoding // e.g. server contract drift
+    let (engine, context) = try makeEngine(transport)
+    context.insert(Emi(
+      id: "kept", label: "Local", type: "bank_loan",
+      principal: 1, interestRate: 1, tenureMonths: 1, emiAmount: 1,
+      startDate: Date(), status: "active", notes: nil, updatedAt: Date()))
+    try context.save()
+
+    await engine.syncNow()
+
+    #expect(engine.state == .offline)
+    #expect(try context.fetchCount(FetchDescriptor<Emi>()) == 1) // not wiped
   }
 
   @Test func snapshotApplyReplacesLocalStateWholesale() async throws {

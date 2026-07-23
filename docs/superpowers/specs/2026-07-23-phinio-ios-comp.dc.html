@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#05080f}
+  *{box-sizing:border-box}
+  a{color:#b4c5ff;text-decoration:none}
+  a:hover{color:#dae2fd}
+  ::-webkit-scrollbar{width:0;height:0}
+  @keyframes fabItem{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+  @keyframes scrimIn{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:36px 0;background:radial-gradient(120% 90% at 50% 0%,#0c1430 0%,#05080f 60%)">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ isDark }}" hint-size="402px,874px">
+
+<div style="height:100%;position:relative;background:#0b1326;color:#dae2fd;font-family:'Inter',system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased">
+
+  <div style="height:100%;overflow-y:auto;padding:54px 0 104px">
+
+    <!-- ══════════════ HOME ══════════════ -->
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:0 20px">
+      <!-- TopBar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 18px">
+        <div>
+          <div style="font:500 13px 'Inter';color:#c3c6d7">{{ greeting }}</div>
+          <div style="font:700 20px 'Manrope';color:#dae2fd;letter-spacing:-.01em">{{ userName }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div onClick="{{ noop }}" style="position:relative;width:42px;height:42px;border-radius:999px;background:rgba(180,197,255,.08);display:flex;align-items:center;justify-content:center;border:.5px solid rgba(180,197,255,.12)">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 8-3 8h18s-3-1-3-8z" stroke="#c3c6d7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke="#c3c6d7" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <div style="position:absolute;top:6px;right:7px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#cf2c30;color:#fff;font:700 10px 'Manrope';display:flex;align-items:center;justify-content:center;border:1.5px solid #0b1326">3</div>
+          </div>
+          <div onClick="{{ goProfile }}" style="width:42px;height:42px;border-radius:999px;background:linear-gradient(135deg,#2563eb,#00a572);display:flex;align-items:center;justify-content:center;font:700 15px 'Manrope';color:#eaf0ff;cursor:pointer">{{ avatarInitials }}</div>
+        </div>
+      </div>
+
+      <!-- Net worth hero -->
+      <div style="position:relative;border-radius:22px;padding:22px 22px 24px;overflow:hidden;background:linear-gradient(140deg,#2563eb 0%,#1c3aa0 48%,#141d38 100%);box-shadow:0 18px 44px rgba(4,10,26,.5)">
+        <div style="position:absolute;width:220px;height:220px;border-radius:999px;background:rgba(180,197,255,.18);filter:blur(46px);top:-90px;right:-40px"></div>
+        <div style="position:relative">
+          <div style="font:600 12px 'Inter';letter-spacing:.14em;text-transform:uppercase;color:rgba(218,226,253,.72)">Net Worth</div>
+          <div style="font:800 42px 'Manrope';color:#f2f5ff;letter-spacing:-.02em;margin-top:8px;line-height:1">{{ netWorthStr }}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+            <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(78,222,163,.2);color:#7ff0c4;font:700 12px 'Manrope';padding:4px 9px;border-radius:999px">▲ {{ gainPctStr }}</div>
+            <span style="font:500 12px 'Inter';color:rgba(218,226,253,.72)">{{ netWorthSub }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+        <div style="background:#222a3d;border-radius:16px;padding:15px 16px">
+          <div style="font:500 12px 'Inter';color:#c3c6d7">Current value</div>
+          <div style="font:700 22px 'Manrope';color:#dae2fd;margin-top:7px;letter-spacing:-.01em">{{ currentValueStr }}</div>
+          <div style="margin-top:9px;display:inline-flex;align-items:center;gap:4px;background:rgba(78,222,163,.14);color:#4edea3;font:700 11px 'Manrope';padding:3px 8px;border-radius:999px">▲ {{ gainPctStr }}</div>
+        </div>
+        <div style="background:#222a3d;border-radius:16px;padding:15px 16px">
+          <div style="font:500 12px 'Inter';color:#c3c6d7">Monthly EMI</div>
+          <div style="font:700 22px 'Manrope';color:#dae2fd;margin-top:7px;letter-spacing:-.01em">{{ monthlyEmiStr }}</div>
+          <div style="margin-top:9px;font:500 11px 'Inter';color:#c3c6d7">across 2 loans</div>
+        </div>
+      </div>
+
+      <!-- Upcoming payments -->
+      <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between">
+        <div style="font:700 17px 'Manrope';color:#dae2fd">Upcoming Payments</div>
+        <span style="font:500 12px 'Inter';color:#b4c5ff">Next 30 days</span>
+      </div>
+      <div style="background:#131b2e;border-radius:16px;padding:6px 16px;margin-top:12px">
+        <sc-for list="{{ upcoming }}" as="p" hint-placeholder-count="3">
+          <div onClick="{{ p.onTap }}" style="display:flex;align-items:center;gap:12px;padding:13px 0;cursor:pointer">
+            <div style="width:38px;height:38px;border-radius:11px;background:#222a3d;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="#b4c5ff" stroke-width="1.7"/><path d="M2.5 9.5h19" stroke="#b4c5ff" stroke-width="1.7"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font:600 14px 'Inter';color:#dae2fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.label }}</div>
+              <div style="font:500 12px 'Inter';color:#c3c6d7;margin-top:2px">{{ p.due }}</div>
+            </div>
+            <div style="font:700 15px 'Manrope';color:#dae2fd">{{ p.amount }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Allocation donut -->
+      <div style="margin-top:22px;font:700 17px 'Manrope';color:#dae2fd">Investment Allocation</div>
+      <div style="background:#131b2e;border-radius:16px;padding:20px 18px;margin-top:12px;display:flex;align-items:center;gap:20px">
+        <div style="position:relative;width:120px;height:120px;flex-shrink:0">
+          <div style="width:120px;height:120px;border-radius:999px;background:conic-gradient(#ffcf70 0deg 102deg,#7fa0ff 102deg 165deg,#4edea3 165deg 220deg,#6fd0ff 220deg 273deg,#b4c5ff 273deg 319deg,#c79bff 319deg 360deg)"></div>
+          <div style="position:absolute;inset:16px;border-radius:999px;background:#131b2e;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font:800 18px 'Manrope';color:#dae2fd">{{ allocTotalStr }}</div>
+            <div style="font:500 10px 'Inter';color:#c3c6d7">total</div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:9px">
+          <sc-for list="{{ allocLegend }}" as="a" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:9px">
+              <span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:{{ a.color }}"></span>
+              <span style="flex:1;font:500 13px 'Inter';color:#dae2fd">{{ a.name }}</span>
+              <span style="font:700 12px 'Manrope';color:#c3c6d7">{{ a.pct }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ══════════════ INVEST ══════════════ -->
+    <sc-if value="{{ isInvest }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:0 20px">
+      <div style="font:800 30px 'Manrope';color:#dae2fd;letter-spacing:-.02em;padding:4px 0 4px">Investments</div>
+      <div style="font:500 13px 'Inter';color:#c3c6d7;margin-bottom:16px">{{ investCountLabel }}</div>
+
+      <!-- Summary -->
+      <div style="background:linear-gradient(140deg,#222a3d,#1a2236);border-radius:18px;padding:18px 8px;display:grid;grid-template-columns:1fr 1fr 1fr">
+        <div style="text-align:center;padding:0 4px">
+          <div style="font:500 11px 'Inter';color:#c3c6d7">Invested</div>
+          <div style="font:700 17px 'Manrope';color:#dae2fd;margin-top:6px">{{ investSummary.investedStr }}</div>
+        </div>
+        <div style="text-align:center;padding:0 4px;border-left:.5px solid rgba(67,70,85,.6);border-right:.5px solid rgba(67,70,85,.6)">
+          <div style="font:500 11px 'Inter';color:#c3c6d7">Value</div>
+          <div style="font:700 17px 'Manrope';color:#dae2fd;margin-top:6px">{{ investSummary.currentStr }}</div>
+        </div>
+        <div style="text-align:center;padding:0 4px">
+          <div style="font:500 11px 'Inter';color:#c3c6d7">Return</div>
+          <div style="font:700 17px 'Manrope';color:#4edea3;margin-top:6px">{{ investSummary.returnStr }}</div>
+        </div>
+      </div>
+
+      <!-- Status tabs -->
+      <div style="display:flex;gap:6px;background:#060e20;border-radius:12px;padding:4px;margin-top:16px">
+        <div onClick="{{ setStatusActive }}" style="{{ statusActiveStyle }}">Active</div>
+        <div onClick="{{ setStatusCompleted }}" style="{{ statusCompletedStyle }}">Completed</div>
+      </div>
+
+      <!-- Type pills -->
+      <div style="display:flex;gap:8px;overflow-x:auto;margin:14px -20px 4px;padding:0 20px">
+        <sc-for list="{{ typePills }}" as="t" hint-placeholder-count="6">
+          <div onClick="{{ t.onTap }}" style="{{ t.style }}">{{ t.label }}</div>
+        </sc-for>
+      </div>
+
+      <!-- Cards -->
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+        <sc-for list="{{ investItems }}" as="it" hint-placeholder-count="4">
+          <div onClick="{{ it.onTap }}" style="background:#222a3d;border-radius:16px;padding:16px;cursor:pointer;box-shadow:0 10px 30px rgba(4,10,26,.28)">
+            <!-- header row -->
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <div style="font:700 16px 'Manrope';color:#dae2fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.name }}</div>
+              <span style="{{ it.badge.style }}">{{ it.badge.label }}</span>
+            </div>
+
+            <!-- LUMP -->
+            <sc-if value="{{ it.isLump }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">
+                <div>
+                  <div style="font:500 11px 'Inter';color:#c3c6d7">Invested</div>
+                  <div style="font:600 15px 'Manrope';color:#c3c6d7;margin-top:3px">{{ it.investedStr }}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font:500 11px 'Inter';color:#c3c6d7">{{ it.valueLabel }}</div>
+                  <div style="font:700 20px 'Manrope';color:#dae2fd;margin-top:3px">{{ it.valueStr }}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+                <span style="font:500 11px 'Inter';color:#8a92a8">{{ it.dateStr }}</span>
+                <sc-if value="{{ it.pillPos }}" hint-placeholder-val="{{ true }}"><span style="background:rgba(78,222,163,.14);color:#4edea3;font:700 12px 'Manrope';padding:3px 9px;border-radius:999px">▲ {{ it.pillStr }}</span></sc-if>
+                <sc-if value="{{ it.pillNeg }}" hint-placeholder-val="{{ false }}"><span style="background:rgba(207,44,48,.18);color:#ffb3ad;font:700 12px 'Manrope';padding:3px 9px;border-radius:999px">▼ {{ it.pillStr }}</span></sc-if>
+              </div>
+            </sc-if>
+
+            <!-- DPS -->
+            <sc-if value="{{ it.isDps }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">
+                <div>
+                  <div style="font:500 11px 'Inter';color:#c3c6d7">Deposited</div>
+                  <div style="font:700 20px 'Manrope';color:#dae2fd;margin-top:3px">{{ it.depositedStr }}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font:500 11px 'Inter';color:#c3c6d7">Maturity</div>
+                  <div style="font:600 15px 'Manrope';color:#4edea3;margin-top:3px">{{ it.maturityStr }}</div>
+                </div>
+              </div>
+              <div style="font:600 11px 'Manrope';color:#c3c6d7;margin-top:14px">{{ it.monthsStr }}</div>
+              <div style="height:5px;border-radius:999px;background:#060e20;margin-top:7px;overflow:hidden"><div style="{{ it.barStyle }}"></div></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font:500 11px 'Inter';color:#8a92a8">
+                <span>{{ it.monthlyStr }}</span><span>{{ it.rateStr }}</span><span>{{ it.nextDue }}</span>
+              </div>
+            </sc-if>
+
+            <!-- SAVINGS -->
+            <sc-if value="{{ it.isSavings }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">
+                <div>
+                  <div style="font:500 11px 'Inter';color:#c3c6d7">{{ it.depositsStr }}</div>
+                  <div style="font:500 11px 'Inter';color:#8a92a8;margin-top:6px">Deposited {{ it.depositedStr }}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font:500 11px 'Inter';color:#c3c6d7">Balance</div>
+                  <div style="font:700 20px 'Manrope';color:#dae2fd;margin-top:3px">{{ it.balanceStr }}</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+
+        <sc-if value="{{ investEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:48px 24px">
+            <div style="font:700 17px 'Manrope';color:#dae2fd">Nothing here yet</div>
+            <div style="font:500 13px 'Inter';color:#c3c6d7;margin-top:8px">No investments match this filter.</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ══════════════ EMIS ══════════════ -->
+    <sc-if value="{{ isEmis }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:0 20px">
+      <div style="font:800 30px 'Manrope';color:#dae2fd;letter-spacing:-.02em;padding:4px 0 16px">EMIs</div>
+
+      <div style="background:linear-gradient(140deg,#222a3d,#1a2236);border-radius:18px;padding:18px 8px;display:grid;grid-template-columns:1fr 1fr 1fr">
+        <div style="text-align:center;padding:0 4px">
+          <div style="font:500 11px 'Inter';color:#c3c6d7">Active</div>
+          <div style="font:700 17px 'Manrope';color:#dae2fd;margin-top:6px">{{ emiSummary.count }}</div>
+        </div>
+        <div style="text-align:center;padding:0 4px;border-left:.5px solid rgba(67,70,85,.6);border-right:.5px solid rgba(67,70,85,.6)">
+          <div style="font:500 11px 'Inter';color:#c3c6d7">Monthly</div>
+          <div style="font:700 17px 'Manrope';color:#dae2fd;margin-top:6px">{{ emiSummary.monthlyStr }}</div>
+        </div>
+        <div style="text-align:center;padding:0 4px">
+          <div style="font:500 11px 'Inter';color:#c3c6d7">Remaining</div>
+          <div style="font:700 17px 'Manrope';color:#ffb3ad;margin-top:6px">{{ emiSummary.remainingStr }}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;overflow-x:auto;margin:16px -20px 4px;padding:0 20px">
+        <sc-for list="{{ emiPills }}" as="t" hint-placeholder-count="3">
+          <div onClick="{{ t.onTap }}" style="{{ t.style }}">{{ t.label }}</div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+        <sc-for list="{{ emiItems }}" as="e" hint-placeholder-count="2">
+          <div onClick="{{ e.onTap }}" style="background:#222a3d;border-radius:16px;padding:16px;cursor:pointer;box-shadow:0 10px 30px rgba(4,10,26,.28)">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:42px;height:42px;border-radius:12px;background:#2d3449;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <sc-if value="{{ e.isLoan }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 10l9-6 9 6" stroke="#b4c5ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v9h14v-9M9 19v-6h6v6" stroke="#b4c5ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></sc-if>
+                <sc-if value="{{ e.isCard }}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2.5" stroke="#c79bff" stroke-width="1.7"/><path d="M3 9.5h18" stroke="#c79bff" stroke-width="1.7"/></svg></sc-if>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font:700 16px 'Manrope';color:#dae2fd">{{ e.name }}</div>
+                <div style="font:500 12px 'Inter';color:#c3c6d7;margin-top:2px">{{ e.badgeLabel }}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font:700 17px 'Manrope';color:#dae2fd">{{ e.emiStr }}</div>
+                <div style="font:500 11px 'Inter';color:#8a92a8;margin-top:2px">per month</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+              <span style="font:500 11px 'Inter';color:#c3c6d7">Remaining {{ e.remainingStr }}</span>
+              <span style="font:600 11px 'Manrope';color:#c3c6d7">{{ e.monthsStr }} months</span>
+            </div>
+            <div style="height:5px;border-radius:999px;background:#060e20;margin-top:8px;overflow:hidden"><div style="{{ e.barStyle }}"></div></div>
+            <div style="font:500 11px 'Inter';color:#8a92a8;margin-top:10px">Next due {{ e.nextDue }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ══════════════ PROFILE ══════════════ -->
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:0 20px">
+      <div style="display:flex;align-items:center;gap:12px;padding:4px 0 20px">
+        <div onClick="{{ goHome }}" style="width:40px;height:40px;border-radius:999px;background:rgba(180,197,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="11" height="18" viewBox="0 0 12 20" fill="none"><path d="M10 2L2 10l8 8" stroke="#b4c5ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="font:800 30px 'Manrope';color:#dae2fd;letter-spacing:-.02em">Profile</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 24px">
+        <div style="width:88px;height:88px;border-radius:999px;background:linear-gradient(135deg,#2563eb,#00a572);display:flex;align-items:center;justify-content:center;font:700 30px 'Manrope';color:#eaf0ff;box-shadow:0 12px 30px rgba(4,10,26,.5)">{{ avatarInitials }}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:700 20px 'Manrope';color:#dae2fd">{{ userName }}</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="#b4c5ff" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font:500 13px 'Inter';color:#c3c6d7">{{ userEmail }}</div>
+      </div>
+
+      <!-- Preferences -->
+      <div style="font:600 12px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#8a92a8;padding:0 4px 10px">Preferences</div>
+      <div style="background:#131b2e;border-radius:16px;padding:16px">
+        <div style="font:500 13px 'Inter';color:#c3c6d7;margin-bottom:10px">Currency</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div onClick="{{ setBdt }}" style="{{ bdtTileStyle }}"><div style="font:700 18px 'Manrope'">৳ BDT</div><div style="font:500 11px 'Inter';margin-top:3px;opacity:.7">Bangladeshi Taka</div></div>
+          <div onClick="{{ setUsd }}" style="{{ usdTileStyle }}"><div style="font:700 18px 'Manrope'">$ USD</div><div style="font:500 11px 'Inter';margin-top:3px;opacity:.7">US Dollar</div></div>
+        </div>
+      </div>
+      <div style="background:#131b2e;border-radius:16px;padding:16px;margin-top:12px;display:flex;align-items:center;justify-content:between;gap:12px">
+        <div style="flex:1">
+          <div style="font:600 14px 'Inter';color:#dae2fd">Payment reminders</div>
+          <div style="font:500 12px 'Inter';color:#8a92a8;margin-top:3px">{{ reminderHelp }}</div>
+        </div>
+        <div onClick="{{ toggleReminders }}" style="{{ toggleTrackStyle }}"><div style="{{ toggleKnobStyle }}"></div></div>
+      </div>
+
+      <!-- Account -->
+      <div style="font:600 12px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#8a92a8;padding:22px 4px 10px">Account</div>
+      <div style="background:#131b2e;border-radius:16px;overflow:hidden">
+        <div onClick="{{ noop }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer"><span style="flex:1;font:500 15px 'Inter';color:#dae2fd">Activity history</span><svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#5a6178" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="height:.5px;background:rgba(67,70,85,.5);margin-left:16px"></div>
+        <div onClick="{{ noop }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer"><span style="flex:1;font:500 15px 'Inter';color:#dae2fd">Change password</span><svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#5a6178" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="height:.5px;background:rgba(67,70,85,.5);margin-left:16px"></div>
+        <div onClick="{{ noop }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 17l-5-5 5-5M5 12h11" stroke="#ffb4ab" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="flex:1;font:600 15px 'Inter';color:#ffb4ab">Sign out</span></div>
+      </div>
+
+      <!-- Developer tools -->
+      <div style="font:600 12px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#8a92a8;padding:22px 4px 10px">Developer tools</div>
+      <div style="background:#131b2e;border-radius:16px;overflow:hidden">
+        <div onClick="{{ noop }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer"><span style="flex:1;font:500 15px 'Inter';color:#dae2fd">Load test data</span><svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#5a6178" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="height:.5px;background:rgba(67,70,85,.5);margin-left:16px"></div>
+        <div onClick="{{ noop }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer"><span style="flex:1;font:500 15px 'Inter';color:#ffb4ab">Clear all my data</span></div>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ══════════════ EMI DETAIL ══════════════ -->
+  <sc-if value="{{ detailIsEmi }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:50;background:#0b1326;overflow-y:auto;padding:54px 0 40px">
+      <div style="display:flex;align-items:center;gap:12px;padding:6px 20px 18px">
+        <div onClick="{{ emiDetail.onBack }}" style="width:40px;height:40px;border-radius:999px;background:rgba(180,197,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="11" height="18" viewBox="0 0 12 20" fill="none"><path d="M10 2L2 10l8 8" stroke="#b4c5ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="flex:1;min-width:0;font:800 22px 'Manrope';color:#dae2fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ emiDetail.name }}</div>
+        <span style="font:600 11px 'Inter';padding:5px 11px;border-radius:999px;background:rgba(199,155,255,.16);color:#c79bff;white-space:nowrap">{{ emiDetail.badgeLabel }}</span>
+      </div>
+
+      <div style="padding:0 20px">
+        <div style="{{ emiDetail.heroStyle }}">
+          <div style="position:absolute;width:200px;height:200px;border-radius:999px;background:rgba(255,255,255,.14);filter:blur(46px);top:-80px;right:-40px"></div>
+          <div style="position:relative">
+            <div style="font:600 12px 'Inter';letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7)">Remaining Balance</div>
+            <div style="font:800 40px 'Manrope';color:#fff;letter-spacing:-.02em;margin-top:8px;line-height:1">{{ emiDetail.remainingStr }}</div>
+            <div style="font:600 13px 'Inter';color:rgba(255,255,255,.7);margin-top:10px">{{ emiDetail.emiStr }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 20px 0">
+        <sc-for list="{{ emiDetail.tiles }}" as="t" hint-placeholder-count="3">
+          <div style="background:#222a3d;border-radius:14px;padding:13px 12px;text-align:center">
+            <div style="font:500 10.5px 'Inter';color:#c3c6d7">{{ t.label }}</div>
+            <div style="font:700 16px 'Manrope';color:#dae2fd;margin-top:6px">{{ t.value }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin:22px 20px 0;font:700 16px 'Manrope';color:#dae2fd">Principal vs Interest</div>
+      <div style="margin:12px 20px 0;background:#131b2e;border-radius:16px;padding:18px;display:flex;align-items:center;gap:20px">
+        <div style="position:relative;width:110px;height:110px;flex-shrink:0">
+          <div style="{{ emiDetail.donutStyle }}"></div>
+          <div style="position:absolute;inset:19px;border-radius:999px;background:#131b2e;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:600 8px 'Inter';letter-spacing:.1em;color:#8a92a8">TOTAL</span><span style="font:800 12px 'Manrope';color:#dae2fd;margin-top:2px">{{ emiDetail.totalPayStr }}</span></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+          <div><div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#2563eb"></span><span style="font:500 12px 'Inter';color:#c3c6d7">Principal</span></div><div style="font:700 16px 'Manrope';color:#dae2fd;margin-top:3px;margin-left:18px">{{ emiDetail.principalStr }}</div></div>
+          <div><div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#c79bff"></span><span style="font:500 12px 'Inter';color:#c3c6d7">Interest</span></div><div style="font:700 16px 'Manrope';color:#dae2fd;margin-top:3px;margin-left:18px">{{ emiDetail.interestStr }}</div></div>
+        </div>
+      </div>
+
+      <div style="margin:22px 20px 0;font:700 16px 'Manrope';color:#dae2fd">Amortization Schedule</div>
+      <div style="margin:12px 20px 0;background:#131b2e;border-radius:16px;padding:6px 10px 10px">
+        <div style="display:grid;grid-template-columns:22px 40px 1fr 1fr 1fr 1fr 26px;gap:4px;padding:10px 6px 8px;font:600 9.5px 'Inter';letter-spacing:.04em;text-transform:uppercase;color:#6b7288">
+          <span>#</span><span>Due</span><span style="text-align:right">EMI</span><span style="text-align:right">Prin.</span><span style="text-align:right">Int.</span><span style="text-align:right">Bal.</span><span></span>
+        </div>
+        <sc-for list="{{ emiDetail.rows }}" as="r" hint-placeholder-count="8">
+          <div onClick="{{ r.onToggle }}" style="{{ r.rowStyle }}">
+            <span>{{ r.num }}</span><span>{{ r.label }}</span><span style="text-align:right">{{ r.emiStr }}</span><span style="text-align:right">{{ r.prinStr }}</span><span style="text-align:right">{{ r.intStr }}</span><span style="text-align:right">{{ r.balStr }}</span>
+            <span style="display:flex;justify-content:flex-end">
+              <sc-if value="{{ r.paid }}" hint-placeholder-val="{{ true }}"><span style="width:18px;height:18px;border-radius:6px;background:#00a572;display:flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></sc-if>
+              <sc-if value="{{ r.unpaid }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border-radius:6px;border:1.5px solid #434655"></span></sc-if>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div onClick="{{ emiDetail.onDelete }}" style="margin:22px 20px 0;padding:15px;border-radius:14px;background:rgba(207,44,48,.12);color:#ffb4ab;text-align:center;font:600 15px 'Inter';cursor:pointer">Delete EMI</div>
+    </div>
+  </sc-if>
+
+  <!-- ══════════════ DPS DETAIL ══════════════ -->
+  <sc-if value="{{ detailIsDps }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:50;background:#0b1326;overflow-y:auto;padding:54px 0 40px">
+      <div style="display:flex;align-items:center;gap:12px;padding:6px 20px 18px">
+        <div onClick="{{ dpsDetail.onBack }}" style="width:40px;height:40px;border-radius:999px;background:rgba(180,197,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="11" height="18" viewBox="0 0 12 20" fill="none"><path d="M10 2L2 10l8 8" stroke="#b4c5ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="flex:1;min-width:0">
+          <div style="font:800 22px 'Manrope';color:#dae2fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ dpsDetail.name }}</div>
+          <div style="font:500 11.5px 'Inter';color:#c3c6d7;margin-top:2px">{{ dpsDetail.subtitle }}</div>
+        </div>
+        <div style="width:38px;height:38px;border-radius:999px;background:rgba(180,197,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="#b4c5ff" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+      </div>
+
+      <div style="padding:0 20px">
+        <div style="position:relative;overflow:hidden;border-radius:20px;padding:22px;background:linear-gradient(140deg,#00a572,#0d2a26);box-shadow:0 16px 40px rgba(4,10,26,.5)">
+          <div style="position:absolute;width:200px;height:200px;border-radius:999px;background:rgba(78,222,163,.22);filter:blur(46px);top:-80px;right:-40px"></div>
+          <div style="position:relative">
+            <div style="font:600 12px 'Inter';letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)">Total Deposited</div>
+            <div style="font:800 40px 'Manrope';color:#fff;letter-spacing:-.02em;margin-top:8px;line-height:1">{{ dpsDetail.depositedStr }}</div>
+            <div style="font:600 12px 'Inter';color:rgba(255,255,255,.75);margin-top:14px">{{ dpsDetail.monthsStr }}</div>
+            <div style="height:6px;border-radius:999px;background:rgba(255,255,255,.2);margin-top:8px;overflow:hidden"><div style="{{ dpsDetail.barStyle }}"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 20px 0">
+        <sc-for list="{{ dpsDetail.tiles }}" as="t" hint-placeholder-count="3">
+          <div style="background:#222a3d;border-radius:14px;padding:13px 12px;text-align:center">
+            <div style="font:500 10.5px 'Inter';color:#c3c6d7">{{ t.label }}</div>
+            <div style="font:700 15px 'Manrope';color:#dae2fd;margin-top:6px">{{ t.value }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin:22px 20px 0;font:700 16px 'Manrope';color:#dae2fd">Deposit Schedule</div>
+      <div style="margin:12px 20px 0;background:#131b2e;border-radius:16px;padding:6px 12px">
+        <sc-for list="{{ dpsDetail.rows }}" as="r" hint-placeholder-count="6">
+          <div onClick="{{ r.onToggle }}" style="{{ r.rowStyle }}">
+            <div style="width:30px;font:700 12px 'Manrope';color:#8a92a8;flex-shrink:0">{{ r.num }}</div>
+            <div style="flex:1">
+              <div style="font:600 13px 'Inter';color:#dae2fd">{{ r.amtStr }}</div>
+              <div style="font:500 11px 'Inter';color:#8a92a8;margin-top:2px">{{ r.label }} · bal {{ r.accStr }}</div>
+            </div>
+            <sc-if value="{{ r.paid }}" hint-placeholder-val="{{ true }}"><span style="width:22px;height:22px;border-radius:7px;background:#00a572;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="13" height="13" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></sc-if>
+            <sc-if value="{{ r.unpaid }}" hint-placeholder-val="{{ false }}"><span style="width:22px;height:22px;border-radius:7px;border:1.5px solid #434655;flex-shrink:0"></span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div onClick="{{ dpsDetail.onDelete }}" style="margin:22px 20px 0;padding:15px;border-radius:14px;background:rgba(207,44,48,.12);color:#ffb4ab;text-align:center;font:600 15px 'Inter';cursor:pointer">Delete DPS scheme</div>
+    </div>
+  </sc-if>
+
+  <!-- ══════════════ SAVINGS DETAIL ══════════════ -->
+  <sc-if value="{{ detailIsSavings }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:50;background:#0b1326;overflow-y:auto;padding:54px 0 40px">
+      <div style="display:flex;align-items:center;gap:12px;padding:6px 20px 18px">
+        <div onClick="{{ savingsDetail.onBack }}" style="width:40px;height:40px;border-radius:999px;background:rgba(180,197,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="11" height="18" viewBox="0 0 12 20" fill="none"><path d="M10 2L2 10l8 8" stroke="#b4c5ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="flex:1;min-width:0">
+          <div style="font:800 22px 'Manrope';color:#dae2fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ savingsDetail.name }}</div>
+          <div style="font:500 11.5px 'Inter';color:#c3c6d7;margin-top:2px">Savings pot</div>
+        </div>
+        <span style="font:600 13px 'Inter';color:#b4c5ff;cursor:pointer">Edit</span>
+      </div>
+
+      <div style="padding:0 20px">
+        <div style="position:relative;overflow:hidden;border-radius:20px;padding:22px;background:linear-gradient(140deg,#2563eb,#141d38);box-shadow:0 16px 40px rgba(4,10,26,.5)">
+          <div style="position:absolute;width:200px;height:200px;border-radius:999px;background:rgba(127,160,255,.22);filter:blur(46px);top:-80px;right:-40px"></div>
+          <div style="position:relative">
+            <div style="font:600 12px 'Inter';letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)">Current Balance</div>
+            <div style="font:800 40px 'Manrope';color:#fff;letter-spacing:-.02em;margin-top:8px;line-height:1">{{ savingsDetail.balanceStr }}</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(78,222,163,.2);color:#7ff0c4;font:700 12px 'Manrope';padding:4px 9px;border-radius:999px;margin-top:12px">▲ {{ savingsDetail.returnStr }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 20px 0">
+        <sc-for list="{{ savingsDetail.tiles }}" as="t" hint-placeholder-count="2">
+          <div style="background:#222a3d;border-radius:14px;padding:14px 14px">
+            <div style="font:500 11px 'Inter';color:#c3c6d7">{{ t.label }}</div>
+            <div style="font:700 19px 'Manrope';color:#dae2fd;margin-top:6px">{{ t.value }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div onClick="{{ savingsDetail.toggleForm }}" style="margin:16px 20px 0;padding:15px;border-radius:14px;border:1.5px dashed #434655;color:#b4c5ff;text-align:center;font:600 14px 'Inter';cursor:pointer">+ Add deposit</div>
+      <sc-if value="{{ savingsDetail.formOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:12px 20px 0;background:#131b2e;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div><div style="font:500 11px 'Inter';color:#c3c6d7;margin-bottom:6px">Amount</div><div style="background:#060e20;border-radius:11px;padding:13px 14px;font:600 15px 'Manrope';color:#8a92a8">৳ 0</div></div>
+          <div><div style="font:500 11px 'Inter';color:#c3c6d7;margin-bottom:6px">Notes (optional)</div><div style="background:#060e20;border-radius:11px;padding:13px 14px;font:500 14px 'Inter';color:#8a92a8">Add a note…</div></div>
+          <div onClick="{{ savingsDetail.toggleForm }}" style="background:#2563eb;color:#fff;text-align:center;padding:13px;border-radius:11px;font:600 14px 'Inter';cursor:pointer">Add deposit</div>
+        </div>
+      </sc-if>
+
+      <div style="margin:22px 20px 0;font:700 16px 'Manrope';color:#dae2fd">Deposit History</div>
+      <div style="margin:12px 20px 0;background:#131b2e;border-radius:16px;padding:6px 16px">
+        <sc-for list="{{ savingsDetail.history }}" as="h" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 0">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(78,222,163,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="#4edea3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div style="flex:1;min-width:0"><div style="font:600 14px 'Inter';color:#dae2fd">{{ h.note }}</div><div style="font:500 11px 'Inter';color:#8a92a8;margin-top:2px">{{ h.date }}</div></div>
+            <div style="font:700 15px 'Manrope';color:#4edea3">{{ h.amtStr }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div onClick="{{ savingsDetail.onDelete }}" style="margin:22px 20px 0;padding:15px;border-radius:14px;background:rgba(207,44,48,.12);color:#ffb4ab;text-align:center;font:600 15px 'Inter';cursor:pointer">Delete savings pot</div>
+    </div>
+  </sc-if>
+
+  <!-- FAB menu (global) -->
+  <sc-if value="{{ fabOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeFab }}" style="position:absolute;inset:0;background:rgba(6,14,32,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:scrimIn .18s ease;z-index:44"></div>
+    <div style="position:absolute;right:20px;bottom:114px;display:flex;flex-direction:column;align-items:flex-end;gap:13px;z-index:46">
+      <sc-for list="{{ fabOptions }}" as="f" hint-placeholder-count="4">
+        <div onClick="{{ f.onTap }}" style="display:flex;align-items:center;gap:13px;cursor:pointer;animation:fabItem .24s cubic-bezier(.2,.9,.3,1.2) backwards;{{ f.anim }}">
+          <span style="background:#222a3d;color:#dae2fd;font:600 13px 'Inter',sans-serif;padding:9px 13px;border-radius:11px;box-shadow:0 8px 22px rgba(4,10,26,.55);white-space:nowrap">{{ f.label }}</span>
+          <div style="width:50px;height:50px;border-radius:999px;background:#2d3449;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(4,10,26,.55);flex-shrink:0">
+            <sc-if value="{{ f.isInv }}" hint-placeholder-val="{{ true }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 16l4.5-5 3.5 3L20 6M20 6h-4M20 6v4" stroke="#b4c5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></sc-if>
+            <sc-if value="{{ f.isDps }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="#4edea3" stroke-width="1.8"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="#4edea3" stroke-width="1.8" stroke-linecap="round"/></svg></sc-if>
+            <sc-if value="{{ f.isSav }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12a7 6 0 0114 0v5H5a1 1 0 01-1-1v-4zM18 10h2v3h-2M8 8.5h4" stroke="#7fa0ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></sc-if>
+            <sc-if value="{{ f.isEmi }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2.5" stroke="#c79bff" stroke-width="1.8"/><path d="M3 9.5h18" stroke="#c79bff" stroke-width="1.8"/></svg></sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- Tab bar (pill + detached add) -->
+  <div style="position:absolute;left:0;right:0;bottom:0;z-index:45;padding:0 16px 26px;display:flex;align-items:center;gap:12px">
+    <div style="position:relative;flex:1;border-radius:32px;overflow:hidden;box-shadow:0 -2px 30px rgba(4,10,26,.5)">
+      <div style="position:absolute;inset:0;background:rgba(19,27,46,.82);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:.5px solid rgba(180,197,255,.08)"></div>
+      <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);padding:8px;gap:2px">
+        <div onClick="{{ goHome }}" style="{{ t0 }}">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1v-9.5z" stroke="{{ c0 }}" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <span style="{{ l0 }}">Home</span>
+        </div>
+        <div onClick="{{ goInvest }}" style="{{ t1 }}">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M4 16l4.5-5 3.5 3L20 6M20 6h-4M20 6v4" stroke="{{ c1 }}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="{{ l1 }}">Invest</span>
+        </div>
+        <div onClick="{{ goEmis }}" style="{{ t2 }}">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2.5" stroke="{{ c2 }}" stroke-width="1.7"/><path d="M3 10h18" stroke="{{ c2 }}" stroke-width="1.7"/></svg>
+          <span style="{{ l2 }}">EMIs</span>
+        </div>
+      </div>
+    </div>
+    <div onClick="{{ toggleFab }}" style="position:relative;width:62px;height:62px;border-radius:999px;flex-shrink:0;overflow:hidden;box-shadow:0 -2px 30px rgba(4,10,26,.5);cursor:pointer">
+      <div style="position:absolute;inset:0;background:rgba(19,27,46,.82);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:.5px solid rgba(180,197,255,.1)"></div>
+      <div style="position:relative;height:100%;display:flex;align-items:center;justify-content:center;transition:transform .25s cubic-bezier(.2,.9,.3,1.2);{{ fabRotate }}">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#b4c5ff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tab: 0, fabOpen: false, investStatus: 'active', investType: 'all', emiType: 'all', currency: 'BDT', remindersOn: false, stack: [], emiPaid: { home:18, card:4 }, dpsPaid: { dbbl:14 }, savFormOpen: false };
+
+  db = {
+    lump: [
+      { id:'gp',   name:'Grameenphone', type:'Stocks',      invested:50000,  current:62500,  date:'12 Mar 2024', status:'active' },
+      { id:'sp',   name:'Square Pharma',type:'Mutual Fund', invested:80000,  current:74000,  date:'02 Jan 2024', status:'active' },
+      { id:'gold', name:'Sonali Gold',  type:'Gold',        invested:120000, current:138000, date:'18 Nov 2023', status:'active' },
+      { id:'btc',  name:'BTC Holding',  type:'Crypto',      invested:40000,  current:55000,  date:'05 Feb 2024', status:'active' },
+      { id:'bex',  name:'Beximco IPO',  type:'Stocks',      invested:30000,  current:39000,  date:'20 Jun 2025', status:'completed' },
+    ],
+    dps: [ { id:'dbbl', name:'DBBL DPS', monthly:5000, tenure:36, paid:14, rate:8, interestType:'Simple', current:72000, startY:2025, startM:1 } ],
+    savings: [ { id:'ef', name:'Emergency Fund', deposited:80000, current:85000, deposits:6, start:'Dec 2023', history:[
+      { date:'02 Jul 2026', note:'Salary set-aside', amount:15000 },
+      { date:'05 Jun 2026', note:'Freelance project', amount:10000 },
+      { date:'03 May 2026', note:'', amount:12000 },
+      { date:'01 Apr 2026', note:'Monthly top-up', amount:13000 },
+      { date:'02 Mar 2026', note:'Eid bonus', amount:20000 },
+      { date:'01 Feb 2026', note:'Opening balance', amount:10000 },
+    ] } ],
+    emis: [
+      { id:'home', name:'Home Loan',      type:'loan', principal:500000, rate:9,  tenure:48, paid:18, startY:2025, startM:1 },
+      { id:'card', name:'City Bank Card', type:'card', principal:120000, rate:24, tenure:12, paid:4,  startY:2026, startM:3 },
+    ],
+  };
+
+  fmt(n){ const s = this.state.currency === 'USD' ? '$' : '৳'; return s + Math.round(n).toLocaleString('en-US'); }
+
+  emiCalc(e){
+    const r = e.rate/100/12, n = e.tenure, f = Math.pow(1+r,n);
+    const emi = e.principal*r*f/(f-1);
+    const fp = Math.pow(1+r,e.paid);
+    const remaining = e.principal*(f-fp)/(f-1);
+    const totalPay = emi*n;
+    return { emi, remaining, totalPay, totalInt: totalPay - e.principal };
+  }
+
+  dpsMaturity(d){ let m=0; const r=d.rate/100/12; for(let k=1;k<=d.tenure;k++) m += d.monthly*(1 + r*(d.tenure-k+1)); return m; }
+
+  monthLabel(y,m){ return new Date(y, m, 1).toLocaleDateString('en-US', { month:'short', year:'2-digit' }); }
+  push(screen,id){ this.setState(s=>({ stack:[...s.stack,{screen,id}], fabOpen:false, savFormOpen:false })); }
+  popNav(){ this.setState(s=>({ stack:s.stack.slice(0,-1) })); }
+
+  amort(e, paid){
+    const r=e.rate/100/12, E=this.emiCalc(e).emi; let bal=e.principal; const rows=[];
+    for(let i=0;i<e.tenure;i++){ const interest=bal*r; const principal=E-interest; bal=Math.max(0,bal-principal); rows.push({ num:i+1, label:this.monthLabel(e.startY, e.startM+i), emi:E, principal, interest, balance:bal, paid:i<paid }); }
+    return rows;
+  }
+  dpsSchedule(d, paid){
+    const r=d.rate/100/12; const rows=[]; let acc=0;
+    for(let i=0;i<d.tenure;i++){ acc += d.monthly*(1 + r); rows.push({ num:i+1, label:this.monthLabel(d.startY, d.startM+i), amount:d.monthly, accrued:acc, paid:i<paid }); }
+    return rows;
+  }
+
+  badge(type){
+    const map = { Stocks:['rgba(180,197,255,.16)','#b4c5ff'],'Mutual Fund':['rgba(78,222,163,.16)','#4edea3'],Gold:['rgba(255,207,112,.16)','#ffcf70'],Crypto:['rgba(199,155,255,.16)','#c79bff'],FD:['rgba(111,208,255,.16)','#6fd0ff'],DPS:['rgba(78,222,163,.16)','#4edea3'],Savings:['rgba(127,160,255,.16)','#7fa0ff'],Other:['rgba(195,198,215,.16)','#c3c6d7'] };
+    const [bg,fg] = map[type] || map.Other;
+    return { label:type, style:{ font:"600 11px 'Inter',sans-serif", padding:'3px 9px', borderRadius:'8px', background:bg, color:fg, letterSpacing:'.02em', whiteSpace:'nowrap' } };
+  }
+
+  pill(base, cur){ const pos = cur >= base; const pct = base ? (cur-base)/base*100 : 0; return { pos, neg: !pos, str: (pos?'+':'') + pct.toFixed(1) + '%' }; }
+
+  renderVals(){
+    const S = this.state;
+    const setTab = (i) => this.setState({ tab:i, fabOpen:false });
+
+    const lumpActive = this.db.lump.filter(x => x.status==='active');
+    const invCurrent = lumpActive.reduce((s,x)=>s+x.current,0) + this.db.dps.reduce((s,d)=>s+d.current,0) + this.db.savings.reduce((s,x)=>s+x.current,0);
+    const invInvested = lumpActive.reduce((s,x)=>s+x.invested,0) + this.db.dps.reduce((s,d)=>s+d.monthly*d.paid,0) + this.db.savings.reduce((s,x)=>s+x.deposited,0);
+    const emiCalcs = this.db.emis.map(e => ({ e, ...this.emiCalc(e) }));
+    const emiRemaining = emiCalcs.reduce((s,c)=>s+c.remaining,0);
+    const emiMonthly = emiCalcs.reduce((s,c)=>s+c.emi,0);
+    const netWorth = invCurrent - emiRemaining;
+    const gainPct = ((invCurrent-invInvested)/invInvested*100);
+
+    // ── tab colors + active capsule ──
+    const cActive='#dae2fd', cIdle='#5a6178';
+    const lblStyle = (on) => ({ font:"600 10px 'Inter',sans-serif", color: on?cActive:cIdle, letterSpacing:'.01em' });
+    const tabStyle = (on) => ({ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'5px', padding:'9px 4px', borderRadius:'22px', cursor:'pointer', transition:'background .2s', background: on?'rgba(180,197,255,.16)':'transparent' });
+
+    // ── invest filters ──
+    const combined = [
+      ...this.db.lump.map(x => ({ kind:'lump', ...x, filterType:x.type })),
+      ...this.db.dps.map(x => ({ kind:'dps', ...x, status:'active', filterType:'DPS' })),
+      ...this.db.savings.map(x => ({ kind:'savings', ...x, status:'active', filterType:'Savings' })),
+    ];
+    const byStatus = combined.filter(x => x.status === S.investStatus);
+    const byType = byStatus.filter(x => S.investType==='all' || x.filterType===S.investType);
+    const investItems = byType.map(x => {
+      const b = this.badge(x.filterType);
+      if(x.kind==='lump'){ const p=this.pill(x.invested,x.current); return { name:x.name, badge:b, isLump:true,isDps:false,isSavings:false, investedStr:this.fmt(x.invested), valueLabel: x.status==='completed'?'Exit value':'Current value', valueStr:this.fmt(x.current), pillPos:p.pos, pillNeg:p.neg, pillStr:p.str, dateStr:x.date, onTap:()=>{} }; }
+      if(x.kind==='dps'){ const pct=Math.round(x.paid/x.tenure*100); return { name:x.name, badge:{label:'DPS',style:this.badge('DPS').style}, isLump:false,isDps:true,isSavings:false, depositedStr:this.fmt(x.monthly*x.paid), maturityStr:this.fmt(this.dpsMaturity(x)), monthsStr:x.paid+' / '+x.tenure+' months', barStyle:{height:'100%',borderRadius:'999px',background:'#4edea3',width:pct+'%'}, monthlyStr:this.fmt(x.monthly)+'/mo', rateStr:x.rate+'% p.a.', nextDue:'Next 05 Aug', onTap:()=>this.push('dpsDetail',x.id) }; }
+      const p=this.pill(x.deposited,x.current); return { name:x.name, badge:{label:'Savings',style:this.badge('Savings').style}, isLump:false,isDps:false,isSavings:true, depositsStr:x.deposits+' deposits', depositedStr:this.fmt(x.deposited), balanceStr:this.fmt(x.current), pillPos:p.pos, pillStr:p.str, onTap:()=>this.push('savingsDetail',x.id) };
+    });
+
+    const pill = (label, val, kind) => {
+      const on = (kind==='type'?S.investType:S.emiType)===val;
+      return { label, style:{ font:"600 13px 'Inter',sans-serif", padding:'8px 15px', borderRadius:'999px', whiteSpace:'nowrap', cursor:'pointer', background: on?'#b4c5ff':'#1c2438', color: on?'#0b1326':'#c3c6d7', flexShrink:0 }, onTap:()=> kind==='type'?this.setState({investType:val}):this.setState({emiType:val}) };
+    };
+
+    const segStyle = (on) => ({ flex:1, textAlign:'center', font:"600 14px 'Inter',sans-serif", padding:'9px 0', borderRadius:'9px', cursor:'pointer', background: on?'#2d3449':'transparent', color: on?'#dae2fd':'#8a92a8' });
+
+    const tileStyle = (on) => ({ padding:'14px 14px', borderRadius:'13px', cursor:'pointer', background: on?'rgba(37,99,235,.18)':'#060e20', color: on?'#b4c5ff':'#c3c6d7', border: on?'.5px solid rgba(180,197,255,.4)':'.5px solid transparent' });
+
+    const emiItems = emiCalcs.filter(c => S.emiType==='all' || c.e.type===(S.emiType)).map(c => ({
+      name:c.e.name, isLoan:c.e.type==='loan', isCard:c.e.type==='card',
+      badgeLabel: c.e.type==='loan'?'Bank Loan':'Credit Card',
+      emiStr:this.fmt(c.emi), remainingStr:this.fmt(c.remaining), monthsStr:c.e.paid+' / '+c.e.tenure,
+      barStyle:{height:'100%',borderRadius:'999px',background:'#2563eb',width:Math.round(c.e.paid/c.e.tenure*100)+'%'},
+      nextDue:this.monthLabel(c.e.startY, c.e.startM + c.e.paid), onTap:()=>this.push('emiDetail',c.e.id),
+    }));
+
+    const permCopy = { granted:'Reminders on — we\u2019ll nudge you before each due date.', denied:'Notifications are off in iOS Settings.', on:'You\u2019ll be reminded 3 days before each payment.', off:'Turn on to get a heads-up before payments are due.' };
+
+    // ── push-stack detail screens ──
+    const top = S.stack[S.stack.length-1] || null;
+    const NOW = new Date(2026, 6, 23);
+    let emiDetail=null, dpsDetail=null, savingsDetail=null;
+
+    if(top && top.screen==='emiDetail'){
+      const e = this.db.emis.find(x=>x.id===top.id);
+      const paid = S.emiPaid[e.id];
+      const { emi, totalInt } = this.emiCalc(e);
+      const rows = this.amort(e, paid);
+      const remaining = paid>0 ? rows[paid-1].balance : e.principal;
+      const paidInt = rows.slice(0,paid).reduce((s,r)=>s+r.interest,0);
+      const pDeg = e.principal/(e.principal+totalInt)*360;
+      const isLoan = e.type==='loan';
+      emiDetail = {
+        name:e.name, isLoan, isCard:!isLoan, badgeLabel: isLoan?'Bank Loan':'Credit Card',
+        heroStyle:{ position:'relative', overflow:'hidden', borderRadius:'20px', padding:'22px', background: isLoan?'linear-gradient(140deg,#2563eb,#141d38)':'linear-gradient(140deg,#7a4bd0,#20182f)', boxShadow:'0 16px 40px rgba(4,10,26,.5)' },
+        remainingStr:this.fmt(remaining), emiStr:this.fmt(emi)+'/mo',
+        tiles:[ {label:'Paid months', value:paid+' / '+e.tenure}, {label:'Remaining', value:String(e.tenure-paid)}, {label:'Interest paid', value:this.fmt(paidInt)} ],
+        donutStyle:{ width:'110px', height:'110px', borderRadius:'999px', flexShrink:0, background:'conic-gradient(#2563eb 0deg '+pDeg+'deg,#c79bff '+pDeg+'deg 360deg)' },
+        principalStr:this.fmt(e.principal), interestStr:this.fmt(totalInt), totalPayStr:this.fmt(e.principal+totalInt),
+        rows: rows.map((r,i)=>({
+          num:r.num, label:r.label, emiStr:Math.round(r.emi).toLocaleString('en-US'), prinStr:Math.round(r.principal).toLocaleString('en-US'), intStr:Math.round(r.interest).toLocaleString('en-US'), balStr:Math.round(r.balance).toLocaleString('en-US'),
+          paid:r.paid, unpaid:!r.paid,
+          rowStyle:{ display:'grid', gridTemplateColumns:'22px 40px 1fr 1fr 1fr 1fr 26px', alignItems:'center', gap:'4px', padding:'9px 6px', borderRadius:'9px', cursor:'pointer', font:"600 10.5px 'Manrope',sans-serif", background: r.paid?'transparent':'rgba(37,99,235,.06)', color: r.paid?'#6b7288':'#dae2fd' },
+          onToggle:()=>{ const cur=S.emiPaid[e.id]; const nv = i<cur ? i : i+1; this.setState({ emiPaid:{...S.emiPaid,[e.id]:nv} }); },
+        })),
+        onDelete:()=>this.popNav(), onBack:()=>this.popNav(),
+      };
+    }
+
+    if(top && top.screen==='dpsDetail'){
+      const d = this.db.dps.find(x=>x.id===top.id);
+      const paid = S.dpsPaid[d.id];
+      const rows = this.dpsSchedule(d, paid);
+      const deposited = d.monthly*paid;
+      const maturity = this.dpsMaturity(d);
+      const interestEarned = (rows[paid-1]?.accrued || 0) - deposited;
+      const pct = Math.round(paid/d.tenure*100);
+      dpsDetail = {
+        name:d.name, subtitle:'DPS · '+d.interestType+' interest · '+d.rate+'% p.a.',
+        depositedStr:this.fmt(deposited), monthsStr:paid+' / '+d.tenure+' months',
+        barStyle:{ height:'100%', borderRadius:'999px', background:'#4edea3', width:pct+'%' },
+        tiles:[ {label:'Monthly deposit', value:this.fmt(d.monthly)}, {label:'Maturity value', value:this.fmt(maturity)}, {label:'Interest earned', value:this.fmt(Math.max(0,interestEarned))} ],
+        rows: rows.map((r,i)=>({
+          num:r.num, label:r.label, amtStr:this.fmt(r.amount), accStr:this.fmt(r.accrued),
+          paid:r.paid, unpaid:!r.paid,
+          rowStyle:{ display:'flex', alignItems:'center', gap:'12px', padding:'12px 8px', borderRadius:'11px', cursor:'pointer', background: r.paid?'transparent':'rgba(78,222,163,.06)' },
+          onToggle:()=>{ const cur=S.dpsPaid[d.id]; const nv = i<cur ? i : i+1; this.setState({ dpsPaid:{...S.dpsPaid,[d.id]:nv} }); },
+        })),
+        onDelete:()=>this.popNav(), onBack:()=>this.popNav(),
+      };
+    }
+
+    if(top && top.screen==='savingsDetail'){
+      const p = this.db.savings.find(x=>x.id===top.id);
+      const ret = this.pill(p.deposited, p.current);
+      savingsDetail = {
+        name:p.name, balanceStr:this.fmt(p.current), returnStr:ret.str, retPos:ret.pos,
+        tiles:[ {label:'Total deposited', value:this.fmt(p.deposited)}, {label:'Deposits', value:String(p.deposits)} ],
+        history: p.history.map(h=>({ date:h.date, note:h.note||'Deposit', amtStr:'+ '+this.fmt(h.amount) })),
+        formOpen:S.savFormOpen, toggleForm:()=>this.setState({savFormOpen:!S.savFormOpen}),
+        onDelete:()=>this.popNav(), onBack:()=>this.popNav(),
+      };
+    }
+
+    return {
+      stackEmpty:S.stack.length===0,
+      detailIsEmi: top && top.screen==='emiDetail',
+      detailIsDps: top && top.screen==='dpsDetail',
+      detailIsSavings: top && top.screen==='savingsDetail',
+      emiDetail, dpsDetail, savingsDetail, goBack:()=>this.popNav(),
+      isDark: true, noop: ()=>{},
+      isHome:S.tab===0, isInvest:S.tab===1, isEmis:S.tab===2, isProfile:S.tab===3,
+      goHome:()=>setTab(0), goInvest:()=>setTab(1), goEmis:()=>setTab(2), goProfile:()=>setTab(3),
+      c0:S.tab===0?cActive:cIdle, c1:S.tab===1?cActive:cIdle, c2:S.tab===2?cActive:cIdle, c3:S.tab===3?cActive:cIdle,
+      l0:lblStyle(S.tab===0), l1:lblStyle(S.tab===1), l2:lblStyle(S.tab===2), l3:lblStyle(S.tab===3),
+      t0:tabStyle(S.tab===0), t1:tabStyle(S.tab===1), t2:tabStyle(S.tab===2), t3:tabStyle(S.tab===3),
+
+      // Home
+      greeting:'Good evening', userName:'Rahim Ahmed', userEmail:'rahim.ahmed@gmail.com', avatarInitials:'RA',
+      netWorthStr:this.fmt(netWorth), netWorthSub:'6 investments · 2 EMIs', gainPctStr:(gainPct>=0?'+':'')+gainPct.toFixed(1)+'%',
+      currentValueStr:this.fmt(invCurrent), monthlyEmiStr:this.fmt(emiMonthly),
+      upcoming:[
+        { label:'City Bank Card', due:'Due in 5 days', amount:this.fmt(emiCalcs[1].emi), onTap:()=>this.push('emiDetail','card') },
+        { label:'DBBL DPS installment', due:'Due in 9 days', amount:this.fmt(5000), onTap:()=>this.push('dpsDetail','dbbl') },
+        { label:'Home Loan', due:'Due in 13 days', amount:this.fmt(emiCalcs[0].emi), onTap:()=>this.push('emiDetail','home') },
+      ],
+      allocTotalStr:this.fmt(invCurrent),
+      allocLegend:[
+        { name:'Gold', color:'#ffcf70', pct:'28%' },
+        { name:'Savings', color:'#7fa0ff', pct:'17%' },
+        { name:'Mutual Fund', color:'#4edea3', pct:'15%' },
+        { name:'DPS', color:'#6fd0ff', pct:'15%' },
+        { name:'Stocks', color:'#b4c5ff', pct:'13%' },
+      ],
+
+      // Invest
+      investCountLabel:'6 active · 1 completed',
+      investSummary:{ investedStr:this.fmt(invInvested), currentStr:this.fmt(invCurrent), returnStr:(gainPct>=0?'+':'')+gainPct.toFixed(1)+'%' },
+      statusActiveStyle:segStyle(S.investStatus==='active'), statusCompletedStyle:segStyle(S.investStatus==='completed'),
+      setStatusActive:()=>this.setState({investStatus:'active'}), setStatusCompleted:()=>this.setState({investStatus:'completed'}),
+      typePills:[ pill('All','all','type'), pill('Stocks','Stocks','type'), pill('Mutual Fund','Mutual Fund','type'), pill('Gold','Gold','type'), pill('Crypto','Crypto','type'), pill('DPS','DPS','type'), pill('Savings','Savings','type') ],
+      investItems, investEmpty:investItems.length===0,
+
+      // FAB
+      fabOpen:S.fabOpen, toggleFab:()=>this.setState({fabOpen:!S.fabOpen}), closeFab:()=>this.setState({fabOpen:false}),
+      fabRotate:{ transform: S.fabOpen?'rotate(45deg)':'none' },
+      fabOptions:[
+        { label:'Investment', isInv:true,  anim:{animationDelay:'.02s'}, onTap:()=>this.setState({fabOpen:false}) },
+        { label:'DPS Scheme', isDps:true,  anim:{animationDelay:'.06s'}, onTap:()=>this.setState({fabOpen:false}) },
+        { label:'Savings Pot',isSav:true,  anim:{animationDelay:'.10s'}, onTap:()=>this.setState({fabOpen:false}) },
+        { label:'EMI',        isEmi:true,  anim:{animationDelay:'.14s'}, onTap:()=>this.setState({fabOpen:false}) },
+      ],
+
+      // EMIs
+      emiSummary:{ count:String(this.db.emis.length), monthlyStr:this.fmt(emiMonthly), remainingStr:this.fmt(emiRemaining) },
+      emiPills:[ pill('All','all','emi'), pill('Bank Loan','loan','emi'), pill('Credit Card','card','emi') ],
+      emiItems,
+
+      // Profile
+      setBdt:()=>this.setState({currency:'BDT'}), setUsd:()=>this.setState({currency:'USD'}),
+      bdtTileStyle:tileStyle(S.currency==='BDT'), usdTileStyle:tileStyle(S.currency==='USD'),
+      toggleReminders:()=>this.setState({remindersOn:!S.remindersOn}),
+      reminderHelp: S.remindersOn?permCopy.on:permCopy.off,
+      toggleTrackStyle:{ width:'50px', height:'30px', borderRadius:'999px', padding:'3px', cursor:'pointer', flexShrink:0, background: S.remindersOn?'#00a572':'#2d3449', transition:'background .2s', display:'flex', justifyContent: S.remindersOn?'flex-end':'flex-start' },
+      toggleKnobStyle:{ width:'24px', height:'24px', borderRadius:'999px', background:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,.3)' },
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -96,4 +96,52 @@ final class APIClient: SyncTransport {
     }
     return token
   }
+
+  /// Create an account. Better Auth requires email verification before
+  /// sign-in succeeds, so no token comes back here.
+  func signUp(name: String, email: String, password: String,
+              preferredCurrency: String) async throws {
+    var req = request(path: "/api/auth/sign-up/email", method: "POST")
+    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    req.httpBody = try JSONEncoder().encode(
+      ["name": name, "email": email, "password": password,
+       "preferredCurrency": preferredCurrency])
+    let (data, response): (Data, URLResponse)
+    do {
+      (data, response) = try await session.data(for: req)
+    } catch {
+      throw APIError.retryable
+    }
+    guard let http = response as? HTTPURLResponse,
+          (200...299).contains(http.statusCode) else {
+      let envelope = try? JSONDecoder().decode(ErrorEnvelope.self,
+                                               from: data)
+      throw APIError.rejected(
+        code: envelope?.error.code ?? "sign_up_failed",
+        message: envelope?.error.message ?? "Sign-up failed")
+    }
+  }
+
+  /// Built with URLComponents rather than `request(path:)` — `appending(path:)`
+  /// would percent-encode the `?` and break the query string.
+  func fetchActivity(cursor: String?) async throws -> ActivityPageDTO {
+    var comps = URLComponents(
+      url: baseURL.appending(path: "/api/v1/activity"),
+      resolvingAgainstBaseURL: false)!
+    comps.queryItems = [URLQueryItem(name: "limit", value: "30")]
+    if let cursor {
+      comps.queryItems!.append(URLQueryItem(name: "cursor", value: cursor))
+    }
+    var req = URLRequest(url: comps.url!)
+    req.httpMethod = "GET"
+    if let token = tokenProvider() {
+      req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+    let data = try await run(req)
+    do {
+      return try JSONDecoder().decode(ActivityPageDTO.self, from: data)
+    } catch {
+      throw APIError.decoding
+    }
+  }
 }

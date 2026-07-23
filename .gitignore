@@ -20,3 +20,7 @@ src/generated/
 apps/ios/**/xcuserdata/
 apps/ios/**/*.xcuserstate
 apps/ios/DerivedData/
+apps/ios/Phinio/build/
+
+# subagent-driven-development scratch
+.superpowers/

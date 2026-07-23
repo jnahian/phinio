@@ -15,6 +15,10 @@ enum SyncState: Equatable {
 final class SyncEngine: ObservableObject {
   @Published private(set) var state: SyncState = .idle
 
+  /// A mutation that keeps failing retryably is dropped to SyncIssue after
+  /// this many attempts so it can't wedge the FIFO outbox forever.
+  static let maxAttempts = 5
+
   private let transport: SyncTransport
   private let container: ModelContainer
   private var context: ModelContext { container.mainContext }
@@ -64,6 +68,16 @@ final class SyncEngine: ObservableObject {
           return false
         case .retryable, .decoding:
           mutation.attemptCount += 1
+          if mutation.attemptCount >= Self.maxAttempts {
+            // Poison message: record and drop so the rest of the queue drains.
+            context.insert(SyncIssue(
+              id: UUID(), path: mutation.path,
+              message: "Could not reach the server after \(mutation.attemptCount) attempts",
+              occurredAt: Date()))
+            context.delete(mutation)
+            try? context.save()
+            continue
+          }
           try? context.save()
           state = .offline
           return false
@@ -79,6 +93,10 @@ final class SyncEngine: ObservableObject {
   private func pullSnapshot() async {
     do {
       let snap = try await transport.fetchSnapshot()
+      // Re-check after the await: a user write during the fetch would be
+      // clobbered by this (older) snapshot. Skip; the next sync picks it up.
+      let pending = (try? context.fetchCount(FetchDescriptor<PendingMutation>())) ?? 0
+      guard pending == 0 else { return }
       try apply(snap)
     } catch let error as APIError where error == .unauthorized {
       state = .unauthorized
@@ -123,7 +141,8 @@ final class SyncEngine: ObservableObject {
         id: d.id, investmentId: d.investmentId, amount: money(d.amount),
         dueDate: ts(d.dueDate), depositDate: ts(d.depositDate),
         installmentNumber: d.installmentNumber, status: d.status,
-        notes: d.notes, updatedAt: ts(d.updatedAt) ?? now))
+        notes: d.notes, updatedAt: ts(d.updatedAt) ?? now,
+        accruedValue: d.accruedValue.map(money)))
     }
     for w in snap.investmentWithdrawals {
       context.insert(InvestmentWithdrawal(
