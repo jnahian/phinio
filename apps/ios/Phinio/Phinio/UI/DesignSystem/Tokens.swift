@@ -99,7 +99,15 @@ enum TypePalette {
   /// This supersedes the brief §5.7 "green DPS badge" — the badge follows the
   /// palette so badge, slice and legend can never disagree (decision #6).
   static let dps = Color(light: 0xC2447E, dark: 0xFF9ECD)
-  static let savings = Color(light: 0x3554C9, dark: 0x7FA0FF)
+  /// Light value is a deep navy, not a mid indigo like the dark one. The dark
+  /// palette separates savings (#7FA0FF) from stock (#B4C5FF) by LIGHTNESS —
+  /// both are the same blue hue. Darkening both for light mode collapsed them:
+  /// the original #3554C9 sat at CIELAB ΔE 5.2 from stock's #3D5AC8, i.e.
+  /// perceptually identical, so a portfolio holding stocks and a savings pot
+  /// drew two indistinguishable allocation slices. Navy restores the lightness
+  /// separation on a white background (ΔE 37.9 from stock, >=24 from every
+  /// other type).
+  static let savings = Color(light: 0x1B3B6D, dark: 0x7FA0FF)
   static let other = Color(light: 0x6B7280, dark: 0xC3C6D7)
 
   /// Maps `Investment.type` raw values (see Support/Formatting.swift) onto the
