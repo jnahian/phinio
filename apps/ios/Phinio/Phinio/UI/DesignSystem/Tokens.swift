@@ -69,7 +69,16 @@ enum TypePalette {
   static let gold = Color(hex: 0xffcf70)
   static let crypto = Color(hex: 0xc79bff)
   static let fd = Color(hex: 0x6fd0ff)
-  static let dps = Color(hex: 0x4edea3)
+  /// NOT from the comp. The comp's badge map gives DPS the same #4edea3 as
+  /// Mutual Fund, which is survivable on a badge (the label differs) but makes
+  /// two allocation-donut slices identical. The comp's own legend works around
+  /// it with #6fd0ff — already FD's hue — so no comp value resolves this.
+  /// Rose sits in the one hue family the palette leaves free: far from mint
+  /// (158°), cyan (197°) and violet (270°), and distinct from the salmon
+  /// error/overdue tints (~4°), which never share a surface with a type swatch.
+  /// This supersedes the brief §5.7 "green DPS badge" — the badge follows the
+  /// palette so badge, slice and legend can never disagree (decision #6).
+  static let dps = Color(hex: 0xff9ecd)
   static let savings = Color(hex: 0x7fa0ff)
   static let other = Color(hex: 0xc3c6d7)
 
