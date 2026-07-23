@@ -70,22 +70,26 @@ struct HeroCard<Content: View>: View {
 
 // MARK: - Stats & badges
 
-/// Grid tile (3-up centered on EMI/DPS detail, 2-up leading on Savings detail).
+/// Grid tile (3-up on EMI/DPS detail, 2-up on Savings detail).
 struct StatTile: View {
   let label: String
   let value: String
   var alignment: HorizontalAlignment = .center
-  var valueFont: Font = .cardTitle
 
   var body: some View {
-    VStack(alignment: alignment, spacing: 6) {
-      Text(label).font(.meta).foregroundStyle(Color.onSurfaceVariant)
-      Text(value).font(valueFont).foregroundStyle(Color.onSurface)
+    VStack(alignment: alignment, spacing: 4) {
+      Text(label).font(.caption).foregroundStyle(.secondary)
+      Text(value)
+        .font(.headline.monospacedDigit())
+        .lineLimit(1)
+        .minimumScaleFactor(0.6)
     }
     .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .center))
-    .padding(.vertical, 13)
-    .padding(.horizontal, 12)
-    .background(Color.surfaceHigh, in: RoundedRectangle(cornerRadius: Radii.tile, style: .continuous))
+    .padding(.vertical, 12)
+    .padding(.horizontal, 10)
+    .background(
+      Color(.secondarySystemGroupedBackground),
+      in: RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
 }
 
