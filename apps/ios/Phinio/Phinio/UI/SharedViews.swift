@@ -25,21 +25,36 @@ struct EmptyStateView: View {
 struct UpcomingRow: View {
   let item: UpcomingItem
 
+  private var dueText: String {
+    (item.sequenceNumber.map { "#\($0) · " } ?? "") + dueLabel(daysUntil: item.daysUntilDue)
+  }
+
   var body: some View {
-    HStack {
-      VStack(alignment: .leading) {
-        Text(item.label).font(.body)
-        Text(item.sequenceNumber.map { "#\($0) · " } ?? "")
-          .font(.caption).foregroundStyle(.secondary)
-          + Text(dueLabel(daysUntil: item.daysUntilDue))
-          .font(.caption)
-          .foregroundStyle(
-            item.isOverdue
-              ? AnyShapeStyle(.red)
-              : AnyShapeStyle(.secondary))
+    HStack(spacing: 12) {
+      IconTile(size: 38, radius: Radii.iconTile) {
+        Image(systemName: item.kind == .emi ? "creditcard" : "calendar")
+          .font(.system(size: 18))
+          .foregroundStyle(Color.brandPrimary)
       }
-      Spacer()
-      MoneyText(amount: item.amount).font(.body.monospacedDigit())
+      VStack(alignment: .leading, spacing: 2) {
+        Text(item.label)
+          .font(.rowLabel(14))
+          .foregroundStyle(Color.onSurface)
+          .lineLimit(1)
+        Text(dueText)
+          .font(.caption)
+          // Overdue uses tertiaryFixedDim, not full error red — that is reserved
+          // for actual losses and destructive actions (brief §6).
+          .foregroundStyle(item.isOverdue ? Color.tertiaryFixedDim : Color.onSurfaceVariant)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      MoneyText(amount: item.amount)
+        .font(.amount)
+        .foregroundStyle(Color.onSurface)
+        .lineLimit(1)
     }
+    .padding(.horizontal, 16)
+    .padding(.vertical, 13)
+    .contentShape(.rect)
   }
 }

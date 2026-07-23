@@ -97,30 +97,41 @@ enum TypePalette {
 }
 
 enum Gradients {
-  // 140°, top-leading -> bottom-trailing per the comp.
-  static let netWorthHero = LinearGradient(
-    stops: [
-      .init(color: Color(hex: 0x2563eb), location: 0),
-      .init(color: Color(hex: 0x1c3aa0), location: 0.48),
-      .init(color: Color(hex: 0x141d38), location: 1.0),
-    ], startPoint: .topLeading, endPoint: .bottomTrailing)
-  static let summaryCard = LinearGradient(
-    colors: [Color(hex: 0x222a3d), Color(hex: 0x1a2236)], startPoint: .topLeading, endPoint: .bottomTrailing)
-  static let emiLoanHero = LinearGradient(
-    colors: [Color(hex: 0x2563eb), Color(hex: 0x141d38)], startPoint: .topLeading, endPoint: .bottomTrailing)
-  static let emiCardHero = LinearGradient(
-    colors: [Color(hex: 0x7a4bd0), Color(hex: 0x20182f)], startPoint: .topLeading, endPoint: .bottomTrailing)
-  static let dpsHero = LinearGradient(
-    colors: [Color(hex: 0x00a572), Color(hex: 0x0d2a26)], startPoint: .topLeading, endPoint: .bottomTrailing)
-  static let savingsHero = LinearGradient(
-    colors: [Color(hex: 0x2563eb), Color(hex: 0x141d38)], startPoint: .topLeading, endPoint: .bottomTrailing)
-  // `.topLeading -> .bottomTrailing` is a fixed 135° diagonal — all seven
-  // gradients above carry the same 5° deviation from the comp's 140°, not
-  // just this one; SwiftUI has no built-in way to express an arbitrary angle
-  // via UnitPoint without a bespoke angle-to-point conversion, judged not
-  // worth it for a 5° difference.
-  static let avatar = LinearGradient(
-    colors: [Color(hex: 0x2563eb), Color(hex: 0x00a572)], startPoint: .topLeading, endPoint: .bottomTrailing)
+  /// CSS `linear-gradient(Ndeg, …)` measures clockwise from "to top"; SwiftUI
+  /// takes two UnitPoints. `.topLeading -> .bottomTrailing` is NOT the comp's
+  /// 140° — it is whatever the box's own diagonal happens to be, so on a wide
+  /// short card (the net-worth hero is ~350x150) it lands near 110° and the
+  /// dark end gets squeezed into one corner instead of falling off downward.
+  /// Converting the angle explicitly keeps every hero's falloff direction right
+  /// regardless of its aspect ratio.
+  private static func angled(_ degrees: Double, _ stops: [Gradient.Stop]) -> LinearGradient {
+    let r = degrees * .pi / 180
+    let dx = sin(r), dy = -cos(r)  // y grows downward in UnitPoint space
+    return LinearGradient(
+      stops: stops,
+      startPoint: UnitPoint(x: 0.5 - dx / 2, y: 0.5 - dy / 2),
+      endPoint: UnitPoint(x: 0.5 + dx / 2, y: 0.5 + dy / 2))
+  }
+
+  private static func angled(_ degrees: Double, _ colors: [Color]) -> LinearGradient {
+    angled(
+      degrees,
+      colors.enumerated().map {
+        .init(color: $1, location: Double($0) / Double(max(1, colors.count - 1)))
+      })
+  }
+
+  static let netWorthHero = angled(140, [
+    .init(color: Color(hex: 0x2563eb), location: 0),
+    .init(color: Color(hex: 0x1c3aa0), location: 0.48),
+    .init(color: Color(hex: 0x141d38), location: 1.0),
+  ])
+  static let summaryCard = angled(140, [Color(hex: 0x222a3d), Color(hex: 0x1a2236)])
+  static let emiLoanHero = angled(140, [Color(hex: 0x2563eb), Color(hex: 0x141d38)])
+  static let emiCardHero = angled(140, [Color(hex: 0x7a4bd0), Color(hex: 0x20182f)])
+  static let dpsHero = angled(140, [Color(hex: 0x00a572), Color(hex: 0x0d2a26)])
+  static let savingsHero = angled(140, [Color(hex: 0x2563eb), Color(hex: 0x141d38)])
+  static let avatar = angled(135, [Color(hex: 0x2563eb), Color(hex: 0x00a572)])
 }
 
 enum Radii {

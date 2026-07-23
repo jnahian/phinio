@@ -23,7 +23,7 @@ struct MainTabView: View {
       stack(.home, path: $homePath) {
         VStack(spacing: 0) {
           HomeTopBar(showNotifications: $showNotifications)
-          DashboardView()
+          DashboardView { creating = $0 }
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }

@@ -1,9 +1,26 @@
 import Foundation
 
 extension Decimal {
-  /// Profile-currency display, always 2 fraction digits (BDT defaults to 2).
+  /// Profile-currency display, always 2 fraction digits.
+  /// `.currency(code:)` renders the ISO code ("BDT 1,200.00") under en_US; the
+  /// brief (§6) and the comp both want the symbol, so the symbol is prefixed
+  /// explicitly rather than depending on the device locale.
   func currency(_ code: String) -> String {
-    formatted(.currency(code: code).precision(.fractionLength(2)))
+    currencySymbol(code) + formatted(.number.precision(.fractionLength(2)))
+  }
+
+  /// Same symbol, no fraction digits — for space-constrained numerics like the
+  /// allocation donut's centre label, where the comp shows a rounded total.
+  func currencyCompact(_ code: String) -> String {
+    currencySymbol(code) + formatted(.number.precision(.fractionLength(0)))
+  }
+}
+
+func currencySymbol(_ code: String) -> String {
+  switch code {
+  case "BDT": "৳"
+  case "USD": "$"
+  default: code + " "
   }
 }
 
