@@ -39,31 +39,6 @@ struct CarvedTextField: View {
   }
 }
 
-/// Full-width destructive action (Delete EMI / DPS scheme / savings pot).
-struct DangerButton: View {
-  let title: String
-  let action: () -> Void
-
-  init(_ title: String, action: @escaping () -> Void) {
-    self.title = title
-    self.action = action
-  }
-
-  var body: some View {
-    Button(action: action) {
-      Text(title)
-        .font(.rowLabel(15))
-        .foregroundStyle(Color.error)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
-        .background(
-          Color.tertiaryContainer.opacity(0.12),
-          in: RoundedRectangle(cornerRadius: Radii.tile, style: .continuous))
-    }
-    .buttonStyle(.plain)
-  }
-}
-
 // MARK: - Empty state, avatar, icon tile
 
 /// Replaces `EmptyStateView`'s `ContentUnavailableView` — system chrome can't
@@ -178,37 +153,6 @@ struct TextButton: View {
     }
     .buttonStyle(.plain)
   }
-}
-
-/// Puts a stock `Form` on the Modern Noir palette.
-///
-/// ponytail: the forms keep SwiftUI's `Picker`, `DatePicker` and `Toggle`
-/// rather than hand-rolled equivalents — those controls carry a lot of
-/// behaviour (wheels, calendars, VoiceOver rotors, Dynamic Type) that a custom
-/// version would have to re-earn, and `Form` accepts the palette through these
-/// four modifiers. Only inputs where stock chrome genuinely refuses the tokens
-/// (the auth screens' carved fields) are hand-built.
-struct NoirFormStyle: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .scrollContentBackground(.hidden)
-      .background(Color.surface)
-      // Applied at the Form level so every Section inherits it — otherwise rows
-      // keep the system grouped-background grey, which reads as a different
-      // surface from SectionGroup elsewhere in the app.
-      .listRowBackground(Color.surfaceLow)
-      .tint(Color.brandPrimary)
-      .foregroundStyle(Color.onSurface)
-      .toolbarBackground(Color.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-  }
-}
-
-extension View {
-  func noirForm() -> some View { modifier(NoirFormStyle()) }
-
-  /// Section rows sit on `surfaceLow`, matching SectionGroup elsewhere.
-  func noirFormRow() -> some View { listRowBackground(Color.surfaceLow) }
 }
 
 /// Connectivity strip under the top bar (brief §3, §6).

@@ -13,7 +13,6 @@ struct EmiListView: View {
   private var showCompleted: Bool { statusIndex == 1 }
 
   private static let pillTypes = ["bank_loan", "credit_card"]
-  private var pillTitles: [String] { ["All", "Bank Loan", "Credit Card"] }
 
   private var byStatus: [Emi] {
     emis.filter { showCompleted ? $0.status == "completed" : $0.status == "active" }
@@ -42,91 +41,94 @@ struct EmiListView: View {
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        Text("EMIs")
-          .font(.screenTitle)
-          .tracking(Tracking.screenTitle)
-          .foregroundStyle(Color.onSurface)
-          .padding(.vertical, 4)
+    List {
+      Section {
+        Picker("Status", selection: $statusIndex) {
+          Text("Active").tag(0)
+          Text("Completed").tag(1)
+        }
+        .pickerStyle(.segmented)
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+        .onChange(of: statusIndex) { _, _ in typeIndex = 0 }
+      }
 
-        summaryCard.padding(.top, 12)
+      Section { summaryRow }
 
-        SegmentedTabs(titles: ["Active", "Completed"], selection: $statusIndex)
-          .padding(.top, 16)
-          .onChange(of: statusIndex) { _, _ in typeIndex = 0 }
-        FilterPills(titles: pillTitles, selection: $typeIndex)
-          .padding(.top, 14)
-
-        if filtered.isEmpty {
-          NoirEmptyState(
-            title: showCompleted ? "Nothing completed yet" : "No EMIs yet",
-            message: showCompleted
-              ? "Finished loans and cards will appear here."
-              : "Add a loan or credit card to track its schedule.")
-        } else {
-          VStack(spacing: Layout.cardGap) {
-            ForEach(filtered) { emi in
-              NavigationLink(value: EmiRoute(id: emi.id)) {
-                EmiCard(
-                  emi: emi,
-                  schedule: payments.filter { $0.emiId == emi.id && $0.paymentNumber > 0 },
-                  remaining: remaining(of: emi),
-                  currency: currency)
-              }
-              .buttonStyle(.plain)
+      if filtered.isEmpty {
+        Section {
+          ContentUnavailableView(
+            showCompleted ? "Nothing completed yet" : "No EMIs yet",
+            systemImage: "creditcard",
+            description: Text(
+              showCompleted
+                ? "Finished loans and cards will appear here."
+                : "Add a loan or credit card to track its schedule."))
+            .listRowBackground(Color.clear)
+        }
+      } else {
+        Section {
+          ForEach(filtered) { emi in
+            NavigationLink(value: EmiRoute(id: emi.id)) {
+              EmiRow(
+                emi: emi,
+                schedule: payments.filter { $0.emiId == emi.id && $0.paymentNumber > 0 },
+                remaining: remaining(of: emi),
+                currency: currency)
             }
           }
-          .padding(.top, 14)
         }
       }
-      .padding(.horizontal, Layout.screenHorizontalPadding)
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
-    .toolbar(.hidden, for: .navigationBar)
+    .navigationTitle("EMIs")
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Picker("Type", selection: $typeIndex) {
+            Text("All").tag(0)
+            Text("Bank Loan").tag(1)
+            Text("Credit Card").tag(2)
+          }
+        } label: {
+          Label(
+            "Filter by type",
+            systemImage: typeIndex == 0
+              ? "line.3.horizontal.decrease.circle"
+              : "line.3.horizontal.decrease.circle.fill")
+        }
+      }
+    }
   }
 
-  private var summaryCard: some View {
+  private var summaryRow: some View {
     HStack(spacing: 0) {
-      summaryColumn("Active", "\(activeEmis.count)", Color.onSurface)
-      hairline
-      summaryColumn("Monthly", monthlyOutflow.currencyCompact(currency), Color.onSurface)
-      hairline
-      // Remaining balance is a liability — comp tints it, but with
-      // tertiaryFixedDim rather than the full loss red (brief §6).
-      summaryColumn("Remaining", totalRemaining.currencyCompact(currency), Color.tertiaryFixedDim)
+      summaryColumn("Active", "\(activeEmis.count)", .primary)
+      Divider()
+      summaryColumn("Monthly", monthlyOutflow.currencyCompact(currency), .primary)
+      Divider()
+      // Remaining balance is a liability — tinted red.
+      summaryColumn("Remaining", totalRemaining.currencyCompact(currency), .red)
     }
-    .padding(.vertical, 18)
-    .padding(.horizontal, 8)
-    .background(
-      Gradients.summaryCard,
-      in: RoundedRectangle(cornerRadius: Radii.summary, style: .continuous))
+    .padding(.vertical, 6)
   }
 
-  private var hairline: some View {
-    Rectangle()
-      .fill(Color.outlineVariant.opacity(0.6))
-      .frame(width: 0.5)
-      .frame(maxHeight: .infinity)
-  }
-
-  private func summaryColumn(_ label: String, _ value: String, _ tint: Color) -> some View {
-    VStack(spacing: 6) {
-      Text(label).font(.meta).foregroundStyle(Color.onSurfaceVariant)
+  private func summaryColumn(
+    _ label: LocalizedStringKey, _ value: String, _ tint: Color
+  ) -> some View {
+    VStack(spacing: 5) {
+      Text(label).font(.caption).foregroundStyle(.secondary)
       Text(value)
-        .font(.custom("Manrope-Bold", size: 17))
+        .font(.headline.monospacedDigit())
         .foregroundStyle(tint)
         .lineLimit(1)
         .minimumScaleFactor(0.6)
     }
     .frame(maxWidth: .infinity)
-    .padding(.horizontal, 4)
     .accessibilityElement(children: .combine)
   }
 }
 
-private struct EmiCard: View {
+private struct EmiRow: View {
   let emi: Emi
   let schedule: [EmiPayment]
   let remaining: Decimal
@@ -140,53 +142,46 @@ private struct EmiCard: View {
   }
 
   var body: some View {
-    NoirCard {
-      VStack(alignment: .leading, spacing: 0) {
-        HStack(spacing: 12) {
-          IconTile(size: 42, radius: Radii.segmentTrack, background: .surfaceHighest) {
-            Image(systemName: isLoan ? "house" : "creditcard")
-              .font(.system(size: 20))
-              .foregroundStyle(isLoan ? Color.brandPrimary : TypePalette.crypto)
-          }
-          VStack(alignment: .leading, spacing: 2) {
-            Text(emi.label).font(.cardTitle).foregroundStyle(Color.onSurface).lineLimit(1)
-            Text(isLoan ? "Bank Loan" : "Credit Card")
-              .font(.caption).foregroundStyle(Color.onSurfaceVariant)
-          }
-          .frame(maxWidth: .infinity, alignment: .leading)
-          VStack(alignment: .trailing, spacing: 2) {
-            Text(emi.emiAmount.currency(currency))
-              .font(.custom("Manrope-Bold", size: 17))
-              .foregroundStyle(Color.onSurface)
-              .lineLimit(1)
-              .minimumScaleFactor(0.6)
-            Text("per month").font(.meta).foregroundStyle(Color.onSurfaceMuted)
-          }
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(spacing: 12) {
+        IconTile(size: 42, radius: 12) {
+          Image(systemName: isLoan ? "house" : "creditcard")
+            .font(.system(size: 20))
+            .foregroundStyle(isLoan ? Color.accentColor : TypePalette.crypto)
         }
-
-        HStack {
-          Text("Remaining \(remaining.currency(currency))")
-            .font(.meta).foregroundStyle(Color.onSurfaceVariant)
-          Spacer()
-          Text("\(paidCount) / \(total) months")
-            .font(.custom("Manrope-SemiBold", size: 11))
-            .foregroundStyle(Color.onSurfaceVariant)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(emi.label).font(.headline).lineLimit(1)
+          Text(isLoan ? "Bank Loan" : "Credit Card")
+            .font(.footnote).foregroundStyle(.secondary)
         }
-        .padding(.top, 16)
-
-        NoirProgressBar(
-          fraction: total > 0 ? Double(paidCount) / Double(total) : 0,
-          tint: .primaryContainer
-        )
-        .padding(.top, 8)
-
-        if let nextDue {
-          (Text("Next due ") + Text(nextDue, format: .dateTime.day().month(.abbreviated).year()))
-            .font(.meta)
-            .foregroundStyle(Color.onSurfaceMuted)
-            .padding(.top, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .trailing, spacing: 2) {
+          Text(emi.emiAmount.currency(currency))
+            .font(.headline.monospacedDigit())
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+          Text("per month").font(.caption).foregroundStyle(.secondary)
         }
       }
+
+      ProgressView(value: total > 0 ? Double(paidCount) / Double(total) : 0) {
+        HStack {
+          Text("Remaining \(remaining.currency(currency))")
+            .font(.caption).foregroundStyle(.secondary)
+          Spacer()
+          Text("\(paidCount) / \(total) months")
+            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+        }
+      }
+      .padding(.top, 12)
+
+      if let nextDue {
+        (Text("Next due ") + Text(nextDue, format: .dateTime.day().month(.abbreviated).year()))
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .padding(.top, 8)
+      }
     }
+    .padding(.vertical, 4)
   }
 }
