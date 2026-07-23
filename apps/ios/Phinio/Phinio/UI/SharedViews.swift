@@ -31,30 +31,23 @@ struct UpcomingRow: View {
 
   var body: some View {
     HStack(spacing: 12) {
-      IconTile(size: 38, radius: Radii.iconTile) {
+      IconTile(size: 38, radius: 11) {
         Image(systemName: item.kind == .emi ? "creditcard" : "calendar")
           .font(.system(size: 18))
-          .foregroundStyle(Color.brandPrimary)
+          .foregroundStyle(.tint)
       }
       VStack(alignment: .leading, spacing: 2) {
         Text(item.label)
-          .font(.rowLabel(14))
-          .foregroundStyle(Color.onSurface)
+          .font(.body)
           .lineLimit(1)
         Text(dueText)
-          .font(.caption)
-          // Overdue uses tertiaryFixedDim, not full error red — that is reserved
-          // for actual losses and destructive actions (brief §6).
-          .foregroundStyle(item.isOverdue ? Color.tertiaryFixedDim : Color.onSurfaceVariant)
+          .font(.footnote)
+          .foregroundStyle(item.isOverdue ? Color.red : Color.secondary)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       MoneyText(amount: item.amount)
-        .font(.amount)
-        .foregroundStyle(Color.onSurface)
+        .font(.subheadline.weight(.semibold).monospacedDigit())
         .lineLimit(1)
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 13)
-    .contentShape(.rect)
   }
 }

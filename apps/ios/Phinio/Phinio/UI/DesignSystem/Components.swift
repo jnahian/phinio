@@ -20,7 +20,7 @@ struct NoirCard<Content: View>: View {
 }
 
 /// Grouped row list container — `surfaceLow`, radius 16. Rows bring their own
-/// padding/hairlines (see `NavRow`); this just clips them to the card shape.
+/// padding/hairlines; this just clips them to the card shape.
 struct SectionGroup<Content: View>: View {
   @ViewBuilder let content: Content
 
@@ -89,8 +89,8 @@ struct StatTile: View {
   }
 }
 
-/// Gain/loss capsule. `.compact` for list rows and quick stats, `.hero` for
-/// detail-hero placement (larger opacity/padding per the comp).
+/// Gain/loss capsule. `.compact` for list rows and stat cards, `.hero` for
+/// placement on gradient hero cards (white on translucent white).
 struct MoneyPill: View {
   enum Size { case compact, hero }
 
@@ -105,20 +105,15 @@ struct MoneyPill: View {
 
   var body: some View {
     Text("\(isPositive ? "▲" : "▼") \(valueText)")
-      .font(.pillText(12))
-      .foregroundStyle(
-        isPositive
-          ? (size == .hero ? Color.brandSecondaryHero : Color.brandSecondary)
-          : Color.tertiaryFixedDim
-      )
+      .font(.caption.weight(.bold).monospacedDigit())
+      .foregroundStyle(size == .hero ? Color.white : (isPositive ? Color.green : Color.red))
       .padding(.horizontal, 9)
       .padding(.vertical, size == .hero ? 4 : 3)
       .background(
-        isPositive
-          ? Color.brandSecondary.opacity(size == .hero ? 0.20 : 0.14)
-          : Color.tertiaryContainer.opacity(0.18),
-        in: Capsule()
-      )
+        size == .hero
+          ? AnyShapeStyle(.white.opacity(0.18))
+          : AnyShapeStyle((isPositive ? Color.green : Color.red).opacity(0.15)),
+        in: .capsule)
       .accessibilityLabel(
         Text(
           "\(isPositive ? "Up" : "Down") \(percent.magnitude.formatted(.number.precision(.fractionLength(1))))%"
@@ -133,7 +128,7 @@ struct TypeBadge: View {
 
   var body: some View {
     Text(investmentTypeLabel(type))
-      .font(.badgeLabel)
+      .font(.caption2.weight(.semibold))
       .foregroundStyle(TypePalette.foreground(for: type))
       .padding(.horizontal, 9)
       .padding(.vertical, 3)
@@ -166,7 +161,7 @@ struct FilterPills: View {
               .padding(.vertical, 8)
               .background(isSelected ? Color.brandPrimary : Color.pillIdle, in: Capsule())
               // Drawn chip keeps comp size; frame only expands the tap target
-              // to >=44pt (same pattern as NoirToggleStyle/NavRow).
+              // to >=44pt.
               .frame(minWidth: 44, minHeight: 44)
               .contentShape(Rectangle())
           }
@@ -262,49 +257,3 @@ struct SectionHeader: View {
   }
 }
 
-/// Uppercase group label (Preferences / Account / Developer tools).
-struct SectionLabel: View {
-  let text: String
-  init(_ text: String) { self.text = text }
-
-  var body: some View {
-    Text(text)
-      .font(.sectionLabel)
-      .tracking(Tracking.sectionLabel)
-      .textCase(.uppercase)
-      .foregroundStyle(Color.onSurfaceMuted)
-      .accessibilityAddTraits(.isHeader)
-  }
-}
-
-/// Chevron row for grouped lists (Profile). Purely presentational — wrap in a
-/// `NavigationLink`/`Button` at the call site for the tap action, matching the
-/// existing `UpcomingRow` pattern in SharedViews.swift.
-struct NavRow: View {
-  let title: String
-  var showsDivider: Bool = true
-
-  var body: some View {
-    VStack(spacing: 0) {
-      HStack {
-        Text(title).font(.navRowLabel).foregroundStyle(Color.onSurface)
-        Spacer()
-        Image(systemName: "chevron.right")
-          .font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(Color.tabIdle)
-          .accessibilityHidden(true)
-      }
-      .padding(.horizontal, 16)
-      .padding(.vertical, 15)
-      .frame(minHeight: 44)
-      if showsDivider {
-        Rectangle()
-          .fill(Color.outlineVariant.opacity(0.5))
-          .frame(height: 0.5)
-          .padding(.leading, 16)
-      }
-    }
-    .contentShape(Rectangle())
-    .accessibilityElement(children: .combine)
-  }
-}

@@ -64,38 +64,6 @@ struct DangerButton: View {
   }
 }
 
-/// Track/knob styling for `Toggle`. SwiftUI's `Toggle` already supplies tap
-/// handling and accessibility (isOn value, switch semantics) regardless of the
-/// custom style body — no gesture code needed here.
-struct NoirToggleStyle: ToggleStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    Button {
-      configuration.isOn.toggle()
-    } label: {
-      ZStack(alignment: configuration.isOn ? .trailing : .leading) {
-        Capsule()
-          .fill(configuration.isOn ? Color.secondaryContainer : Color.surfaceHighest)
-          .frame(width: 50, height: 30)
-        Circle()
-          .fill(Color.onHero)
-          .frame(width: 24, height: 24)
-          .padding(3)
-      }
-    }
-    .buttonStyle(.plain)
-    .frame(minWidth: 44, minHeight: 44)
-    .contentShape(Rectangle())
-    // A custom Button-based style doesn't inherit SwitchToggleStyle's on/off
-    // accessibilityValue — call sites use .labelsHidden(), so state must be
-    // announced here or VoiceOver reads a bare "Button".
-    .accessibilityValue(configuration.isOn ? Text("On") : Text("Off"))
-  }
-}
-
-extension ToggleStyle where Self == NoirToggleStyle {
-  static var noir: NoirToggleStyle { NoirToggleStyle() }
-}
-
 // MARK: - Empty state, avatar, icon tile
 
 /// Replaces `EmptyStateView`'s `ContentUnavailableView` — system chrome can't
@@ -129,8 +97,8 @@ struct AvatarView: View {
       .frame(width: size, height: size)
       .overlay(
         Text(initials)
-          .font(.avatarInitials(size * 0.35))
-          .foregroundStyle(Color.avatarText)
+          .font(.system(size: size * 0.35, weight: .bold))
+          .foregroundStyle(.white)
       )
       .accessibilityHidden(true)
   }
@@ -141,7 +109,7 @@ struct AvatarView: View {
 struct IconTile<Icon: View>: View {
   let size: CGFloat
   let radius: CGFloat
-  var background: Color = .surfaceHigh
+  var background: Color = Color(.tertiarySystemFill)
   @ViewBuilder let icon: Icon
 
   var body: some View {
