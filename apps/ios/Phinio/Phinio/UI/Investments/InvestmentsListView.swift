@@ -45,6 +45,10 @@ struct InvestmentsListView: View {
 
   var body: some View {
     List {
+      // Portfolio totals lead; the Active/Completed switch sits directly above
+      // the list it filters, not above the summary (which is always active-only).
+      Section { summaryRow }
+
       Section {
         Picker("Status", selection: $statusIndex) {
           Text("Active").tag(0)
@@ -55,8 +59,6 @@ struct InvestmentsListView: View {
         .listRowBackground(Color.clear)
         .onChange(of: statusIndex) { _, _ in typeIndex = 0 }
       }
-
-      Section { summaryRow }
 
       if filtered.isEmpty {
         Section {
