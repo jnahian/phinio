@@ -170,28 +170,22 @@ struct DpsDetailView: View {
         self.error = error.localizedDescription
       }
     } label: {
-      HStack(spacing: 12) {
-        Text("\(dep.installmentNumber ?? 0)")
-          .font(.caption.weight(.bold).monospacedDigit())
-          .foregroundStyle(.secondary)
-          .frame(width: 30, alignment: .leading)
-        VStack(alignment: .leading, spacing: 2) {
-          Text(dep.amount.currency(currency))
-            .font(.body.monospacedDigit())
-          Text(rowSubtitle(dep))
-            .font(.caption)
-            .monospacedDigit()
-            .foregroundStyle(overdue ? Color.red : Color.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        checkbox(paid)
-      }
-      .contentShape(.rect)
+      TransactionRow(
+        symbol: paid ? "checkmark" : overdue ? "exclamationmark" : "calendar",
+        tint: paid ? .green : overdue ? .red : .accentColor,
+        title: Text("Installment \(dep.installmentNumber ?? 0)"),
+        subtitle: Text(verbatim: rowSubtitle(dep))
+          .foregroundColor(overdue ? .red : nil),
+        amount: Text(verbatim: dep.amount.currency(currency)),
+        amountTint: paid ? .secondary : .primary)
+        .contentShape(.rect)
     }
     .buttonStyle(.plain)
     .disabled(!canToggle)
+    .animation(.snappy, value: paid)
     .accessibilityLabel("Installment \(dep.installmentNumber ?? 0), \(dep.amount.currency(currency))")
     .accessibilityValue(paid ? "Paid" : overdue ? "Overdue" : "Upcoming")
+    .accessibilityHint(canToggle ? "Double tap to mark \(paid ? "unpaid" : "paid")" : "")
   }
 
   private func rowSubtitle(_ dep: InvestmentDeposit) -> String {
@@ -203,13 +197,6 @@ struct DpsDetailView: View {
       parts.append("bal \(accrued.currencyCompact(currency))")
     }
     return parts.joined(separator: " · ")
-  }
-
-  private func checkbox(_ paid: Bool) -> some View {
-    Image(systemName: paid ? "checkmark.circle.fill" : "circle")
-      .font(.title3)
-      .foregroundStyle(paid ? Color.green : Color(.separator))
-      .accessibilityHidden(true)
   }
 }
 

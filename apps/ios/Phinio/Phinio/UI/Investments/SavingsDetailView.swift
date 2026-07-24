@@ -142,26 +142,15 @@ struct SavingsDetailView: View {
   }
 
   private func depositRow(_ dep: InvestmentDeposit) -> some View {
-    HStack(spacing: 12) {
-      IconTile(size: 38, radius: 11, background: Color.green.opacity(0.12)) {
-        Image(systemName: "arrow.down")
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundStyle(.green)
-      }
-      VStack(alignment: .leading, spacing: 2) {
-        Text(dep.notes ?? "Deposit")
-          .font(.body).lineLimit(1)
-        if let d = dep.depositDate {
-          Text(d, format: .dateTime.day().month(.abbreviated).year())
-            .font(.caption).foregroundStyle(.secondary)
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      Text("+ " + dep.amount.currency(currency))
-        .font(.subheadline.weight(.semibold).monospacedDigit())
-        .foregroundStyle(.green)
-        .lineLimit(1).minimumScaleFactor(0.6)
-    }
+    TransactionRow(
+      symbol: "arrow.down",
+      tint: .green,
+      title: dep.notes.map(Text.init(verbatim:)) ?? Text("Deposit"),
+      subtitle: dep.depositDate.map {
+        Text($0, format: .dateTime.day().month(.abbreviated).year())
+      },
+      amount: Text(verbatim: "+ " + dep.amount.currency(currency)),
+      amountTint: .green)
   }
 }
 

@@ -127,23 +127,13 @@ struct WithdrawalRow: View {
   let currency: String
 
   var body: some View {
-    HStack(spacing: 12) {
-      IconTile(size: 38, radius: 11, background: Color.red.opacity(0.12)) {
-        Image(systemName: "arrow.up")
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundStyle(.red)
-      }
-      VStack(alignment: .leading, spacing: 2) {
-        Text(withdrawal.notes ?? "Withdrawal")
-          .font(.body).lineLimit(1)
-        Text(withdrawal.withdrawalDate, format: .dateTime.day().month(.abbreviated).year())
-          .font(.caption).foregroundStyle(.secondary)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      Text("− " + withdrawal.amount.currency(currency))
-        .font(.subheadline.weight(.semibold).monospacedDigit())
-        .foregroundStyle(.red)
-        .lineLimit(1).minimumScaleFactor(0.6)
-    }
+    TransactionRow(
+      symbol: "arrow.up",
+      tint: .red,
+      title: withdrawal.notes.map(Text.init(verbatim:)) ?? Text("Withdrawal"),
+      subtitle: Text(
+        withdrawal.withdrawalDate, format: .dateTime.day().month(.abbreviated).year()),
+      amount: Text(verbatim: "− " + withdrawal.amount.currency(currency)),
+      amountTint: .red)
   }
 }
