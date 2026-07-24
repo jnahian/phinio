@@ -122,6 +122,28 @@ final class APIClient: SyncTransport {
     }
   }
 
+  /// Kick off Better Auth's password-reset email. Succeeds even for unknown
+  /// addresses (Better Auth avoids account enumeration); the emailed link opens
+  /// the web reset page, so the app only fires the request.
+  func requestPasswordReset(email: String) async throws {
+    var req = request(path: "/api/auth/request-password-reset", method: "POST")
+    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    req.httpBody = try JSONEncoder().encode(["email": email, "redirectTo": "/login"])
+    let (data, response): (Data, URLResponse)
+    do {
+      (data, response) = try await session.data(for: req)
+    } catch {
+      throw APIError.retryable
+    }
+    guard let http = response as? HTTPURLResponse,
+          (200...299).contains(http.statusCode) else {
+      let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
+      throw APIError.rejected(
+        code: envelope?.error.code ?? "reset_failed",
+        message: envelope?.error.message ?? "Reset request failed")
+    }
+  }
+
   /// Built with URLComponents rather than `request(path:)` — `appending(path:)`
   /// would percent-encode the `?` and break the query string.
   func fetchActivity(cursor: String?) async throws -> ActivityPageDTO {

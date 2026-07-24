@@ -24,6 +24,27 @@ final class StubURLProtocol: URLProtocol {
   override func stopLoading() {}
 }
 
+/// URLSession swaps `httpBody` for `httpBodyStream` before the protocol sees
+/// the request, so the body has to be drained from the stream.
+extension URLRequest {
+  var bodyData: Data? {
+    if let httpBody { return httpBody }
+    guard let stream = httpBodyStream else { return nil }
+    stream.open()
+    defer { stream.close() }
+    var data = Data()
+    let size = 4096
+    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
+    defer { buffer.deallocate() }
+    while stream.hasBytesAvailable {
+      let read = stream.read(buffer, maxLength: size)
+      if read <= 0 { break }
+      data.append(buffer, count: read)
+    }
+    return data
+  }
+}
+
 private func makeClient(token: String? = "tok") -> APIClient {
   let config = URLSessionConfiguration.ephemeral
   config.protocolClasses = [StubURLProtocol.self]
@@ -70,6 +91,19 @@ struct APIClientTests {
       code: "rejected", message: "Withdrawal amount exceeds current value")) {
       try await client.post(path: "/x", body: nil, method: "POST", idempotencyKey: UUID())
     }
+  }
+
+  @Test func requestPasswordResetPostsEmailToBetterAuth() async throws {
+    StubURLProtocol.responses = [(200, Data("{}".utf8))]
+    let client = makeClient()
+    try await client.requestPasswordReset(email: "a@b.com")
+    let req = StubURLProtocol.requests.last!
+    #expect(req.url?.path == "/api/auth/request-password-reset")
+    #expect(req.httpMethod == "POST")
+    let body = try #require(req.bodyData)
+    let json = try JSONSerialization.jsonObject(with: body) as? [String: String]
+    #expect(json?["email"] == "a@b.com")
+    #expect(json?["redirectTo"] == "/login")
   }
 
   @Test func maps500ToRetryable() async {
