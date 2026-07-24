@@ -17,9 +17,6 @@
     "·" : {
 
     },
-    "#" : {
-
-    },
     "#%lld" : {
 
     },
@@ -378,9 +375,6 @@
         }
       }
     },
-    "Bal." : {
-
-    },
     "Balance" : {
       "localizations" : {
         "bn" : {
@@ -431,6 +425,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "বাতিল"
+          }
+        }
+      }
+    },
+    "Change profile photo" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "প্রোফাইল ছবি পরিবর্তন করুন"
           }
         }
       }
@@ -619,9 +623,6 @@
           }
         }
       }
-    },
-    "Create" : {
-
     },
     "Create account" : {
       "localizations" : {
@@ -824,6 +825,16 @@
         }
       }
     },
+    "Deposit" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "জমা"
+          }
+        }
+      }
+    },
     "Deposit history" : {
 
     },
@@ -928,9 +939,6 @@
           }
         }
       }
-    },
-    "Due" : {
-
     },
     "Edit" : {
       "localizations" : {
@@ -1111,7 +1119,18 @@
         }
       }
     },
+    "Failed to update photo." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ছবি হালনাগাদ করা যায়নি।"
+          }
+        }
+      }
+    },
     "Fee" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1302,6 +1321,16 @@
         }
       }
     },
+    "Installment %lld" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "কিস্তি %lld"
+          }
+        }
+      }
+    },
     "Installment %lld, %@" : {
       "localizations" : {
         "bn" : {
@@ -1328,9 +1357,6 @@
           }
         }
       }
-    },
-    "Int." : {
-
     },
     "Interest" : {
       "localizations" : {
@@ -1807,6 +1833,16 @@
         }
       }
     },
+    "Payment %lld" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পেমেন্ট %lld"
+          }
+        }
+      }
+    },
     "Payment %lld, %@" : {
       "localizations" : {
         "bn" : {
@@ -1885,9 +1921,6 @@
     "Preview" : {
 
     },
-    "Prin." : {
-
-    },
     "Principal" : {
       "localizations" : {
         "bn" : {
@@ -1902,7 +1935,6 @@
 
     },
     "Processing fee" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1983,6 +2015,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "সরান"
+          }
+        }
+      }
+    },
+    "Remove photo" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ছবি সরান"
+          }
+        }
+      }
+    },
+    "Remove photo?" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ছবি সরাবেন?"
           }
         }
       }
@@ -2436,6 +2488,16 @@
         }
       }
     },
+    "Withdrawal" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "প্রত্যাহার"
+          }
+        }
+      }
+    },
     "Withdrawals" : {
       "localizations" : {
         "bn" : {
@@ -2453,6 +2515,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "কাজ চলছে…"
+          }
+        }
+      }
+    },
+    "Your initial avatar will be shown instead." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিবর্তে আপনার আদ্যক্ষরের অবতার দেখানো হবে।"
           }
         }
       }
