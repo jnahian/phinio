@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // Custom leaves that survive the native re-skin — pieces with no system
 // equivalent: the gradient hero card, stat tiles, money/type badges, the
@@ -108,21 +109,76 @@ struct TypeBadge: View {
   }
 }
 
-/// Circular gradient avatar with initials (toolbar 30pt, Profile 88pt).
+/// Circular avatar (toolbar 30pt, Profile 88pt): the profile photo when there
+/// is one, otherwise initials on a flat color picked from `colorKey`.
 struct AvatarView: View {
   let initials: String
   let size: CGFloat
+  /// Stable per-profile key for the backdrop color — the profile id where the
+  /// caller has one, so the color survives a rename.
+  var colorKey: String = ""
+  var photo: UIImage?
 
   var body: some View {
     Circle()
-      .fill(Gradients.avatar)
+      .fill(AvatarPalette.color(for: colorKey.isEmpty ? initials : colorKey))
       .frame(width: size, height: size)
-      .overlay(
-        Text(initials)
-          .font(.system(size: size * 0.35, weight: .bold))
-          .foregroundStyle(.white)
-      )
+      .overlay {
+        if let photo {
+          Image(uiImage: photo)
+            .resizable()
+            .scaledToFill()
+            .clipShape(.circle)
+        } else {
+          Text(initials)
+            .font(.system(size: size * 0.35, weight: .bold))
+            .foregroundStyle(.white)
+        }
+      }
       .accessibilityHidden(true)
+  }
+}
+
+/// The deposit-history row shape, shared by every detail screen's history and
+/// schedule section: tinted icon tile, title over an optional subtitle, and a
+/// trailing amount over an optional caption. One component so the DPS schedule,
+/// the amortization schedule, savings deposits and withdrawals all scan the
+/// same way.
+struct TransactionRow: View {
+  let symbol: String
+  let tint: Color
+  let title: Text
+  var subtitle: Text?
+  let amount: Text
+  var amountTint: Color = .primary
+  var caption: Text?
+
+  var body: some View {
+    HStack(spacing: 12) {
+      IconTile(size: 38, radius: 11, background: tint.opacity(0.14)) {
+        Image(systemName: symbol)
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(tint)
+          // Icons carry the row's state (paid / overdue / upcoming), so they
+          // animate through it rather than cutting.
+          .contentTransition(.symbolEffect(.replace))
+      }
+      VStack(alignment: .leading, spacing: 2) {
+        title.font(.body).lineLimit(1)
+        subtitle?.font(.caption).foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      VStack(alignment: .trailing, spacing: 2) {
+        amount
+          .font(.subheadline.weight(.semibold).monospacedDigit())
+          .foregroundStyle(amountTint)
+          .lineLimit(1).minimumScaleFactor(0.6)
+        caption?
+          .font(.caption2.monospacedDigit())
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+      }
+    }
   }
 }
 
@@ -145,7 +201,12 @@ struct IconTile<Icon: View>: View {
 /// both appearances.
 struct OfflineBanner: View {
   var body: some View {
-    Label("Offline — changes sync when you reconnect.", systemImage: "wifi.slash")
+    Label {
+      Text("Offline — changes sync when you reconnect.")
+    } icon: {
+      Image(systemName: "wifi.slash")
+        .symbolEffect(.pulse, options: .repeating)
+    }
       .font(.footnote)
       .foregroundStyle(.secondary)
       .padding(.horizontal, 14)
