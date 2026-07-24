@@ -36,6 +36,14 @@ enum CreateSheet: String, Identifiable, CaseIterable {
 }
 
 struct MainTabView: View {
+  /// Centre of the tab bar's separated + slot, measured from the bottom-trailing
+  /// corner of the *safe area* — the floating tab bar is positioned off that
+  /// too, so this tracks it across devices better than screen coordinates would.
+  /// UIKit exposes no frame for the slot, so the numbers are measured off a
+  /// screenshot; the popover only has to point near the button.
+  private static let createSlotTrailingInset: CGFloat = 53
+  private static let createSlotBottomInset: CGFloat = 20
+
   @EnvironmentObject private var deepLink: DeepLinkRouter
   @EnvironmentObject private var sync: SyncEngine
   @State private var tab: AppTab = .home
@@ -45,6 +53,18 @@ struct MainTabView: View {
   @State private var showCreateMenu = false
   @State private var creating: CreateSheet?
   @State private var showNotifications = false
+
+  /// Tab item whose symbol bounces as it becomes selected.
+  private func animatedTabLabel(
+    _ title: LocalizedStringKey, symbol: String, tab item: AppTab
+  ) -> some View {
+    Label {
+      Text(title)
+    } icon: {
+      Image(systemName: symbol)
+        .symbolEffect(.bounce, options: .nonRepeating, value: tab == item)
+    }
+  }
 
   var body: some View {
     TabView(selection: Binding(
@@ -59,7 +79,7 @@ struct MainTabView: View {
         }
       }
     )) {
-      Tab("Home", systemImage: "house", value: AppTab.home) {
+      Tab(value: AppTab.home) {
         NavigationStack(path: $homePath) {
           DashboardView(showNotifications: $showNotifications) { creating = $0 }
             .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }
@@ -69,22 +89,28 @@ struct MainTabView: View {
             .navigationDestination(for: ProfileRoute.self) { _ in ProfileView() }
             .navigationDestination(for: ActivityRoute.self) { _ in ActivityView() }
         }
+      } label: {
+        animatedTabLabel("Home", symbol: "house", tab: .home)
       }
 
-      Tab("Invest", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.invest) {
+      Tab(value: AppTab.invest) {
         NavigationStack(path: $investmentsPath) {
           InvestmentsListView()
             .navigationDestination(for: InvestmentRoute.self) {
               InvestmentDetailRouter(investmentId: $0.id)
             }
         }
+      } label: {
+        animatedTabLabel("Invest", symbol: "chart.line.uptrend.xyaxis", tab: .invest)
       }
 
-      Tab("EMIs", systemImage: "creditcard", value: AppTab.emis) {
+      Tab(value: AppTab.emis) {
         NavigationStack(path: $emisPath) {
           EmiListView()
             .navigationDestination(for: EmiRoute.self) { EmiDetailView(emiId: $0.id) }
         }
+      } label: {
+        animatedTabLabel("EMIs", symbol: "creditcard", tab: .emis)
       }
 
       // Off-label (spec §2): the search role renders as the separated circular
@@ -95,12 +121,29 @@ struct MainTabView: View {
         Color.clear
       }
     }
-    .sheet(isPresented: $showCreateMenu) {
-      CreateMenuSheet { option in
-        showCreateMenu = false
-        tab = option.owningTab
-        creating = option
-      }
+    // A popover needs a view to point at, and the + is a `Tab` whose content is
+    // `Color.clear` — nothing to anchor to. This 1×1 spacer sits over the tab
+    // bar's separated trailing slot purely as the attachment point; it never
+    // takes a hit, the Tab still handles the tap.
+    .overlay(alignment: .bottomTrailing) {
+      Color.clear
+        .frame(width: 1, height: 1)
+        // `.popover` before the padding, not after: it anchors to the bounds of
+        // whatever it is attached to, and a padded 1×1 spacer is a 54pt-wide
+        // rect whose centre sits well right of the button.
+        //
+        // `.bottom` puts the arrow on the popover's bottom edge, i.e. the menu
+        // opens upward. `.top` would open it downward, off the screen.
+        .popover(isPresented: $showCreateMenu, arrowEdge: .bottom) {
+          CreateMenuPopover { option in
+            showCreateMenu = false
+            tab = option.owningTab
+            creating = option
+          }
+        }
+        .padding(.trailing, Self.createSlotTrailingInset)
+        .padding(.bottom, Self.createSlotBottomInset)
+        .allowsHitTesting(false)
     }
     .sheet(isPresented: $showNotifications) {
       NavigationStack { NotificationsView() }
@@ -129,40 +172,42 @@ struct MainTabView: View {
   }
 }
 
-/// Native replacement for FabMenu: the four create flows in a grouped list,
-/// presented as a medium-detent sheet from the tab bar's + slot.
-struct CreateMenuSheet: View {
-  @Environment(\.dismiss) private var dismiss
+/// The four create flows as a popover off the tab bar's + slot. Four rows and a
+/// Cancel button don't earn a half-screen sheet — and `.presentationCompact-
+/// Adaptation(.popover)` is required, or iPhone silently re-adapts it back into
+/// one.
+struct CreateMenuPopover: View {
   let onSelect: (CreateSheet) -> Void
 
   var body: some View {
-    NavigationStack {
-      List {
-        Section("New investment") {
-          row(.investment)
-          row(.dps)
-          row(.savings)
-        }
-        Section("New EMI") {
-          row(.emi)
-        }
-      }
-      .navigationTitle("Create")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") { dismiss() }
-        }
+    VStack(spacing: 0) {
+      ForEach(Array(CreateSheet.allCases.enumerated()), id: \.element) { index, option in
+        if index > 0 { Divider().padding(.leading, 54) }
+        row(option)
       }
     }
-    .presentationDetents([.medium])
+    .frame(width: 232)
+    .presentationCompactAdaptation(.popover)
   }
 
   private func row(_ option: CreateSheet) -> some View {
     Button {
       onSelect(option)
     } label: {
-      Label(option.label, systemImage: option.symbol)
+      HStack(spacing: 12) {
+        Image(systemName: option.symbol)
+          .font(.system(size: 16))
+          .foregroundStyle(.tint)
+          .frame(width: 26)
+        Text(option.label)
+          .font(.body)
+          .foregroundStyle(.primary)
+        Spacer(minLength: 0)
+      }
+      .padding(.horizontal, 16)
+      .frame(height: 50)
+      .contentShape(.rect)
     }
+    .buttonStyle(.plain)
   }
 }
