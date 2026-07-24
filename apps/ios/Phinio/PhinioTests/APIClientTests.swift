@@ -106,6 +106,17 @@ struct APIClientTests {
     #expect(json?["redirectTo"] == "/login")
   }
 
+  // Better Auth returns errors flat (`{code,message}`), not nested under
+  // `error`. Sign-in must surface the real message, not the generic fallback.
+  @Test func signInSurfacesFlatBetterAuthError() async {
+    StubURLProtocol.responses = [(403, Data(#"{"code":"EMAIL_NOT_VERIFIED","message":"Email not verified"}"#.utf8))]
+    let client = makeClient()
+    await #expect(throws: APIError.rejected(
+      code: "EMAIL_NOT_VERIFIED", message: "Email not verified")) {
+      _ = try await client.signIn(email: "a@b.com", password: "x")
+    }
+  }
+
   @Test func maps500ToRetryable() async {
     StubURLProtocol.responses = [(500, Data("{}".utf8))]
     let client = makeClient()

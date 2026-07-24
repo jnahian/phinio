@@ -86,10 +86,10 @@ final class APIClient: SyncTransport {
     }
     guard let http = response as? HTTPURLResponse else { throw APIError.retryable }
     guard http.statusCode == 200 else {
-      let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
+      let body = try? JSONDecoder().decode(AuthErrorBody.self, from: data)
       throw APIError.rejected(
-        code: envelope?.error.code ?? "sign_in_failed",
-        message: envelope?.error.message ?? "Sign-in failed")
+        code: body?.code ?? "sign_in_failed",
+        message: body?.message ?? "Sign-in failed")
     }
     guard let token = http.value(forHTTPHeaderField: "set-auth-token") else {
       throw APIError.decoding
@@ -114,11 +114,10 @@ final class APIClient: SyncTransport {
     }
     guard let http = response as? HTTPURLResponse,
           (200...299).contains(http.statusCode) else {
-      let envelope = try? JSONDecoder().decode(ErrorEnvelope.self,
-                                               from: data)
+      let body = try? JSONDecoder().decode(AuthErrorBody.self, from: data)
       throw APIError.rejected(
-        code: envelope?.error.code ?? "sign_up_failed",
-        message: envelope?.error.message ?? "Sign-up failed")
+        code: body?.code ?? "sign_up_failed",
+        message: body?.message ?? "Sign-up failed")
     }
   }
 
@@ -137,10 +136,10 @@ final class APIClient: SyncTransport {
     }
     guard let http = response as? HTTPURLResponse,
           (200...299).contains(http.statusCode) else {
-      let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
+      let body = try? JSONDecoder().decode(AuthErrorBody.self, from: data)
       throw APIError.rejected(
-        code: envelope?.error.code ?? "reset_failed",
-        message: envelope?.error.message ?? "Reset request failed")
+        code: body?.code ?? "reset_failed",
+        message: body?.message ?? "Reset request failed")
     }
   }
 

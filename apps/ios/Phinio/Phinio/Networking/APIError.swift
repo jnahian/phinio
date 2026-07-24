@@ -14,3 +14,10 @@ struct ErrorEnvelope: Decodable {
   }
   let error: Inner
 }
+
+/// Better Auth (`/api/auth/*`) returns errors flat — `{"code","message"}` —
+/// unlike the app's own `/api/v1` endpoints, which nest under `error`.
+struct AuthErrorBody: Decodable {
+  let code: String
+  let message: String
+}
