@@ -3,8 +3,8 @@ import SwiftData
 import SwiftUI
 
 struct DashboardView: View {
-  /// Empty-state CTAs open the shell's create sheets — the FAB owns creation
-  /// since Phase 2, so the tab shell hands the presenter down.
+  @Binding var showNotifications: Bool
+  /// Empty-state CTAs open the shell's create sheets.
   var onCreate: (CreateSheet) -> Void = { _ in }
 
   @EnvironmentObject private var sync: SyncEngine
@@ -14,15 +14,22 @@ struct DashboardView: View {
   @Query private var payments: [EmiPayment]
   @Query private var deposits: [InvestmentDeposit]
   @Query private var withdrawals: [InvestmentWithdrawal]
+  @Query(filter: #Predicate<AppNotification> { $0.readAt == nil })
+  private var unread: [AppNotification]
 
   /// Legend selection: nil = no focus. Tapping a row focuses its slice and dims
   /// the rest; dimmed rows stay tappable so focus can move directly; tapping the
-  /// focused row again clears it (brief §5.6).
+  /// focused row again clears it.
   @State private var focusedType: String?
 
   private var currency: String { profiles.first?.preferredCurrency ?? "BDT" }
   private var activeInvestmentCount: Int { investments.count { $0.status == "active" } }
   private var activeEmiCount: Int { emis.count { $0.status == "active" } }
+
+  private var initials: String {
+    let parts = (profiles.first?.fullName ?? "").split(separator: " ").prefix(2)
+    return parts.compactMap { $0.first }.map(String.init).joined().uppercased()
+  }
 
   private func isEmptyPortfolio(_ stats: DashboardStats) -> Bool {
     stats.invested == 0 && stats.monthlyEmiOutflow == 0
@@ -35,54 +42,86 @@ struct DashboardView: View {
     let stats = DashboardStats.compute(
       investments: investments, emis: emis, payments: payments,
       deposits: deposits, withdrawals: withdrawals, now: Date())
-    ScrollView {
+    List {
       if isEmptyPortfolio(stats) {
-        emptyState
+        emptySections
       } else {
-        VStack(alignment: .leading, spacing: 0) {
-          netWorthHero(stats)
-          quickStats(stats)
-          upcomingSection(stats)
-          allocationSection(stats)
-        }
-        .padding(.horizontal, Layout.screenHorizontalPadding)
+        heroSection(stats)
+        quickStats(stats)
+        upcomingSection(stats)
+        allocationSection(stats)
       }
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
+    .navigationTitle("Home")
+    .toolbar {
+      if sync.state == .syncing {
+        ToolbarItem(placement: .topBarLeading) {
+          ProgressView().controlSize(.small)
+        }
+      }
+      ToolbarItem(placement: .topBarTrailing) { bell }
+      ToolbarItem(placement: .topBarTrailing) {
+        NavigationLink(value: ProfileRoute()) {
+          AvatarView(initials: initials, size: 30)
+        }
+        .accessibilityLabel("Profile")
+      }
+    }
+    .safeAreaInset(edge: .top) {
+      if sync.state == .offline { OfflineBanner() }
+    }
     .refreshable { await sync.syncNow() }
+  }
+
+  private var bell: some View {
+    Button { showNotifications = true } label: {
+      Image(systemName: "bell")
+        .overlay(alignment: .topTrailing) {
+          if !unread.isEmpty {
+            Text("\(unread.count)")
+              .font(.caption2.weight(.bold))
+              .foregroundStyle(.white)
+              .padding(.horizontal, 4)
+              .frame(minWidth: 15, minHeight: 15)
+              .background(.red, in: .capsule)
+              .offset(x: 9, y: -8)
+          }
+        }
+    }
+    .accessibilityLabel("Notifications")
   }
 
   // MARK: - Net worth
 
-  private func netWorthHero(_ stats: DashboardStats) -> some View {
-    // Comp's home hero orb is larger and sits higher than the detail heroes'.
-    HeroCard(
-      gradient: Gradients.netWorthHero, orbTint: Color.brandPrimary.opacity(0.18),
-      orbSize: 220, orbTopOffset: -90, bottomPadding: 24
-    ) {
-      VStack(alignment: .leading, spacing: 0) {
-        Text("Net Worth")
-          .font(.heroLabel)
-          .tracking(Tracking.heroLabel)
-          .textCase(.uppercase)
-          .foregroundStyle(Color.onHeroVariant.opacity(0.72))
-        MoneyText(amount: stats.netWorth)
-          .font(.heroNumeric)
-          .tracking(Tracking.heroNumeric)
-          .foregroundStyle(Color.onHeroVariant)
-          .lineLimit(1)
-          .minimumScaleFactor(0.6)
-          .padding(.top, 8)
-        HStack(spacing: 8) {
-          MoneyPill(percent: Decimal(stats.gainLossPercent), size: .hero)
-          Text(portfolioSummary)
-            .font(.caption)
-            .foregroundStyle(Color.onHeroVariant.opacity(0.72))
+  private func heroSection(_ stats: DashboardStats) -> some View {
+    Section {
+      HeroCard(
+        gradient: Gradients.netWorthHero, orbTint: .white.opacity(0.14),
+        orbSize: 220, orbTopOffset: -90, bottomPadding: 24
+      ) {
+        VStack(alignment: .leading, spacing: 0) {
+          Text("Net Worth")
+            .font(.caption.weight(.semibold))
+            .textCase(.uppercase)
+            .foregroundStyle(.white.opacity(0.72))
+          MoneyText(amount: stats.netWorth)
+            .font(.largeTitle.weight(.heavy).monospacedDigit())
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .padding(.top, 8)
+          HStack(spacing: 8) {
+            MoneyPill(percent: Decimal(stats.gainLossPercent), size: .hero)
+            Text(portfolioSummary)
+              .font(.footnote)
+              .foregroundStyle(.white.opacity(0.72))
+          }
+          .padding(.top, 14)
         }
-        .padding(.top, 14)
       }
     }
+    .listRowInsets(EdgeInsets())
+    .listRowBackground(Color.clear)
   }
 
   private var portfolioSummary: LocalizedStringKey {
@@ -95,39 +134,45 @@ struct DashboardView: View {
   // MARK: - Quick stats
 
   private func quickStats(_ stats: DashboardStats) -> some View {
-    HStack(spacing: Layout.cardGap) {
-      NoirCard {
-        VStack(alignment: .leading, spacing: 0) {
-          Text("Current value").font(.caption).foregroundStyle(Color.onSurfaceVariant)
+    Section {
+      HStack(spacing: 12) {
+        statCard("Current value") {
           MoneyText(amount: stats.current)
-            .font(.amountLarge(22))
-            .foregroundStyle(Color.onSurface)
+            .font(.title3.weight(.bold).monospacedDigit())
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .padding(.top, 7)
-          MoneyPill(percent: Decimal(stats.gainLossPercent)).padding(.top, 9)
+        } caption: {
+          MoneyPill(percent: Decimal(stats.gainLossPercent))
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-      }
-
-      NoirCard {
-        VStack(alignment: .leading, spacing: 0) {
-          Text("Monthly EMI").font(.caption).foregroundStyle(Color.onSurfaceVariant)
+        statCard("Monthly EMI") {
           MoneyText(amount: stats.monthlyEmiOutflow)
-            .font(.amountLarge(22))
-            .foregroundStyle(Color.onSurface)
+            .font(.title3.weight(.bold).monospacedDigit())
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .padding(.top, 7)
-          Text(emiCaption)
-            .font(.meta)
-            .foregroundStyle(Color.onSurfaceVariant)
-            .padding(.top, 9)
+        } caption: {
+          Text(emiCaption).font(.caption).foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
       }
     }
-    .padding(.top, 14)
+    .listRowInsets(EdgeInsets())
+    .listRowBackground(Color.clear)
+  }
+
+  private func statCard<Value: View, Caption: View>(
+    _ label: LocalizedStringKey,
+    @ViewBuilder value: () -> Value,
+    @ViewBuilder caption: () -> Caption
+  ) -> some View {
+    VStack(alignment: .leading, spacing: 7) {
+      Text(label).font(.footnote).foregroundStyle(.secondary)
+      value()
+      caption()
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(
+      Color(.secondarySystemGroupedBackground),
+      in: RoundedRectangle(cornerRadius: 20, style: .continuous))
   }
 
   private var emiCaption: LocalizedStringKey {
@@ -137,25 +182,21 @@ struct DashboardView: View {
   // MARK: - Upcoming payments
 
   private func upcomingSection(_ stats: DashboardStats) -> some View {
-    VStack(alignment: .leading, spacing: 0) {
-      SectionHeader(title: "Upcoming Payments", trailing: "Next 30 days")
-        .padding(.top, Layout.sectionGap)
+    Section {
       if stats.upcoming.isEmpty {
-        NoirEmptyState(
-          title: "Nothing due",
-          message: "No payments fall in the next 30 days.")
+        Text("No payments fall in the next 30 days.")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
       } else {
-        SectionGroup {
-          // Comp's group is `padding:6px 16px`; rows carry the 16 horizontal,
-          // the 6 vertical belongs to the group.
-          VStack(spacing: 0) {
-            ForEach(stats.upcoming) { item in
-              upcomingLink(item)
-            }
-          }
-          .padding(.vertical, 6)
+        ForEach(stats.upcoming) { item in
+          upcomingLink(item)
         }
-        .padding(.top, 12)
+      }
+    } header: {
+      HStack {
+        Text("Upcoming payments")
+        Spacer()
+        Text("Next 30 days")
       }
     }
   }
@@ -167,10 +208,8 @@ struct DashboardView: View {
     switch item.kind {
     case .emi:
       NavigationLink(value: EmiRoute(id: item.parentId)) { UpcomingRow(item: item) }
-        .buttonStyle(.plain)
     case .deposit:
       NavigationLink(value: InvestmentRoute(id: item.parentId)) { UpcomingRow(item: item) }
-        .buttonStyle(.plain)
     }
   }
 
@@ -179,25 +218,16 @@ struct DashboardView: View {
   @ViewBuilder
   private func allocationSection(_ stats: DashboardStats) -> some View {
     if !stats.allocation.isEmpty {
-      VStack(alignment: .leading, spacing: 0) {
-        SectionHeader(title: "Investment Allocation")
-          .padding(.top, Layout.sectionGap)
-
+      Section("Investment allocation") {
         HStack(spacing: 20) {
           allocationDonut(stats)
           VStack(spacing: 0) {
-            // Comp legend lists the top 5 types; row padding carries the 9pt gap.
             ForEach(stats.allocation.prefix(5), id: \.type) { slice in
               legendRow(slice)
             }
           }
         }
-        .padding(.vertical, 20)
-        .padding(.horizontal, 18)
-        .background(
-          Color.surfaceLow, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous)
-        )
-        .padding(.top, 12)
+        .padding(.vertical, 8)
       }
     }
   }
@@ -206,7 +236,6 @@ struct DashboardView: View {
     Chart(stats.allocation, id: \.type) { slice in
       SectorMark(
         angle: .value("Value", Double(truncating: NSDecimalNumber(decimal: slice.value))),
-        // Comp insets the hole 16pt inside a 120pt ring: 88/120.
         innerRadius: .ratio(0.733),
         angularInset: 0
       )
@@ -218,13 +247,12 @@ struct DashboardView: View {
     .overlay {
       VStack(spacing: 0) {
         Text(focusedValue(stats).currencyCompact(currency))
-          .font(.custom("Manrope-ExtraBold", size: 18))
-          .foregroundStyle(Color.onSurface)
+          .font(.headline.monospacedDigit())
           .lineLimit(1)
           .minimumScaleFactor(0.5)
         Text(focusedType.map(investmentTypeLabel) ?? "total")
-          .font(.custom("Inter-Medium", size: 10))
-          .foregroundStyle(Color.onSurfaceVariant)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
           .lineLimit(1)
       }
       .padding(.horizontal, 14)
@@ -247,18 +275,12 @@ struct DashboardView: View {
           .fill(TypePalette.foreground(for: slice.type))
           .frame(width: 9, height: 9)
         Text(investmentTypeLabel(slice.type))
-          .font(.body)
-          .foregroundStyle(Color.onSurface)
+          .font(.subheadline)
           .frame(maxWidth: .infinity, alignment: .leading)
         Text(slice.percent.formatted(.number.precision(.fractionLength(0))) + "%")
-          .font(.pillText(12))
-          .foregroundStyle(Color.onSurfaceVariant)
+          .font(.caption.weight(.semibold).monospacedDigit())
+          .foregroundStyle(.secondary)
       }
-      // Legend rows sit on a ~29pt pitch in the comp (row + 9pt gap). Forcing
-      // each to 44pt doubles the card's height and breaks the donut/legend
-      // balance, and rows this close cannot be enlarged without overlapping
-      // their neighbours — so the hit area is the full pitch, not 44pt. The
-      // donut carries the same information for anyone who needs a larger target.
       .frame(height: 20)
       .padding(.vertical, 4.5)
       .contentShape(.rect)
@@ -274,42 +296,39 @@ struct DashboardView: View {
 
   // MARK: - Empty state
 
-  private var emptyState: some View {
-    VStack(spacing: Layout.cardGap) {
-      NoirEmptyState(
-        title: "Welcome to Phinio",
-        message: "Add your first investment or EMI to see your dashboard.")
-      ctaCard(
+  @ViewBuilder
+  private var emptySections: some View {
+    Section {
+      ContentUnavailableView(
+        "Welcome to Phinio", systemImage: "chart.pie",
+        description: Text("Add your first investment or EMI to see your dashboard."))
+        .listRowBackground(Color.clear)
+    }
+    Section {
+      ctaRow(
         title: "Add your first investment",
         message: "Track stocks, gold, DPS schemes and savings pots.",
-        symbol: "chart.line.uptrend.xyaxis", tint: .brandPrimary, sheet: .investment)
-      ctaCard(
+        symbol: "chart.line.uptrend.xyaxis", sheet: .investment)
+      ctaRow(
         title: "Add your first EMI",
         message: "Generate a full amortization schedule up front.",
-        symbol: "creditcard", tint: TypePalette.crypto, sheet: .emi)
+        symbol: "creditcard", sheet: .emi)
     }
-    .padding(.horizontal, Layout.screenHorizontalPadding)
   }
 
-  private func ctaCard(
-    title: String, message: String, symbol: String, tint: Color, sheet: CreateSheet
+  private func ctaRow(
+    title: LocalizedStringKey, message: LocalizedStringKey, symbol: String, sheet: CreateSheet
   ) -> some View {
     Button { onCreate(sheet) } label: {
-      NoirCard {
-        HStack(spacing: 12) {
-          IconTile(size: 38, radius: Radii.iconTile, background: .surfaceHighest) {
-            Image(systemName: symbol).font(.system(size: 18)).foregroundStyle(tint)
-          }
-          VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.rowLabel(14)).foregroundStyle(Color.onSurface)
-            Text(message).font(.meta).foregroundStyle(Color.onSurfaceVariant)
-          }
-          .frame(maxWidth: .infinity, alignment: .leading)
+      HStack(spacing: 12) {
+        IconTile(size: 38, radius: 11) {
+          Image(systemName: symbol).font(.system(size: 18)).foregroundStyle(.tint)
+        }
+        VStack(alignment: .leading, spacing: 2) {
+          Text(title).font(.body).foregroundStyle(.primary)
+          Text(message).font(.caption).foregroundStyle(.secondary)
         }
       }
     }
-    .buttonStyle(.plain)
-    .accessibilityLabel(title)
-    .accessibilityHint(message)
   }
 }

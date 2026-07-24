@@ -32,13 +32,10 @@ struct SavingsFormView: View {
             Text("An initial balance is recorded as your first deposit.")
           }
         }
-        .noirFormRow()
         if let error {
-          Section { Text(error).foregroundStyle(Color.error) }
-        .noirFormRow()
+          Section { Text(error).foregroundStyle(.red) }
         }
       }
-      .noirForm()
       .navigationTitle(existing == nil ? "New savings" : "Edit savings")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

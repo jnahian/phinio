@@ -4,10 +4,13 @@ import SwiftUI
 struct DpsDetailView: View {
   let investment: Investment
   @Environment(\.modelContext) private var context
+  @Environment(\.dismiss) private var dismiss
   @EnvironmentObject private var sync: SyncEngine
   @Query private var deposits: [InvestmentDeposit]
+  @Query private var profiles: [Profile]
   @State private var editing = false
   @State private var closing = false
+  @State private var confirmDelete = false
   @State private var error: String?
 
   init(investment: Investment) {
@@ -17,10 +20,6 @@ struct DpsDetailView: View {
       filter: #Predicate<InvestmentDeposit> { $0.investmentId == invId },
       sort: [SortDescriptor(\.installmentNumber)])
   }
-
-  @Environment(\.dismiss) private var dismiss
-  @Query private var profiles: [Profile]
-  @State private var confirmDelete = false
 
   private var currency: String { profiles.first?.preferredCurrency ?? "BDT" }
   private var paidCount: Int { deposits.count { $0.status == "paid" } }
@@ -40,86 +39,73 @@ struct DpsDetailView: View {
     return max(0, accrued - Decimal(contiguousPaid) * (investment.monthlyDeposit ?? 0))
   }
 
-  private var subtitle: String {
-    var parts = ["DPS"]
-    if let type = investment.interestType { parts.append("\(type.capitalized) interest") }
-    if let rate = investment.interestRate {
-      parts.append(rate.formatted(.number.precision(.fractionLength(0))) + "% p.a.")
-    }
-    return parts.joined(separator: " · ")
+  private var interestLine: String? {
+    guard let rate = investment.interestRate else { return nil }
+    let pct = rate.formatted(.number.precision(.fractionLength(0))) + "% p.a."
+    guard let type = investment.interestType else { return pct }
+    return "\(type.capitalized) · \(pct)"
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        DetailHeader(title: investment.name, subtitle: subtitle, onBack: { dismiss() }) {
-          Button { editing = true } label: {
-            Image(systemName: "pencil")
-              .font(.system(size: 15))
-              .foregroundStyle(Color.brandPrimary)
-              .frame(width: 40, height: 40)
-              .background(Color.brandPrimary.opacity(0.08), in: .circle)
-              .contentShape(.circle)
-          }
-          .buttonStyle(.plain)
-          .accessibilityLabel("Edit scheme")
-        }
+    List {
+      Section {
+        hero
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
 
-        hero.padding(.horizontal, Layout.screenHorizontalPadding)
-
+      Section {
         HStack(spacing: 10) {
           StatTile(
             label: "Monthly deposit",
-            value: (investment.monthlyDeposit ?? 0).currencyCompact(currency),
-            valueFont: .custom("Manrope-Bold", size: 15))
+            value: (investment.monthlyDeposit ?? 0).currencyCompact(currency))
           StatTile(
             label: "Maturity value",
-            value: maturity?.currencyCompact(currency) ?? "—",
-            valueFont: .custom("Manrope-Bold", size: 15))
+            value: maturity?.currencyCompact(currency) ?? "—")
           StatTile(
             label: "Interest earned",
-            value: interestEarned?.currencyCompact(currency) ?? "—",
-            valueFont: .custom("Manrope-Bold", size: 15))
+            value: interestEarned?.currencyCompact(currency) ?? "—")
         }
-        .padding(.top, 14)
-        .padding(.horizontal, Layout.screenHorizontalPadding)
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
 
-        SectionHeader(title: "Deposit Schedule")
-          .padding(.top, Layout.sectionGap)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
+      if let interestLine {
+        Section {
+          LabeledContent("Interest") { Text(interestLine) }
+        }
+      }
 
+      Section("Deposit schedule") {
         if let error {
-          Text(error).font(.caption).foregroundStyle(Color.error)
-            .padding(.top, 8)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
+          Text(error).font(.footnote).foregroundStyle(.red)
         }
-
-        scheduleCard
-          .padding(.top, 12)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-
-        if investment.status == "active" {
-          Button("Close early") { closing = true }
-            .font(.rowLabel(15))
-            .foregroundStyle(Color.brandPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(15)
-            .background(
-              Color.brandPrimary.opacity(0.10),
-              in: RoundedRectangle(cornerRadius: Radii.tile, style: .continuous))
-            .padding(.top, Layout.sectionGap)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
+        if deposits.isEmpty {
+          Text("Schedule appears after first sync")
+            .font(.subheadline).foregroundStyle(.secondary)
         }
-
-        DangerButton("Delete DPS scheme") { confirmDelete = true }
-          .padding(.top, 12)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-          .padding(.bottom, 40)
+        ForEach(deposits) { scheduleRow($0) }
       }
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
-    .toolbar(.hidden, for: .navigationBar)
+    .navigationTitle(investment.name)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Button { editing = true } label: { Label("Edit", systemImage: "pencil") }
+          if investment.status == "active" {
+            Button { closing = true } label: {
+              Label("Close early", systemImage: "xmark.circle")
+            }
+          }
+          Button(role: .destructive) { confirmDelete = true } label: {
+            Label("Delete DPS scheme", systemImage: "trash")
+          }
+        } label: {
+          Label("More", systemImage: "ellipsis.circle")
+        }
+      }
+    }
     .sheet(isPresented: $editing) { DpsEditSheet(investment: investment) }
     .sheet(isPresented: $closing) { DpsCloseSheet(investment: investment) }
     .confirmationDialog(
@@ -137,30 +123,31 @@ struct DpsDetailView: View {
   private var hero: some View {
     HeroCard(
       gradient: Gradients.dpsHero,
-      orbTint: Color.brandSecondary.opacity(0.22),
-      radius: Radii.detailHero
+      orbTint: .white.opacity(0.14),
+      radius: 20
     ) {
       VStack(alignment: .leading, spacing: 0) {
         Text("Total Deposited")
-          .font(.heroLabel).tracking(Tracking.heroLabel).textCase(.uppercase)
-          .foregroundStyle(Color.onHero.opacity(0.72))
+          .font(.caption.weight(.semibold)).textCase(.uppercase)
+          .foregroundStyle(.white.opacity(0.72))
         Text(investment.investedAmount.currency(currency))
-          .font(.detailHeroNumeric).tracking(Tracking.detailHeroNumeric)
-          .foregroundStyle(Color.onHero)
+          .font(.largeTitle.weight(.bold).monospacedDigit())
+          .foregroundStyle(.white)
           .lineLimit(1).minimumScaleFactor(0.6)
           .padding(.top, 8)
         Text("\(paidCount) / \(tenure) months")
-          .font(.rowLabel(12))
-          .foregroundStyle(Color.onHero.opacity(0.75))
+          .font(.footnote.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.75))
           .padding(.top, 14)
-        // In-hero bar is white-on-white per the comp, not the token progress bar.
+        // In-hero bar stays white-on-white — the tinted system bar would
+        // vanish on the gradient.
         Capsule()
-          .fill(Color.onHero.opacity(0.2))
+          .fill(.white.opacity(0.2))
           .frame(height: 6)
           .overlay(alignment: .leading) {
             GeometryReader { geo in
               Capsule()
-                .fill(Color.onHero)
+                .fill(.white)
                 .frame(width: geo.size.width * (tenure > 0 ? Double(paidCount) / Double(tenure) : 0))
             }
           }
@@ -169,22 +156,7 @@ struct DpsDetailView: View {
     }
   }
 
-  private var scheduleCard: some View {
-    VStack(spacing: 0) {
-      if deposits.isEmpty {
-        Text("Schedule appears after first sync")
-          .font(.body).foregroundStyle(Color.onSurfaceVariant)
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 24)
-      }
-      ForEach(deposits) { row($0) }
-    }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 6)
-    .background(Color.surfaceLow, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
-  }
-
-  private func row(_ dep: InvestmentDeposit) -> some View {
+  private func scheduleRow(_ dep: InvestmentDeposit) -> some View {
     let paid = dep.status == "paid"
     let overdue = !paid && dep.dueDate.map { utcDaysUntil($0, from: Date()) < 0 } ?? false
     let canToggle = investment.status == "active" || investment.status == "matured"
@@ -200,27 +172,20 @@ struct DpsDetailView: View {
     } label: {
       HStack(spacing: 12) {
         Text("\(dep.installmentNumber ?? 0)")
-          .font(.custom("Manrope-Bold", size: 12))
-          .foregroundStyle(Color.onSurfaceMuted)
+          .font(.caption.weight(.bold).monospacedDigit())
+          .foregroundStyle(.secondary)
           .frame(width: 30, alignment: .leading)
         VStack(alignment: .leading, spacing: 2) {
           Text(dep.amount.currency(currency))
-            .font(.rowLabel(13)).foregroundStyle(Color.onSurface)
+            .font(.body.monospacedDigit())
           Text(rowSubtitle(dep))
-            .font(.meta)
-            .foregroundStyle(overdue ? Color.tertiaryFixedDim : Color.onSurfaceMuted)
+            .font(.caption)
+            .monospacedDigit()
+            .foregroundStyle(overdue ? Color.red : Color.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         checkbox(paid)
       }
-      .padding(.horizontal, 8)
-      .padding(.vertical, 12)
-      .frame(minHeight: 44)
-      .background(
-        overdue
-          ? Color.tertiaryFixedDim.opacity(0.10)
-          : (paid ? .clear : Color.brandSecondary.opacity(0.06)),
-        in: RoundedRectangle(cornerRadius: 11, style: .continuous))
       .contentShape(.rect)
     }
     .buttonStyle(.plain)
@@ -241,22 +206,10 @@ struct DpsDetailView: View {
   }
 
   private func checkbox(_ paid: Bool) -> some View {
-    Group {
-      if paid {
-        RoundedRectangle(cornerRadius: 7, style: .continuous)
-          .fill(Color.secondaryContainer)
-          .frame(width: 22, height: 22)
-          .overlay(
-            Image(systemName: "checkmark")
-              .font(.system(size: 12, weight: .bold))
-              .foregroundStyle(Color.onHero))
-      } else {
-        RoundedRectangle(cornerRadius: 7, style: .continuous)
-          .strokeBorder(Color.outlineVariant, lineWidth: 1.5)
-          .frame(width: 22, height: 22)
-      }
-    }
-    .accessibilityHidden(true)
+    Image(systemName: paid ? "checkmark.circle.fill" : "circle")
+      .font(.title3)
+      .foregroundStyle(paid ? Color.green : Color(.separator))
+      .accessibilityHidden(true)
   }
 }
 
@@ -274,7 +227,6 @@ struct DpsEditSheet: View {
         TextField("Name", text: $name)
         TextField("Notes", text: $notes, axis: .vertical)
       }
-      .noirForm()
       .navigationTitle("Edit DPS")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -296,6 +248,7 @@ struct DpsEditSheet: View {
         notes = investment.notes ?? ""
       }
     }
+    .presentationDetents([.medium, .large])
   }
 }
 
@@ -321,11 +274,8 @@ struct DpsCloseSheet: View {
         } footer: {
           Text("Premature closure removes remaining installments. This can't be undone locally.")
         }
-        .noirFormRow()
-        if let error { Section { Text(error).foregroundStyle(Color.error) }
-        .noirFormRow() }
+        if let error { Section { Text(error).foregroundStyle(.red) } }
       }
-      .noirForm()
       .navigationTitle("Close DPS")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -338,6 +288,7 @@ struct DpsCloseSheet: View {
         }
       }
     }
+    .presentationDetents([.medium, .large])
   }
 
   private func submit() {

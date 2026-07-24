@@ -24,6 +24,12 @@ final class AuthManager: ObservableObject {
                             preferredCurrency: preferredCurrency)
   }
 
+  /// Send a password-reset link. Reset itself happens on the web page the
+  /// emailed link opens; the user comes back here to sign in with the new one.
+  func requestPasswordReset(email: String) async throws {
+    try await client.requestPasswordReset(email: email)
+  }
+
   /// Explicit logout: drop the token and wipe local data (spec §2).
   func signOut(container: ModelContainer) {
     Keychain.deleteToken()

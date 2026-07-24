@@ -21,6 +21,7 @@ struct WithdrawSheet: View {
         Section {
           LabeledContent("Available") {
             MoneyText(amount: investment.currentValue)
+              .monospacedDigit()
           }
           TextField("Amount", text: $amount).keyboardType(.decimalPad)
           DatePicker("Date", selection: $withdrawalDate,
@@ -30,13 +31,10 @@ struct WithdrawSheet: View {
         } footer: {
           Text("Closing requires withdrawing the full current value.")
         }
-        .noirFormRow()
         if let error {
-          Section { Text(error).foregroundStyle(Color.error) }
-        .noirFormRow()
+          Section { Text(error).foregroundStyle(.red) }
         }
       }
-      .noirForm()
       .navigationTitle("Withdraw")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

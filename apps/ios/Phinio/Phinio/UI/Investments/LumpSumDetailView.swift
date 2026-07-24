@@ -29,75 +29,62 @@ struct LumpSumDetailView: View {
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        DetailHeader(
-          title: investment.name,
-          subtitle: investment.status.capitalized,
-          onBack: { dismiss() }
-        ) {
-          TypeBadge(type: investment.type)
+    List {
+      Section {
+        hero
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
+
+      Section {
+        LabeledContent("Invested") {
+          MoneyText(amount: investment.investedAmount)
+            .monospacedDigit()
         }
-
-        hero.padding(.horizontal, Layout.screenHorizontalPadding)
-
-        HStack(spacing: 10) {
-          StatTile(
-            label: "Invested",
-            value: investment.investedAmount.currencyCompact(currency),
-            valueFont: .custom("Manrope-Bold", size: 15))
-          StatTile(
-            label: investment.exitValue == nil ? "Current" : "Exit value",
-            value: value.currencyCompact(currency),
-            valueFont: .custom("Manrope-Bold", size: 15))
-          StatTile(
-            label: "Type", value: investmentTypeLabel(investment.type),
-            valueFont: .custom("Manrope-Bold", size: 15))
-        }
-        .padding(.top, 14)
-        .padding(.horizontal, Layout.screenHorizontalPadding)
-
+        LabeledContent("Status") { Text(investment.status.capitalized) }
+        LabeledContent("Type") { TypeBadge(type: investment.type) }
         if let date = investment.dateOfInvestment {
-          detailRow("Invested on", date.formatted(.dateTime.day().month(.wide).year()))
+          LabeledContent("Invested on") {
+            Text(date, format: .dateTime.day().month(.wide).year())
+          }
         }
         if let closure = investment.estimatedClosureDate {
-          detailRow("Estimated closure", closure.formatted(.dateTime.day().month(.wide).year()))
+          LabeledContent("Estimated closure") {
+            Text(closure, format: .dateTime.day().month(.wide).year())
+          }
         }
         if let notes = investment.notes, !notes.isEmpty {
-          detailRow("Notes", notes)
+          LabeledContent("Notes") { Text(notes) }
         }
+      }
 
-        if !withdrawals.isEmpty {
-          SectionHeader(title: "Withdrawals")
-            .padding(.top, Layout.sectionGap)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
-          withdrawalCard
-            .padding(.top, 12)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
+      if !withdrawals.isEmpty {
+        Section("Withdrawals") {
+          ForEach(withdrawals) { w in
+            WithdrawalRow(withdrawal: w, currency: currency)
+          }
         }
-
-        if investment.status == "active" {
-          Button("Withdraw") { withdrawing = true }
-            .font(.rowLabel(15))
-            .foregroundStyle(Color.brandPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(15)
-            .background(
-              Color.brandPrimary.opacity(0.10),
-              in: RoundedRectangle(cornerRadius: Radii.tile, style: .continuous))
-            .padding(.top, Layout.sectionGap)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
-        }
-
-        DangerButton("Delete investment") { confirmDelete = true }
-          .padding(.top, 12)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-          .padding(.bottom, 40)
       }
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
-    .toolbar(.hidden, for: .navigationBar)
+    .navigationTitle(investment.name)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Button { editing = true } label: { Label("Edit", systemImage: "pencil") }
+          if investment.status == "active" {
+            Button { withdrawing = true } label: {
+              Label("Withdraw", systemImage: "arrow.up.circle")
+            }
+          }
+          Button(role: .destructive) { confirmDelete = true } label: {
+            Label("Delete investment", systemImage: "trash")
+          }
+        } label: {
+          Label("More", systemImage: "ellipsis.circle")
+        }
+      }
+    }
     .sheet(isPresented: $editing) { LumpSumFormView(existing: investment) }
     .sheet(isPresented: $withdrawing) { WithdrawSheet(investment: investment) }
     .confirmationDialog(
@@ -114,73 +101,49 @@ struct LumpSumDetailView: View {
   private var hero: some View {
     HeroCard(
       gradient: Gradients.netWorthHero,
-      orbTint: Color.brandPrimary.opacity(0.18),
-      radius: Radii.detailHero
+      orbTint: .white.opacity(0.14),
+      radius: 20
     ) {
       VStack(alignment: .leading, spacing: 0) {
         Text(investment.exitValue == nil ? "Current Value" : "Exit Value")
-          .font(.heroLabel).tracking(Tracking.heroLabel).textCase(.uppercase)
-          .foregroundStyle(Color.onHero.opacity(0.72))
+          .font(.caption.weight(.semibold)).textCase(.uppercase)
+          .foregroundStyle(.white.opacity(0.72))
         Text(value.currency(currency))
-          .font(.detailHeroNumeric).tracking(Tracking.detailHeroNumeric)
-          .foregroundStyle(Color.onHero)
+          .font(.largeTitle.weight(.bold).monospacedDigit())
+          .foregroundStyle(.white)
           .lineLimit(1).minimumScaleFactor(0.6)
           .padding(.top, 8)
-        HStack(spacing: 8) {
-          if let pct = returnPercent { MoneyPill(percent: pct, size: .hero) }
-          Button("Edit") { editing = true }
-            .font(.rowLabel(13))
-            .foregroundStyle(Color.onHero.opacity(0.8))
-            .frame(minHeight: 44)
+        if let pct = returnPercent {
+          MoneyPill(percent: pct, size: .hero).padding(.top, 10)
         }
-        .padding(.top, 10)
       }
     }
   }
+}
 
-  private func detailRow(_ label: String, _ value: String) -> some View {
-    HStack(alignment: .top, spacing: 12) {
-      Text(label).font(.body).foregroundStyle(Color.onSurfaceVariant)
-      Spacer(minLength: 12)
-      Text(value)
-        .font(.rowLabel(14)).foregroundStyle(Color.onSurface)
-        .multilineTextAlignment(.trailing)
-    }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 14)
-    .background(
-      Color.surfaceLow, in: RoundedRectangle(cornerRadius: Radii.card, style: .continuous))
-    .padding(.top, 12)
-    .padding(.horizontal, Layout.screenHorizontalPadding)
-  }
+/// Shared by LumpSumDetailView and SavingsDetailView.
+struct WithdrawalRow: View {
+  let withdrawal: InvestmentWithdrawal
+  let currency: String
 
-  private var withdrawalCard: some View {
-    SectionGroup {
-      VStack(spacing: 0) {
-        ForEach(withdrawals) { w in
-          HStack(spacing: 12) {
-            IconTile(size: 38, radius: Radii.iconTile,
-                     background: Color.tertiaryContainer.opacity(0.12)) {
-              Image(systemName: "arrow.up")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.tertiaryFixedDim)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-              Text(w.notes ?? "Withdrawal")
-                .font(.rowLabel(14)).foregroundStyle(Color.onSurface).lineLimit(1)
-              Text(w.withdrawalDate, format: .dateTime.day().month(.abbreviated).year())
-                .font(.meta).foregroundStyle(Color.onSurfaceMuted)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text("− " + w.amount.currency(currency))
-              .font(.amount).foregroundStyle(Color.tertiaryFixedDim)
-              .lineLimit(1).minimumScaleFactor(0.6)
-          }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 14)
-        }
+  var body: some View {
+    HStack(spacing: 12) {
+      IconTile(size: 38, radius: 11, background: Color.red.opacity(0.12)) {
+        Image(systemName: "arrow.up")
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(.red)
       }
-      .padding(.vertical, 6)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(withdrawal.notes ?? "Withdrawal")
+          .font(.body).lineLimit(1)
+        Text(withdrawal.withdrawalDate, format: .dateTime.day().month(.abbreviated).year())
+          .font(.caption).foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      Text("− " + withdrawal.amount.currency(currency))
+        .font(.subheadline.weight(.semibold).monospacedDigit())
+        .foregroundStyle(.red)
+        .lineLimit(1).minimumScaleFactor(0.6)
     }
   }
 }

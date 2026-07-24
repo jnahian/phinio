@@ -8,6 +8,7 @@ struct SavingsDetailView: View {
   @EnvironmentObject private var sync: SyncEngine
   @Query private var deposits: [InvestmentDeposit]
   @Query private var withdrawals: [InvestmentWithdrawal]
+  @Query private var profiles: [Profile]
   @State private var editing = false
   @State private var addingDeposit = false
   @State private var withdrawing = false
@@ -24,7 +25,6 @@ struct SavingsDetailView: View {
       sort: [SortDescriptor(\.withdrawalDate, order: .reverse)])
   }
 
-  @Query private var profiles: [Profile]
   private var currency: String { profiles.first?.preferredCurrency ?? "BDT" }
 
   private var returnPercent: Decimal? {
@@ -34,65 +34,78 @@ struct SavingsDetailView: View {
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        DetailHeader(
-          title: investment.name, subtitle: "Savings pot", onBack: { dismiss() }
-        ) {
-          Button("Edit") { editing = true }
-            .font(.rowLabel(13))
-            .foregroundStyle(Color.brandPrimary)
-            .frame(minWidth: 44, minHeight: 44)
-        }
+    List {
+      Section {
+        hero
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
 
-        hero.padding(.horizontal, Layout.screenHorizontalPadding)
-
+      Section {
         HStack(spacing: 10) {
           StatTile(
             label: "Total deposited",
             value: investment.investedAmount.currencyCompact(currency),
-            alignment: .leading, valueFont: .custom("Manrope-Bold", size: 19))
+            alignment: .leading)
           StatTile(
             label: "Deposits", value: "\(deposits.count)",
-            alignment: .leading, valueFont: .custom("Manrope-Bold", size: 19))
+            alignment: .leading)
         }
-        .padding(.top, 14)
-        .padding(.horizontal, Layout.screenHorizontalPadding)
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
 
-        if investment.status == "active" {
-          dashedButton("+ Add deposit") { addingDeposit = true }
-            .padding(.top, 16)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
-          dashedButton("Withdraw") { withdrawing = true }
-            .padding(.top, 10)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
+      if investment.status == "active" {
+        Section {
+          Button { addingDeposit = true } label: {
+            Label("Add deposit", systemImage: "plus.circle")
+          }
+          Button { withdrawing = true } label: {
+            Label("Withdraw", systemImage: "arrow.up.circle")
+          }
         }
+      }
 
-        SectionHeader(title: "Deposit History")
-          .padding(.top, Layout.sectionGap)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-        historyCard
-          .padding(.top, 12)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-
-        if !withdrawals.isEmpty {
-          SectionHeader(title: "Withdrawals")
-            .padding(.top, Layout.sectionGap)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
-          withdrawalCard
-            .padding(.top, 12)
-            .padding(.horizontal, Layout.screenHorizontalPadding)
+      Section("Deposit history") {
+        if deposits.isEmpty {
+          Text("No deposits yet")
+            .font(.subheadline).foregroundStyle(.secondary)
         }
+        ForEach(deposits) { dep in
+          depositRow(dep)
+            .swipeActions {
+              if investment.status == "active" {
+                Button("Remove", role: .destructive) {
+                  try? Store(context: context).removeDeposit(dep, from: investment)
+                  Task { await sync.syncNow() }
+                }
+              }
+            }
+        }
+      }
 
-        DangerButton("Delete savings pot") { confirmDelete = true }
-          .padding(.top, Layout.sectionGap)
-          .padding(.horizontal, Layout.screenHorizontalPadding)
-          .padding(.bottom, 40)
+      if !withdrawals.isEmpty {
+        Section("Withdrawals") {
+          ForEach(withdrawals) { w in
+            WithdrawalRow(withdrawal: w, currency: currency)
+          }
+        }
       }
     }
-    .scrollIndicators(.hidden)
-    .background(Color.surface)
-    .toolbar(.hidden, for: .navigationBar)
+    .navigationTitle(investment.name)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          Button { editing = true } label: { Label("Edit", systemImage: "pencil") }
+          Button(role: .destructive) { confirmDelete = true } label: {
+            Label("Delete savings pot", systemImage: "trash")
+          }
+        } label: {
+          Label("More", systemImage: "ellipsis.circle")
+        }
+      }
+    }
     .sheet(isPresented: $editing) { SavingsFormView(existing: investment) }
     .sheet(isPresented: $addingDeposit) { AddDepositSheet(investment: investment) }
     .sheet(isPresented: $withdrawing) { WithdrawSheet(investment: investment) }
@@ -109,16 +122,16 @@ struct SavingsDetailView: View {
   private var hero: some View {
     HeroCard(
       gradient: Gradients.savingsHero,
-      orbTint: TypePalette.savings.opacity(0.22),
-      radius: Radii.detailHero
+      orbTint: .white.opacity(0.14),
+      radius: 20
     ) {
       VStack(alignment: .leading, spacing: 0) {
         Text("Current Balance")
-          .font(.heroLabel).tracking(Tracking.heroLabel).textCase(.uppercase)
-          .foregroundStyle(Color.onHero.opacity(0.72))
+          .font(.caption.weight(.semibold)).textCase(.uppercase)
+          .foregroundStyle(.white.opacity(0.72))
         Text(investment.currentValue.currency(currency))
-          .font(.detailHeroNumeric).tracking(Tracking.detailHeroNumeric)
-          .foregroundStyle(Color.onHero)
+          .font(.largeTitle.weight(.bold).monospacedDigit())
+          .foregroundStyle(.white)
           .lineLimit(1).minimumScaleFactor(0.6)
           .padding(.top, 8)
         if let pct = returnPercent, !deposits.isEmpty {
@@ -128,98 +141,26 @@ struct SavingsDetailView: View {
     }
   }
 
-  /// Comp draws the add-deposit affordance as a dashed outline, not a filled
-  /// button — it reads as "slot to fill" rather than a primary action.
-  private func dashedButton(_ title: String, action: @escaping () -> Void) -> some View {
-    Button(action: action) {
-      Text(title)
-        .font(.rowLabel(14))
-        .foregroundStyle(Color.brandPrimary)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
-        .background(
-          RoundedRectangle(cornerRadius: Radii.tile, style: .continuous)
-            .strokeBorder(
-              Color.outlineVariant,
-              style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
-    }
-    .buttonStyle(.plain)
-  }
-
-  private var historyCard: some View {
-    SectionGroup {
-      VStack(spacing: 0) {
-        if deposits.isEmpty {
-          Text("No deposits yet")
-            .font(.body).foregroundStyle(Color.onSurfaceVariant)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
-        }
-        ForEach(deposits) { dep in
-          HStack(spacing: 12) {
-            IconTile(size: 38, radius: Radii.iconTile,
-                     background: Color.brandSecondary.opacity(0.12)) {
-              Image(systemName: "arrow.down")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.brandSecondary)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-              Text(dep.notes ?? "Deposit")
-                .font(.rowLabel(14)).foregroundStyle(Color.onSurface).lineLimit(1)
-              if let d = dep.depositDate {
-                Text(d, format: .dateTime.day().month(.abbreviated).year())
-                  .font(.meta).foregroundStyle(Color.onSurfaceMuted)
-              }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text("+ " + dep.amount.currency(currency))
-              .font(.amount).foregroundStyle(Color.brandSecondary)
-              .lineLimit(1).minimumScaleFactor(0.6)
-          }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 14)
-          .contentShape(.rect)
-          .swipeActions {
-            if investment.status == "active" {
-              Button("Remove", role: .destructive) {
-                try? Store(context: context).removeDeposit(dep, from: investment)
-                Task { await sync.syncNow() }
-              }
-            }
-          }
+  private func depositRow(_ dep: InvestmentDeposit) -> some View {
+    HStack(spacing: 12) {
+      IconTile(size: 38, radius: 11, background: Color.green.opacity(0.12)) {
+        Image(systemName: "arrow.down")
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(.green)
+      }
+      VStack(alignment: .leading, spacing: 2) {
+        Text(dep.notes ?? "Deposit")
+          .font(.body).lineLimit(1)
+        if let d = dep.depositDate {
+          Text(d, format: .dateTime.day().month(.abbreviated).year())
+            .font(.caption).foregroundStyle(.secondary)
         }
       }
-      .padding(.vertical, 6)
-    }
-  }
-
-  private var withdrawalCard: some View {
-    SectionGroup {
-      VStack(spacing: 0) {
-        ForEach(withdrawals) { w in
-          HStack(spacing: 12) {
-            IconTile(size: 38, radius: Radii.iconTile,
-                     background: Color.tertiaryContainer.opacity(0.12)) {
-              Image(systemName: "arrow.up")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.tertiaryFixedDim)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-              Text(w.notes ?? "Withdrawal")
-                .font(.rowLabel(14)).foregroundStyle(Color.onSurface).lineLimit(1)
-              Text(w.withdrawalDate, format: .dateTime.day().month(.abbreviated).year())
-                .font(.meta).foregroundStyle(Color.onSurfaceMuted)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text("− " + w.amount.currency(currency))
-              .font(.amount).foregroundStyle(Color.tertiaryFixedDim)
-              .lineLimit(1).minimumScaleFactor(0.6)
-          }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 14)
-        }
-      }
-      .padding(.vertical, 6)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      Text("+ " + dep.amount.currency(currency))
+        .font(.subheadline.weight(.semibold).monospacedDigit())
+        .foregroundStyle(.green)
+        .lineLimit(1).minimumScaleFactor(0.6)
     }
   }
 }
@@ -240,9 +181,8 @@ struct AddDepositSheet: View {
         TextField("Amount", text: $amount).keyboardType(.decimalPad)
         DatePicker("Date", selection: $depositDate, displayedComponents: .date)
         TextField("Notes", text: $notes, axis: .vertical)
-        if let error { Text(error).foregroundStyle(Color.error) }
+        if let error { Text(error).foregroundStyle(.red) }
       }
-      .noirForm()
       .navigationTitle("Add deposit")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -255,6 +195,7 @@ struct AddDepositSheet: View {
         }
       }
     }
+    .presentationDetents([.medium, .large])
   }
 
   private func submit() {
