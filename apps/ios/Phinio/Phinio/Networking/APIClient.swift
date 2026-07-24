@@ -12,7 +12,20 @@ final class APIClient: SyncTransport {
   private let baseURL: URL
   private let tokenProvider: @Sendable () -> String?
 
-  init(session: URLSession = .shared,
+  /// Bearer-token client: auth rides in the `Authorization` header, never a
+  /// cookie. On the shared session URLSession would store Better Auth's
+  /// Set-Cookie and re-send it on the next request — and a native request has
+  /// no Origin header, so Better Auth's CSRF check rejects it with "Missing or
+  /// null Origin". Drop cookie handling entirely.
+  static let cookielessSession: URLSession = {
+    let config = URLSessionConfiguration.default
+    config.httpShouldSetCookies = false
+    config.httpCookieStorage = nil
+    config.httpCookieAcceptPolicy = .never
+    return URLSession(configuration: config)
+  }()
+
+  init(session: URLSession = APIClient.cookielessSession,
        baseURL: URL = AppConfig.baseURL,
        tokenProvider: @escaping @Sendable () -> String? = { Keychain.loadToken() }) {
     self.session = session

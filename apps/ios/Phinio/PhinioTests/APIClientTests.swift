@@ -117,6 +117,14 @@ struct APIClientTests {
     }
   }
 
+  // Cookies must stay off: a stored Better Auth cookie on a native (no-Origin)
+  // request trips the server's CSRF check -> "Missing or null Origin".
+  @Test func defaultSessionDropsCookies() {
+    let config = APIClient.cookielessSession.configuration
+    #expect(config.httpShouldSetCookies == false)
+    #expect(config.httpCookieStorage == nil)
+  }
+
   @Test func maps500ToRetryable() async {
     StubURLProtocol.responses = [(500, Data("{}".utf8))]
     let client = makeClient()
