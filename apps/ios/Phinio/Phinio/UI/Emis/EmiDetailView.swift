@@ -2,6 +2,18 @@ import Charts
 import SwiftData
 import SwiftUI
 
+/// The two halves of the principal-vs-interest donut, so the legend can focus one.
+enum SplitSlice {
+  case principal, interest
+
+  var label: LocalizedStringKey {
+    switch self {
+    case .principal: "Principal"
+    case .interest: "Interest"
+    }
+  }
+}
+
 struct EmiDetailView: View {
   let emiId: String
   @Environment(\.modelContext) private var context
@@ -14,6 +26,7 @@ struct EmiDetailView: View {
   @State private var confirmComplete = false
   @State private var confirmDelete = false
   @State private var error: String?
+  @State private var focusedSplit: SplitSlice?
 
   init(emiId: String) {
     self.emiId = emiId
@@ -120,14 +133,8 @@ struct EmiDetailView: View {
         if let error {
           Text(error).font(.footnote).foregroundStyle(.red)
         }
-        columnHeader
         if let fee { feeRow(fee) }
-        ForEach(schedule) { p in
-          paymentRow(p)
-            .listRowBackground(rowBackground(
-              paid: p.status == "paid",
-              overdue: p.status != "paid" && utcDaysUntil(p.dueDate, from: Date()) < 0))
-        }
+        ForEach(schedule) { paymentRow($0) }
       }
     }
   }
@@ -155,138 +162,140 @@ struct EmiDetailView: View {
     }
   }
 
+  private static let splitDonutSize: CGFloat = 110
+  private static let splitDonutInnerRatio: CGFloat = 0.655
+
+  /// See `DashboardView.donutLabelWidth` — an uncapped center label lays out at
+  /// the chart's full width and spills onto the ring instead of scaling down.
+  private static var splitLabelWidth: CGFloat {
+    splitDonutSize * splitDonutInnerRatio - 10
+  }
+
   private func splitRow(_ emi: Emi) -> some View {
     HStack(spacing: 20) {
       Chart {
         SectorMark(
           angle: .value("Principal", Double(truncating: NSDecimalNumber(decimal: emi.principal))),
-          innerRadius: .ratio(0.655), angularInset: 0
+          innerRadius: .ratio(Self.splitDonutInnerRatio), angularInset: 0
         )
         .foregroundStyle(Color.accentColor)
+        .opacity(focusedSplit == nil || focusedSplit == .principal ? 1 : 0.25)
         SectorMark(
           angle: .value("Interest", Double(truncating: NSDecimalNumber(decimal: totalInterest))),
-          innerRadius: .ratio(0.655), angularInset: 0
+          innerRadius: .ratio(Self.splitDonutInnerRatio), angularInset: 0
         )
         .foregroundStyle(TypePalette.crypto)
+        .opacity(focusedSplit == nil || focusedSplit == .interest ? 1 : 0.25)
       }
       .chartLegend(.hidden)
-      .frame(width: 110, height: 110)
+      .frame(width: Self.splitDonutSize, height: Self.splitDonutSize)
       .overlay {
         VStack(spacing: 2) {
-          Text("Total")
+          Text(focusedSplit?.label ?? "Total")
             .font(.caption2)
             .textCase(.uppercase)
             .foregroundStyle(.secondary)
-          Text((emi.principal + totalInterest).currencyCompact(currency))
+            .lineLimit(1).minimumScaleFactor(0.6)
+          Text(splitValue(emi).currencyCompact(currency))
             .font(.caption.weight(.bold).monospacedDigit())
             .lineLimit(1).minimumScaleFactor(0.5)
         }
-        .padding(.horizontal, 10)
+        .frame(width: Self.splitLabelWidth)
+        .contentTransition(.numericText())
       }
+      .animation(.snappy, value: focusedSplit)
       .accessibilityHidden(true)  // the legend below states both figures
 
       VStack(alignment: .leading, spacing: 14) {
-        splitLegend("Principal", emi.principal, Color.accentColor)
-        splitLegend("Interest", totalInterest, TypePalette.crypto)
+        splitLegend(.principal, emi.principal, Color.accentColor)
+        splitLegend(.interest, totalInterest, TypePalette.crypto)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
     .padding(.vertical, 8)
   }
 
-  private func splitLegend(_ label: LocalizedStringKey, _ value: Decimal, _ tint: Color) -> some View {
-    VStack(alignment: .leading, spacing: 3) {
-      HStack(spacing: 8) {
-        RoundedRectangle(cornerRadius: 3, style: .continuous)
-          .fill(tint).frame(width: 10, height: 10)
-        Text(label).font(.footnote).foregroundStyle(.secondary)
-      }
-      Text(value.currency(currency))
-        .font(.headline.monospacedDigit())
-        .lineLimit(1).minimumScaleFactor(0.6)
-        .padding(.leading, 18)
+  private func splitValue(_ emi: Emi) -> Decimal {
+    switch focusedSplit {
+    case .principal: emi.principal
+    case .interest: totalInterest
+    case nil: emi.principal + totalInterest
     }
+  }
+
+  /// Same focus interaction as the dashboard allocation legend: tap to focus a
+  /// slice, tap again to clear. `.borderless` because several buttons share one
+  /// List row — under `.plain` the row swallows every tap.
+  private func splitLegend(_ slice: SplitSlice, _ value: Decimal, _ tint: Color) -> some View {
+    let focused = focusedSplit == slice
+    return Button {
+      focusedSplit = focused ? nil : slice
+    } label: {
+      VStack(alignment: .leading, spacing: 3) {
+        HStack(spacing: 8) {
+          RoundedRectangle(cornerRadius: 3, style: .continuous)
+            .fill(tint).frame(width: 10, height: 10)
+          Text(slice.label).font(.footnote).foregroundStyle(.secondary)
+        }
+        Text(value.currency(currency))
+          .font(.headline.monospacedDigit())
+          .foregroundStyle(.primary)
+          .lineLimit(1).minimumScaleFactor(0.6)
+          .padding(.leading, 18)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(.rect)
+      .opacity(focusedSplit == nil || focused ? 1 : 0.45)
+    }
+    .buttonStyle(.borderless)
     .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(focused ? [.isButton, .isSelected] : .isButton)
   }
 
   // MARK: Amortization
 
-  private var columnHeader: some View {
-    HStack(spacing: 4) {
-      Text("#").frame(width: 22, alignment: .leading)
-      Text("Due").frame(width: 40, alignment: .leading)
-      Text("EMI").frame(maxWidth: .infinity, alignment: .trailing)
-      Text("Prin.").frame(maxWidth: .infinity, alignment: .trailing)
-      Text("Int.").frame(maxWidth: .infinity, alignment: .trailing)
-      Text("Bal.").frame(maxWidth: .infinity, alignment: .trailing)
-      Color.clear.frame(width: 26)
-    }
-    .font(.caption2.weight(.semibold))
-    .textCase(.uppercase)
-    .foregroundStyle(.secondary)
-  }
-
   /// Processing fee is `paymentNumber == 0` — shown, but never part of the
   /// paid/total counts or the progress figures.
   private func feeRow(_ fee: EmiPayment) -> some View {
-    HStack(spacing: 4) {
-      Text("—").frame(width: 22, alignment: .leading)
-      Text("Fee").frame(width: 40, alignment: .leading)
-      Text(fee.emiAmount.currencyCompact(currency))
-        .frame(maxWidth: .infinity, alignment: .trailing)
-      Text("—").frame(maxWidth: .infinity, alignment: .trailing)
-      Text("—").frame(maxWidth: .infinity, alignment: .trailing)
-      Text("—").frame(maxWidth: .infinity, alignment: .trailing)
-      Color.clear.frame(width: 26)
-    }
-    .font(.caption2.monospacedDigit())
-    .foregroundStyle(.secondary)
+    TransactionRow(
+      symbol: "doc.text",
+      tint: .secondary,
+      title: Text("Processing fee"),
+      amount: Text(verbatim: fee.emiAmount.currency(currency)),
+      amountTint: .secondary)
   }
 
+  /// The six-column table this replaced was unreadable at caption2; the same
+  /// figures now ride the shared `TransactionRow` — principal/interest on the
+  /// subtitle, remaining balance as the trailing caption.
   private func paymentRow(_ p: EmiPayment) -> some View {
     let paid = p.status == "paid"
     let overdue = !paid && utcDaysUntil(p.dueDate, from: Date()) < 0
     return Button {
       toggle(p)
     } label: {
-      HStack(spacing: 4) {
-        Text("\(p.paymentNumber)").frame(width: 22, alignment: .leading)
-        Text(p.dueDate, format: .dateTime.month(.abbreviated).year(.twoDigits))
-          .frame(width: 40, alignment: .leading)
-        Text(p.emiAmount.currencyCompact(currency))
-          .frame(maxWidth: .infinity, alignment: .trailing)
-        Text(p.principalComponent.currencyCompact(currency))
-          .frame(maxWidth: .infinity, alignment: .trailing)
-        Text(p.interestComponent.currencyCompact(currency))
-          .frame(maxWidth: .infinity, alignment: .trailing)
-        Text(p.remainingBalance.currencyCompact(currency))
-          .frame(maxWidth: .infinity, alignment: .trailing)
-        Image(systemName: paid ? "checkmark.circle.fill" : "circle")
-          .font(.subheadline)
-          .foregroundStyle(paid ? Color.green : Color(.separator))
-          .frame(width: 26, alignment: .trailing)
-          .accessibilityHidden(true)
-      }
-      .font(.caption2.monospacedDigit())
-      .foregroundStyle(paid ? Color.secondary : Color.primary)
-      .contentShape(.rect)
+      TransactionRow(
+        symbol: paid ? "checkmark" : overdue ? "exclamationmark" : "calendar",
+        tint: paid ? .green : overdue ? .red : .accentColor,
+        title: Text("Payment \(p.paymentNumber)"),
+        subtitle: Text(verbatim: rowSubtitle(p))
+          .foregroundColor(overdue ? .red : nil),
+        amount: Text(verbatim: p.emiAmount.currency(currency)),
+        amountTint: paid ? .secondary : .primary,
+        caption: Text(verbatim: "bal " + p.remainingBalance.currencyCompact(currency)))
+        .contentShape(.rect)
     }
     .buttonStyle(.plain)
+    .animation(.snappy, value: paid)
     .accessibilityLabel("Payment \(p.paymentNumber), \(p.emiAmount.currency(currency))")
     .accessibilityValue(paid ? "Paid" : overdue ? "Overdue" : "Unpaid")
     .accessibilityHint("Double tap to mark \(paid ? "unpaid" : "paid")")
   }
 
-  @ViewBuilder
-  private func rowBackground(paid: Bool, overdue: Bool) -> some View {
-    ZStack {
-      Color(.secondarySystemGroupedBackground)
-      if overdue {
-        Color.red.opacity(0.08)
-      } else if !paid {
-        Color.accentColor.opacity(0.05)
-      }
-    }
+  private func rowSubtitle(_ p: EmiPayment) -> String {
+    let due = p.dueDate.formatted(.dateTime.month(.abbreviated).year(.twoDigits))
+    return "\(due) · P \(p.principalComponent.currencyCompact(currency))"
+      + " · I \(p.interestComponent.currencyCompact(currency))"
   }
 
   /// Optimistic — Store writes locally and enqueues the mutation; a failed
