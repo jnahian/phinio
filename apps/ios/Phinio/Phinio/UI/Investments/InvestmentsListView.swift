@@ -227,6 +227,7 @@ private struct InvestmentRow: View {
       HStack {
         if let monthly = investment.monthlyDeposit {
           Text(monthly.currency(currency) + "/mo")
+            .monospacedDigit()
         }
         Spacer()
         if let rate = investment.interestRate {
@@ -272,7 +273,7 @@ private struct InvestmentRow: View {
         Text("^[\(deposits.count) deposit](inflect: true)")
           .font(.caption).foregroundStyle(.secondary)
         Text("Deposited \(investment.investedAmount.currency(currency))")
-          .font(.caption).foregroundStyle(.secondary)
+          .font(.caption).monospacedDigit().foregroundStyle(.secondary)
       }
       Spacer()
       figure(

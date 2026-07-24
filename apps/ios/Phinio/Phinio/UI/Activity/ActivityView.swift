@@ -115,10 +115,10 @@ struct ActivityView: View {
   private func diffLine(_ change: ActivityChangeDTO) -> some View {
     HStack(spacing: 4) {
       Text(change.field).foregroundStyle(.secondary)
-      Text(format(change.from, change.currency)).foregroundStyle(.tertiary)
+      Text(format(change.from, change.currency)).monospacedDigit().foregroundStyle(.tertiary)
       Image(systemName: "arrow.right").font(.system(size: 8))
         .foregroundStyle(.tertiary)
-      Text(format(change.to, change.currency)).foregroundStyle(.secondary)
+      Text(format(change.to, change.currency)).monospacedDigit().foregroundStyle(.secondary)
     }
     .font(.caption)
   }

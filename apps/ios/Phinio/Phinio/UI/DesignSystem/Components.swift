@@ -1,22 +1,18 @@
 import SwiftUI
 
-// Shared Modern Noir component kit — every screen (Phases 2-8) composes out of
-// these. Tokens only, no inline hex/radius/shadow (docs/superpowers/specs/
-// 2026-07-23-phinio-ios-comp.dc.html is the pixel source of truth).
+// Custom leaves that survive the native re-skin — pieces with no system
+// equivalent: the gradient hero card, stat tiles, money/type badges, the
+// gradient avatar, icon tiles, and the offline capsule.
 
-// MARK: - Surfaces
-
-/// Gradient hero (net worth, EMI/DPS/savings detail heroes). Orb size/offset
-/// vary per hero in the comp (200-220pt, top -80/-90) — only the constant blur
-/// radius and trailing offset are tokenized (`AmbientOrb`), the rest are params.
+/// Gradient hero (net worth, EMI/DPS/savings/lump-sum detail heroes) with a
+/// blurred ambient orb. The one deliberate non-standard element: fixed dark
+/// gradients, white content, both appearances.
 struct HeroCard<Content: View>: View {
   let gradient: LinearGradient
   let orbTint: Color
-  var radius: CGFloat = Radii.hero
+  var radius: CGFloat = 22
   var orbSize: CGFloat = 200
   var orbTopOffset: CGFloat = -80
-  // Comp padding is uniform 22 on every hero except net-worth (22 22 24) —
-  // default keeps the common case a single value, net-worth passes 24.
   var bottomPadding: CGFloat = 22
   @ViewBuilder let content: Content
 
@@ -28,22 +24,17 @@ struct HeroCard<Content: View>: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(gradient)
       .background(alignment: .topTrailing) {
-        // Comp's `right:-40px` bleeds the orb *outward* past the card's
-        // trailing edge; `.offset` at a `.topTrailing` anchor moves inward on
-        // positive x, so the token's sign is negated here to match.
+        // The orb bleeds outward past the trailing edge (+40 at a .topTrailing
+        // anchor moves it outward).
         Circle()
           .fill(orbTint)
           .frame(width: orbSize, height: orbSize)
-          .blur(radius: AmbientOrb.blurRadius)
-          .offset(x: -AmbientOrb.trailingOffset, y: orbTopOffset)
+          .blur(radius: 46)
+          .offset(x: 40, y: orbTopOffset)
       }
       .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-      .shadow(
-        color: Shadows.hero.color, radius: Shadows.hero.radius, x: Shadows.hero.x, y: Shadows.hero.y)
   }
 }
-
-// MARK: - Stats & badges
 
 /// Grid tile (3-up on EMI/DPS detail, 2-up on Savings detail).
 struct StatTile: View {
@@ -113,6 +104,54 @@ struct TypeBadge: View {
       .padding(.vertical, 3)
       .background(
         TypePalette.background(for: type),
-        in: RoundedRectangle(cornerRadius: Radii.badge, style: .continuous))
+        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+  }
+}
+
+/// Circular gradient avatar with initials (toolbar 30pt, Profile 88pt).
+struct AvatarView: View {
+  let initials: String
+  let size: CGFloat
+
+  var body: some View {
+    Circle()
+      .fill(Gradients.avatar)
+      .frame(width: size, height: size)
+      .overlay(
+        Text(initials)
+          .font(.system(size: size * 0.35, weight: .bold))
+          .foregroundStyle(.white)
+      )
+      .accessibilityHidden(true)
+  }
+}
+
+/// Rounded-square backdrop behind an SF Symbol (list-row leading icons).
+struct IconTile<Icon: View>: View {
+  let size: CGFloat
+  let radius: CGFloat
+  var background: Color = Color(.tertiarySystemFill)
+  @ViewBuilder let icon: Icon
+
+  var body: some View {
+    icon
+      .frame(width: size, height: size)
+      .background(background, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+      .accessibilityHidden(true)
+  }
+}
+
+/// Connectivity capsule under the nav bar, on system material so it reads in
+/// both appearances.
+struct OfflineBanner: View {
+  var body: some View {
+    Label("Offline — changes sync when you reconnect.", systemImage: "wifi.slash")
+      .font(.footnote)
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 8)
+      .background(.regularMaterial, in: .capsule)
+      .padding(.top, 4)
+      .accessibilityElement(children: .combine)
   }
 }

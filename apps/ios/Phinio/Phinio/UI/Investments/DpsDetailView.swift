@@ -180,6 +180,7 @@ struct DpsDetailView: View {
             .font(.body.monospacedDigit())
           Text(rowSubtitle(dep))
             .font(.caption)
+            .monospacedDigit()
             .foregroundStyle(overdue ? Color.red : Color.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

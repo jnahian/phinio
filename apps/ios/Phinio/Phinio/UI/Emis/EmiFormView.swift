@@ -53,6 +53,7 @@ struct EmiFormView: View {
             LabeledContent("Monthly EMI") {
               MoneyText(amount: Money.decimal(first.emiAmount) ?? 0)
                 .fontWeight(.semibold)
+                .monospacedDigit()
             }
             ForEach(rows.prefix(3), id: \.paymentNumber) { row in
               HStack {

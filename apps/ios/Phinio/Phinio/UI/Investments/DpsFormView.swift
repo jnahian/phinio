@@ -51,7 +51,7 @@ struct DpsFormView: View {
         }
         if let total = totalDeposits {
           Section("Preview") {
-            LabeledContent("Total deposits") { MoneyText(amount: total) }
+            LabeledContent("Total deposits") { MoneyText(amount: total).monospacedDigit() }
             LabeledContent("Over") { Text("\(tenureMonths) months") }
           }
         }

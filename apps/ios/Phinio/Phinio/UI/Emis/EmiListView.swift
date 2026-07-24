@@ -167,7 +167,7 @@ private struct EmiRow: View {
       ProgressView(value: total > 0 ? Double(paidCount) / Double(total) : 0) {
         HStack {
           Text("Remaining \(remaining.currency(currency))")
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
           Spacer()
           Text("\(paidCount) / \(total) months")
             .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)

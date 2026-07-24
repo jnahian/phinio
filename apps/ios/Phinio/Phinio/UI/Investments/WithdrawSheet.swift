@@ -21,6 +21,7 @@ struct WithdrawSheet: View {
         Section {
           LabeledContent("Available") {
             MoneyText(amount: investment.currentValue)
+              .monospacedDigit()
           }
           TextField("Amount", text: $amount).keyboardType(.decimalPad)
           DatePicker("Date", selection: $withdrawalDate,
