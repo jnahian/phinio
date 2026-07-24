@@ -17,6 +17,9 @@
     "·" : {
 
     },
+    "#" : {
+
+    },
     "#%lld" : {
 
     },
@@ -42,16 +45,16 @@
     },
     "%@, %@ percent" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@ percent"
-          }
-        },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@ শতাংশ"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@ percent"
           }
         }
       }
@@ -61,32 +64,33 @@
     },
     "%lld / %lld months" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld / %2$lld months"
-          }
-        },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld / %2$lld মাস"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld months"
+          }
         }
       }
     },
     "%lld active · %lld completed" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld active · %2$lld completed"
-          }
-        },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld সক্রিয় · %2$lld সম্পন্ন"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld active · %2$lld completed"
           }
         }
       }
@@ -146,16 +150,16 @@
     },
     "^[%lld investment](inflect: true) · %lld EMIs" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "^[%1$lld investment](inflect: true) · %2$lld EMIs"
-          }
-        },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld বিনিয়োগ · %2$lld EMI"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "^[%1$lld investment](inflect: true) · %2$lld EMIs"
           }
         }
       }
@@ -170,6 +174,15 @@
         }
       }
     },
+    "$ USD" : {
+
+    },
+    "৳ BDT" : {
+
+    },
+    "Account" : {
+
+    },
     "across ^[%lld loan](inflect: true)" : {
       "localizations" : {
         "bn" : {
@@ -181,7 +194,6 @@
       }
     },
     "Active" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -192,7 +204,6 @@
       }
     },
     "Activity" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -203,7 +214,6 @@
       }
     },
     "Activity history" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -212,6 +222,9 @@
           }
         }
       }
+    },
+    "Activity needs a connection." : {
+
     },
     "Add" : {
       "localizations" : {
@@ -223,6 +236,9 @@
         }
       }
     },
+    "Add a loan or credit card to track its schedule." : {
+
+    },
     "Add deposit" : {
       "localizations" : {
         "bn" : {
@@ -233,6 +249,18 @@
         }
       }
     },
+    "Add your first EMI" : {
+
+    },
+    "Add your first investment" : {
+
+    },
+    "Add your first investment or EMI to see your dashboard." : {
+
+    },
+    "All" : {
+
+    },
     "Allocation" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -240,6 +268,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "বরাদ্দ"
+          }
+        }
+      }
+    },
+    "Already have an account? Login" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন"
           }
         }
       }
@@ -254,6 +292,9 @@
           }
         }
       }
+    },
+    "Amortization schedule" : {
+
     },
     "Amount" : {
       "localizations" : {
@@ -296,6 +337,16 @@
         }
       }
     },
+    "At least 8 characters" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "কমপক্ষে ৮টি অক্ষর"
+          }
+        }
+      }
+    },
     "Available" : {
       "localizations" : {
         "bn" : {
@@ -307,6 +358,7 @@
       }
     },
     "Back" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -316,8 +368,20 @@
         }
       }
     },
+    "Back to login" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "লগইনে ফিরে যান"
+          }
+        }
+      }
+    },
+    "Bal." : {
+
+    },
     "Balance" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -347,6 +411,9 @@
         }
       }
     },
+    "Bank Loan · Remaining Balance" : {
+
+    },
     "BDT" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -368,13 +435,25 @@
         }
       }
     },
+    "Changes you make will show up here." : {
+
+    },
     "Check your email" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "আপনার ইমেল দেখুন"
+          }
+        }
+      }
+    },
+    "Check your inbox." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনার ইনবক্স দেখুন।"
           }
         }
       }
@@ -522,7 +601,6 @@
       }
     },
     "Continue" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -542,8 +620,20 @@
         }
       }
     },
+    "Create" : {
+
+    },
     "Create account" : {
-      "extractionState" : "stale",
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অ্যাকাউন্ট তৈরি করুন"
+          }
+        }
+      }
+    },
+    "Create Account" : {
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -573,8 +663,10 @@
         }
       }
     },
+    "Credit Card · Remaining Balance" : {
+
+    },
     "Currency" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -655,8 +747,10 @@
         }
       }
     },
+    "Delete DPS scheme" : {
+
+    },
     "Delete EMI" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -667,7 +761,6 @@
       }
     },
     "Delete investment" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -687,6 +780,9 @@
           }
         }
       }
+    },
+    "Delete savings pot" : {
+
     },
     "Delete this EMI and its schedule?" : {
       "localizations" : {
@@ -727,6 +823,15 @@
           }
         }
       }
+    },
+    "Deposit history" : {
+
+    },
+    "Deposit schedule" : {
+
+    },
+    "Deposited" : {
+
     },
     "Deposited %@" : {
       "localizations" : {
@@ -780,6 +885,19 @@
         }
       }
     },
+    "Don't have an account? Sign Up" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অ্যাকাউন্ট নেই? সাইন আপ করুন"
+          }
+        }
+      }
+    },
+    "Done" : {
+
+    },
     "Double tap to mark %@" : {
       "localizations" : {
         "bn" : {
@@ -810,6 +928,9 @@
           }
         }
       }
+    },
+    "Due" : {
+
     },
     "Edit" : {
       "localizations" : {
@@ -852,6 +973,7 @@
       }
     },
     "Edit name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -872,6 +994,7 @@
       }
     },
     "Edit scheme" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -882,7 +1005,6 @@
       }
     },
     "Email" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -924,7 +1046,6 @@
       }
     },
     "Enable reminders" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -935,7 +1056,6 @@
       }
     },
     "English" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -945,7 +1065,20 @@
         }
       }
     },
+    "Enter your email to get a reset link." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "রিসেট লিঙ্ক পেতে আপনার ইমেল লিখুন।"
+          }
+        }
+      }
+    },
     "Entity · moments ago" : {
+
+    },
+    "Estimated closure" : {
 
     },
     "Estimated closure date" : {
@@ -999,6 +1132,12 @@
         }
       }
     },
+    "Filter by type" : {
+
+    },
+    "Finished loans and cards will appear here." : {
+
+    },
     "First payment" : {
       "localizations" : {
         "bn" : {
@@ -1009,8 +1148,17 @@
         }
       }
     },
+    "Forgot password?" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পাসওয়ার্ড ভুলে গেছেন?"
+          }
+        }
+      }
+    },
     "Full name" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1019,6 +1167,9 @@
           }
         }
       }
+    },
+    "Generate a full amortization schedule up front." : {
+
     },
     "Get notified before EMI payments and DPS installments are due, so nothing slips." : {
       "localizations" : {
@@ -1041,6 +1192,9 @@
         }
       }
     },
+    "Get Started" : {
+
+    },
     "Getting your data…" : {
       "localizations" : {
         "bn" : {
@@ -1052,6 +1206,7 @@
       }
     },
     "Good afternoon" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1062,6 +1217,7 @@
       }
     },
     "Good evening" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1072,6 +1228,7 @@
       }
     },
     "Good morning" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1112,13 +1269,25 @@
         }
       }
     },
+    "I already have an account" : {
+
+    },
     "I've verified — continue" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "আমি যাচাই করেছি — চালিয়ে যান"
+          }
+        }
+      }
+    },
+    "If an account exists for %@, we've sent a link to reset your password. Open it, set a new password, then come back and log in." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@-এর জন্য কোনো অ্যাকাউন্ট থাকলে, আমরা পাসওয়ার্ড রিসেট করার একটি লিঙ্ক পাঠিয়েছি। এটি খুলুন, নতুন পাসওয়ার্ড সেট করুন, তারপর ফিরে এসে লগইন করুন।"
           }
         }
       }
@@ -1135,16 +1304,16 @@
     },
     "Installment %lld, %@" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Installment %1$lld, %2$@"
-          }
-        },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "কিস্তি %1$lld, %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Installment %1$lld, %2$@"
           }
         }
       }
@@ -1159,6 +1328,9 @@
           }
         }
       }
+    },
+    "Int." : {
+
     },
     "Interest" : {
       "localizations" : {
@@ -1201,7 +1373,6 @@
       }
     },
     "Invested" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1222,7 +1393,6 @@
       }
     },
     "Invested on" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1241,6 +1411,9 @@
           }
         }
       }
+    },
+    "Investment allocation" : {
+
     },
     "Investments" : {
       "localizations" : {
@@ -1263,7 +1436,6 @@
       }
     },
     "Language" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1279,6 +1451,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "আরও লোড করুন"
+          }
+        }
+      }
+    },
+    "Login" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "লগইন"
           }
         }
       }
@@ -1314,8 +1496,13 @@
         }
       }
     },
+    "Mark read" : {
+
+    },
+    "Maturity" : {
+
+    },
     "Maybe later" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1324,6 +1511,9 @@
           }
         }
       }
+    },
+    "Monthly" : {
+
     },
     "Monthly deposit" : {
       "localizations" : {
@@ -1345,6 +1535,9 @@
         }
       }
     },
+    "More" : {
+
+    },
     "Name" : {
       "localizations" : {
         "bn" : {
@@ -1354,6 +1547,9 @@
           }
         }
       }
+    },
+    "Name needs at least 2 characters." : {
+
     },
     "Net worth" : {
       "extractionState" : "stale",
@@ -1437,6 +1633,9 @@
         }
       }
     },
+    "Next 30 days" : {
+
+    },
     "Next due " : {
       "localizations" : {
         "bn" : {
@@ -1446,6 +1645,12 @@
           }
         }
       }
+    },
+    "No activity" : {
+
+    },
+    "No completed investments match this filter." : {
+
     },
     "No deposits yet" : {
       "localizations" : {
@@ -1478,6 +1683,18 @@
         }
       }
     },
+    "No investments match this filter." : {
+
+    },
+    "No notifications" : {
+
+    },
+    "No payments fall in the next 30 days." : {
+
+    },
+    "Not found" : {
+
+    },
     "Notes" : {
       "localizations" : {
         "bn" : {
@@ -1487,6 +1704,9 @@
           }
         }
       }
+    },
+    "Nothing completed yet" : {
+
     },
     "Nothing due in the next 30 days" : {
       "extractionState" : "stale",
@@ -1499,6 +1719,9 @@
         }
       }
     },
+    "Nothing here yet" : {
+
+    },
     "Notifications" : {
       "localizations" : {
         "bn" : {
@@ -1510,6 +1733,7 @@
       }
     },
     "Off" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1518,6 +1742,9 @@
           }
         }
       }
+    },
+    "Offline" : {
+
     },
     "Offline — changes sync when you reconnect." : {
       "localizations" : {
@@ -1530,6 +1757,7 @@
       }
     },
     "On" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1570,7 +1798,6 @@
       }
     },
     "Password" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1582,16 +1809,16 @@
     },
     "Payment %lld, %@" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Payment %1$lld, %2$@"
-          }
-        },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "পেমেন্ট %1$lld, %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payment %1$lld, %2$@"
           }
         }
       }
@@ -1605,6 +1832,9 @@
           }
         }
       }
+    },
+    "Payment reminders will show up here." : {
+
     },
     "per month" : {
       "localizations" : {
@@ -1629,6 +1859,19 @@
     "Placeholder summary text" : {
 
     },
+    "Preferences" : {
+
+    },
+    "Preferred currency" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পছন্দের মুদ্রা"
+          }
+        }
+      }
+    },
     "Premature closure removes remaining installments. This can't be undone locally." : {
       "localizations" : {
         "bn" : {
@@ -1642,6 +1885,9 @@
     "Preview" : {
 
     },
+    "Prin." : {
+
+    },
     "Principal" : {
       "localizations" : {
         "bn" : {
@@ -1651,6 +1897,9 @@
           }
         }
       }
+    },
+    "Principal vs interest" : {
+
     },
     "Processing fee" : {
       "extractionState" : "stale",
@@ -1693,6 +1942,9 @@
         }
       }
     },
+    "Remaining" : {
+
+    },
     "Remaining %@" : {
       "localizations" : {
         "bn" : {
@@ -1704,6 +1956,7 @@
       }
     },
     "Remaining Balance" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1733,6 +1986,19 @@
           }
         }
       }
+    },
+    "Reset password" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পাসওয়ার্ড রিসেট করুন"
+          }
+        }
+      }
+    },
+    "Return" : {
+
     },
     "Save" : {
       "localizations" : {
@@ -1796,6 +2062,16 @@
         }
       }
     },
+    "Send reset link" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "রিসেট লিঙ্ক পাঠান"
+          }
+        }
+      }
+    },
     "Settings" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1824,6 +2100,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "সাইন ইন করুন"
+          }
+        }
+      }
+    },
+    "Sign in to your vault." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনার ভল্টে সাইন ইন করুন।"
           }
         }
       }
@@ -1879,8 +2165,17 @@
         }
       }
     },
+    "Start tracking investments and EMIs." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "বিনিয়োগ ও EMI ট্র্যাক করা শুরু করুন।"
+          }
+        }
+      }
+    },
     "Status" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1900,6 +2195,9 @@
           }
         }
       }
+    },
+    "Sync issues" : {
+
     },
     "Sync now" : {
       "localizations" : {
@@ -1941,7 +2239,14 @@
         }
       }
     },
+    "This EMI is no longer on this device." : {
+
+    },
+    "Total" : {
+
+    },
     "TOTAL" : {
+      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -1992,6 +2297,9 @@
           }
         }
       }
+    },
+    "Track stocks, gold, DPS schemes and savings pots." : {
+
     },
     "Type" : {
       "localizations" : {
@@ -2045,7 +2353,6 @@
       }
     },
     "Upcoming payments" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -2066,6 +2373,16 @@
         }
       }
     },
+    "Use a different email" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অন্য একটি ইমেল ব্যবহার করুন"
+          }
+        }
+      }
+    },
     "Value" : {
       "localizations" : {
         "bn" : {
@@ -2076,8 +2393,17 @@
         }
       }
     },
+    "Verify your email to continue." : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "চালিয়ে যেতে আপনার ইমেল যাচাই করুন।"
+          }
+        }
+      }
+    },
     "We sent a verification link to %@. Tap it, then come back here." : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -2086,6 +2412,19 @@
           }
         }
       }
+    },
+    "Welcome back" : {
+      "localizations" : {
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আবার স্বাগতম"
+          }
+        }
+      }
+    },
+    "Welcome to Phinio" : {
+
     },
     "Withdraw" : {
       "localizations" : {
@@ -2098,7 +2437,6 @@
       }
     },
     "Withdrawals" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
@@ -2120,192 +2458,11 @@
       }
     },
     "বাংলা" : {
-      "extractionState" : "stale",
       "localizations" : {
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "বাংলা"
-          }
-        }
-      }
-    },
-    "Welcome back" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "আবার স্বাগতম"
-          }
-        }
-      }
-    },
-    "Reset password" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "পাসওয়ার্ড রিসেট করুন"
-          }
-        }
-      }
-    },
-    "Send reset link" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "রিসেট লিঙ্ক পাঠান"
-          }
-        }
-      }
-    },
-    "Forgot password?" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "পাসওয়ার্ড ভুলে গেছেন?"
-          }
-        }
-      }
-    },
-    "Back to login" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "লগইনে ফিরে যান"
-          }
-        }
-      }
-    },
-    "Login" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "লগইন"
-          }
-        }
-      }
-    },
-    "Create Account" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "অ্যাকাউন্ট তৈরি করুন"
-          }
-        }
-      }
-    },
-    "Sign in to your vault." : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "আপনার ভল্টে সাইন ইন করুন।"
-          }
-        }
-      }
-    },
-    "Start tracking investments and EMIs." : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "বিনিয়োগ ও EMI ট্র্যাক করা শুরু করুন।"
-          }
-        }
-      }
-    },
-    "Check your inbox." : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "আপনার ইনবক্স দেখুন।"
-          }
-        }
-      }
-    },
-    "Enter your email to get a reset link." : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "রিসেট লিঙ্ক পেতে আপনার ইমেল লিখুন।"
-          }
-        }
-      }
-    },
-    "Verify your email to continue." : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "চালিয়ে যেতে আপনার ইমেল যাচাই করুন।"
-          }
-        }
-      }
-    },
-    "At least 8 characters" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "কমপক্ষে ৮টি অক্ষর"
-          }
-        }
-      }
-    },
-    "If an account exists for %@, we've sent a link to reset your password. Open it, set a new password, then come back and log in." : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@-এর জন্য কোনো অ্যাকাউন্ট থাকলে, আমরা পাসওয়ার্ড রিসেট করার একটি লিঙ্ক পাঠিয়েছি। এটি খুলুন, নতুন পাসওয়ার্ড সেট করুন, তারপর ফিরে এসে লগইন করুন।"
-          }
-        }
-      }
-    },
-    "Preferred currency" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "পছন্দের মুদ্রা"
-          }
-        }
-      }
-    },
-    "Don't have an account? Sign Up" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "অ্যাকাউন্ট নেই? সাইন আপ করুন"
-          }
-        }
-      }
-    },
-    "Already have an account? Login" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন"
-          }
-        }
-      }
-    },
-    "Use a different email" : {
-      "localizations" : {
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "অন্য একটি ইমেল ব্যবহার করুন"
           }
         }
       }
