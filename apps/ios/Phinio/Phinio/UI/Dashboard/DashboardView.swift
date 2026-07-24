@@ -8,6 +8,7 @@ struct DashboardView: View {
   var onCreate: (CreateSheet) -> Void = { _ in }
 
   @EnvironmentObject private var sync: SyncEngine
+  @EnvironmentObject private var avatars: AvatarStore
   @Query private var profiles: [Profile]
   @Query private var investments: [Investment]
   @Query private var emis: [Emi]
@@ -62,7 +63,9 @@ struct DashboardView: View {
       ToolbarItem(placement: .topBarTrailing) { bell }
       ToolbarItem(placement: .topBarTrailing) {
         NavigationLink(value: ProfileRoute()) {
-          AvatarView(initials: initials, size: 30)
+          AvatarView(
+            initials: initials, size: 30,
+            colorKey: profiles.first?.id ?? "", photo: avatars.image)
         }
         .accessibilityLabel("Profile")
       }
@@ -70,12 +73,16 @@ struct DashboardView: View {
     .safeAreaInset(edge: .top) {
       if sync.state == .offline { OfflineBanner() }
     }
+    .task { await avatars.refresh() }
     .refreshable { await sync.syncNow() }
   }
 
   private var bell: some View {
     Button { showNotifications = true } label: {
       Image(systemName: "bell")
+        // Rings when the unread count climbs — the badge alone is easy to miss
+        // on a screen the user is already scrolling.
+        .symbolEffect(.bounce, value: unread.count)
         .overlay(alignment: .topTrailing) {
           if !unread.isEmpty {
             Text("\(unread.count)")
@@ -85,8 +92,10 @@ struct DashboardView: View {
               .frame(minWidth: 15, minHeight: 15)
               .background(.red, in: .capsule)
               .offset(x: 9, y: -8)
+              .transition(.scale.combined(with: .opacity))
           }
         }
+        .animation(.snappy, value: unread.count)
     }
     .accessibilityLabel("Notifications")
   }
@@ -232,18 +241,28 @@ struct DashboardView: View {
     }
   }
 
+  private static let donutSize: CGFloat = 120
+  private static let donutInnerRatio: CGFloat = 0.733
+
+  /// The hole's diameter, less a 6pt inset. The center label has to be capped
+  /// to this: an uncapped overlay lays out at the chart's full width, so
+  /// `minimumScaleFactor` never kicks in and long totals spill onto the ring.
+  private static var donutLabelWidth: CGFloat {
+    donutSize * donutInnerRatio - 12
+  }
+
   private func allocationDonut(_ stats: DashboardStats) -> some View {
     Chart(stats.allocation, id: \.type) { slice in
       SectorMark(
         angle: .value("Value", Double(truncating: NSDecimalNumber(decimal: slice.value))),
-        innerRadius: .ratio(0.733),
+        innerRadius: .ratio(Self.donutInnerRatio),
         angularInset: 0
       )
       .foregroundStyle(TypePalette.foreground(for: slice.type))
       .opacity(focusedType == nil || focusedType == slice.type ? 1 : 0.25)
     }
     .chartLegend(.hidden)
-    .frame(width: 120, height: 120)
+    .frame(width: Self.donutSize, height: Self.donutSize)
     .overlay {
       VStack(spacing: 0) {
         Text(focusedValue(stats).currencyCompact(currency))
@@ -254,9 +273,12 @@ struct DashboardView: View {
           .font(.caption2)
           .foregroundStyle(.secondary)
           .lineLimit(1)
+          .minimumScaleFactor(0.6)
       }
-      .padding(.horizontal, 14)
+      .frame(width: Self.donutLabelWidth)
+      .contentTransition(.numericText())
     }
+    .animation(.snappy, value: focusedType)
     .accessibilityHidden(true)  // the legend rows below carry the same data
   }
 
@@ -287,7 +309,10 @@ struct DashboardView: View {
       // Dimmed rows stay tappable so focus can move straight between types.
       .opacity(focusedType == nil || focused ? 1 : 0.45)
     }
-    .buttonStyle(.plain)
+    // `.borderless`, not `.plain`: a List row that holds several buttons routes
+    // every tap to the row itself under `.plain`, so all five legend rows shared
+    // one hit target and focusing an individual type did nothing.
+    .buttonStyle(.borderless)
     .accessibilityLabel(
       "\(investmentTypeLabel(slice.type)), \(slice.percent.formatted(.number.precision(.fractionLength(0)))) percent"
     )
