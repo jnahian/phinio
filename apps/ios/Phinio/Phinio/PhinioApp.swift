@@ -11,6 +11,7 @@ struct PhinioApp: App {
   private let deepLinkRouter = DeepLinkRouter()
   @StateObject private var auth: AuthManager
   @StateObject private var sync: SyncEngine
+  @StateObject private var avatars: AvatarStore
   @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
   init() {
@@ -19,6 +20,7 @@ struct PhinioApp: App {
     self.container = container
     _auth = StateObject(wrappedValue: AuthManager(client: client))
     _sync = StateObject(wrappedValue: SyncEngine(transport: client, container: container))
+    _avatars = StateObject(wrappedValue: AvatarStore(client: client))
     AppDelegate.router = deepLinkRouter
   }
 
@@ -27,6 +29,7 @@ struct PhinioApp: App {
       RootView()
         .environmentObject(auth)
         .environmentObject(sync)
+        .environmentObject(avatars)
         .environmentObject(deepLinkRouter)
     }
     .modelContainer(container)

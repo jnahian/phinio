@@ -21,3 +21,10 @@ struct AuthErrorBody: Decodable {
   let code: String
   let message: String
 }
+
+/// Just the slice of `GET /api/auth/get-session` the app reads: the profile
+/// photo, which Better Auth stores on `user.image` as a data URL.
+struct SessionUserEnvelope: Decodable {
+  struct User: Decodable { let image: String? }
+  let user: User
+}

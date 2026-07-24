@@ -156,6 +156,23 @@ final class APIClient: SyncTransport {
     }
   }
 
+  /// Profile photo lives on Better Auth's `user.image` as a data URL — the same
+  /// column and the same encoding the web profile screen writes (300px longest
+  /// edge, JPEG q0.85). No blob storage in the stack, so the app reads and
+  /// writes it through Better Auth directly rather than a Phinio endpoint.
+  func fetchAvatar() async throws -> String? {
+    let data = try await run(request(path: "/api/auth/get-session", method: "GET"))
+    // An expired session returns 200 with a literal `null` body, not a 401.
+    return (try? JSONDecoder().decode(SessionUserEnvelope.self, from: data))?.user.image
+  }
+
+  func updateAvatar(dataURL: String) async throws {
+    var req = request(path: "/api/auth/update-user", method: "POST")
+    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    req.httpBody = try JSONEncoder().encode(["image": dataURL])
+    _ = try await run(req)
+  }
+
   /// Built with URLComponents rather than `request(path:)` — `appending(path:)`
   /// would percent-encode the `?` and break the query string.
   func fetchActivity(cursor: String?) async throws -> ActivityPageDTO {
