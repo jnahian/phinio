@@ -68,6 +68,12 @@ enum TypePalette {
   }
 }
 
+/// The net-worth hero's brightest blue — the top stop of `Gradients.netWorthHero`.
+/// Tints the auth screen's primary button and links so login echoes the home hero.
+enum Brand {
+  static let blue = Color(hex: 0x2563eb)
+}
+
 /// Fixed dark gradients for the hero cards — the one deliberate non-standard
 /// element; white content on top in both appearances.
 enum Gradients {

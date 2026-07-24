@@ -221,6 +221,7 @@ struct AuthStepView: View {
     }
     .padding(.horizontal, 20)
     .padding(.bottom, 8)
+    .tint(Brand.blue)
   }
 
   private var primaryCta: LocalizedStringKey {
