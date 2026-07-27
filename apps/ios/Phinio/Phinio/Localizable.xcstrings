@@ -1812,9 +1812,8 @@
           }
         }
       }
-    }
-  }
-}
+    },
+    "Paid" : {
       "localizations" : {
         "bn" : {
           "stringUnit" : {
