@@ -1808,12 +1808,13 @@
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "বকেয়া"
+            "value" : "মেয়াদোত্তীর্ণ"
           }
         }
       }
-    },
-    "Paid" : {
+    }
+  }
+}
       "localizations" : {
         "bn" : {
           "stringUnit" : {
