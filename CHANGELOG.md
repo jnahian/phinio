@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.4] - 2026-08-18
+
+Phinio now has a native iPhone app, backed by a new REST API. Almost
+everything below is new surface area rather than a change to the web app —
+the one exception is the EMI scheduling fix.
+
+### Added
+
+- **Phinio for iPhone** — a native app covering the whole product: sign-up
+  with email verification, sign-in and password reset; a home dashboard with
+  net worth, quick stats, an interactive allocation donut and upcoming
+  payments; investments (lump-sum, savings pots and DPS) with detail screens,
+  forms, deposits, withdrawals and premature close; EMIs with a live payment
+  preview while you type and a full amortization schedule you can tick off;
+  activity history; a notification centre with an unread badge; and a profile
+  screen with photo upload, currency and language switching, and
+  payment-reminder settings.
+- **The iPhone app works offline.** Everything is held on the device, so the
+  app opens and reads with no connection. Writes queue up and drain
+  automatically once you are back online, with an offline banner while you
+  are away and a sync-issues list for anything the server rejected.
+- **Bengali throughout the iPhone app**, matching the web app's language
+  support, with the language switch applying immediately.
+- **Payment reminders on iPhone.** The reminder job now pushes EMI and DPS
+  due-date notifications to registered devices, and tapping one opens the
+  record it refers to. Push is dormant in this build — signing the APNs
+  entitlement needs a paid Apple developer membership.
+- **A REST API under `/api/v1`.** Bearer-token access to profile,
+  investments, EMIs, notifications, dashboard, activity and device
+  registration, plus a full-snapshot endpoint that seeds the app's offline
+  database in a single request.
+
+### Fixed
+
+- New EMI schedules bill the first installment one calendar month after the
+  start date instead of on the start date itself. Month-end starts still
+  clamp, so a January 31 start falls due February 28. EMIs created before
+  this release keep their original schedules.
+
 ## [1.8.3] - 2026-07-16
 
 ### Changed
