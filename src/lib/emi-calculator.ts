@@ -141,9 +141,11 @@ function addMonths(date: Date, months: number): Date {
 /**
  * Generate the full amortization schedule.
  *
- * Returns one row per month. The last row's principal component is forced to
- * consume whatever principal is still outstanding so remainingBalance === 0.00
- * after the final payment.
+ * Returns one row per month. The first installment falls due one calendar
+ * month after `startDate` (same day-of-month), and each subsequent row steps
+ * another month. The last row's principal component is forced to consume
+ * whatever principal is still outstanding so remainingBalance === 0.00 after
+ * the final payment.
  */
 export function generateAmortization(input: {
   principal: string | number
@@ -192,7 +194,7 @@ export function generateAmortization(input: {
 
     rows.push({
       paymentNumber: i,
-      dueDate: addMonths(input.startDate, i - 1),
+      dueDate: addMonths(input.startDate, i),
       emiAmount: paymentAmount.toFixed(2),
       principalComponent: principalComponent.toFixed(2),
       interestComponent: interestComponent.toFixed(2),

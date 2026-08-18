@@ -122,7 +122,7 @@ enum EmiCalculator {
 
       rows.append(AmortizationRow(
         paymentNumber: i,
-        dueDate: addMonths(startDate, i - 1),
+        dueDate: addMonths(startDate, i),
         emiAmount: fixed2(paymentAmount),
         principalComponent: fixed2(principalComponent),
         interestComponent: fixed2(interestComponent),

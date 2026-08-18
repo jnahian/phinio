@@ -592,7 +592,7 @@ Let D = monthly deposit, r = annualRate / 1200 (monthly rate), n = installment n
 - **Simple interest:**
   - `accruedValue(n) = D × n + D × r × n × (n + 1) / 2`
 
-Each row's `dueDate` = `startDate + (n − 1) months`.
+Each row's `dueDate` = `startDate + n months` — the first installment falls due one calendar month after the start date.
 
 #### Flexible / Savings (`mode = 'flexible'`, `type = 'savings'`)
 
@@ -610,7 +610,7 @@ When an EMI is created, all `EmiPayment` rows are generated upfront (`src/lib/em
 - **EMI formula:** `EMI = P × r × (1 + r)^n / ((1 + r)^n − 1)`. If `r = 0`: `EMI = P / n`.
 - **Each month (1 to n):** `interest = remainingBalance × r`, `principal = EMI − interest`, `newBalance = remainingBalance − principal`
 - **Final payment** absorbs floating-point residuals so `remainingBalance` lands at exactly `0.00`.
-- **Due dates:** `startDate + (paymentNumber − 1) months`
+- **Due dates:** `startDate + paymentNumber months` (first installment is one month after `startDate`)
 - **Overdue detection:** client-side on load (`dueDate < today && status ≠ 'paid'`)
 
 ### 8.3 Dashboard Calculations

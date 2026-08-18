@@ -124,16 +124,16 @@ describe('generateAmortization', () => {
     expect(rows[rows.length - 1].remainingBalance).toBe('0.00')
   })
 
-  it('due dates step one calendar month at a time starting at startDate', () => {
+  it('due dates start one calendar month after startDate and step monthly', () => {
     const rows = generateAmortization({
       principal: '1200',
       annualRate: '0',
       tenureMonths: 3,
       startDate: new Date('2026-01-15'),
     })
-    expect(rows[0].dueDate.toISOString().slice(0, 10)).toBe('2026-01-15')
-    expect(rows[1].dueDate.toISOString().slice(0, 10)).toBe('2026-02-15')
-    expect(rows[2].dueDate.toISOString().slice(0, 10)).toBe('2026-03-15')
+    expect(rows[0].dueDate.toISOString().slice(0, 10)).toBe('2026-02-15')
+    expect(rows[1].dueDate.toISOString().slice(0, 10)).toBe('2026-03-15')
+    expect(rows[2].dueDate.toISOString().slice(0, 10)).toBe('2026-04-15')
   })
 
   it('clamps end-of-month due dates when the target month is shorter', () => {
@@ -143,10 +143,10 @@ describe('generateAmortization', () => {
       tenureMonths: 3,
       startDate: new Date('2026-01-31'),
     })
-    expect(rows[0].dueDate.toISOString().slice(0, 10)).toBe('2026-01-31')
     // Feb 2026 has 28 days
-    expect(rows[1].dueDate.toISOString().slice(0, 10)).toBe('2026-02-28')
-    expect(rows[2].dueDate.toISOString().slice(0, 10)).toBe('2026-03-31')
+    expect(rows[0].dueDate.toISOString().slice(0, 10)).toBe('2026-02-28')
+    expect(rows[1].dueDate.toISOString().slice(0, 10)).toBe('2026-03-31')
+    expect(rows[2].dueDate.toISOString().slice(0, 10)).toBe('2026-04-30')
   })
 
   it('single-month tenure collapses principal and interest into one row', () => {
