@@ -15,7 +15,7 @@
 ## Global constraints
 
 - **This is a view-layer re-skin, not a rebuild.** `Models/`, `Domain/`, `Sync/`, `Networking/`, `Support/Money.swift`, `Support/Validators.swift`, `Auth/` are **frozen**. Every edit lands in `apps/ios/Phinio/Phinio/UI/`, the new `UI/DesignSystem/`, `Resources/Fonts/`, or `Info.plist`. If a phase seems to need a domain change, stop and flag it — it almost certainly doesn't.
-- **Do not port comp mechanics, only comp pixels.** The `<script data-dc-script>` block is a mock: `fmt()` rounds money with JS floats, `emiCalc`/`dpsMaturity`/`amort` are re-derivations, and the schedule checkboxes set a paid *count* by index. The real app already has `EmiCalculator`, `DashboardStats`, `Store`, and `Decimal.currency`. **Reuse those.** CLAUDE.md: money is `Decimal`, never rounded for arithmetic.
+- **Do not port comp mechanics, only comp pixels.** The `<script data-dc-script>` block is a mock: `fmt()` rounds money with JS floats, `emiCalc`/`dpsMaturity`/`amort` are re-derivations, and the schedule checkboxes set a paid _count_ by index. The real app already has `EmiCalculator`, `DashboardStats`, `Store`, and `Decimal.currency`. **Reuse those.** CLAUDE.md: money is `Decimal`, never rounded for arithmetic.
 - **Dark only.** `.preferredColorScheme(.dark)` at the app root; all colors come from the token file, never from system semantic colors (`.red`, `.green`, `.secondary`) once Phase 0 lands.
 - **Localization.** The repo ships `Localizable.xcstrings` with Bengali. Every new user-visible literal must be added to the catalog. Purely decorative strings (currency glyphs, `▲`/`▼`) stay unlocalized.
 - **Accessibility is not optional** (see CLAUDE.md "When NOT to be lazy"). Hand-rolled chrome loses free a11y — Phase 2 owes explicit `accessibilityLabel`/`accessibilityAddTraits(.isSelected)` on tab items and the FAB, and every tap target stays ≥ 44×44pt even where the comp draws a smaller glyph.
@@ -35,16 +35,16 @@ Existing tests (`PhinioTests`) must stay green through every phase — they cove
 
 ## Decisions taken (comp vs. brief conflicts)
 
-| # | Conflict | Resolution |
-|---|---|---|
-| 1 | Comp: 3-tab glass pill + **detached** circular FAB. Brief/iOS 26: native `TabView` full-width bar, no side-by-side FAB slot. | **Hand-roll the bar** — user decision, confirmed. Pixel-match the comp; pay the a11y/safe-area cost explicitly in Phase 2. |
-| 2 | Comp: 3 tabs, Profile reached by tapping the Home avatar. Brief §4: Profile is tab 4. | **Comp wins** — 3 tabs, Profile pushed from the Home top bar. |
-| 3 | Comp: no Activity tab. Brief §5.18: Activity History reached from Profile. | **Comp + brief agree** — drop the Activity tab, keep it behind Profile → Activity history. |
-| 4 | Comp: FAB is global with **4** options (Investment · DPS Scheme · Savings Pot · **EMI**). Brief §5.7: FABMenu lives on Investments with 3. | **Comp wins** — one global FAB, 4 options. |
-| 5 | Brief §2: "No 1px dividers." Comp uses `.5px` hairlines in the summary card and Profile list. | **Comp wins** — hairline `#434655` at 50% opacity, ≤ 0.5pt. The brief's rule targets 1px borders, not sub-pixel separators. |
-| 6 | Comp legend colors DPS `#6fd0ff`; comp badge map colors DPS `#4edea3`. | **Badge map is the source of truth.** One `TypePalette` drives badge, donut slice, and legend swatch — they must never disagree. |
-| 7 | Comp donuts are CSS `conic-gradient`. | `DashboardView` already renders a Swift Charts `SectorMark` donut. **Restyle it**, don't hand-draw. Same for the EMI principal/interest donut. |
-| 8 | Comp hardcodes allocation percentages, upcoming payments, "6 active · 1 completed", "across 2 loans". | Wire to real `DashboardStats` / `@Query`. Comp values are mock data. |
+| #   | Conflict                                                                                                                                   | Resolution                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Comp: 3-tab glass pill + **detached** circular FAB. Brief/iOS 26: native `TabView` full-width bar, no side-by-side FAB slot.               | **Hand-roll the bar** — user decision, confirmed. Pixel-match the comp; pay the a11y/safe-area cost explicitly in Phase 2.                     |
+| 2   | Comp: 3 tabs, Profile reached by tapping the Home avatar. Brief §4: Profile is tab 4.                                                      | **Comp wins** — 3 tabs, Profile pushed from the Home top bar.                                                                                  |
+| 3   | Comp: no Activity tab. Brief §5.18: Activity History reached from Profile.                                                                 | **Comp + brief agree** — drop the Activity tab, keep it behind Profile → Activity history.                                                     |
+| 4   | Comp: FAB is global with **4** options (Investment · DPS Scheme · Savings Pot · **EMI**). Brief §5.7: FABMenu lives on Investments with 3. | **Comp wins** — one global FAB, 4 options.                                                                                                     |
+| 5   | Brief §2: "No 1px dividers." Comp uses `.5px` hairlines in the summary card and Profile list.                                              | **Comp wins** — hairline `#434655` at 50% opacity, ≤ 0.5pt. The brief's rule targets 1px borders, not sub-pixel separators.                    |
+| 6   | Comp legend colors DPS `#6fd0ff`; comp badge map colors DPS `#4edea3`.                                                                     | **Badge map is the source of truth.** One `TypePalette` drives badge, donut slice, and legend swatch — they must never disagree.               |
+| 7   | Comp donuts are CSS `conic-gradient`.                                                                                                      | `DashboardView` already renders a Swift Charts `SectorMark` donut. **Restyle it**, don't hand-draw. Same for the EMI principal/interest donut. |
+| 8   | Comp hardcodes allocation percentages, upcoming payments, "6 active · 1 completed", "across 2 loans".                                      | Wire to real `DashboardStats` / `@Query`. Comp values are mock data.                                                                           |
 
 ---
 
@@ -53,6 +53,7 @@ Existing tests (`PhinioTests`) must stay green through every phase — they cove
 Nothing downstream can start without this.
 
 **Files:**
+
 - Create `UI/DesignSystem/Tokens.swift` — colors, radii, shadows, spacing, gradients.
 - Create `UI/DesignSystem/Typography.swift` — Manrope/Inter `Font` helpers.
 - Create `Resources/Fonts/` — Manrope + Inter static `.ttf` (both OFL-licensed; Manrope via github.com/sharanda/manrope, Inter via rsms.me/inter).
@@ -62,55 +63,55 @@ Nothing downstream can start without this.
 
 **Tokens (exact values from the comp):**
 
-*Surfaces* — `surface #0b1326` · `surfaceLowest #060e20` (inputs, progress track, segmented control bg) · `surfaceLow #131b2e` (section group) · `surfaceHigh #222a3d` (card body) · `surfaceHighest #2d3449` (icon tile, active segment) · `pillIdle #1c2438`
+_Surfaces_ — `surface #0b1326` · `surfaceLowest #060e20` (inputs, progress track, segmented control bg) · `surfaceLow #131b2e` (section group) · `surfaceHigh #222a3d` (card body) · `surfaceHighest #2d3449` (icon tile, active segment) · `pillIdle #1c2438`
 
-*Text* — `onSurface #dae2fd` · `onSurfaceVariant #c3c6d7` · `onSurfaceMuted #8a92a8` (metadata, dates) · `onSurfaceFaint #6b7288` (table headers, paid rows) · `tabIdle #5a6178` (idle tab label, chevrons) · `onHero #ffffff` / `#f2f5ff` · `avatarText #eaf0ff`
+_Text_ — `onSurface #dae2fd` · `onSurfaceVariant #c3c6d7` · `onSurfaceMuted #8a92a8` (metadata, dates) · `onSurfaceFaint #6b7288` (table headers, paid rows) · `tabIdle #5a6178` (idle tab label, chevrons) · `onHero #ffffff` / `#f2f5ff` · `avatarText #eaf0ff`
 
 > `onSurfaceMuted`, `onSurfaceFaint`, `tabIdle`, `pillIdle` are **not** in the brief's table — they exist only in the comp. Add them; note the addition in a comment.
 
-*Accent / semantic* — `primary #b4c5ff` · `primaryContainer #2563eb` · `secondary #4edea3` · `secondaryContainer #00a572` · `tertiaryContainer #cf2c30` · `tertiaryFixedDim #ffb3ad` · `error #ffb4ab` · `outlineVariant #434655`
+_Accent / semantic_ — `primary #b4c5ff` · `primaryContainer #2563eb` · `secondary #4edea3` · `secondaryContainer #00a572` · `tertiaryContainer #cf2c30` · `tertiaryFixedDim #ffb3ad` · `error #ffb4ab` · `outlineVariant #434655`
 
-*Type palette* (drives badge bg/fg, donut slice, legend swatch — bg is fg at 16% alpha):
+_Type palette_ (drives badge bg/fg, donut slice, legend swatch — bg is fg at 16% alpha):
 `stock #b4c5ff` · `mutualFund #4edea3` · `gold #ffcf70` · `crypto #c79bff` · `fd #6fd0ff` · `dps #4edea3` · `savings #7fa0ff` · `other #c3c6d7`. Map the domain's full enum (`sanchayapatra`, `real_estate`, `agro_farm`, `business`) onto these — do not add new hues the comp never drew.
 
-*Gradients* (all `140°`, top-leading → bottom-trailing) — `netWorthHero #2563eb 0% → #1c3aa0 48% → #141d38 100%` · `summaryCard #222a3d → #1a2236` · `emiLoanHero #2563eb → #141d38` · `emiCardHero #7a4bd0 → #20182f` · `dpsHero #00a572 → #0d2a26` · `savingsHero #2563eb → #141d38` · `avatar 135° #2563eb → #00a572`
+_Gradients_ (all `140°`, top-leading → bottom-trailing) — `netWorthHero #2563eb 0% → #1c3aa0 48% → #141d38 100%` · `summaryCard #222a3d → #1a2236` · `emiLoanHero #2563eb → #141d38` · `emiCardHero #7a4bd0 → #20182f` · `dpsHero #00a572 → #0d2a26` · `savingsHero #2563eb → #141d38` · `avatar 135° #2563eb → #00a572`
 
-*Ambient orb* — every hero carries one blurred circle, 200–220pt, `blur 46`, offset `top -80/-90, trailing -40`, tint: net-worth `primary @18%`, EMI `white @14%`, DPS `secondary @22%`, savings `#7fa0ff @22%`.
+_Ambient orb_ — every hero carries one blurred circle, 200–220pt, `blur 46`, offset `top -80/-90, trailing -40`, tint: net-worth `primary @18%`, EMI `white @14%`, DPS `secondary @22%`, savings `#7fa0ff @22%`.
 
-*Radii* — hero 22 · detailHero 20 · summary 18 · card 16 · tile 14 · currencyTile 13 · input 11 · iconTile 11 · segment 9 · badge 8 · tabPill 32 · pill/circle `.capsule`
+_Radii_ — hero 22 · detailHero 20 · summary 18 · card 16 · tile 14 · currencyTile 13 · input 11 · iconTile 11 · segment 9 · badge 8 · tabPill 32 · pill/circle `.capsule`
 
-*Shadows* — card `y10 blur30 #040a1a @28%` · hero `y16–18 blur40–44 @50%` · tabBar `y-2 blur30 @50%` · fabItem `y8 blur22 @55%`
+_Shadows_ — card `y10 blur30 #040a1a @28%` · hero `y16–18 blur40–44 @50%` · tabBar `y-2 blur30 @50%` · fabItem `y8 blur22 @55%`
 
-*Glass* (tab bar + FAB only) — fill `#131b2e @82%`, `.regularMaterial` backdrop, hairline border `primary @8–10%`
+_Glass_ (tab bar + FAB only) — fill `#131b2e @82%`, `.regularMaterial` backdrop, hairline border `primary @8–10%`
 
-*Layout* — screen horizontal padding 20 · content top inset 54 · content bottom inset 104 · card gap 12 · section gap 22
+_Layout_ — screen horizontal padding 20 · content top inset 54 · content bottom inset 104 · card gap 12 · section gap 22
 
 **Typography** — two families, never mixed (brief §2):
 
-| Helper | Font | Use |
-|---|---|---|
-| `.heroNumeric` | Manrope ExtraBold 42, tracking −0.02em | Net worth |
-| `.detailHeroNumeric` | Manrope ExtraBold 40, −0.02em | Detail hero |
-| `.screenTitle` | Manrope ExtraBold 30, −0.02em | "Investments", "EMIs", "Profile" |
-| `.detailTitle` | Manrope ExtraBold 22 | Detail header |
-| `.displayName` | Manrope Bold 20 | User name |
-| `.sectionTitle` | Manrope Bold 17 | "Upcoming Payments" |
-| `.cardTitle` | Manrope Bold 16 | Card name, detail section title |
-| `.amount` / `.amountLarge` | Manrope Bold 15 / 20–22 | Row + card numerics |
-| `.amountSecondary` | Manrope SemiBold 15 | De-emphasised numerics |
-| `.pillText` | Manrope Bold 11–12 | Money pills, legend % |
-| `.tableRow` | Manrope SemiBold 10.5 | Amortization rows |
-| `.rowLabel` | Inter SemiBold 14–15 | List row primary |
-| `.body` | Inter Medium 13 | Body copy |
-| `.caption` | Inter Medium 12 | Secondary |
-| `.meta` | Inter Medium 11 | Dates, footers |
-| `.sectionLabel` | Inter SemiBold 12, uppercase, tracking 0.1em | "PREFERENCES" |
-| `.heroLabel` | Inter SemiBold 12, uppercase, tracking 0.14em | "NET WORTH" |
-| `.tabLabel` | Inter SemiBold 10 | Tab bar |
+| Helper                     | Font                                          | Use                              |
+| -------------------------- | --------------------------------------------- | -------------------------------- |
+| `.heroNumeric`             | Manrope ExtraBold 42, tracking −0.02em        | Net worth                        |
+| `.detailHeroNumeric`       | Manrope ExtraBold 40, −0.02em                 | Detail hero                      |
+| `.screenTitle`             | Manrope ExtraBold 30, −0.02em                 | "Investments", "EMIs", "Profile" |
+| `.detailTitle`             | Manrope ExtraBold 22                          | Detail header                    |
+| `.displayName`             | Manrope Bold 20                               | User name                        |
+| `.sectionTitle`            | Manrope Bold 17                               | "Upcoming Payments"              |
+| `.cardTitle`               | Manrope Bold 16                               | Card name, detail section title  |
+| `.amount` / `.amountLarge` | Manrope Bold 15 / 20–22                       | Row + card numerics              |
+| `.amountSecondary`         | Manrope SemiBold 15                           | De-emphasised numerics           |
+| `.pillText`                | Manrope Bold 11–12                            | Money pills, legend %            |
+| `.tableRow`                | Manrope SemiBold 10.5                         | Amortization rows                |
+| `.rowLabel`                | Inter SemiBold 14–15                          | List row primary                 |
+| `.body`                    | Inter Medium 13                               | Body copy                        |
+| `.caption`                 | Inter Medium 12                               | Secondary                        |
+| `.meta`                    | Inter Medium 11                               | Dates, footers                   |
+| `.sectionLabel`            | Inter SemiBold 12, uppercase, tracking 0.1em  | "PREFERENCES"                    |
+| `.heroLabel`               | Inter SemiBold 12, uppercase, tracking 0.14em | "NET WORTH"                      |
+| `.tabLabel`                | Inter SemiBold 10                             | Tab bar                          |
 
 - [ ] Vendor the `.ttf` files (Regular / Medium / SemiBold / Bold / ExtraBold for Manrope; Regular / Medium / SemiBold / Bold for Inter). Ship only the weights the table uses.
 - [ ] `Info.plist` with `UIAppFonts` listing each filename; wire `INFOPLIST_FILE`.
-- [ ] **Verify the PostScript names, don't guess them.** Recent Inter releases ship as `Inter18pt-Regular`, *not* `Inter-Regular` — referencing the CSS family name silently falls back to system font and the whole re-skin looks subtly wrong with a green build. Dump once at launch and delete the dump after:
+- [ ] **Verify the PostScript names, don't guess them.** Recent Inter releases ship as `Inter18pt-Regular`, _not_ `Inter-Regular` — referencing the CSS family name silently falls back to system font and the whole re-skin looks subtly wrong with a green build. Dump once at launch and delete the dump after:
   ```swift
   UIFont.familyNames.filter { $0.contains("Manrope") || $0.contains("Inter") }
     .forEach { print($0, UIFont.fontNames(forFamilyName: $0)) }
@@ -158,7 +159,7 @@ The structural phase. Everything visual after this is per-screen.
 **Files:** rewrite `UI/MainTabView.swift`; new `UI/DesignSystem/NoirTabBar.swift`, `UI/DesignSystem/FabMenu.swift`, `UI/Dashboard/ProfileView.swift` (rename target for `SettingsView`).
 
 - [ ] Replace `TabView` with a `ZStack` of three **always-instantiated** `NavigationStack`s (`.home`, `.invest`, `.emis`), each with a retained `NavigationPath`, switched by z-order + `.opacity`/`.zIndex` — **not** by `if tab == …`, which tears the stacks down and loses each tab's back stack on every switch. Today's `investmentsPath` / `emisPath` behavior must survive; the deep-link handler depends on it.
-- [ ] **Attach the bar and FAB to each stack's *root view*** via `.safeAreaInset(edge: .bottom)` — **not** as a ZStack sibling above the stacks. Native `TabView` auto-hid its bar on push; the rewrite loses that, and `.toolbar(.hidden, for: .tabBar)` is a no-op once there's no `TabView`. Root attachment makes pushed detail screens cover the chrome for free, matching the comp's own z-order (details `z-index:50`, bar `45`), with no path-depth bookkeeping.
+- [ ] **Attach the bar and FAB to each stack's _root view_** via `.safeAreaInset(edge: .bottom)` — **not** as a ZStack sibling above the stacks. Native `TabView` auto-hid its bar on push; the rewrite loses that, and `.toolbar(.hidden, for: .tabBar)` is a no-op once there's no `TabView`. Root attachment makes pushed detail screens cover the chrome for free, matching the comp's own z-order (details `z-index:50`, bar `45`), with no path-depth bookkeeping.
 - [ ] `NoirTabBar` — bottom `HStack`, 16pt horizontal / 26pt bottom padding, 12pt gap. Left: flexible glass pill, radius 32, **`.glassEffect(in: .rect(cornerRadius: 32))`** (brief §3 — native Liquid Glass, and closer to the comp's `blur(22) saturate(160%)` than a flat material) over `surfaceLow @82%` with a hairline `primary @8%` border, 8pt inner padding, 3 equal columns. Each item: 23pt SF Symbol over Inter SemiBold 10 label, 5pt gap, 9pt vertical padding, radius 22, active background `primary @16%`, active tint `onSurface` / idle `tabIdle`. Symbols: `house`, `chart.line.uptrend.xyaxis`, `creditcard`. Wrap the pill and FAB in one `GlassEffectContainer` so the two glass surfaces blend as a pair.
 - [ ] Detached FAB — 62pt circle, same `.glassEffect(in: .circle)`, `plus` glyph 27pt `primary`, rotates 45° when the menu is open (`.spring(duration: 0.25, bounce: 0.3)`).
 - [ ] **A11y debt from hand-rolling:** each tab item gets `accessibilityLabel` + `accessibilityAddTraits(.isSelected)` + `.isButton`; the FAB gets a label and `.isButton`. Respect `safeAreaInsets.bottom` rather than a hardcoded 26pt. Add `.safeAreaInset(edge: .bottom)` (or matching content padding) so scroll content clears the bar — the comp's 104pt bottom inset assumes this.
