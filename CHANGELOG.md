@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Reopening the installed app no longer drops you on the landing page. A
+  home-screen install always relaunches at one fixed address rather than
+  wherever you left off, and that address pointed at the marketing page — so
+  once the phone reclaimed the backgrounded app, anywhere from minutes to
+  hours later, the next tap started you at the front door instead of your
+  dashboard. It now opens straight into the app. You were never signed out;
+  only the landing spot was wrong. Copies already installed keep the old
+  address until the browser refreshes it in the background, so until then the
+  landing page forwards you on if you are signed in.
+- Opening the app with no connection now boots into your last-synced data
+  instead of the landing page. The offline shell only ever covered the app
+  itself, which is not where a relaunch was landing.
+
 ## [1.8.4] - 2026-08-18
 
 Phinio now has a native iPhone app, backed by a new REST API. Almost
