@@ -29,23 +29,23 @@ North star: **"The Digital Private Bank."** Editorial, nocturnal, data-first. At
 
 ### Color tokens
 
-| Role | Token | Hex |
-| --- | --- | --- |
-| Page base | `surface` | `#0b1326` |
-| Recessed (inputs, detail rows) | `surface-container-lowest` | `#060e20` |
-| Section / card group | `surface-container-low` | `#131b2e` |
-| Card body | `surface-container-high` | `#222a3d` |
-| Interactive card / variant | `surface-container-highest` | `#2d3449` |
-| Primary text | `on-surface` | `#dae2fd` |
-| Secondary text | `on-surface-variant` | `#c3c6d7` |
-| Outline (subtle) | `outline-variant` | `#434655` |
-| Accent (text/tint) | `primary` | `#b4c5ff` |
-| Accent fill | `primary-container` | `#2563eb` |
-| **Gain / positive** | `secondary` | `#4edea3` |
-| Gain fill | `secondary-container` | `#00a572` |
-| **Loss / destructive** | `tertiary-container` | `#cf2c30` |
-| Soft warning | `tertiary-fixed-dim` | `#ffb3ad` |
-| Error text | `error` | `#ffb4ab` |
+| Role                           | Token                       | Hex       |
+| ------------------------------ | --------------------------- | --------- |
+| Page base                      | `surface`                   | `#0b1326` |
+| Recessed (inputs, detail rows) | `surface-container-lowest`  | `#060e20` |
+| Section / card group           | `surface-container-low`     | `#131b2e` |
+| Card body                      | `surface-container-high`    | `#222a3d` |
+| Interactive card / variant     | `surface-container-highest` | `#2d3449` |
+| Primary text                   | `on-surface`                | `#dae2fd` |
+| Secondary text                 | `on-surface-variant`        | `#c3c6d7` |
+| Outline (subtle)               | `outline-variant`           | `#434655` |
+| Accent (text/tint)             | `primary`                   | `#b4c5ff` |
+| Accent fill                    | `primary-container`         | `#2563eb` |
+| **Gain / positive**            | `secondary`                 | `#4edea3` |
+| Gain fill                      | `secondary-container`       | `#00a572` |
+| **Loss / destructive**         | `tertiary-container`        | `#cf2c30` |
+| Soft warning                   | `tertiary-fixed-dim`        | `#ffb3ad` |
+| Error text                     | `error`                     | `#ffb4ab` |
 
 ### Rules
 
@@ -70,28 +70,28 @@ North star: **"The Digital Private Bank."** Editorial, nocturnal, data-first. At
 
 Build these once; every screen composes them.
 
-| Component | Role | SwiftUI approach |
-| --- | --- | --- |
-| **TopBar** | Sticky header — user name (truncated) + avatar, notification bell with unread-count badge | Toolbar with glass background |
-| **BottomTabBar** | 4 tabs: Home, Invest, EMIs, Profile. Hidden on all sub-screens | `TabView` — Liquid Glass tab bar is native |
-| **NotificationBell** | Badge + opens Notification Center | Toolbar item → sheet |
-| **Card** | Base surface — `surface-container-high`, 16pt corners, no dividers | Glass/material card |
-| **StatTile** | Small label + large numeric, used in 2- and 3-up rows | — |
-| **MoneyPill** | Gain/loss percentage in a tinted pill | — |
-| **TypeBadge** | Color-coded investment/EMI type chip | — |
-| **FilterPills** | Horizontally scrolling filter chips | ScrollView + chips |
-| **ProgressBar** | 4pt thin; track `surface-variant`, indicator `secondary` (positive) or `primary-container` (neutral) | `ProgressView` restyled |
-| **TextField** | "Carved" input — `surface-container-lowest` fill, focus transitions border to full `primary`, inline error below | — |
-| **FAB** | Floating "+" button, bottom-trailing, glass | — |
-| **FABMenu** | FAB that expands to 3 labeled options | Menu / custom expand |
-| **EmptyState** | Icon + headline + body + CTA | `ContentUnavailableView` |
-| **Skeleton** | Loading shimmer for cards and rows | `.redacted(reason: .placeholder)` |
-| **ConfirmModal** | Destructive confirmation | `confirmationDialog` |
-| **ActionMenu** | Contextual actions (edit / delete) | `Menu` |
-| **OfflineBanner** | Connectivity indicator | Inline banner below TopBar |
-| **PullToRefresh** | — | `.refreshable` |
-| **AllocationDonut** | Portfolio pie by investment type, interactive legend | Swift Charts `SectorMark` |
-| **PrincipalInterestDonut** | Loan lifetime principal-vs-interest split | Swift Charts `SectorMark` |
+| Component                  | Role                                                                                                             | SwiftUI approach                           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **TopBar**                 | Sticky header — user name (truncated) + avatar, notification bell with unread-count badge                        | Toolbar with glass background              |
+| **BottomTabBar**           | 4 tabs: Home, Invest, EMIs, Profile. Hidden on all sub-screens                                                   | `TabView` — Liquid Glass tab bar is native |
+| **NotificationBell**       | Badge + opens Notification Center                                                                                | Toolbar item → sheet                       |
+| **Card**                   | Base surface — `surface-container-high`, 16pt corners, no dividers                                               | Glass/material card                        |
+| **StatTile**               | Small label + large numeric, used in 2- and 3-up rows                                                            | —                                          |
+| **MoneyPill**              | Gain/loss percentage in a tinted pill                                                                            | —                                          |
+| **TypeBadge**              | Color-coded investment/EMI type chip                                                                             | —                                          |
+| **FilterPills**            | Horizontally scrolling filter chips                                                                              | ScrollView + chips                         |
+| **ProgressBar**            | 4pt thin; track `surface-variant`, indicator `secondary` (positive) or `primary-container` (neutral)             | `ProgressView` restyled                    |
+| **TextField**              | "Carved" input — `surface-container-lowest` fill, focus transitions border to full `primary`, inline error below | —                                          |
+| **FAB**                    | Floating "+" button, bottom-trailing, glass                                                                      | —                                          |
+| **FABMenu**                | FAB that expands to 3 labeled options                                                                            | Menu / custom expand                       |
+| **EmptyState**             | Icon + headline + body + CTA                                                                                     | `ContentUnavailableView`                   |
+| **Skeleton**               | Loading shimmer for cards and rows                                                                               | `.redacted(reason: .placeholder)`          |
+| **ConfirmModal**           | Destructive confirmation                                                                                         | `confirmationDialog`                       |
+| **ActionMenu**             | Contextual actions (edit / delete)                                                                               | `Menu`                                     |
+| **OfflineBanner**          | Connectivity indicator                                                                                           | Inline banner below TopBar                 |
+| **PullToRefresh**          | —                                                                                                                | `.refreshable`                             |
+| **AllocationDonut**        | Portfolio pie by investment type, interactive legend                                                             | Swift Charts `SectorMark`                  |
+| **PrincipalInterestDonut** | Loan lifetime principal-vs-interest split                                                                        | Swift Charts `SectorMark`                  |
 
 ---
 
@@ -99,12 +99,12 @@ Build these once; every screen composes them.
 
 **Tabs** (persistent, hidden on sub-screens):
 
-| Tab | Icon | Label | Root |
-| --- | --- | --- | --- |
-| 1 | `house` | Home | Dashboard |
-| 2 | `chart.line.uptrend.xyaxis` | Invest | Investments list |
-| 3 | `creditcard` | EMIs | EMIs list |
-| 4 | `person` | Profile | Profile / settings |
+| Tab | Icon                        | Label   | Root               |
+| --- | --------------------------- | ------- | ------------------ |
+| 1   | `house`                     | Home    | Dashboard          |
+| 2   | `chart.line.uptrend.xyaxis` | Invest  | Investments list   |
+| 3   | `creditcard`                | EMIs    | EMIs list          |
+| 4   | `person`                    | Profile | Profile / settings |
 
 **Push stacks:**
 
@@ -143,15 +143,15 @@ Reference mockup: `screens/splash_screen/code.html`.
 
 **Animation (~1.4s entry, then settle)**
 
-| Time | Element | Motion |
-| --- | --- | --- |
-| 0.0s | Orb | Fade in, then slow continuous scale-breathe (6s loop, autoreverse) |
-| 0.1s | Logo tile | Scale 0.8 → 1.0 + fade, spring |
-| 0.4s | Accent dot | Pop-in, spring with overshoot |
-| 0.5s | Wordmark | Fade + 12pt slide-up |
-| 0.7s | Tagline | Fade, staggered after wordmark |
-| 0.9s | Buttons | Fade + slide-up, `.blurReplace` transition |
-| loop | Glow | Opacity pulse 0.6 ↔ 1.0 |
+| Time | Element    | Motion                                                             |
+| ---- | ---------- | ------------------------------------------------------------------ |
+| 0.0s | Orb        | Fade in, then slow continuous scale-breathe (6s loop, autoreverse) |
+| 0.1s | Logo tile  | Scale 0.8 → 1.0 + fade, spring                                     |
+| 0.4s | Accent dot | Pop-in, spring with overshoot                                      |
+| 0.5s | Wordmark   | Fade + 12pt slide-up                                               |
+| 0.7s | Tagline    | Fade, staggered after wordmark                                     |
+| 0.9s | Buttons    | Fade + slide-up, `.blurReplace` transition                         |
+| loop | Glow       | Opacity pulse 0.6 ↔ 1.0                                            |
 
 Implementation: `PhaseAnimator` for the entry chain; `.spring(duration: 0.5, bounce: 0.3)`; ambient orb as a `Circle().blur(radius: 120)` with `.repeatForever(autoreverses: true)`. The logo tile is `.regularMaterial` so the orb reads through it.
 
@@ -211,9 +211,9 @@ Tab 2.
 - **Status tabs** — Active / Completed.
 - **Type filter pills** (horizontal scroll) — All · Stocks · Mutual Fund · FD · Gold · Crypto · DPS · Savings · Other.
 - **Cards — three variants:**
-  - *Lump-sum* — name, color-coded type badge, invested amount, current or exit value, return % pill, date
-  - *DPS* — name, green "DPS" badge, `paidCount / tenureMonths` months, total deposited → maturity value, progress bar, footer with monthly amount / rate / next due
-  - *Savings* — name, blue "Savings" badge, deposit count, current balance, return % if any, footer with total deposited
+  - _Lump-sum_ — name, color-coded type badge, invested amount, current or exit value, return % pill, date
+  - _DPS_ — name, green "DPS" badge, `paidCount / tenureMonths` months, total deposited → maturity value, progress bar, footer with monthly amount / rate / next due
+  - _Savings_ — name, blue "Savings" badge, deposit count, current balance, return % if any, footer with total deposited
 - **FABMenu** (bottom-trailing) — expands to: Investment · DPS Scheme · Savings Pot
 - **Empty state** when no items match the active filters
 

@@ -14,14 +14,14 @@ the investment-type palette, and the gradient hero cards.
 
 ## Decisions (user-confirmed)
 
-| Question | Decision |
-| --- | --- |
-| Adoption depth | Full native — standard components replace custom chrome and controls |
-| Appearance | Follow system light/dark (dark lock removed) |
-| Typography | System font (SF Pro) + Dynamic Type; vendored Manrope/Inter deleted |
+| Question             | Decision                                                                   |
+| -------------------- | -------------------------------------------------------------------------- |
+| Adoption depth       | Full native — standard components replace custom chrome and controls       |
+| Appearance           | Follow system light/dark (dark lock removed)                               |
+| Typography           | System font (SF Pro) + Dynamic Type; vendored Manrope/Inter deleted        |
 | Creation entry point | Tab bar's separated trailing slot (iOS 26 search-role tab styled as **+**) |
-| Content surfaces | Native inset-grouped lists; gradient hero cards kept as custom headers |
-| Execution | Phased in-place rewrite on one branch; app builds after every phase |
+| Content surfaces     | Native inset-grouped lists; gradient hero cards kept as custom headers     |
+| Execution            | Phased in-place rewrite on one branch; app builds after every phase        |
 
 ## Frozen layers
 
@@ -56,7 +56,7 @@ deleted with the fonts).
   selection binding intercepts it: selecting Create never navigates —
   it presents the create menu (New investment → type chooser, New EMI) as a
   sheet and restores the previous tab selection.
-  - *Fallback (known off-label API risk):* if the search-role tab resists
+  - _Fallback (known off-label API risk):_ if the search-role tab resists
     icon/behavior overrides, use a plain fourth tab with the same
     interception pattern. Same UX, loses the separated styling.
 - **Navigation:** per-tab `NavigationStack`s and the typed route values
@@ -72,21 +72,21 @@ deleted with the fonts).
 
 Component mapping (old → new):
 
-| Modern Noir | Native replacement |
-| --- | --- |
-| `NoirCard` / `SectionGroup` | inset-grouped `List` sections / `Section` |
-| `CarvedTextField` | `TextField` in `Form` rows |
-| `NoirToggle` | `Toggle` |
-| `PrimaryButton` | `.buttonStyle(.glassProminent)` |
-| `FilterPills` / `SegmentedTabs` | segmented `Picker` / `Menu` |
-| `ProgressBar` | `ProgressView` / `Gauge` |
-| Skeleton views | `.redacted(reason: .placeholder)` |
-| `DetailHeader` | native navigation bar + toolbar |
-| `NoirTabBar` + `FabMenu` | native `TabView` + create slot |
-| Offline banner | kept, re-rendered on a system-material capsule |
-| `MoneyPill`, `TypeBadge`, `StatTile` | kept as small custom leaves, semantic colors (no native equivalent) |
-| `HeroCard` | kept — gradient hero headers (the one deliberate non-standard element) |
-| Swift Charts donuts | unchanged (already native) |
+| Modern Noir                          | Native replacement                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| `NoirCard` / `SectionGroup`          | inset-grouped `List` sections / `Section`                              |
+| `CarvedTextField`                    | `TextField` in `Form` rows                                             |
+| `NoirToggle`                         | `Toggle`                                                               |
+| `PrimaryButton`                      | `.buttonStyle(.glassProminent)`                                        |
+| `FilterPills` / `SegmentedTabs`      | segmented `Picker` / `Menu`                                            |
+| `ProgressBar`                        | `ProgressView` / `Gauge`                                               |
+| Skeleton views                       | `.redacted(reason: .placeholder)`                                      |
+| `DetailHeader`                       | native navigation bar + toolbar                                        |
+| `NoirTabBar` + `FabMenu`             | native `TabView` + create slot                                         |
+| Offline banner                       | kept, re-rendered on a system-material capsule                         |
+| `MoneyPill`, `TypeBadge`, `StatTile` | kept as small custom leaves, semantic colors (no native equivalent)    |
+| `HeroCard`                           | kept — gradient hero headers (the one deliberate non-standard element) |
+| Swift Charts donuts                  | unchanged (already native)                                             |
 
 Screens rebuild on `List`/`Form`: dashboard, both list screens, all three
 investment forms + details, withdraw sheet, EMI form + detail (amortization

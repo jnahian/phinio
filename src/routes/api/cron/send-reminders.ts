@@ -315,11 +315,11 @@ export async function handleCron(request: Request): Promise<Response> {
     candidates.push({
       profileId: d.profileId,
       type: 'dps.installment.due',
-      title: t('dps.dueSoon.title', { days: daysFromToday(d.dueDate!) }),
+      title: t('dps.dueSoon.title', { days: daysFromToday(d.dueDate) }),
       body: t('dps.dueSoon.body', {
         label: d.investment.name,
         amount: fmt.currency(d.amount, currency),
-        date: fmt.date(d.dueDate!, {
+        date: fmt.date(d.dueDate, {
           day: '2-digit',
           month: 'short',
           year: 'numeric',
@@ -341,7 +341,7 @@ export async function handleCron(request: Request): Promise<Response> {
       body: t('dps.overdue.body', {
         label: d.investment.name,
         amount: fmt.currency(d.amount, currency),
-        date: fmt.date(d.dueDate!, {
+        date: fmt.date(d.dueDate, {
           day: '2-digit',
           month: 'short',
           year: 'numeric',

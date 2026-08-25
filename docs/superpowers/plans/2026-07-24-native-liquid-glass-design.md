@@ -44,40 +44,40 @@ xcrun simctl ui "$UDID" appearance dark    # check again
 
 **Style translation tables** — use these everywhere; do not invent new mappings:
 
-| Modern Noir token | Native replacement |
-| --- | --- |
-| `Color.surface` (screen bg) | delete the `.background(...)` — `List`/`Form` default grouped background |
-| `Color.surfaceLow` / `.surfaceHigh` (card bg) | delete — default list row bg; standalone tiles use `Color(.secondarySystemGroupedBackground)` |
-| `Color.surfaceLowest` / `.surfaceHighest` | `Color(.tertiarySystemFill)` |
-| `Color.onSurface` | `.primary` (usually just delete the modifier) |
-| `Color.onSurfaceVariant` / `.onSurfaceMuted` | `.secondary` |
-| `Color.onSurfaceFaint` / `.tabIdle` | `.tertiary` / `Color(.tertiaryLabel)` |
-| `Color.onHero` / `.onHeroVariant` | `.white` (hero cards only) |
-| `Color.brandPrimary` (interactive) | `.tint` / `Color.accentColor` |
-| `Color.brandSecondary` / `.brandSecondaryHero` / `.secondaryContainer` (gains, paid) | `.green` |
-| `Color.error` / `.tertiaryContainer` / `.tertiaryFixedDim` (losses, overdue, destructive) | `.red` |
-| `Color.primaryContainer` | `Color.accentColor` (outside gradients) |
-| `Color.outlineVariant` | `Color(.separator)` |
+| Modern Noir token                                                                         | Native replacement                                                                            |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `Color.surface` (screen bg)                                                               | delete the `.background(...)` — `List`/`Form` default grouped background                      |
+| `Color.surfaceLow` / `.surfaceHigh` (card bg)                                             | delete — default list row bg; standalone tiles use `Color(.secondarySystemGroupedBackground)` |
+| `Color.surfaceLowest` / `.surfaceHighest`                                                 | `Color(.tertiarySystemFill)`                                                                  |
+| `Color.onSurface`                                                                         | `.primary` (usually just delete the modifier)                                                 |
+| `Color.onSurfaceVariant` / `.onSurfaceMuted`                                              | `.secondary`                                                                                  |
+| `Color.onSurfaceFaint` / `.tabIdle`                                                       | `.tertiary` / `Color(.tertiaryLabel)`                                                         |
+| `Color.onHero` / `.onHeroVariant`                                                         | `.white` (hero cards only)                                                                    |
+| `Color.brandPrimary` (interactive)                                                        | `.tint` / `Color.accentColor`                                                                 |
+| `Color.brandSecondary` / `.brandSecondaryHero` / `.secondaryContainer` (gains, paid)      | `.green`                                                                                      |
+| `Color.error` / `.tertiaryContainer` / `.tertiaryFixedDim` (losses, overdue, destructive) | `.red`                                                                                        |
+| `Color.primaryContainer`                                                                  | `Color.accentColor` (outside gradients)                                                       |
+| `Color.outlineVariant`                                                                    | `Color(.separator)`                                                                           |
 
-| Modern Noir font | Native replacement |
-| --- | --- |
+| Modern Noir font                      | Native replacement                                                                             |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `.heroNumeric` / `.detailHeroNumeric` | `.largeTitle.weight(.heavy).monospacedDigit()` / `.largeTitle.weight(.bold).monospacedDigit()` |
-| `.screenTitle` | `.navigationTitle(...)` large title (delete the Text) |
-| `.detailTitle` | `.navigationTitle(...)` + `.navigationBarTitleDisplayMode(.inline)` |
-| `.sectionTitle` / `SectionHeader` | `Section` header text (system default) |
-| `.cardTitle` | `.headline` |
-| `.displayName` | `.title3.weight(.semibold)` |
-| `.amountLarge(20/22)` | `.title3.weight(.bold).monospacedDigit()` |
-| `.amount` (15) | `.subheadline.weight(.semibold).monospacedDigit()` |
-| `.amountSecondary` | `.subheadline.monospacedDigit()` |
-| `.rowLabel(13–15)` | `.body` |
-| `.body` (13) | `.subheadline` |
-| `.caption` (12) | `.footnote` |
-| `.meta` (11) | `.caption` |
-| `.badgeLabel` | `.caption2.weight(.semibold)` |
-| `.tableRow` (10.5) | `.caption2.monospacedDigit()` |
-| `.pillText` | `.caption.weight(.bold).monospacedDigit()` |
-| `.tracking(...)` calls | delete (system font uses default tracking) |
+| `.screenTitle`                        | `.navigationTitle(...)` large title (delete the Text)                                          |
+| `.detailTitle`                        | `.navigationTitle(...)` + `.navigationBarTitleDisplayMode(.inline)`                            |
+| `.sectionTitle` / `SectionHeader`     | `Section` header text (system default)                                                         |
+| `.cardTitle`                          | `.headline`                                                                                    |
+| `.displayName`                        | `.title3.weight(.semibold)`                                                                    |
+| `.amountLarge(20/22)`                 | `.title3.weight(.bold).monospacedDigit()`                                                      |
+| `.amount` (15)                        | `.subheadline.weight(.semibold).monospacedDigit()`                                             |
+| `.amountSecondary`                    | `.subheadline.monospacedDigit()`                                                               |
+| `.rowLabel(13–15)`                    | `.body`                                                                                        |
+| `.body` (13)                          | `.subheadline`                                                                                 |
+| `.caption` (12)                       | `.footnote`                                                                                    |
+| `.meta` (11)                          | `.caption`                                                                                     |
+| `.badgeLabel`                         | `.caption2.weight(.semibold)`                                                                  |
+| `.tableRow` (10.5)                    | `.caption2.monospacedDigit()`                                                                  |
+| `.pillText`                           | `.caption.weight(.bold).monospacedDigit()`                                                     |
+| `.tracking(...)` calls                | delete (system font uses default tracking)                                                     |
 
 All `Font.custom("Manrope-…"/"Inter-…", …)` calls map by size to the nearest row above.
 
@@ -86,11 +86,13 @@ All `Font.custom("Manrope-…"/"Inter-…", …)` calls map by size to the neare
 ### Task 1: Appearance unlock + adaptive brand color layer
 
 **Files:**
+
 - Modify: `apps/ios/Phinio/Phinio/PhinioApp.swift:31`
 - Modify: `apps/ios/Phinio/Phinio/Assets.xcassets/AccentColor.colorset/Contents.json`
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Tokens.swift` (TypePalette only — everything else in the file stays until Task 9)
 
 **Interfaces:**
+
 - Produces: `TypePalette.stock/.mutualFund/.gold/.crypto/.fd/.dps/.savings/.other: Color` (now light/dark adaptive), `TypePalette.foreground(for: String) -> Color`, `TypePalette.background(for: String) -> Color` — signatures unchanged, all later tasks keep calling them.
 - Produces: asset-catalog `AccentColor` — later tasks use it via `.tint` / `Color.accentColor`.
 
@@ -108,41 +110,41 @@ Replace the entire contents of `Assets.xcassets/AccentColor.colorset/Contents.js
 
 ```json
 {
-  "colors" : [
+  "colors": [
     {
-      "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "0xEB",
-          "green" : "0x63",
-          "red" : "0x25"
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xEB",
+          "green": "0x63",
+          "red": "0x25"
         }
       },
-      "idiom" : "universal"
+      "idiom": "universal"
     },
     {
-      "appearances" : [
+      "appearances": [
         {
-          "appearance" : "luminosity",
-          "value" : "dark"
+          "appearance": "luminosity",
+          "value": "dark"
         }
       ],
-      "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "0xFF",
-          "green" : "0xC5",
-          "red" : "0xB4"
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xC5",
+          "red": "0xB4"
         }
       },
-      "idiom" : "universal"
+      "idiom": "universal"
     }
   ],
-  "info" : {
-    "author" : "xcode",
-    "version" : 1
+  "info": {
+    "author": "xcode",
+    "version": 1
   }
 }
 ```
@@ -224,12 +226,14 @@ git commit -m "💄 style(ios): unlock system appearance, adaptive AccentColor +
 ### Task 2: Native TabView shell + create slot
 
 **Files:**
+
 - Rewrite: `apps/ios/Phinio/Phinio/UI/MainTabView.swift`
 - Delete: `apps/ios/Phinio/Phinio/UI/DesignSystem/NoirTabBar.swift` (defines `AppTab` — moves to MainTabView.swift)
 - Delete: `apps/ios/Phinio/Phinio/UI/DesignSystem/FabMenu.swift` (defines `CreateSheet` — moves to MainTabView.swift)
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components+Controls.swift` (delete the `#Preview("Component Kit")` block — it references components that die across Tasks 2–8)
 
 **Interfaces:**
+
 - Produces: `enum AppTab: Hashable { case home, invest, emis, create }`
 - Produces: `enum CreateSheet: String, Identifiable, CaseIterable { case investment, dps, savings, emi }` with `label: LocalizedStringKey`, `symbol: String`, `owningTab: AppTab` (`tint` is dropped — its only consumer was FabMenu).
 - Produces: `CreateMenuSheet(onSelect: (CreateSheet) -> Void)` — used only by MainTabView.
@@ -539,9 +543,11 @@ git commit -m "✨ feat(ios): native TabView with Liquid Glass bar and create sl
 ```
 
 ---
+
 ### Task 3: Home — Dashboard on List, Profile on Form, kept-leaf restyle
 
 **Files:**
+
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Dashboard/DashboardView.swift`
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Dashboard/ProfileView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/MainTabView.swift` (Home tab body; delete `HomeTopBar`)
@@ -550,6 +556,7 @@ git commit -m "✨ feat(ios): native TabView with Liquid Glass bar and create sl
 - Modify: `apps/ios/Phinio/Phinio/UI/SharedViews.swift` (restyle `UpcomingRow`)
 
 **Interfaces:**
+
 - Produces: `DashboardView(showNotifications: Binding<Bool>, onCreate: (CreateSheet) -> Void)` — the notifications sheet stays in MainTabView (deep links must be able to close it), the bell button moves into Dashboard's toolbar.
 - Produces (restyled, same signatures): `MoneyPill(percent: Decimal, size: Size)`, `AvatarView(initials: String, size: CGFloat)`, `IconTile(size:radius:background:icon:)` with new default `background: Color = Color(.tertiarySystemFill)`, `UpcomingRow(item: UpcomingItem)`.
 - Consumes: `HeroCard`, `Gradients.netWorthHero`, `TypePalette`, `MoneyText`, `DashboardStats`, `Store` — unchanged.
@@ -595,6 +602,7 @@ struct MoneyPill: View {
 Also in `Components.swift`: delete the `NavRow` and `SectionLabel` structs (last consumer is the old ProfileView, rewritten this task). Leave `TypeBadge` in place but change its font line from `.font(.badgeLabel)` to `.font(.caption2.weight(.semibold))`.
 
 In `Components+Controls.swift`:
+
 - Delete `NoirToggleStyle` and the `extension ToggleStyle where Self == NoirToggleStyle` block (last consumer: old ProfileView).
 - In `AvatarView`, replace the initials `Text` modifiers with `.font(.system(size: size * 0.35, weight: .bold))` and `.foregroundStyle(.white)`.
 - In `IconTile`, change the default parameter `var background: Color = .surfaceHigh` to `var background: Color = Color(.tertiarySystemFill)`.
@@ -1239,9 +1247,11 @@ git commit -m "💄 style(ios): Home dashboard on native List, Profile on Form"
 ```
 
 ---
+
 ### Task 4: Invest — list screen, three forms, withdraw sheet
 
 **Files:**
+
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Investments/InvestmentsListView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Investments/LumpSumFormView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Investments/DpsFormView.swift`
@@ -1249,6 +1259,7 @@ git commit -m "💄 style(ios): Home dashboard on native List, Profile on Form"
 - Modify: `apps/ios/Phinio/Phinio/UI/Investments/WithdrawSheet.swift`
 
 **Interfaces:**
+
 - Consumes: `TypeBadge(type:)`, `MoneyText(amount:)`, `InvestmentRoute`, `Validate`, `Store`, `Money.string`, `investmentTypeLabel(_:)` — unchanged.
 - Produces: `InvestmentDetailRouter(investmentId:)` — kept verbatim at the bottom of InvestmentsListView.swift (Task 5's detail views depend on it).
 - Form view signatures unchanged: `LumpSumFormView(existing: Investment?)`, `DpsFormView()`, `SavingsFormView(existing: Investment?)`, `WithdrawSheet(investment: Investment)`.
@@ -1632,12 +1643,14 @@ git commit -m "💄 style(ios): Investments list on native List, forms de-noired
 ### Task 5: Invest — three detail screens
 
 **Files:**
+
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Investments/LumpSumDetailView.swift`
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Investments/DpsDetailView.swift` (includes `DpsEditSheet`, `DpsCloseSheet`)
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Investments/SavingsDetailView.swift` (includes `AddDepositSheet`)
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components.swift` (restyle `StatTile`)
 
 **Interfaces:**
+
 - Produces: `StatTile(label: String, value: String, alignment: HorizontalAlignment = .center)` — the `valueFont` parameter is **removed**; the EMI detail (Task 6) uses this new signature.
 - Consumes: `HeroCard(gradient:orbTint:radius:...)` with literal `radius: 20`, `Gradients.netWorthHero/.dpsHero/.savingsHero`, `MoneyPill`, `TypeBadge`, `IconTile`, `Store`, `Validate`, `utcDaysUntil` — unchanged.
 - Detail view signatures unchanged: `LumpSumDetailView(investment:)`, `DpsDetailView(investment:)`, `SavingsDetailView(investment:)`.
@@ -2382,9 +2395,11 @@ git commit -m "💄 style(ios): investment detail screens on native List + toolb
 ```
 
 ---
+
 ### Task 6: EMIs — list, form, detail
 
 **Files:**
+
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Emis/EmiListView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Emis/EmiFormView.swift`
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Emis/EmiDetailView.swift` (includes `EmiEditSheet`)
@@ -2392,6 +2407,7 @@ git commit -m "💄 style(ios): investment detail screens on native List + toolb
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components+Controls.swift` (delete `DangerButton`, `NoirFormStyle` + the `noirForm()`/`noirFormRow()` extension)
 
 **Interfaces:**
+
 - Consumes: `StatTile(label:value:alignment:)` (Task 5's new signature), `IconTile`, `MoneyText`, `TypePalette.crypto`, `Gradients.emiLoanHero/.emiCardHero`, `EmiCalculator`, `Store`, `EmiRoute` — unchanged.
 - Deletes (last consumers convert here): `NoirCard`, `FilterPills`, `SegmentedTabs`, `NoirProgressBar`, `SectionHeader`, `DangerButton`, `NoirFormStyle`/`.noirForm()`/`.noirFormRow()`.
 
@@ -2957,6 +2973,7 @@ grep -rn "NoirCard\|FilterPills\|SegmentedTabs\|NoirProgressBar\|SectionHeader(\
 ```
 
 Expected: matches only inside their own definitions in `Components.swift` / `Components+Controls.swift`. Then delete:
+
 - From `Components.swift`: the `NoirCard`, `FilterPills`, `SegmentedTabs`, `NoirProgressBar`, `SectionHeader` structs.
 - From `Components+Controls.swift`: the `DangerButton` struct, the `NoirFormStyle` ViewModifier, and the `extension View { func noirForm() ... func noirFormRow() ... }` block.
 
@@ -2984,12 +3001,14 @@ git commit -m "💄 style(ios): EMI screens on native List/Form, amortization as
 ### Task 7: Activity, notifications, offline banner
 
 **Files:**
+
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Activity/ActivityView.swift`
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Activity/NotificationsView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components+Controls.swift` (replace `OfflineBanner`; delete `NoirEmptyState`, `DetailHeader` + its `EmptyView` extension)
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components.swift` (delete `SectionGroup`)
 
 **Interfaces:**
+
 - Consumes: `APIClient.fetchActivity(cursor:)`, `ActivityItemDTO`, `ActivityChangeDTO`, `WireDate`, `Store.markNotificationRead/markAllNotificationsRead`, `DeepLink.parse`, `Money.decimal` — unchanged.
 - Produces: `OfflineBanner()` — same name, now a system-material capsule (already consumed by DashboardView's `safeAreaInset` since Task 3).
 - Note: the spec asks for "swipe actions for read/unread"; the frozen `Store` has no mark-unread API, so the swipe action is **Mark read** only (tap already marks read + follows the link). Documented deviation, not an omission.
@@ -3325,15 +3344,18 @@ git commit -m "💄 style(ios): activity + notifications on native List, materia
 ```
 
 ---
+
 ### Task 8: Onboarding + auth
 
 **Files:**
+
 - Modify: `apps/ios/Phinio/Phinio/UI/Onboarding/GetStartedView.swift`
 - Rewrite: `apps/ios/Phinio/Phinio/UI/Onboarding/AuthStepView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Onboarding/OnboardingView.swift` (`PrimingStep`, `InitialSyncStep`)
 - Modify: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components+Controls.swift` (delete `CarvedTextField`, `PrimaryButton`, `TextButton`)
 
 **Interfaces:**
+
 - Consumes: `AuthManager.signIn/signUp`, `APIError.rejected`, `Validate.name`, `PushManager.requestAndRegister`, `SyncEngine` — unchanged.
 - Signatures unchanged: `GetStartedView(onSignUp:onLogin:)`, `AuthStepView(startMode:done:)`, `OnboardingView(startAt:)`.
 
@@ -3341,17 +3363,17 @@ git commit -m "💄 style(ios): activity + notifications on native List, materia
 
 Apply these exact replacements in `GetStartedView.swift`:
 
-| Old | New |
-| --- | --- |
-| `Color.surface.ignoresSafeArea()` | `Color(.systemBackground).ignoresSafeArea()` |
-| `.fill(Color.primaryContainer.opacity(0.05))` (orb) | `.fill(Color.accentColor.opacity(0.05))` |
-| `.fill(Color.primaryContainer.opacity(0.20))` (glow) | `.fill(Color.accentColor.opacity(0.20))` |
-| `.strokeBorder(Color.onHero.opacity(0.05), lineWidth: 1)` | `.strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)` |
-| `.fill(Color.brandSecondary)` (badge dot) | `.fill(Color.green)` |
-| `.overlay(Circle().strokeBorder(Color.surface, lineWidth: 3))` | `.overlay(Circle().strokeBorder(Color(.systemBackground), lineWidth: 3))` |
-| `.font(.custom("Manrope-ExtraBold", size: 48))` + `.tracking(-0.02 * 48)` + `.foregroundStyle(Color.onSurface)` | `.font(.system(size: 48, weight: .heavy))` + `.foregroundStyle(.primary)` (delete the tracking line) |
-| `.font(.custom("Inter-SemiBold", size: 14))` + `.tracking(0.2 * 14)` + `.foregroundStyle(Color.onSurfaceVariant)` | `.font(.footnote.weight(.semibold))` + `.tracking(2.8)` + `.foregroundStyle(.secondary)` |
-| `.font(.meta)` + `.foregroundStyle(Color.onSurfaceMuted)` (footer) | `.font(.caption)` + `.foregroundStyle(.secondary)` |
+| Old                                                                                                               | New                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `Color.surface.ignoresSafeArea()`                                                                                 | `Color(.systemBackground).ignoresSafeArea()`                                                         |
+| `.fill(Color.primaryContainer.opacity(0.05))` (orb)                                                               | `.fill(Color.accentColor.opacity(0.05))`                                                             |
+| `.fill(Color.primaryContainer.opacity(0.20))` (glow)                                                              | `.fill(Color.accentColor.opacity(0.20))`                                                             |
+| `.strokeBorder(Color.onHero.opacity(0.05), lineWidth: 1)`                                                         | `.strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)`                                           |
+| `.fill(Color.brandSecondary)` (badge dot)                                                                         | `.fill(Color.green)`                                                                                 |
+| `.overlay(Circle().strokeBorder(Color.surface, lineWidth: 3))`                                                    | `.overlay(Circle().strokeBorder(Color(.systemBackground), lineWidth: 3))`                            |
+| `.font(.custom("Manrope-ExtraBold", size: 48))` + `.tracking(-0.02 * 48)` + `.foregroundStyle(Color.onSurface)`   | `.font(.system(size: 48, weight: .heavy))` + `.foregroundStyle(.primary)` (delete the tracking line) |
+| `.font(.custom("Inter-SemiBold", size: 14))` + `.tracking(0.2 * 14)` + `.foregroundStyle(Color.onSurfaceVariant)` | `.font(.footnote.weight(.semibold))` + `.tracking(2.8)` + `.foregroundStyle(.secondary)`             |
+| `.font(.meta)` + `.foregroundStyle(Color.onSurfaceMuted)` (footer)                                                | `.font(.caption)` + `.foregroundStyle(.secondary)`                                                   |
 
 And replace the `actions` property body's button stack with:
 
@@ -3680,6 +3702,7 @@ Expected: `BUILD SUCCEEDED`, all green.
 - [ ] **Step 6: Simulator check (both appearances)**
 
 Erase the app (`xcrun simctl uninstall "$UDID" com.phinio.app`), reinstall, and walk the first-launch flow:
+
 - Welcome: logo/wordmark animation intact on system background (white in light, black in dark); Get Started is a glass-prominent button.
 - Sign up: native Form, segmented currency picker, submit disabled until name ≥ 2 chars + email + 8-char password; error section renders in red; check-email loop reachable.
 - Login: Form with password reveal toggle; wrong-password error surfaces.
@@ -3697,6 +3720,7 @@ git commit -m "💄 style(ios): onboarding + auth on native forms and glass butt
 ### Task 9: Cleanup — fonts, typography, token collapse, sweeps
 
 **Files:**
+
 - Delete: `apps/ios/Phinio/Phinio/Resources/Fonts/` (9 `.ttf` + 2 OFL licenses; removes the whole directory)
 - Delete: `apps/ios/Phinio/Phinio/UI/DesignSystem/Typography.swift`
 - Delete: `apps/ios/Phinio/PhinioTests/FontLoadingTests.swift`
@@ -3706,6 +3730,7 @@ git commit -m "💄 style(ios): onboarding + auth on native forms and glass butt
 - Delete: `apps/ios/Phinio/Phinio/UI/DesignSystem/Components+Controls.swift` (survivors merge into Components.swift)
 
 **Interfaces:**
+
 - Survivors, signatures stable: `HeroCard(gradient:orbTint:radius:orbSize:orbTopOffset:bottomPadding:content:)`, `StatTile(label:value:alignment:)`, `MoneyPill(percent:size:)`, `TypeBadge(type:)`, `AvatarView(initials:size:)`, `IconTile(size:radius:background:icon:)`, `OfflineBanner()`, plus `TypePalette` and `Gradients` (minus `summaryCard`).
 
 - [ ] **Step 1: Delete fonts, typography, and the font test**
@@ -4074,6 +4099,7 @@ git commit -m "🔥 chore(ios): drop vendored fonts and Modern Noir remnants"
 ## Self-Review (performed while writing)
 
 **Spec coverage:**
+
 - §1 Appearance & tokens → Tasks 1 (unlock, AccentColor, TypePalette) and 9 (token collapse, Typography/fonts/`UIAppFonts`/`FontLoadingTests` deletion). Money `.monospacedDigit()` is baked into the font translation table.
 - §2 Chrome → Task 2 (TabView, search-role create slot + interception + fallback, per-tab stacks and typed routes preserved), Task 3 (profile behind Home toolbar avatar), Tasks 5–6 (DetailHeader → nav bars, destructive actions behind toolbar Menus), all form tasks (sheets with detents where the sheet is small; full-height forms keep the default large detent).
 - §3 Component mapping → every row of the spec's table has a home: cards/sections → List Sections (Tasks 3–7), CarvedTextField → Form TextFields (Task 8), NoirToggle → Toggle (Task 3), PrimaryButton → `.glassProminent` (Task 8), FilterPills/SegmentedTabs → segmented Picker + toolbar Menu (Tasks 4/6), ProgressBar → ProgressView (Tasks 4/6), skeletons → `.redacted` (Task 7), offline banner → material capsule (Task 7), kept leaves restyled (Tasks 3/5/9), heroes and Swift Charts kept.
@@ -4085,7 +4111,3 @@ git commit -m "🔥 chore(ios): drop vendored fonts and Modern Noir remnants"
 **Known judgment calls (flag to the user, not blockers):** light-mode TypePalette hexes and the AccentColor light variant are eyeballed for contrast, verified visually in Tasks 3/9; the Home greeting header is replaced by a "Home" large title; the Investments count line ("3 active · 1 completed") is dropped; Profile name editing becomes save-on-submit; notifications get "Mark read" swipe only (frozen Store has no unread API).
 
 **Type consistency:** `StatTile` loses `valueFont` in Task 5 — Task 6 (its only later consumer) uses the new signature. `DashboardView` gains `showNotifications:` in Task 3 — MainTabView call site updated in the same task. `WithdrawalRow` is defined in Task 5 Step 2 and consumed in Step 4. `CreateSheet.tint` is dropped in Task 2 — its only consumer (FabMenu) dies in the same step.
-
-
-
-

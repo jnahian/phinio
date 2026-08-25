@@ -31,6 +31,7 @@
 - Manual verification runs against `npm run dev` on :3000 (simulator hits `http://localhost:3000`; physical device sets scheme env `PHINIO_BASE_URL=http://<mac-lan-ip>:3000` with `npm run dev -- --host`).
 
 **Deliberate scope notes (spec-consistent):**
+
 - DPS installment schedules are server-generated (`generateDpsSchedule` is NOT ported). Offline DPS creation inserts the Investment row only; the detail screen shows "Schedule appears after first sync" until then.
 - Activity tab requires connectivity (activity log is not in the snapshot); it shows an offline message when unreachable.
 - No XCUITest; UI verification is manual per spec §6.
@@ -40,11 +41,13 @@
 ### Task 1: Input validation + display formatting helpers
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/Support/Validators.swift`
 - Create: `apps/ios/Phinio/Phinio/Support/Formatting.swift`
 - Test: `apps/ios/Phinio/PhinioTests/ValidatorsTests.swift`
 
 **Interfaces:**
+
 - Consumes: `Money.decimal(String) -> Decimal?`.
 - Produces: `Validate.money/positiveMoney/nonNegativeMoney/rate(_ s: String) -> Decimal?`, `Validate.name(_ s: String, max: Int = 120) -> String?`, `Validate.notes(_ s: String, max: Int = 1000) -> String??` (nil = invalid, `.some(nil)` = empty→omit); `Decimal.currency(_ code: String) -> String`; `investmentTypeLabel(_ raw: String) -> String`; `dueLabel(daysUntil: Int) -> String`; `utcDaysUntil(_ target: Date, from now: Date) -> Int`. Every form task and the dashboard rely on these exact names.
 
@@ -204,10 +207,12 @@ git commit -m "✨ feat(ios): form validators + display formatting helpers"
 ### Task 2: Store — investment write operations
 
 **Files:**
+
 - Modify: `apps/ios/Phinio/Phinio/Sync/Store.swift` (append; existing `enqueue`/`newId`/`createEmi`/`markPaymentPaid` stay)
 - Test: `apps/ios/Phinio/PhinioTests/StoreInvestmentTests.swift`
 
 **Interfaces:**
+
 - Consumes: `Store.enqueue(method:path:body:)`, `Store.newId()`, `Money.string`, `WireDate.dayString`, models from `DomainModels.swift`.
 - Produces (exact signatures the form tasks call — all `throws`, all on `Store`):
   - `StoreError.validation(String)` (new top-level enum, `LocalizedError`)
@@ -712,10 +717,12 @@ git commit -m "✨ feat(ios): Store investment writes — savings, deposits, wit
 ### Task 3: Store — EMI edit/complete/delete + processing fee, notifications, profile
 
 **Files:**
+
 - Modify: `apps/ios/Phinio/Phinio/Sync/Store.swift` (extend `createEmi`, `markPaymentPaid`; append new ops)
 - Test: `apps/ios/Phinio/PhinioTests/StoreEmiTests.swift`
 
 **Interfaces:**
+
 - Consumes: Task 2's `StoreError`, existing `createEmi`/`markPaymentPaid`.
 - Produces (all on `Store`, all `throws`):
   - `createEmi(label:type:principal:interestRate:tenureMonths:startDate:notes:)` gains a `processingFee: Decimal? = nil` parameter (existing callers unaffected)
@@ -1012,10 +1019,12 @@ git commit -m "✨ feat(ios): Store EMI management, notifications + profile writ
 ### Task 4: Local dashboard stats
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/Domain/DashboardStats.swift`
 - Test: `apps/ios/Phinio/PhinioTests/DashboardStatsTests.swift`
 
 **Interfaces:**
+
 - Consumes: models from `DomainModels.swift`, `utcDaysUntil` from Task 1.
 - Produces:
   ```swift
@@ -1275,6 +1284,7 @@ git commit -m "✨ feat(ios): local dashboard stats — port of getDashboardStat
 ### Task 5: Tab shell, shared UI atoms, deep-link router
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/MainTabView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/SharedViews.swift`
 - Create: `apps/ios/Phinio/Phinio/Support/DeepLink.swift`
@@ -1283,6 +1293,7 @@ git commit -m "✨ feat(ios): local dashboard stats — port of getDashboardStat
 - Test: `apps/ios/Phinio/PhinioTests/DeepLinkTests.swift`
 
 **Interfaces:**
+
 - Produces:
   - `enum DeepLink: Equatable { case emi(String); case dps(String) }` with `DeepLink.parse(_ link: String) -> DeepLink?` (parses the server's notification `link` strings `/app/emis/<id>` and `/app/investments/dps/<id>`)
   - `@MainActor final class DeepLinkRouter: ObservableObject { @Published var pending: DeepLink? }`
@@ -1473,10 +1484,12 @@ git commit -m "✨ feat(ios): 4-tab shell, deep-link router + shared UI atoms"
 ### Task 6: Dashboard screen
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/Dashboard/DashboardView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/MainTabView.swift` (delete the `DashboardView` stub)
 
 **Interfaces:**
+
 - Consumes: `DashboardStats.compute` (Task 4), `MoneyText`/`UpcomingRow`/`EmptyStateView` (Task 5), `EmiRoute`/`InvestmentRoute`, `sync.state`, `SettingsView` (Task 12 — until then, reference a placeholder `SettingsView` stub added HERE and replaced in Task 12).
 - Produces: `DashboardView` (used by the tab shell). Adds a `SettingsView` stub `struct SettingsView: View { var body: some View { Text("Settings") } }` at the bottom of this file — Task 12 deletes it.
 
@@ -1684,6 +1697,7 @@ git commit -m "✨ feat(ios): dashboard — glass stat cards, allocation donut, 
 ### Task 7: Investments list + lump-sum form, detail, withdraw sheet
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/InvestmentsListView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/LumpSumDetailView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/LumpSumFormView.swift`
@@ -1691,6 +1705,7 @@ git commit -m "✨ feat(ios): dashboard — glass stat cards, allocation donut, 
 - Modify: `apps/ios/Phinio/Phinio/UI/MainTabView.swift` (delete `InvestmentsListView` + `InvestmentDetailRouter` stubs)
 
 **Interfaces:**
+
 - Consumes: `Store` investment ops (Task 2), `Validate` (Task 1), `MoneyText`/`EmptyStateView` (Task 5).
 - Produces: `InvestmentsListView`; `InvestmentDetailRouter(investmentId:)` which dispatches on `mode` — `lump_sum` → `LumpSumDetailView`, `flexible` → `SavingsDetailView` (Task 8), `scheduled` → `DpsDetailView` (Task 9). Until Tasks 8/9 land, the router shows `Text("…")` for those modes — this task creates the router with those two arms as placeholders and Tasks 8/9 fill them in.
 - Produces: `WithdrawSheet(investment:)` — reused by Task 8's savings detail.
@@ -2133,11 +2148,13 @@ git commit -m "✨ feat(ios): investments list, lump-sum form/detail + withdraw"
 ### Task 8: Savings detail + form
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/SavingsDetailView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/SavingsFormView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Investments/InvestmentsListView.swift` (delete the `SavingsDetailView`/`SavingsFormView` stubs)
 
 **Interfaces:**
+
 - Consumes: `Store.createSavings/updateSavings/addDeposit/removeDeposit`, `WithdrawSheet` (Task 7), `Validate`, `MoneyText`.
 - Produces: `SavingsDetailView(investment:)`, `SavingsFormView(existing:)` — names must match the stubs being deleted.
 
@@ -2393,11 +2410,13 @@ git commit -m "✨ feat(ios): savings detail + form with deposits"
 ### Task 9: DPS detail + form
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/DpsDetailView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/Investments/DpsFormView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Investments/InvestmentsListView.swift` (delete the `DpsDetailView`/`DpsFormView` stubs)
 
 **Interfaces:**
+
 - Consumes: `Store.createDps/updateDps/markDepositPaid/closeDps`, `Validate`, `MoneyText`, `dueLabel`/`utcDaysUntil`.
 - Produces: `DpsDetailView(investment:)`, `DpsFormView()` (create-only; editing name/notes happens via an edit sheet inside the detail view using `updateDps`).
 
@@ -2691,12 +2710,14 @@ git commit -m "✨ feat(ios): DPS form, installment schedule + premature close"
 ### Task 10: EMI list, create form with live schedule preview, detail
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/Emis/EmiListView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/Emis/EmiFormView.swift`
 - Create: `apps/ios/Phinio/Phinio/UI/Emis/EmiDetailView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/MainTabView.swift` (delete the `EmiListView`/`EmiDetailView` stubs)
 
 **Interfaces:**
+
 - Consumes: `Store.createEmi(...processingFee:)`, `markPaymentPaid`, `updateEmi`, `deleteEmi`, `completeEmi` (Task 3); `EmiCalculator.amortization` for the live preview; `Validate`, `MoneyText`, `dueLabel`.
 - Produces: `EmiListView`, `EmiDetailView(emiId: String)` (id-based — deep-link target), `EmiFormView`.
 
@@ -3075,6 +3096,7 @@ git commit -m "✨ feat(ios): EMI list, create with live preview + amortization 
 ### Task 11: Activity tab + notifications screen
 
 **Files:**
+
 - Modify: `apps/ios/Phinio/Phinio/Networking/DTOs.swift` (append activity DTOs)
 - Modify: `apps/ios/Phinio/Phinio/Networking/APIClient.swift` (add `fetchActivity`)
 - Create: `apps/ios/Phinio/Phinio/UI/Activity/ActivityView.swift`
@@ -3083,8 +3105,10 @@ git commit -m "✨ feat(ios): EMI list, create with live preview + amortization 
 - Test: `apps/ios/Phinio/PhinioTests/ActivityDTOTests.swift`
 
 **Interfaces:**
+
 - Consumes: `APIClient.run`/`request` (private — add `fetchActivity` inside `APIClient`), `Store` notification ops (Task 3), `DeepLink.parse`.
 - Produces:
+
   ```swift
   struct ActivityChangeDTO: Decodable { let field: String; let from: String?; let to: String?; let currency: String? }
   struct ActivityItemDTO: Decodable, Identifiable {
@@ -3333,10 +3357,12 @@ git commit -m "✨ feat(ios): activity log + notifications with unread badge"
 ### Task 12: Settings
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/UI/Dashboard/SettingsView.swift`
 - Modify: `apps/ios/Phinio/Phinio/UI/Dashboard/DashboardView.swift` (delete the `SettingsView` stub at the bottom)
 
 **Interfaces:**
+
 - Consumes: `Store.updateProfile` (Task 3), `SyncIssue` model, `AuthManager.signOut(container:)`, `sync.state`, `UNUserNotificationCenter` (permission status; full APNs wiring is Task 14 — this task calls `PushManager.registerIfAuthorized()` which Task 14 provides; until then, add a placeholder `enum PushManager { static func requestAndRegister() async {} static var deviceTokenForLogout: String? { nil } }` in THIS file and Task 14 replaces it).
 - Produces: `SettingsView`.
 
@@ -3507,6 +3533,7 @@ git commit -m "✨ feat(ios): settings — profile, notifications, sync issues, 
 ### Task 13: Onboarding flow
 
 **Files:**
+
 - Modify: `apps/ios/Phinio/Phinio/Networking/APIClient.swift` (add `signUp`)
 - Modify: `apps/ios/Phinio/Phinio/Auth/AuthManager.swift` (add `signUp` passthrough)
 - Create: `apps/ios/Phinio/Phinio/UI/Onboarding/OnboardingView.swift`
@@ -3515,6 +3542,7 @@ git commit -m "✨ feat(ios): settings — profile, notifications, sync issues, 
 - Delete: `apps/ios/Phinio/Phinio/UI/LoginView.swift` (superseded by `AuthStepView`)
 
 **Interfaces:**
+
 - Consumes: `AuthManager.signIn`, `SyncEngine.syncNow`, `PushManager.requestAndRegister` (Task 12 placeholder / Task 14 real).
 - Produces:
   - `APIClient.signUp(name:email:password:) async throws` — POST `/api/auth/sign-up/email` `{name, email, password}`; success is 2xx (no token — email verification is required before sign-in works).
@@ -3834,12 +3862,14 @@ git commit -m "✨ feat(ios): onboarding — welcome, signup + verification, pri
 ### Task 14: APNs registration, deep links from notification taps, badge
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/Support/PushManager.swift`
 - Modify: `apps/ios/Phinio/Phinio/PhinioApp.swift` (add `@UIApplicationDelegateAdaptor`, share the router with the delegate)
 - Modify: `apps/ios/Phinio/Phinio/UI/Dashboard/SettingsView.swift` (delete the `PushManager` placeholder enum)
 - Create: `apps/ios/Phinio/Phinio/Phinio.entitlements`
 
 **Interfaces:**
+
 - Consumes: `DeepLink.parse`/`DeepLinkRouter` (Task 5), `APIClient.post`.
 - Produces:
   - `enum PushManager { static func requestAndRegister() async; static func handleDeviceToken(_ deviceToken: Data); static var deviceTokenForLogout: String? }` — token hex stored in `UserDefaults` key `"apnsDeviceToken"`.
@@ -3987,6 +4017,7 @@ git commit -m "✨ feat(ios): APNs registration, notification deep links + entit
 ### Task 15: Localization (String Catalog, en + bn)
 
 **Files:**
+
 - Create: `apps/ios/Phinio/Phinio/Localizable.xcstrings` (created via Xcode or as a JSON file — format below)
 - Modify: `apps/ios/Phinio/Phinio.xcodeproj/project.pbxproj` (add `bn` to `knownRegions` — one-line sed)
 
@@ -4082,10 +4113,7 @@ git push -u origin HEAD
 Open a stacked PR (base: `feat/ios-app-foundation`) titled `✨ feat(ios): full native UI — onboarding, dashboard, investments, EMIs, notifications`.
 
 **Known deferred items (carry into the PR description):**
+
 - Production base URL in `AppConfig.swift` (`https://phinio.vercel.app`) still needs confirmation before a TestFlight build.
 - APNs end-to-end delivery verification needs server env keys + a TestFlight/device build.
 - `BGAppRefreshTask` background sync (spec §2 mentions it) is NOT in this plan — foreground + post-write sync covers the product need; add it if reminders regularly arrive before the data they reference. ponytail: skipped, add when stale-on-open becomes noticeable.
-
-
-
-
