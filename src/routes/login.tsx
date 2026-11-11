@@ -49,7 +49,7 @@ function LoginScreen() {
     }
 
     setIsSubmitting(true)
-    const { error } = await authClient.signIn.email({
+    const { data, error } = await authClient.signIn.email({
       email: parsed.data.email,
       password: parsed.data.password,
       callbackURL: '/app',
@@ -68,6 +68,13 @@ function LoginScreen() {
         return
       }
       setFormError(error.message ?? t('login.genericError'))
+      return
+    }
+
+    // 2FA users get no session yet, just a short-lived cookie for the
+    // code step.
+    if ('twoFactorRedirect' in data) {
+      navigate({ to: '/two-factor' })
       return
     }
 

@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { twoFactor } from 'better-auth/plugins/two-factor'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { Resend } from 'resend'
 import { prisma } from '#/db'
@@ -111,5 +112,11 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [tanstackStartCookies()],
+  plugins: [
+    // TOTP (authenticator app) + backup codes. Secrets are encrypted with
+    // BETTER_AUTH_SECRET — rotating it breaks every enrolled user's 2FA.
+    twoFactor({ issuer: 'Phinio' }),
+    // Must stay last so cookies set by other plugins' hooks reach the response.
+    tanstackStartCookies(),
+  ],
 })
