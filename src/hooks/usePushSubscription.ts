@@ -3,8 +3,7 @@ import { toast } from 'sonner'
 import { deletePushSubscriptionFn, savePushSubscriptionFn } from '#/server/push'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as
-  | string
-  | undefined
+  string | undefined
 
 type Permission = NotificationPermission | 'unsupported'
 

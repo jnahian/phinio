@@ -95,24 +95,20 @@ function SavingsDetailScreen() {
       }
 
   const activity: Array<ActivityRow> = [
-    ...inv.deposits.map(
-      (d): ActivityRow => ({
-        kind: 'deposit',
-        id: d.id,
-        date: d.dueDate ? new Date(d.dueDate).getTime() : 0,
-        amount: d.amount,
-        notes: d.notes,
-      }),
-    ),
-    ...inv.withdrawals.map(
-      (w): ActivityRow => ({
-        kind: 'withdrawal',
-        id: w.id,
-        date: new Date(w.withdrawalDate).getTime(),
-        amount: w.amount,
-        notes: w.notes,
-      }),
-    ),
+    ...inv.deposits.map((d): ActivityRow => ({
+      kind: 'deposit',
+      id: d.id,
+      date: d.dueDate ? new Date(d.dueDate).getTime() : 0,
+      amount: d.amount,
+      notes: d.notes,
+    })),
+    ...inv.withdrawals.map((w): ActivityRow => ({
+      kind: 'withdrawal',
+      id: w.id,
+      date: new Date(w.withdrawalDate).getTime(),
+      amount: w.amount,
+      notes: w.notes,
+    })),
   ].sort((a, b) => b.date - a.date)
 
   const isActive = inv.status === 'active'
