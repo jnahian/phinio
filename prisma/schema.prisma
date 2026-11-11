@@ -21,8 +21,10 @@ model User {
   updatedAt         DateTime  @updatedAt
   preferredCurrency String    @default("BDT")
   preferredLanguage String    @default("en")
+  twoFactorEnabled  Boolean?  @default(false)
   sessions          Session[]
   accounts          Account[]
+  twoFactors        TwoFactor[]
   profile           Profile?
 
   @@unique([email])
@@ -75,6 +77,22 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// Better Auth twoFactor plugin. `secret` and `backupCodes` are encrypted with
+// BETTER_AUTH_SECRET. `verified` stays false until the first TOTP code is
+// confirmed, which is also when user.twoFactorEnabled flips to true.
+model TwoFactor {
+  id          String   @id
+  secret      String
+  backupCodes String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified    Boolean? @default(true)
+
+  @@index([secret])
+  @@index([userId])
+  @@map("twoFactor")
 }
 
 // ----------------------------------------------------------------------------
