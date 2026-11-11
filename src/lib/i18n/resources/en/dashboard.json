@@ -28,7 +28,7 @@
   "upcoming": {
     "title": "Upcoming payments",
     "viewAll": "View all",
-    "empty": "Nothing due in the next 30 days"
+    "empty": "Nothing due this month"
   },
   "allocation": {
     "title": "Allocation",
