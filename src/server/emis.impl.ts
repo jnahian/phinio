@@ -314,7 +314,9 @@ export async function updateEmiImpl(profileId: string, data: EmiUpdateInput) {
 
     const result = await tx.emi.updateMany({
       where: { id: data.emiId, profileId },
-      data: { label: data.label, notes: data.notes },
+      // Prisma skips `undefined`, so an emptied notes field must be sent as
+      // null to actually clear it.
+      data: { label: data.label, notes: data.notes ?? null },
     })
     if (result.count === 0) throw new Error('EMI not found')
     const updated = await tx.emi.findFirstOrThrow({
