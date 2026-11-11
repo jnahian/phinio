@@ -1,5 +1,4 @@
 import { betterAuth } from 'better-auth'
-import { bearer } from 'better-auth/plugins'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { Resend } from 'resend'
@@ -112,5 +111,5 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [bearer(), tanstackStartCookies()],
+  plugins: [tanstackStartCookies()],
 })
