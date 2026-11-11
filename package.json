@@ -43,7 +43,7 @@
     "@tanstack/router-plugin": "^1.132.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "better-auth": "^1.5.3",
+    "better-auth": "^1.7.7",
     "i18next": "^26.0.9",
     "idb-keyval": "^6.2.2",
     "lucide-react": "^0.545.0",
