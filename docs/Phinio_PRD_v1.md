@@ -206,6 +206,34 @@ model EmiPayment {
   @@map("emi_payments")
 }
 
+// Personal loan with no schedule: repayments of any amount, any time (§8.6)
+model PersonalLoan {
+  id             String   @id @default(uuid())
+  profileId      String
+  direction      String   // borrowed | lent
+  counterparty   String
+  principal      Decimal  @db.Decimal(15, 2)
+  totalRepayable Decimal? @db.Decimal(15, 2) // agreed total; null = principal
+  startDate      DateTime @db.Date
+  status         String   @default("active") // active | settled
+  notes          String?
+  repayments     PersonalLoanRepayment[]
+  @@index([profileId, status])
+  @@map("personal_loans")
+}
+
+model PersonalLoanRepayment {
+  id        String   @id @default(uuid())
+  loanId    String
+  profileId String
+  amount    Decimal  @db.Decimal(15, 2)
+  paidAt    DateTime @db.Date
+  notes     String?
+  @@index([loanId, paidAt])
+  @@index([profileId])
+  @@map("personal_loan_repayments")
+}
+
 model Notification {
   id        String    @id @default(uuid())
   profileId String
@@ -426,6 +454,16 @@ All authenticated app screens share:
 - **Amortization schedule** — scrollable table; columns: #, Due Date, EMI, Principal, Interest, Balance. Paid rows muted + strikethrough. Overdue rows highlighted. Checkbox per row for mark paid (optimistic update with rollback on error).
 - **Delete** with confirmation (cascade deletes all payment rows)
 
+### 5.17a Personal Loans
+
+**Routes:** `/app/emis/personal`, `/app/emis/personal/new`, `/app/emis/personal/$loanId`
+
+The Loans tab has an **EMIs | Personal** switch at the top of both lists. Behaviour is in §8.6.
+
+- **List** — "You owe" / "Owed to you" summary (active tab only), Active | Settled tabs, All | Borrowed | Lent pills (filtered client-side), cards with direction badge, name, amount left and a repaid-of-total progress bar
+- **Add** — Borrowed / Lent toggle, name, date, amount, optional "Total to repay", notes
+- **Detail** — outstanding hero with progress and "Log repayment" ("Log payment received" for lent), amount / agreed-total tiles, payment history with remove, edit (all fields except direction) and delete
+
 ### 5.18 Profile / Settings Screen
 
 **Route:** `/app/profile`
@@ -497,7 +535,7 @@ Persistent bottom navigation visible on all main `/app/*` routes. Hidden on sub-
 | --- | ---------- | ------- | ------------------ | ------------------ |
 | 1   | Home       | Home    | `/app`             | Exact match `/app` |
 | 2   | TrendingUp | Invest  | `/app/investments` | Starts with path   |
-| 3   | Receipt    | EMIs    | `/app/emis`        | Starts with path   |
+| 3   | Receipt    | Loans   | `/app/emis`        | Starts with path   |
 | 4   | User       | Profile | `/app/profile`     | Starts with path   |
 
 ### 6.2 Route Map
@@ -520,6 +558,9 @@ Persistent bottom navigation visible on all main `/app/*` routes. Hidden on sub-
 | `/app/emis`                    | EMIs list                | Yes     | Required |
 | `/app/emis/new`                | Add EMI                  | Hidden  | Required |
 | `/app/emis/$emiId`             | EMI detail               | Hidden  | Required |
+| `/app/emis/personal`           | Personal loans list      | Yes     | Required |
+| `/app/emis/personal/new`       | Add personal loan        | Hidden  | Required |
+| `/app/emis/personal/$loanId`   | Personal loan detail     | Hidden  | Required |
 | `/app/profile`                 | Profile / settings       | Yes     | Required |
 
 ---
@@ -615,7 +656,7 @@ When an EMI is created, all `EmiPayment` rows are generated upfront (`src/lib/em
 
 ### 8.3 Dashboard Calculations
 
-- **Net Worth** = `Σ active investments currentValue` − `Σ active EMIs remainingBalance` (from each EMI's first unpaid payment row)
+- **Net Worth** = `Σ active investments currentValue` − `Σ active EMIs remainingBalance` (from each EMI's first unpaid payment row) − `Σ outstanding of active borrowed personal loans` + `Σ outstanding of active lent personal loans`. A loan's agreed total counts in full: unlike EMI interest it doesn't shrink when repaid early.
 - **Monthly EMI Outflow** = `Σ emiAmount` for all active EMIs
 - **Upcoming Payments** = next 5 `EmiPayment` rows where `status ≠ 'paid'` and `dueDate ≤ today + 30 days`, ordered by `dueDate ASC`
 - **Investment Allocation** = group active investments by `type`, sum `currentValue` per type
@@ -636,6 +677,16 @@ Each notification is created via an idempotent upsert keyed on `(profileId, dedu
 - All money fields are `Decimal(15, 2)` in Prisma — stored in PostgreSQL as exact decimals.
 - Money values are serialized to `String` when crossing the server/client boundary (`String(prismaDecimal)`).
 - Never coerce to JS `number` for arithmetic; accumulate as `Number(stringValue)` only for summation, then `toFixed(2)` back to string before storing.
+
+### 8.6 Personal Loans
+
+No schedule, rate or due dates — so no reminders and no upcoming-payment entries.
+
+- **Outstanding** = `(totalRepayable ?? principal) − Σ repayments`, computed on read.
+- `totalRepayable` must be ≥ `principal`; a value equal to the principal is stored as `null`.
+- A repayment larger than the outstanding balance is rejected.
+- The repayment that brings outstanding to 0 sets `status = 'settled'`; removing any repayment from a settled loan sets it back to `active`.
+- Edits may change name, amount, agreed total, date and notes (not direction). An edit that would make the total less than what's already repaid is rejected; status is re-evaluated after every edit.
 
 ---
 
