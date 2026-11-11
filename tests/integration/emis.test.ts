@@ -6,6 +6,7 @@ import {
   getEmiImpl,
   listEmisImpl,
   markPaymentPaidImpl,
+  updateEmiImpl,
   upcomingPaymentsImpl,
 } from '#/server/emis.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
@@ -733,5 +734,27 @@ describe('emis server impls', () => {
         rows[i - 1].dueDate.getTime(),
       )
     }
+  })
+
+  it('updateEmiImpl clears notes when the edit omits them', async () => {
+    const user = await createTestUser()
+    const created = await createEmiImpl(user.profileId, {
+      label: 'Car loan',
+      type: 'bank_loan',
+      principal: '100000',
+      interestRate: '12',
+      tenureMonths: 12,
+      startDate: '2026-01-15',
+      notes: 'HSBC account 1234',
+    })
+
+    // The edit form sends `notes: undefined` when the field is emptied.
+    await updateEmiImpl(user.profileId, {
+      emiId: created.id,
+      label: 'Car loan',
+    })
+
+    const emi = await getEmiImpl(user.profileId, created.id)
+    expect(emi.notes).toBeNull()
   })
 })
