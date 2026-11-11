@@ -13,7 +13,7 @@ const deleteSchema = z.object({
 })
 
 export const savePushSubscriptionFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => saveSchema.parse(input))
+  .validator((input: unknown) => saveSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, savePushSubscriptionImpl } =
       await import('./push.impl')
@@ -21,7 +21,7 @@ export const savePushSubscriptionFn = createServerFn({ method: 'POST' })
   })
 
 export const deletePushSubscriptionFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => deleteSchema.parse(input))
+  .validator((input: unknown) => deleteSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, deletePushSubscriptionImpl } =
       await import('./push.impl')

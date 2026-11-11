@@ -1,6 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
 import type {
   MutateOptions,
+  UseMutateAsyncFunction,
+  UseMutateFunction,
   UseMutationOptions,
   UseMutationResult,
 } from '@tanstack/react-query'
@@ -78,9 +80,18 @@ export function useOfflineMutation<
     [result, wrap],
   )
 
+  // React Query types these with a conditional rest tuple (variables are
+  // optional when `undefined extends TVariables`). TypeScript can't resolve
+  // that for a generic TVariables, but ours is always an object, so the
+  // required-variables signatures above are the resolved form.
   return {
     ...result,
-    mutate,
-    mutateAsync,
+    mutate: mutate as UseMutateFunction<TData, TError, TVariables, TContext>,
+    mutateAsync: mutateAsync as UseMutateAsyncFunction<
+      TData,
+      TError,
+      TVariables,
+      TContext
+    >,
   }
 }

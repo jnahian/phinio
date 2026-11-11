@@ -15,7 +15,7 @@ const activityListQuerySchema = z.object({
 export type ActivityListQuery = z.infer<typeof activityListQuerySchema>
 
 export const listActivityFn = createServerFn({ method: 'GET' })
-  .inputValidator((input: unknown) => activityListQuerySchema.parse(input))
+  .validator((input: unknown) => activityListQuerySchema.parse(input))
   .handler(async ({ data }): Promise<ActivityListResult> => {
     const { requireProfileId, listActivityImpl } =
       await import('./activity-log.impl')

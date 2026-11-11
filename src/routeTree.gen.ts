@@ -9,55 +9,35 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as CheckEmailRouteImport } from './routes/check-email'
-import { Route as ChangelogRouteImport } from './routes/changelog'
-import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as CheckEmailRouteImport } from './routes/check-email'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
-import { Route as AppInvestmentsIndexRouteImport } from './routes/app/investments/index'
-import { Route as AppEmisIndexRouteImport } from './routes/app/emis/index'
-import { Route as AppActivityIndexRouteImport } from './routes/app/activity/index'
-import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
-import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
-import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
-import { Route as ApiCronSendRemindersRouteImport } from './routes/api/cron/send-reminders'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiCronSendRemindersRouteImport } from './routes/api/cron/send-reminders'
+import { Route as AppActivityIndexRouteImport } from './routes/app/activity/index'
+import { Route as AppEmisIndexRouteImport } from './routes/app/emis/index'
+import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
+import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
+import { Route as AppInvestmentsIndexRouteImport } from './routes/app/investments/index'
+import { Route as AppInvestmentsNewRouteImport } from './routes/app/investments/new'
 import { Route as AppEmisPersonalIndexRouteImport } from './routes/app/emis/personal/index'
-import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
-import { Route as AppInvestmentsSavingsIdRouteImport } from './routes/app/investments/savings/$id'
-import { Route as AppInvestmentsDpsNewRouteImport } from './routes/app/investments/dps/new'
-import { Route as AppInvestmentsDpsIdRouteImport } from './routes/app/investments/dps/$id'
-import { Route as AppInvestmentsIdEditRouteImport } from './routes/app/investments/$id.edit'
-import { Route as AppEmisPersonalNewRouteImport } from './routes/app/emis/personal/new'
 import { Route as AppEmisPersonalLoanIdRouteImport } from './routes/app/emis/personal/$loanId'
+import { Route as AppEmisPersonalNewRouteImport } from './routes/app/emis/personal/new'
+import { Route as AppInvestmentsIdEditRouteImport } from './routes/app/investments/$id.edit'
+import { Route as AppInvestmentsDpsIdRouteImport } from './routes/app/investments/dps/$id'
+import { Route as AppInvestmentsDpsNewRouteImport } from './routes/app/investments/dps/new'
+import { Route as AppInvestmentsSavingsIdRouteImport } from './routes/app/investments/savings/$id'
+import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
 
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CheckEmailRoute = CheckEmailRouteImport.update({
-  id: '/check-email',
-  path: '/check-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangelogRoute = ChangelogRouteImport.update({
-  id: '/changelog',
-  path: '/changelog',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -65,9 +45,29 @@ const AppRouteRoute = AppRouteRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckEmailRoute = CheckEmailRouteImport.update({
+  id: '/check-email',
+  path: '/check-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -80,9 +80,19 @@ const AppProfileRoute = AppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppInvestmentsIndexRoute = AppInvestmentsIndexRouteImport.update({
-  id: '/investments/',
-  path: '/investments/',
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronSendRemindersRoute = ApiCronSendRemindersRouteImport.update({
+  id: '/api/cron/send-reminders',
+  path: '/api/cron/send-reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppActivityIndexRoute = AppActivityIndexRouteImport.update({
+  id: '/activity/',
+  path: '/activity/',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppEmisIndexRoute = AppEmisIndexRouteImport.update({
@@ -90,14 +100,9 @@ const AppEmisIndexRoute = AppEmisIndexRouteImport.update({
   path: '/emis/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppActivityIndexRoute = AppActivityIndexRouteImport.update({
-  id: '/activity/',
-  path: '/activity/',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppInvestmentsNewRoute = AppInvestmentsNewRouteImport.update({
-  id: '/investments/new',
-  path: '/investments/new',
+const AppEmisEmiIdRoute = AppEmisEmiIdRouteImport.update({
+  id: '/emis/$emiId',
+  path: '/emis/$emiId',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppEmisNewRoute = AppEmisNewRouteImport.update({
@@ -105,24 +110,49 @@ const AppEmisNewRoute = AppEmisNewRouteImport.update({
   path: '/emis/new',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppEmisEmiIdRoute = AppEmisEmiIdRouteImport.update({
-  id: '/emis/$emiId',
-  path: '/emis/$emiId',
+const AppInvestmentsIndexRoute = AppInvestmentsIndexRouteImport.update({
+  id: '/investments/',
+  path: '/investments/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const ApiCronSendRemindersRoute = ApiCronSendRemindersRouteImport.update({
-  id: '/api/cron/send-reminders',
-  path: '/api/cron/send-reminders',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
+const AppInvestmentsNewRoute = AppInvestmentsNewRouteImport.update({
+  id: '/investments/new',
+  path: '/investments/new',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppEmisPersonalIndexRoute = AppEmisPersonalIndexRouteImport.update({
   id: '/emis/personal/',
   path: '/emis/personal/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEmisPersonalLoanIdRoute = AppEmisPersonalLoanIdRouteImport.update({
+  id: '/emis/personal/$loanId',
+  path: '/emis/personal/$loanId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEmisPersonalNewRoute = AppEmisPersonalNewRouteImport.update({
+  id: '/emis/personal/new',
+  path: '/emis/personal/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
+  id: '/investments/$id/edit',
+  path: '/investments/$id/edit',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvestmentsDpsIdRoute = AppInvestmentsDpsIdRouteImport.update({
+  id: '/investments/dps/$id',
+  path: '/investments/dps/$id',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvestmentsDpsNewRoute = AppInvestmentsDpsNewRouteImport.update({
+  id: '/investments/dps/new',
+  path: '/investments/dps/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvestmentsSavingsIdRoute = AppInvestmentsSavingsIdRouteImport.update({
+  id: '/investments/savings/$id',
+  path: '/investments/savings/$id',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppInvestmentsSavingsNewRoute =
@@ -131,36 +161,6 @@ const AppInvestmentsSavingsNewRoute =
     path: '/investments/savings/new',
     getParentRoute: () => AppRouteRoute,
   } as any)
-const AppInvestmentsSavingsIdRoute = AppInvestmentsSavingsIdRouteImport.update({
-  id: '/investments/savings/$id',
-  path: '/investments/savings/$id',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppInvestmentsDpsNewRoute = AppInvestmentsDpsNewRouteImport.update({
-  id: '/investments/dps/new',
-  path: '/investments/dps/new',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppInvestmentsDpsIdRoute = AppInvestmentsDpsIdRouteImport.update({
-  id: '/investments/dps/$id',
-  path: '/investments/dps/$id',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
-  id: '/investments/$id/edit',
-  path: '/investments/$id/edit',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppEmisPersonalNewRoute = AppEmisPersonalNewRouteImport.update({
-  id: '/emis/personal/new',
-  path: '/emis/personal/new',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppEmisPersonalLoanIdRoute = AppEmisPersonalLoanIdRouteImport.update({
-  id: '/emis/personal/$loanId',
-  path: '/emis/personal/$loanId',
-  getParentRoute: () => AppRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -340,39 +340,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/check-email': {
-      id: '/check-email'
-      path: '/check-email'
-      fullPath: '/check-email'
-      preLoaderRoute: typeof CheckEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/changelog': {
-      id: '/changelog'
-      path: '/changelog'
-      fullPath: '/changelog'
-      preLoaderRoute: typeof ChangelogRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -382,11 +354,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/check-email': {
+      id: '/check-email'
+      path: '/check-email'
+      fullPath: '/check-email'
+      preLoaderRoute: typeof CheckEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -403,11 +403,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/investments/': {
-      id: '/app/investments/'
-      path: '/investments'
-      fullPath: '/app/investments/'
-      preLoaderRoute: typeof AppInvestmentsIndexRouteImport
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/send-reminders': {
+      id: '/api/cron/send-reminders'
+      path: '/api/cron/send-reminders'
+      fullPath: '/api/cron/send-reminders'
+      preLoaderRoute: typeof ApiCronSendRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/activity/': {
+      id: '/app/activity/'
+      path: '/activity'
+      fullPath: '/app/activity/'
+      preLoaderRoute: typeof AppActivityIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/emis/': {
@@ -417,18 +431,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/activity/': {
-      id: '/app/activity/'
-      path: '/activity'
-      fullPath: '/app/activity/'
-      preLoaderRoute: typeof AppActivityIndexRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/investments/new': {
-      id: '/app/investments/new'
-      path: '/investments/new'
-      fullPath: '/app/investments/new'
-      preLoaderRoute: typeof AppInvestmentsNewRouteImport
+    '/app/emis/$emiId': {
+      id: '/app/emis/$emiId'
+      path: '/emis/$emiId'
+      fullPath: '/app/emis/$emiId'
+      preLoaderRoute: typeof AppEmisEmiIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/emis/new': {
@@ -438,26 +445,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisNewRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/emis/$emiId': {
-      id: '/app/emis/$emiId'
-      path: '/emis/$emiId'
-      fullPath: '/app/emis/$emiId'
-      preLoaderRoute: typeof AppEmisEmiIdRouteImport
+    '/app/investments/': {
+      id: '/app/investments/'
+      path: '/investments'
+      fullPath: '/app/investments/'
+      preLoaderRoute: typeof AppInvestmentsIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/api/cron/send-reminders': {
-      id: '/api/cron/send-reminders'
-      path: '/api/cron/send-reminders'
-      fullPath: '/api/cron/send-reminders'
-      preLoaderRoute: typeof ApiCronSendRemindersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/investments/new': {
+      id: '/app/investments/new'
+      path: '/investments/new'
+      fullPath: '/app/investments/new'
+      preLoaderRoute: typeof AppInvestmentsNewRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/app/emis/personal/': {
       id: '/app/emis/personal/'
@@ -466,39 +466,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisPersonalIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/investments/savings/new': {
-      id: '/app/investments/savings/new'
-      path: '/investments/savings/new'
-      fullPath: '/app/investments/savings/new'
-      preLoaderRoute: typeof AppInvestmentsSavingsNewRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/investments/savings/$id': {
-      id: '/app/investments/savings/$id'
-      path: '/investments/savings/$id'
-      fullPath: '/app/investments/savings/$id'
-      preLoaderRoute: typeof AppInvestmentsSavingsIdRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/investments/dps/new': {
-      id: '/app/investments/dps/new'
-      path: '/investments/dps/new'
-      fullPath: '/app/investments/dps/new'
-      preLoaderRoute: typeof AppInvestmentsDpsNewRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/investments/dps/$id': {
-      id: '/app/investments/dps/$id'
-      path: '/investments/dps/$id'
-      fullPath: '/app/investments/dps/$id'
-      preLoaderRoute: typeof AppInvestmentsDpsIdRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/investments/$id/edit': {
-      id: '/app/investments/$id/edit'
-      path: '/investments/$id/edit'
-      fullPath: '/app/investments/$id/edit'
-      preLoaderRoute: typeof AppInvestmentsIdEditRouteImport
+    '/app/emis/personal/$loanId': {
+      id: '/app/emis/personal/$loanId'
+      path: '/emis/personal/$loanId'
+      fullPath: '/app/emis/personal/$loanId'
+      preLoaderRoute: typeof AppEmisPersonalLoanIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/emis/personal/new': {
@@ -508,11 +480,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmisPersonalNewRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/emis/personal/$loanId': {
-      id: '/app/emis/personal/$loanId'
-      path: '/emis/personal/$loanId'
-      fullPath: '/app/emis/personal/$loanId'
-      preLoaderRoute: typeof AppEmisPersonalLoanIdRouteImport
+    '/app/investments/$id/edit': {
+      id: '/app/investments/$id/edit'
+      path: '/investments/$id/edit'
+      fullPath: '/app/investments/$id/edit'
+      preLoaderRoute: typeof AppInvestmentsIdEditRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/investments/dps/$id': {
+      id: '/app/investments/dps/$id'
+      path: '/investments/dps/$id'
+      fullPath: '/app/investments/dps/$id'
+      preLoaderRoute: typeof AppInvestmentsDpsIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/investments/dps/new': {
+      id: '/app/investments/dps/new'
+      path: '/investments/dps/new'
+      fullPath: '/app/investments/dps/new'
+      preLoaderRoute: typeof AppInvestmentsDpsNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/investments/savings/$id': {
+      id: '/app/investments/savings/$id'
+      path: '/investments/savings/$id'
+      fullPath: '/app/investments/savings/$id'
+      preLoaderRoute: typeof AppInvestmentsSavingsIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/investments/savings/new': {
+      id: '/app/investments/savings/new'
+      path: '/investments/savings/new'
+      fullPath: '/app/investments/savings/new'
+      preLoaderRoute: typeof AppInvestmentsSavingsNewRouteImport
       parentRoute: typeof AppRouteRoute
     }
   }

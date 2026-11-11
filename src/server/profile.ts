@@ -32,7 +32,7 @@ export const getProfileFn = createServerFn({ method: 'GET' }).handler(
 )
 
 export const updateProfileCurrencyFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => updateCurrencySchema.parse(input))
+  .validator((input: unknown) => updateCurrencySchema.parse(input))
   .handler(async ({ data }): Promise<SerializedProfile> => {
     const { requireUserId, updateProfileCurrencyImpl } =
       await import('./profile.impl')
@@ -40,7 +40,7 @@ export const updateProfileCurrencyFn = createServerFn({ method: 'POST' })
   })
 
 export const updateProfileNameFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => updateNameSchema.parse(input))
+  .validator((input: unknown) => updateNameSchema.parse(input))
   .handler(async ({ data }): Promise<SerializedProfile> => {
     const { requireUserId, updateProfileNameImpl } =
       await import('./profile.impl')
@@ -48,7 +48,7 @@ export const updateProfileNameFn = createServerFn({ method: 'POST' })
   })
 
 export const updateProfileLanguageFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => updateLanguageSchema.parse(input))
+  .validator((input: unknown) => updateLanguageSchema.parse(input))
   .handler(async ({ data }): Promise<SerializedProfile> => {
     const { requireUserId, updateProfileLanguageImpl } =
       await import('./profile.impl')

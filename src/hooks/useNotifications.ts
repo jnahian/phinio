@@ -74,9 +74,12 @@ export function useMarkNotificationRead() {
         )
       }
       if (count && list?.find((n) => n.id === input.id && !n.read)) {
-        qc.setQueryData<UnreadCountSnapshot>(notificationKeys.unreadCount(), {
-          count: Math.max(0, count.count - 1),
-        })
+        qc.setQueryData<NonNullable<UnreadCountSnapshot>>(
+          notificationKeys.unreadCount(),
+          {
+            count: Math.max(0, count.count - 1),
+          },
+        )
       }
       return { list, count }
     },
@@ -146,9 +149,12 @@ export function useMarkAllNotificationsRead() {
           list.map((n) => ({ ...n, read: true })),
         )
       }
-      qc.setQueryData<UnreadCountSnapshot>(notificationKeys.unreadCount(), {
-        count: 0,
-      })
+      qc.setQueryData<NonNullable<UnreadCountSnapshot>>(
+        notificationKeys.unreadCount(),
+        {
+          count: 0,
+        },
+      )
       return { list, count }
     },
     onError: (err, _input, ctx) => {

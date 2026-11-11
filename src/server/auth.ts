@@ -19,9 +19,8 @@ export const getSessionFn = createServerFn({ method: 'GET' }).handler(
 export const getLocaleFn = createServerFn({ method: 'GET' }).handler(
   async (): Promise<Locale> => {
     const headers = getRequestHeaders()
-    const cookieHeader = (headers.cookie as string | undefined) ?? null
-    const acceptLanguageHeader =
-      (headers['accept-language'] as string | undefined) ?? null
+    const cookieHeader = headers.get('cookie')
+    const acceptLanguageHeader = headers.get('accept-language')
 
     let userPreferredLanguage: string | null = null
     try {

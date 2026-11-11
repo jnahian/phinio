@@ -581,7 +581,7 @@ Client Component
 
 ### 7.2 Server Files Convention
 
-- `src/server/*.ts` — thin wrappers: `createServerFn` + `inputValidator` only. No Prisma imports.
+- `src/server/*.ts` — thin wrappers: `createServerFn` + `validator` only. No Prisma imports.
 - `src/server/*.impl.ts` — all business logic, Prisma calls, notifications. Dynamically imported inside handler bodies.
 
 ### 7.3 Query Key Structure

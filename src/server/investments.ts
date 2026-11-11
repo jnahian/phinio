@@ -26,7 +26,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export const listInvestmentsFn = createServerFn({ method: 'GET' })
-  .inputValidator((input: unknown) => investmentListQuerySchema.parse(input))
+  .validator((input: unknown) => investmentListQuerySchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, listInvestmentsImpl } =
       await import('./investments.impl')
@@ -34,7 +34,7 @@ export const listInvestmentsFn = createServerFn({ method: 'GET' })
   })
 
 export const getInvestmentFn = createServerFn({ method: 'GET' })
-  .inputValidator((input: unknown) => investmentIdSchema.parse(input))
+  .validator((input: unknown) => investmentIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, getInvestmentImpl } =
       await import('./investments.impl')
@@ -46,7 +46,7 @@ export const getInvestmentFn = createServerFn({ method: 'GET' })
 // ---------------------------------------------------------------------------
 
 export const createInvestmentFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => investmentCreateSchema.parse(input))
+  .validator((input: unknown) => investmentCreateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, createInvestmentImpl } =
       await import('./investments.impl')
@@ -54,7 +54,7 @@ export const createInvestmentFn = createServerFn({ method: 'POST' })
   })
 
 export const updateInvestmentFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => investmentUpdateSchema.parse(input))
+  .validator((input: unknown) => investmentUpdateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, updateInvestmentImpl } =
       await import('./investments.impl')
@@ -62,7 +62,7 @@ export const updateInvestmentFn = createServerFn({ method: 'POST' })
   })
 
 export const deleteInvestmentFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => investmentIdSchema.parse(input))
+  .validator((input: unknown) => investmentIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
@@ -74,7 +74,7 @@ export const deleteInvestmentFn = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 
 export const createDpsFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => dpsCreateSchema.parse(input))
+  .validator((input: unknown) => dpsCreateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, createDpsInvestmentImpl } =
       await import('./investments.impl')
@@ -82,7 +82,7 @@ export const createDpsFn = createServerFn({ method: 'POST' })
   })
 
 export const updateDpsFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => dpsUpdateSchema.parse(input))
+  .validator((input: unknown) => dpsUpdateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, updateDpsInvestmentImpl } =
       await import('./investments.impl')
@@ -90,7 +90,7 @@ export const updateDpsFn = createServerFn({ method: 'POST' })
   })
 
 export const markDepositPaidFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => markDepositPaidSchema.parse(input))
+  .validator((input: unknown) => markDepositPaidSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, markDepositPaidImpl } =
       await import('./investments.impl')
@@ -102,7 +102,7 @@ export const markDepositPaidFn = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 
 export const createSavingsFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => savingsCreateSchema.parse(input))
+  .validator((input: unknown) => savingsCreateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, createSavingsInvestmentImpl } =
       await import('./investments.impl')
@@ -110,7 +110,7 @@ export const createSavingsFn = createServerFn({ method: 'POST' })
   })
 
 export const updateSavingsFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => savingsUpdateSchema.parse(input))
+  .validator((input: unknown) => savingsUpdateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, updateSavingsInvestmentImpl } =
       await import('./investments.impl')
@@ -118,7 +118,7 @@ export const updateSavingsFn = createServerFn({ method: 'POST' })
   })
 
 export const addDepositFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => addDepositSchema.parse(input))
+  .validator((input: unknown) => addDepositSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, addDepositImpl } =
       await import('./investments.impl')
@@ -126,7 +126,7 @@ export const addDepositFn = createServerFn({ method: 'POST' })
   })
 
 export const removeDepositFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => removeDepositSchema.parse(input))
+  .validator((input: unknown) => removeDepositSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, removeDepositImpl } =
       await import('./investments.impl')
@@ -134,7 +134,7 @@ export const removeDepositFn = createServerFn({ method: 'POST' })
   })
 
 export const deleteSavingsFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => investmentIdSchema.parse(input))
+  .validator((input: unknown) => investmentIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, deleteInvestmentImpl } =
       await import('./investments.impl')
@@ -146,7 +146,7 @@ export const deleteSavingsFn = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 
 export const withdrawFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => withdrawalSchema.parse(input))
+  .validator((input: unknown) => withdrawalSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, withdrawImpl } =
       await import('./investments.impl')
@@ -154,7 +154,7 @@ export const withdrawFn = createServerFn({ method: 'POST' })
   })
 
 export const closeDpsFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => dpsCloseSchema.parse(input))
+  .validator((input: unknown) => dpsCloseSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, closeDpsImpl } =
       await import('./investments.impl')
