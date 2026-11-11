@@ -177,8 +177,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const data = event.notification.data as
-    | { link?: string | null; notificationId?: string | null }
-    | undefined
+    { link?: string | null; notificationId?: string | null } | undefined
   const targetUrl = data?.link ?? '/app'
   event.waitUntil(
     (async () => {

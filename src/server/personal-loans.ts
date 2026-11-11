@@ -13,7 +13,7 @@ import {
 // Prisma or Better Auth. See `./investments.ts` for the rationale.
 
 export const listPersonalLoansFn = createServerFn({ method: 'GET' })
-  .inputValidator((input: unknown) => personalLoanListQuerySchema.parse(input))
+  .validator((input: unknown) => personalLoanListQuerySchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, listPersonalLoansImpl } =
       await import('./personal-loans.impl')
@@ -21,7 +21,7 @@ export const listPersonalLoansFn = createServerFn({ method: 'GET' })
   })
 
 export const getPersonalLoanFn = createServerFn({ method: 'GET' })
-  .inputValidator((input: unknown) => personalLoanIdSchema.parse(input))
+  .validator((input: unknown) => personalLoanIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, getPersonalLoanImpl } =
       await import('./personal-loans.impl')
@@ -29,7 +29,7 @@ export const getPersonalLoanFn = createServerFn({ method: 'GET' })
   })
 
 export const createPersonalLoanFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => personalLoanCreateSchema.parse(input))
+  .validator((input: unknown) => personalLoanCreateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, createPersonalLoanImpl } =
       await import('./personal-loans.impl')
@@ -37,7 +37,7 @@ export const createPersonalLoanFn = createServerFn({ method: 'POST' })
   })
 
 export const updatePersonalLoanFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => personalLoanUpdateSchema.parse(input))
+  .validator((input: unknown) => personalLoanUpdateSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, updatePersonalLoanImpl } =
       await import('./personal-loans.impl')
@@ -45,7 +45,7 @@ export const updatePersonalLoanFn = createServerFn({ method: 'POST' })
   })
 
 export const deletePersonalLoanFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => personalLoanIdSchema.parse(input))
+  .validator((input: unknown) => personalLoanIdSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, deletePersonalLoanImpl } =
       await import('./personal-loans.impl')
@@ -53,7 +53,7 @@ export const deletePersonalLoanFn = createServerFn({ method: 'POST' })
   })
 
 export const addLoanRepaymentFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => addLoanRepaymentSchema.parse(input))
+  .validator((input: unknown) => addLoanRepaymentSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, addLoanRepaymentImpl } =
       await import('./personal-loans.impl')
@@ -61,7 +61,7 @@ export const addLoanRepaymentFn = createServerFn({ method: 'POST' })
   })
 
 export const removeLoanRepaymentFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => removeLoanRepaymentSchema.parse(input))
+  .validator((input: unknown) => removeLoanRepaymentSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, removeLoanRepaymentImpl } =
       await import('./personal-loans.impl')

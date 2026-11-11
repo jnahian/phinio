@@ -10,7 +10,7 @@ Execution patterns for Phinio. Each section is a recipe — when you're adding a
 Component
   └─ useQuery in src/hooks/use*.ts
       └─ calls listFooFn from src/server/foo.ts
-          └─ wrapper: createServerFn().inputValidator(zod).handler(async ({data}) => {
+          └─ wrapper: createServerFn().validator(zod).handler(async ({data}) => {
               const { requireProfileId, listFooImpl } = await import('./foo.impl')
               return listFooImpl(await requireProfileId(), data)
             })

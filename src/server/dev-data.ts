@@ -19,7 +19,7 @@ const seedSchema = z.object({
 })
 
 export const seedProfileDataFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => seedSchema.parse(input))
+  .validator((input: unknown) => seedSchema.parse(input))
   .handler(async ({ data }): Promise<DevDataResult> => {
     const { requireUserId } = await import('./profile.impl')
     const { seedProfileDataImpl } = await import('./dev-data.impl')

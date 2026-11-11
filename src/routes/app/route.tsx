@@ -121,8 +121,7 @@ function AppLayout() {
   const matches = useMatches()
 
   const deepest = matches[matches.length - 1] as
-    | { staticData?: RouteStaticData }
-    | undefined
+    { staticData?: RouteStaticData } | undefined
   const staticData = deepest?.staticData ?? {}
 
   const hideTabBar = staticData.hideTabBar

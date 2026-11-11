@@ -25,7 +25,7 @@ export const unreadNotificationCountFn = createServerFn({
 })
 
 export const markNotificationReadFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: unknown) => markNotificationReadSchema.parse(input))
+  .validator((input: unknown) => markNotificationReadSchema.parse(input))
   .handler(async ({ data }) => {
     const { requireProfileId, markNotificationReadImpl } =
       await import('./notifications.impl')
@@ -35,7 +35,7 @@ export const markNotificationReadFn = createServerFn({ method: 'POST' })
 export const markAllNotificationsReadFn = createServerFn({
   method: 'POST',
 })
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     markAllNotificationsReadSchema.parse(input ?? {}),
   )
   .handler(async ({ data }) => {
@@ -47,7 +47,7 @@ export const markAllNotificationsReadFn = createServerFn({
 export const clearReadNotificationsFn = createServerFn({
   method: 'POST',
 })
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     clearReadNotificationsSchema.parse(input ?? {}),
   )
   .handler(async ({ data }) => {
