@@ -66,7 +66,11 @@ export async function getDashboardStatsImpl(
   profileId: string,
 ): Promise<DashboardStats> {
   const now = new Date()
-  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  // Upcoming payments cover the current calendar month (UTC, like the
+  // `@db.Date` due dates), plus anything still unpaid from earlier months.
+  const monthEnd = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
+  )
 
   const [
     activeInvestments,
@@ -104,7 +108,7 @@ export async function getDashboardStatsImpl(
       where: {
         profileId,
         status: { not: 'paid' },
-        dueDate: { lte: in30Days },
+        dueDate: { lte: monthEnd },
         // Defensively exclude the sentinel processing-fee row (mirrors
         // `upcomingPaymentsImpl`).
         paymentNumber: { gt: FEE_PAYMENT_NUMBER },
@@ -113,20 +117,18 @@ export async function getDashboardStatsImpl(
         emi: { select: { id: true, label: true, type: true } },
       },
       orderBy: { dueDate: 'asc' },
-      take: 5,
     }),
     prisma.investmentDeposit.findMany({
       where: {
         profileId,
         status: { not: 'paid' },
-        dueDate: { not: null, lte: in30Days },
+        dueDate: { not: null, lte: monthEnd },
         investment: { mode: 'scheduled', status: 'active' },
       },
       include: {
         investment: { select: { id: true, name: true, type: true } },
       },
       orderBy: { dueDate: 'asc' },
-      take: 5,
     }),
     prisma.personalLoan.findMany({
       where: { profileId, status: 'active' },
@@ -238,9 +240,9 @@ export async function getDashboardStatsImpl(
       sequenceNumber: d.installmentNumber,
     }))
 
-  const upcomingPayments = [...upcomingEmiItems, ...upcomingDepositItems]
-    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
-    .slice(0, 5)
+  const upcomingPayments = [...upcomingEmiItems, ...upcomingDepositItems].sort(
+    (a, b) => a.dueDate.getTime() - b.dueDate.getTime(),
+  )
 
   return {
     netWorth: netWorth.toFixed(2),

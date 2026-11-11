@@ -345,7 +345,7 @@ All authenticated app screens share:
 - **Quick Stats Row** (2 columns):
   - Total invested, current value, % gain/loss (green/red)
   - Monthly EMI outflow total
-- **Upcoming Payments** — next 5 EMI payments due within 30 days. Each card: EMI label, amount, relative due date, overdue badge if past due. Tapping → EMI detail.
+- **Upcoming Payments** — every unpaid EMI payment and DPS deposit due this calendar month, plus any still overdue from earlier months. Each card: label, amount, relative due date, overdue badge if past due. Tapping → EMI / DPS detail.
 - **Investment Allocation Donut** — lazy-loaded Recharts pie; groups active investments by type. Legend shows top 5 types with color and %. Tapping a legend row highlights that slice on the donut and visually dims the others; dimmed rows remain clickable so users can switch focus directly. Tap the selected row again to clear.
 - **Empty state** (fresh account) — CTA cards linking to add first investment or EMI.
 
@@ -658,7 +658,7 @@ When an EMI is created, all `EmiPayment` rows are generated upfront (`src/lib/em
 
 - **Net Worth** = `Σ active investments currentValue` − `Σ active EMIs remainingBalance` (from each EMI's first unpaid payment row) − `Σ outstanding of active borrowed personal loans` + `Σ outstanding of active lent personal loans`. A loan's agreed total counts in full: unlike EMI interest it doesn't shrink when repaid early.
 - **Monthly EMI Outflow** = `Σ emiAmount` for all active EMIs
-- **Upcoming Payments** = next 5 `EmiPayment` rows where `status ≠ 'paid'` and `dueDate ≤ today + 30 days`, ordered by `dueDate ASC`
+- **Upcoming Payments** = all unpaid `EmiPayment` rows and active-DPS `InvestmentDeposit` rows with `dueDate ≤ last day of the current month` (UTC) — so this month's items plus anything overdue from earlier months — ordered by `dueDate ASC`, no limit
 - **Investment Allocation** = group active investments by `type`, sum `currentValue` per type
 
 ### 8.4 Notification Sync
