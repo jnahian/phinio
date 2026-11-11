@@ -14,12 +14,14 @@ import {
   LogOut,
   Mail,
   Pencil,
+  ShieldCheck,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { SeedDataModal } from '#/components/SeedDataModal'
+import { TwoFactorModal } from '#/components/TwoFactorModal'
 import { TextField } from '#/components/ui/TextField'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/cn'
@@ -68,6 +70,8 @@ function ProfileScreen() {
   })
   const [pwError, setPwError] = useState('')
   const [isSavingPassword, setIsSavingPassword] = useState(false)
+
+  const [isTwoFactorOpen, setIsTwoFactorOpen] = useState(false)
 
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
@@ -243,6 +247,17 @@ function ProfileScreen() {
     } finally {
       setIsSavingPassword(false)
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // Two-factor
+  // -------------------------------------------------------------------------
+
+  // Enabling/disabling rotates the session; drop the cached copy so the
+  // /app loader refetches it and `user.twoFactorEnabled` updates.
+  async function refreshSession() {
+    await qc.invalidateQueries({ queryKey: ['auth', 'session'] })
+    await router.invalidate()
   }
 
   // -------------------------------------------------------------------------
@@ -544,6 +559,38 @@ function ProfileScreen() {
 
           <button
             type="button"
+            onClick={() => setIsTwoFactorOpen(true)}
+            className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 text-on-surface transition hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck
+                className="h-5 w-5 text-on-surface-variant"
+                strokeWidth={1.75}
+              />
+              <span className="font-display font-semibold">
+                {t('twoFactor.title')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'text-xs font-semibold',
+                  user.twoFactorEnabled
+                    ? 'text-primary-fixed-dim'
+                    : 'text-on-surface-variant',
+                )}
+              >
+                {user.twoFactorEnabled ? t('twoFactor.on') : t('twoFactor.off')}
+              </span>
+              <ChevronRight
+                className="h-4 w-4 text-on-surface-variant/50"
+                strokeWidth={2}
+              />
+            </div>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setConfirmLogout(true)}
             className="flex w-full items-center justify-between rounded-2xl border border-outline-variant/30 px-5 py-4 transition hover:bg-white/5"
           >
@@ -610,6 +657,14 @@ function ProfileScreen() {
         onSubmit={handleChangePassword}
         onClose={closeChangePassword}
       />
+
+      {isTwoFactorOpen && (
+        <TwoFactorModal
+          enabled={!!user.twoFactorEnabled}
+          onChanged={refreshSession}
+          onClose={() => setIsTwoFactorOpen(false)}
+        />
+      )}
 
       <ConfirmModal
         open={confirmLogout}
