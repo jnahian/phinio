@@ -641,7 +641,14 @@ function ProfileScreen() {
       />
 
       <p className="body-sm text-center text-on-surface-variant/60">
-        Phinio · v{__APP_VERSION__}
+        Phinio ·{' '}
+        <Link
+          to="/changelog"
+          hash={`v${__APP_VERSION__}`}
+          className="rounded underline decoration-on-surface-variant/30 underline-offset-4 outline-none transition-colors duration-150 hover:text-on-surface-variant focus-visible:ring-2 focus-visible:ring-primary/60"
+        >
+          v{__APP_VERSION__}
+        </Link>
       </p>
     </main>
   )

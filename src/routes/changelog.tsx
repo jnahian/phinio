@@ -60,7 +60,10 @@ function ChangelogScreen() {
 
 function ReleaseBlock({ release }: { release: Release }) {
   return (
-    <article>
+    // The in-app version number links here as /changelog#v<version>, so the
+    // anchor has to clear the fixed nav — hence scroll-mt matching the main
+    // element's top padding.
+    <article id={`v${release.version}`} className="scroll-mt-28">
       <header className="flex flex-wrap items-baseline gap-3 mb-6">
         <h2 className="font-display font-bold text-2xl sm:text-3xl text-on-surface tracking-tight">
           v{release.version}
