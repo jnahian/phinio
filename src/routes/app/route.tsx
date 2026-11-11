@@ -6,7 +6,13 @@ import {
   useMatches,
 } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, PiggyBank, TrendingUp, Wallet } from 'lucide-react'
+import {
+  CalendarClock,
+  HandCoins,
+  PiggyBank,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react'
 import { BottomTabBar } from '#/components/BottomTabBar'
 import { FABMenu } from '#/components/ui/FABMenu'
 import { PullToRefresh } from '#/components/PullToRefresh'
@@ -171,6 +177,11 @@ function AppLayout() {
                 to: '/app/emis/new',
                 label: t('fab.emi'),
                 icon: <CalendarClock className="h-5 w-5" strokeWidth={1.75} />,
+              },
+              {
+                to: '/app/emis/personal/new',
+                label: t('fab.personalLoan'),
+                icon: <HandCoins className="h-5 w-5" strokeWidth={1.75} />,
               },
             ]}
           />

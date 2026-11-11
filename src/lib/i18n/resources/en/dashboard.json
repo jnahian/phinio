@@ -3,7 +3,7 @@
   "greetingFallback": "Welcome",
   "netWorth": {
     "label": "Net worth",
-    "hint": "Assets minus remaining EMI balance"
+    "hint": "Assets and money owed to you, minus loans and EMIs"
   },
   "empty": {
     "title": "Start tracking your finances",
@@ -28,7 +28,7 @@
   "upcoming": {
     "title": "Upcoming payments",
     "viewAll": "View all",
-    "empty": "Nothing due in the next 30 days"
+    "empty": "Nothing due this month"
   },
   "allocation": {
     "title": "Allocation",

@@ -4,6 +4,11 @@ import {
   investmentKeys,
 } from '#/hooks/useInvestments'
 import { emisListQueryOptions, emiKeys } from '#/hooks/useEmis'
+import {
+  loanKeys,
+  personalLoanQueryOptions,
+  personalLoansListQueryOptions,
+} from '#/hooks/usePersonalLoans'
 import { dashboardQueryOptions } from '#/hooks/useDashboard'
 import {
   notificationsListQueryOptions,
@@ -24,6 +29,10 @@ const INVESTMENT_FILTERS = [
 const EMI_FILTERS = [
   { type: 'all' as const, status: 'active' as const },
   { type: 'all' as const, status: 'completed' as const },
+] as const
+const LOAN_FILTERS = [
+  { status: 'active' as const },
+  { status: 'settled' as const },
 ] as const
 
 // Coalesce reconnect events: TanStack Query already respects per-query
@@ -51,6 +60,9 @@ export async function prefetchProfileData(queryClient: QueryClient) {
     ...EMI_FILTERS.map((f) =>
       queryClient.prefetchQuery(emisListQueryOptions(f)),
     ),
+    ...LOAN_FILTERS.map((f) =>
+      queryClient.prefetchQuery(personalLoansListQueryOptions(f)),
+    ),
   ]
   await Promise.allSettled(tasks)
 
@@ -64,6 +76,10 @@ export async function prefetchProfileData(queryClient: QueryClient) {
     ) ?? []
   const emis =
     queryClient.getQueryData<Array<EmiRow>>(emiKeys.list(EMI_FILTERS[0])) ?? []
+  const loans =
+    queryClient.getQueryData<Array<{ id: string }>>(
+      loanKeys.list(LOAN_FILTERS[0]),
+    ) ?? []
 
   await pMapLimit(investments, 4, (row) =>
     queryClient.prefetchQuery({
@@ -76,6 +92,9 @@ export async function prefetchProfileData(queryClient: QueryClient) {
       queryKey: emiKeys.detail(row.id),
       queryFn: () => getEmiFn({ data: { emiId: row.id } }),
     }),
+  )
+  await pMapLimit(loans, 4, (row) =>
+    queryClient.prefetchQuery(personalLoanQueryOptions(row.id)),
   )
 
   lastPrefetchByClient.set(queryClient, Date.now())

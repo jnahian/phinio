@@ -78,6 +78,18 @@ Special row: when an EMI has fees (e.g. credit card processing), one synthetic r
 
 Indexes: `(emiId, paymentNumber)`, `(profileId, status, dueDate)`.
 
+### `PersonalLoan` → `personal_loans`
+
+A loan with no schedule (PRD §8.6). `direction` is `borrowed` (a liability) or `lent` (money owed to the user — an asset). `principal`, optional `totalRepayable` (agreed total; `null` means the principal), `startDate`, `status` (`active | settled`).
+
+Outstanding is **computed on read**: `(totalRepayable ?? principal) − Σ repayments` (`loanOutstanding` in `src/server/personal-loans.impl.ts`). There is no synced total column. `status` is kept in step by every repayment and edit mutation.
+
+### `PersonalLoanRepayment` → `personal_loan_repayments`
+
+One row per payment, any amount, any date: `amount`, `paidAt`, `notes`. Cascades with its loan.
+
+Indexes: `(loanId, paidAt)`, `(profileId)`.
+
 ---
 
 ## Cross-cutting tables

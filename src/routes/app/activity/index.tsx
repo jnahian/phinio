@@ -7,8 +7,10 @@ import {
   ChevronDown,
   CloudOff,
   CreditCard,
+  HandCoins,
   History,
   PencilLine,
+  ArrowLeftRight,
   PiggyBank,
   Plus,
   TrendingUp,
@@ -51,6 +53,8 @@ const ENTITY_META: Record<ActivityEntityType, { icon: LucideIcon }> = {
   investment_withdrawal: { icon: Wallet },
   emi: { icon: CreditCard },
   emi_payment: { icon: CalendarClock },
+  personal_loan: { icon: HandCoins },
+  personal_loan_repayment: { icon: ArrowLeftRight },
   profile: { icon: User },
 }
 

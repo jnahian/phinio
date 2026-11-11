@@ -1,9 +1,22 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getDashboardStatsImpl } from '#/server/dashboard.impl'
+import {
+  addLoanRepaymentImpl,
+  createPersonalLoanImpl,
+} from '#/server/personal-loans.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
+// Upcoming payments cover "this month", so pin today to 11 Nov 2026:
+// +19 days is the month's last day (30 Nov), +20 is the next month (1 Dec).
+// Only Date is faked; timers stay real for the database driver.
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-11-11T09:00:00Z'))
   await resetDb()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // Helpers --------------------------------------------------------------------
@@ -324,6 +337,52 @@ describe('getDashboardStatsImpl', () => {
     expect(stats.netWorth).toBe('600.00')
   })
 
+  it('subtracts borrowed and adds lent personal-loan outstanding to netWorth', async () => {
+    const user = await createTestUser()
+    await insertInvestment(user.profileId, {
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+    })
+    // Borrowed 500, agreed to repay 600, repaid 100 → owes 500.
+    const borrowed = await createPersonalLoanImpl(user.profileId, {
+      direction: 'borrowed',
+      counterparty: 'Rafiq',
+      principal: '500',
+      totalRepayable: '600',
+      startDate: '2026-01-01',
+    })
+    await addLoanRepaymentImpl(user.profileId, {
+      loanId: borrowed.id,
+      amount: '100',
+      paidAt: '2026-02-01',
+    })
+    // Lent 300, nothing back yet → owed 300.
+    await createPersonalLoanImpl(user.profileId, {
+      direction: 'lent',
+      counterparty: 'Karim',
+      principal: '300',
+      startDate: '2026-01-01',
+    })
+    // A settled loan no longer counts.
+    const settled = await createPersonalLoanImpl(user.profileId, {
+      direction: 'borrowed',
+      counterparty: 'Settled',
+      principal: '999',
+      startDate: '2026-01-01',
+    })
+    await addLoanRepaymentImpl(user.profileId, {
+      loanId: settled.id,
+      amount: '999',
+      paidAt: '2026-02-01',
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.personalLoans).toEqual({ owed: '500.00', owedToYou: '300.00' })
+    // 1000 − 500 + 300
+    expect(stats.netWorth).toBe('800.00')
+  })
+
   it('uses the next UNPAID payment (not a paid one) for remaining EMI balance', async () => {
     const user = await createTestUser()
     await insertInvestment(user.profileId, {
@@ -354,11 +413,11 @@ describe('getDashboardStatsImpl', () => {
     expect(stats.netWorth).toBe('750.00')
   })
 
-  it('returns at most 5 upcoming payments sorted by dueDate ascending', async () => {
+  it('returns every unpaid payment due this month, sorted by dueDate ascending', async () => {
     const user = await createTestUser()
     const emi = await insertEmi(user.profileId, { emiAmount: '100.00' })
 
-    // 7 unpaid payments, staggered across the next 30 days.
+    // 7 unpaid payments; +25 (6 Dec) falls in next month.
     const offsets = [25, 3, 18, 1, 10, 7, 14]
     for (let i = 0; i < offsets.length; i++) {
       await insertPayment(user.profileId, emi.id, {
@@ -371,27 +430,13 @@ describe('getDashboardStatsImpl', () => {
 
     const stats = await getDashboardStatsImpl(user.profileId)
 
-    expect(stats.upcomingPayments).toHaveLength(5)
-    // Ordered ascending by dueDate.
-    const due = stats.upcomingPayments.map((p) => p.dueDate.getTime())
-    for (let i = 1; i < due.length; i++) {
-      expect(due[i]).toBeGreaterThanOrEqual(due[i - 1])
-    }
-    // daysUntilDue uses Math.round on (dueDate - now), and our dueDates are
-    // UTC midnight — so the rounded count can land one day lower depending on
-    // the wall-clock hour. Assert the *relative* offsets match the five
-    // smallest from [25, 3, 18, 1, 10, 7, 14] → [1, 3, 7, 10, 14], allowing
-    // a uniform ±1 drift across the whole array.
-    const days = stats.upcomingPayments.map((p) => p.daysUntilDue)
-    const expectedOffsets = [1, 3, 7, 10, 14]
-    const drift = days[0] - expectedOffsets[0]
-    expect(Math.abs(drift)).toBeLessThanOrEqual(1)
-    for (let i = 0; i < expectedOffsets.length; i++) {
-      expect(days[i]).toBe(expectedOffsets[i] + drift)
-    }
+    // No cap: all six in-month payments, ascending.
+    expect(stats.upcomingPayments.map((p) => p.daysUntilDue)).toEqual([
+      1, 3, 7, 10, 14, 18,
+    ])
   })
 
-  it('excludes upcoming payments with dueDate beyond 30 days', async () => {
+  it('includes the last day of this month and excludes next month', async () => {
     const user = await createTestUser()
     const emi = await insertEmi(user.profileId, {
       label: 'Loan X',
@@ -400,13 +445,13 @@ describe('getDashboardStatsImpl', () => {
     })
     await insertPayment(user.profileId, emi.id, {
       paymentNumber: 1,
-      dueDate: daysFromNow(1),
+      dueDate: daysFromNow(19), // 30 Nov
       emiAmount: '100.00',
       remainingBalance: '900.00',
     })
     await insertPayment(user.profileId, emi.id, {
       paymentNumber: 2,
-      dueDate: daysFromNow(60),
+      dueDate: daysFromNow(20), // 1 Dec — within 30 days, but next month
       emiAmount: '100.00',
       remainingBalance: '800.00',
     })
@@ -456,6 +501,23 @@ describe('getDashboardStatsImpl', () => {
     const [p] = stats.upcomingPayments
     expect(p.isOverdue).toBe(true)
     expect(p.daysUntilDue).toBeLessThanOrEqual(0)
+  })
+
+  it('keeps payments still overdue from earlier months', async () => {
+    const user = await createTestUser()
+    const emi = await insertEmi(user.profileId, { emiAmount: '100.00' })
+    await insertPayment(user.profileId, emi.id, {
+      paymentNumber: 1,
+      dueDate: daysFromNow(-45), // 27 Sep
+      emiAmount: '100.00',
+      remainingBalance: '900.00',
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.upcomingPayments).toHaveLength(1)
+    expect(stats.upcomingPayments[0].isOverdue).toBe(true)
+    expect(stats.upcomingPayments[0].daysUntilDue).toBe(-45)
   })
 
   it('scopes every aggregation to the requested profileId (Alice cannot see Bob)', async () => {
@@ -558,7 +620,7 @@ describe('getDashboardStatsImpl', () => {
         paidAt: daysFromNow(-25),
       },
     })
-    // Beyond 30-day window must be excluded.
+    // Due next month must be excluded.
     await prisma.investmentDeposit.create({
       data: {
         investmentId: dps.id,

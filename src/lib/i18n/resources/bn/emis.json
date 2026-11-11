@@ -116,5 +116,79 @@
     "updateFailed": "ইএমআই আপডেট করা যায়নি",
     "deleteFailed": "ইএমআই মুছে ফেলা যায়নি",
     "markFailed": "পেমেন্ট চিহ্নিত করা যায়নি"
+  },
+  "segment": {
+    "emis": "ইএমআই",
+    "personal": "ব্যক্তিগত"
+  },
+  "personal": {
+    "directions": {
+      "all": "সব",
+      "borrowed": "ধার নেওয়া",
+      "lent": "ধার দেওয়া"
+    },
+    "list": {
+      "youOwe": "আপনার দেনা",
+      "owedToYou": "আপনার পাওনা",
+      "active": "সক্রিয়",
+      "settled": "নিষ্পন্ন",
+      "empty": "এখনো কোনো ব্যক্তিগত ঋণ নেই",
+      "emptyHint": "কারো কাছ থেকে ধার নেওয়া বা কাউকে ধার দেওয়া টাকার হিসাব রাখুন, আর যখনই পরিশোধ হয় তখন লিখে রাখুন।",
+      "noSettled": "কোনো নিষ্পন্ন ঋণ নেই",
+      "noSettledHint": "পুরোপুরি পরিশোধ হলে ঋণ এখানে চলে আসবে।",
+      "left": "বাকি",
+      "paidOf": "{{total}}-এর মধ্যে {{paid}}",
+      "loadFailed": "ঋণ লোড করা যায়নি"
+    },
+    "form": {
+      "section": {
+        "details": "ঋণের বিবরণ",
+        "amounts": "পরিমাণ",
+        "notes": "নোট (ঐচ্ছিক)"
+      },
+      "counterpartyBorrowed": "যার কাছ থেকে ধার নিয়েছেন",
+      "counterpartyLent": "যাকে ধার দিয়েছেন",
+      "counterpartyPlaceholder": "যেমন: রফিক",
+      "principalLabel": "ঋণের পরিমাণ",
+      "dateBorrowed": "ধার নেওয়ার তারিখ",
+      "dateLent": "ধার দেওয়ার তারিখ",
+      "totalLabel": "মোট পরিশোধযোগ্য (ঐচ্ছিক)",
+      "totalHint": "একই পরিমাণ ফেরত দিলে খালি রাখুন। বেশি দেওয়ার কথা থাকলে লিখুন, যেমন ৫০,০০০ ধার নিয়ে ৫৫,০০০ ফেরত।",
+      "notesPlaceholder": "উদ্দেশ্য, শর্ত, বা যেকোনো প্রসঙ্গ",
+      "submit": "ঋণ যোগ করুন"
+    },
+    "detail": {
+      "borrowedFrom": "ধার নিয়েছেন",
+      "lentTo": "ধার দিয়েছেন",
+      "youOwe": "আপনার দেনা",
+      "owedToYou": "আপনার পাওনা",
+      "settled": "নিষ্পন্ন",
+      "repaid": "পরিশোধিত",
+      "received": "পেয়েছেন",
+      "principal": "পরিমাণ",
+      "agreedTotal": "মোট পরিশোধযোগ্য",
+      "date": "তারিখ",
+      "logRepayment": "পরিশোধ লিখুন",
+      "logReceived": "প্রাপ্তি লিখুন",
+      "fullRemaining": "বাকি সব",
+      "overpay": "বাকি {{amount}}-এর চেয়ে বেশি",
+      "belowRepaid": "ইতিমধ্যে ফেরত দেওয়া {{amount}}-এর চেয়ে কম হতে পারবে না",
+      "logSubmit": "পেমেন্ট সংরক্ষণ করুন",
+      "paymentNotesPlaceholder": "যেমন: নগদ, বিকাশ",
+      "payments": "পেমেন্ট",
+      "noPayments": "এখনো কোনো পেমেন্ট নেই",
+      "edit": "ঋণ সম্পাদনা",
+      "delete": "ঋণ মুছে ফেলুন",
+      "deleteConfirmTitle": "এই ঋণ মুছে ফেলবেন?",
+      "deleteConfirmBody": "\"{{name}}\"-এর সাথে ঋণ ও এর সব পেমেন্ট মুছে ফেলবেন? এটি ফিরিয়ে নেওয়া যাবে না।",
+      "deleteConfirm": "মুছে ফেলুন",
+      "deletePending": "মুছে ফেলা হচ্ছে…",
+      "removePayment": "পেমেন্ট সরান",
+      "removeTitle": "এই পেমেন্ট সরাবেন?",
+      "removeBody": "পরিমাণটি আবার বকেয়াতে যোগ হবে।",
+      "removeConfirm": "সরান",
+      "removePending": "সরানো হচ্ছে…",
+      "loadFailed": "ঋণ লোড করা যায়নি"
+    }
   }
 }

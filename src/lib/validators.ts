@@ -313,6 +313,82 @@ export const emiCompleteSchema = z.object({
 export type EmiCompleteInput = z.infer<typeof emiCompleteSchema>
 
 // ----------------------------------------------------------------------------
+// Personal loans — no schedule; repayments of any amount, borrowed or lent
+// ----------------------------------------------------------------------------
+
+export const LOAN_DIRECTIONS = ['borrowed', 'lent'] as const
+export type LoanDirection = (typeof LOAN_DIRECTIONS)[number]
+
+const loanTermsFields = {
+  counterparty: z.string().trim().min(1, 'Name is required').max(120),
+  principal: positiveDecimalString,
+  // Agreed total to repay (principal + any extra). Omitted = principal.
+  totalRepayable: positiveDecimalString.optional(),
+  startDate: isoDateString,
+  notes: z.string().trim().max(1000).optional(),
+}
+
+function totalCoversPrincipal(d: {
+  principal: string
+  totalRepayable?: string
+}): boolean {
+  return (
+    d.totalRepayable === undefined ||
+    Number(d.totalRepayable) >= Number(d.principal)
+  )
+}
+const totalBelowPrincipal = {
+  message: 'Total to repay must be at least the loan amount',
+  path: ['totalRepayable'],
+}
+
+export const personalLoanCreateSchema = z
+  .object({
+    direction: z.enum(LOAN_DIRECTIONS),
+    ...loanTermsFields,
+    id: z.string().uuid().optional(),
+    ...clientMutationIdField,
+  })
+  .refine(totalCoversPrincipal, totalBelowPrincipal)
+export type PersonalLoanCreateInput = z.infer<typeof personalLoanCreateSchema>
+
+export const personalLoanUpdateSchema = z
+  .object({
+    loanId: z.string().min(1),
+    ...loanTermsFields,
+    ...clientMutationIdField,
+    ...expectedUpdatedAtField,
+  })
+  .refine(totalCoversPrincipal, totalBelowPrincipal)
+export type PersonalLoanUpdateInput = z.infer<typeof personalLoanUpdateSchema>
+
+export const personalLoanListQuerySchema = z.object({
+  status: z.enum(['active', 'settled']).default('active'),
+})
+export type PersonalLoanListQuery = z.infer<typeof personalLoanListQuerySchema>
+
+export const personalLoanIdSchema = z.object({
+  loanId: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type PersonalLoanIdInput = z.infer<typeof personalLoanIdSchema>
+
+export const addLoanRepaymentSchema = z.object({
+  loanId: z.string().min(1),
+  amount: positiveDecimalString,
+  paidAt: isoDateString,
+  notes: z.string().trim().max(500).optional(),
+  ...clientMutationIdField,
+})
+export type AddLoanRepaymentInput = z.infer<typeof addLoanRepaymentSchema>
+
+export const removeLoanRepaymentSchema = z.object({
+  repaymentId: z.string().min(1),
+  ...clientMutationIdField,
+})
+export type RemoveLoanRepaymentInput = z.infer<typeof removeLoanRepaymentSchema>
+
+// ----------------------------------------------------------------------------
 // Notifications
 // ----------------------------------------------------------------------------
 
