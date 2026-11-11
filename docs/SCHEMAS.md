@@ -23,7 +23,8 @@ For business behavior see `docs/Phinio_PRD_v1.md` §4. For Zod input validators 
 | `User`         | `user`         | `email` unique, `emailVerified` gates login. Owns one `Profile?`. |
 | `Session`      | `session`      | Cookie-bearing session, indexed by `userId`.                      |
 | `Account`      | `account`      | Better Auth credentials (password hash) and OAuth tokens.         |
-| `Verification` | `verification` | Email verification + password reset tokens.                       |
+| `Verification` | `verification` | Email verification, password reset, 2FA sign-in tokens.           |
+| `TwoFactor`    | `twoFactor`    | Encrypted TOTP secret + backup codes (`twoFactor` plugin).        |
 
 These are regenerated in place via `npx @better-auth/cli@latest generate` if `additionalFields` or plugins change. **Don't hand-edit them** beyond `additionalFields` like `preferredCurrency`.
 

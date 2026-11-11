@@ -63,6 +63,7 @@ This split is mandatory — a static import of `./*.impl` from `*.ts` will pollu
 ### Auth — `src/lib/auth.ts` + `src/routes/api/auth/$.ts`
 
 - Better Auth 1.5 with email/password, email verification, password reset.
+- Opt-in 2FA via the `twoFactor` plugin (TOTP + backup codes, enabled from Profile). Sign-in with 2FA on returns `twoFactorRedirect` instead of a session; `/login` sends the user to `/two-factor`. Secrets are encrypted with `BETTER_AUTH_SECRET`, so rotating it breaks enrolled users' 2FA.
 - `tanstackStartCookies()` plugin issues an httpOnly session cookie.
 - The single catch-all route `src/routes/api/auth/$.ts` forwards GET/POST to `auth.handler(request)` — every Better Auth endpoint runs through that one file.
 - Client-side hooks in `src/lib/auth-client.ts`.
