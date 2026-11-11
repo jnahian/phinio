@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getDashboardStatsImpl } from '#/server/dashboard.impl'
+import {
+  addLoanRepaymentImpl,
+  createPersonalLoanImpl,
+} from '#/server/personal-loans.impl'
 import { createTestUser, prisma, resetDb } from './helpers/db'
 
 beforeEach(async () => {
@@ -322,6 +326,52 @@ describe('getDashboardStatsImpl', () => {
     const stats = await getDashboardStatsImpl(user.profileId)
 
     expect(stats.netWorth).toBe('600.00')
+  })
+
+  it('subtracts borrowed and adds lent personal-loan outstanding to netWorth', async () => {
+    const user = await createTestUser()
+    await insertInvestment(user.profileId, {
+      investedAmount: '1000.00',
+      currentValue: '1000.00',
+    })
+    // Borrowed 500, agreed to repay 600, repaid 100 → owes 500.
+    const borrowed = await createPersonalLoanImpl(user.profileId, {
+      direction: 'borrowed',
+      counterparty: 'Rafiq',
+      principal: '500',
+      totalRepayable: '600',
+      startDate: '2026-01-01',
+    })
+    await addLoanRepaymentImpl(user.profileId, {
+      loanId: borrowed.id,
+      amount: '100',
+      paidAt: '2026-02-01',
+    })
+    // Lent 300, nothing back yet → owed 300.
+    await createPersonalLoanImpl(user.profileId, {
+      direction: 'lent',
+      counterparty: 'Karim',
+      principal: '300',
+      startDate: '2026-01-01',
+    })
+    // A settled loan no longer counts.
+    const settled = await createPersonalLoanImpl(user.profileId, {
+      direction: 'borrowed',
+      counterparty: 'Settled',
+      principal: '999',
+      startDate: '2026-01-01',
+    })
+    await addLoanRepaymentImpl(user.profileId, {
+      loanId: settled.id,
+      amount: '999',
+      paidAt: '2026-02-01',
+    })
+
+    const stats = await getDashboardStatsImpl(user.profileId)
+
+    expect(stats.personalLoans).toEqual({ owed: '500.00', owedToYou: '300.00' })
+    // 1000 − 500 + 300
+    expect(stats.netWorth).toBe('800.00')
   })
 
   it('uses the next UNPAID payment (not a paid one) for remaining EMI balance', async () => {

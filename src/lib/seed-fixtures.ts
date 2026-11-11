@@ -22,6 +22,7 @@ function sumStrings(values: string[]): string {
 
 export async function wipeProfileData(prisma: PrismaClient, profileId: string) {
   await prisma.emi.deleteMany({ where: { profileId } })
+  await prisma.personalLoan.deleteMany({ where: { profileId } })
   await prisma.investment.deleteMany({ where: { profileId } })
   try {
     await prisma.notification.deleteMany({ where: { profileId } })
@@ -499,6 +500,48 @@ export async function seedEmis(prisma: PrismaClient, profileId: string) {
 
     console.log(
       `  EMI: ${seed.label} (${seed.tenureMonths} months, ${paidCount} paid) — EMI ৳${emiAmount}`,
+    )
+  }
+
+  // Personal loans (no schedule) live under the same Loans tab, so they're
+  // seeded with the EMIs.
+  const loanSeeds = [
+    {
+      direction: 'borrowed',
+      counterparty: 'Rafiq',
+      principal: '50000.00',
+      totalRepayable: '55000.00',
+      startDate: d('2026-03-10'),
+      repayments: [
+        { amount: '10000.00', paidAt: d('2026-05-02') },
+        { amount: '8000.00', paidAt: d('2026-07-15'), notes: 'bKash' },
+      ],
+    },
+    {
+      direction: 'lent',
+      counterparty: 'Karim',
+      principal: '20000.00',
+      totalRepayable: null,
+      startDate: d('2026-06-01'),
+      repayments: [{ amount: '5000.00', paidAt: d('2026-08-20') }],
+    },
+  ]
+  for (const seed of loanSeeds) {
+    await prisma.personalLoan.create({
+      data: {
+        profileId,
+        direction: seed.direction,
+        counterparty: seed.counterparty,
+        principal: seed.principal,
+        totalRepayable: seed.totalRepayable,
+        startDate: seed.startDate,
+        repayments: {
+          create: seed.repayments.map((r) => ({ ...r, profileId })),
+        },
+      },
+    })
+    console.log(
+      `  Personal loan: ${seed.direction} ${seed.counterparty} (${seed.repayments.length} payments)`,
     )
   }
 }

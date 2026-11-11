@@ -95,6 +95,8 @@ model Profile {
   investmentWithdrawals InvestmentWithdrawal[]
   emis                  Emi[]
   emiPayments           EmiPayment[]
+  personalLoans          PersonalLoan[]
+  personalLoanRepayments PersonalLoanRepayment[]
   notifications         Notification[]
   activityLogs          ActivityLog[]
   pushSubscriptions     PushSubscription[]
@@ -233,6 +235,47 @@ model EmiPayment {
   @@map("emi_payments")
 }
 
+// Flexible personal loan: no schedule, no rate. Repayments of any amount are
+// logged whenever they happen. direction 'borrowed' is a liability, 'lent' is
+// money owed to the user (an asset).
+// Outstanding = (totalRepayable ?? principal) − SUM(repayments.amount),
+// computed on read. status flips to 'settled' when outstanding reaches 0 and
+// back to 'active' if a repayment is removed.
+model PersonalLoan {
+  id             String                  @id @default(uuid())
+  profileId      String
+  profile        Profile                 @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  direction      String // borrowed | lent
+  counterparty   String
+  principal      Decimal                 @db.Decimal(15, 2)
+  totalRepayable Decimal?                @db.Decimal(15, 2) // agreed total; null = principal
+  startDate      DateTime                @db.Date
+  status         String                  @default("active") // active | settled
+  notes          String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  repayments     PersonalLoanRepayment[]
+
+  @@index([profileId, status])
+  @@map("personal_loans")
+}
+
+model PersonalLoanRepayment {
+  id        String       @id @default(uuid())
+  loanId    String
+  loan      PersonalLoan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  amount    Decimal      @db.Decimal(15, 2)
+  paidAt    DateTime     @db.Date
+  notes     String?
+  createdAt DateTime     @default(now())
+
+  @@index([loanId, paidAt])
+  @@index([profileId])
+  @@map("personal_loan_repayments")
+}
+
 model Notification {
   id        String    @id @default(uuid())
   profileId String
@@ -259,7 +302,7 @@ model ActivityLog {
   profileId   String
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   action      String   // create | update | delete
-  entityType  String   // investment | investment_deposit | investment_withdrawal | emi | emi_payment | profile
+  entityType  String   // investment | investment_deposit | investment_withdrawal | emi | emi_payment | personal_loan | personal_loan_repayment | profile
   entityId    String?
   entityLabel String
   summary     String

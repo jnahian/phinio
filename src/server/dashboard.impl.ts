@@ -2,6 +2,7 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { auth } from '#/lib/auth'
 import { prisma } from '#/db'
 import { FEE_PAYMENT_NUMBER } from '#/lib/emi-calculator'
+import { loanOutstanding } from './personal-loans.impl'
 
 export async function requireProfileId(): Promise<string> {
   const headers = new Headers(getRequestHeaders())
@@ -48,6 +49,11 @@ export interface DashboardStats {
     gainLossPercent: number
   }
   monthlyEmiOutflow: string
+  // Outstanding on active personal loans, by direction.
+  personalLoans: {
+    owed: string
+    owedToYou: string
+  }
   upcomingPayments: Array<UpcomingPaymentItem>
   allocation: Array<{
     type: string
@@ -62,62 +68,76 @@ export async function getDashboardStatsImpl(
   const now = new Date()
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-  const [activeInvestments, activeEmis, upcomingEmiRows, upcomingDepositRows] =
-    await Promise.all([
-      // All active investments — investedAmount + currentValue already synced for
-      // scheduled/flexible modes, so no deposit join needed here. Withdrawals
-      // restore realized gains to the ROI numerator without inflating the
-      // currentValue / allocation totals (withdrawn money is no longer held).
-      prisma.investment.findMany({
-        where: { profileId, status: 'active' },
-        select: {
-          type: true,
-          investedAmount: true,
-          currentValue: true,
-          withdrawals: { select: { amount: true } },
+  const [
+    activeInvestments,
+    activeEmis,
+    upcomingEmiRows,
+    upcomingDepositRows,
+    activeLoans,
+  ] = await Promise.all([
+    // All active investments — investedAmount + currentValue already synced for
+    // scheduled/flexible modes, so no deposit join needed here. Withdrawals
+    // restore realized gains to the ROI numerator without inflating the
+    // currentValue / allocation totals (withdrawn money is no longer held).
+    prisma.investment.findMany({
+      where: { profileId, status: 'active' },
+      select: {
+        type: true,
+        investedAmount: true,
+        currentValue: true,
+        withdrawals: { select: { amount: true } },
+      },
+    }),
+    prisma.emi.findMany({
+      where: { profileId, status: 'active' },
+      select: {
+        id: true,
+        emiAmount: true,
+        payments: {
+          where: { status: { not: 'paid' } },
+          select: { emiAmount: true, remainingBalance: true, status: true },
+          orderBy: { paymentNumber: 'asc' },
         },
-      }),
-      prisma.emi.findMany({
-        where: { profileId, status: 'active' },
-        select: {
-          id: true,
-          emiAmount: true,
-          payments: {
-            where: { status: { not: 'paid' } },
-            select: { emiAmount: true, remainingBalance: true, status: true },
-            orderBy: { paymentNumber: 'asc' },
-          },
-        },
-      }),
-      prisma.emiPayment.findMany({
-        where: {
-          profileId,
-          status: { not: 'paid' },
-          dueDate: { lte: in30Days },
-          // Defensively exclude the sentinel processing-fee row (mirrors
-          // `upcomingPaymentsImpl`).
-          paymentNumber: { gt: FEE_PAYMENT_NUMBER },
-        },
-        include: {
-          emi: { select: { id: true, label: true, type: true } },
-        },
-        orderBy: { dueDate: 'asc' },
-        take: 5,
-      }),
-      prisma.investmentDeposit.findMany({
-        where: {
-          profileId,
-          status: { not: 'paid' },
-          dueDate: { not: null, lte: in30Days },
-          investment: { mode: 'scheduled', status: 'active' },
-        },
-        include: {
-          investment: { select: { id: true, name: true, type: true } },
-        },
-        orderBy: { dueDate: 'asc' },
-        take: 5,
-      }),
-    ])
+      },
+    }),
+    prisma.emiPayment.findMany({
+      where: {
+        profileId,
+        status: { not: 'paid' },
+        dueDate: { lte: in30Days },
+        // Defensively exclude the sentinel processing-fee row (mirrors
+        // `upcomingPaymentsImpl`).
+        paymentNumber: { gt: FEE_PAYMENT_NUMBER },
+      },
+      include: {
+        emi: { select: { id: true, label: true, type: true } },
+      },
+      orderBy: { dueDate: 'asc' },
+      take: 5,
+    }),
+    prisma.investmentDeposit.findMany({
+      where: {
+        profileId,
+        status: { not: 'paid' },
+        dueDate: { not: null, lte: in30Days },
+        investment: { mode: 'scheduled', status: 'active' },
+      },
+      include: {
+        investment: { select: { id: true, name: true, type: true } },
+      },
+      orderBy: { dueDate: 'asc' },
+      take: 5,
+    }),
+    prisma.personalLoan.findMany({
+      where: { profileId, status: 'active' },
+      select: {
+        direction: true,
+        principal: true,
+        totalRepayable: true,
+        repayments: { select: { amount: true } },
+      },
+    }),
+  ])
 
   let invested = 0
   let current = 0
@@ -153,7 +173,17 @@ export async function getDashboardStatsImpl(
     }
   }
 
-  const netWorth = current - remainingEmiBalance
+  // The agreed total counts in full: unlike EMI interest it doesn't shrink
+  // when repaid early, so outstanding is what is actually owed.
+  let loansOwed = 0
+  let loansOwedToYou = 0
+  for (const loan of activeLoans) {
+    const outstanding = loanOutstanding(loan).toNumber()
+    if (loan.direction === 'lent') loansOwedToYou += outstanding
+    else loansOwed += outstanding
+  }
+
+  const netWorth = current - remainingEmiBalance - loansOwed + loansOwedToYou
 
   const totalAllocation = current
   const allocation = Array.from(byType.entries())
@@ -220,6 +250,10 @@ export async function getDashboardStatsImpl(
       gainLossPercent,
     },
     monthlyEmiOutflow: monthlyEmiOutflow.toFixed(2),
+    personalLoans: {
+      owed: loansOwed.toFixed(2),
+      owedToYou: loansOwedToYou.toFixed(2),
+    },
     upcomingPayments,
     allocation,
   }

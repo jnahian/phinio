@@ -18,6 +18,8 @@ export type ActivityEntityType =
   | 'investment_withdrawal'
   | 'emi'
   | 'emi_payment'
+  | 'personal_loan'
+  | 'personal_loan_repayment'
   | 'profile'
 
 export interface ActivityChange {
