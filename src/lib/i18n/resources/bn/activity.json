@@ -22,6 +22,8 @@
     "investment_withdrawal": "প্রত্যাহার",
     "emi": "ইএমআই",
     "emi_payment": "ইএমআই পেমেন্ট",
+    "personal_loan": "ব্যক্তিগত ঋণ",
+    "personal_loan_repayment": "ঋণ পরিশোধ",
     "profile": "প্রোফাইল"
   }
 }

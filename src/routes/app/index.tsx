@@ -73,11 +73,17 @@ function HomeScreen() {
     )
   }
 
-  // Fresh accounts with no investments and no EMIs get a single welcome CTA
-  // instead of three stacked empty sections.
+  // Dashboard payloads persisted before personal loans existed don't carry
+  // this field until the next refetch.
+  const loanTotals = data?.personalLoans
+
+  // Fresh accounts with no investments, EMIs or loans get a single welcome
+  // CTA instead of three stacked empty sections.
   const isEmpty = data
     ? Number(data.investmentTotals.invested) === 0 &&
       Number(data.monthlyEmiOutflow) === 0 &&
+      Number(loanTotals?.owed ?? 0) === 0 &&
+      Number(loanTotals?.owedToYou ?? 0) === 0 &&
       data.upcomingPayments.length === 0 &&
       data.allocation.length === 0
     : false

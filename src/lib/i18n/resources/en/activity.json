@@ -22,6 +22,8 @@
     "investment_withdrawal": "Withdrawal",
     "emi": "EMI",
     "emi_payment": "EMI payment",
+    "personal_loan": "Personal loan",
+    "personal_loan_repayment": "Loan payment",
     "profile": "Profile"
   }
 }

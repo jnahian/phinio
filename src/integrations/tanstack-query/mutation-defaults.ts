@@ -23,6 +23,13 @@ import {
   updateEmiFn,
 } from '#/server/emis'
 import {
+  addLoanRepaymentFn,
+  createPersonalLoanFn,
+  deletePersonalLoanFn,
+  removeLoanRepaymentFn,
+  updatePersonalLoanFn,
+} from '#/server/personal-loans'
+import {
   clearReadNotificationsFn,
   markAllNotificationsReadFn,
   markNotificationReadFn,
@@ -43,6 +50,11 @@ import type {
   MarkDepositPaidInput,
   MarkNotificationReadInput,
   MarkPaymentPaidInput,
+  AddLoanRepaymentInput,
+  PersonalLoanCreateInput,
+  PersonalLoanIdInput,
+  PersonalLoanUpdateInput,
+  RemoveLoanRepaymentInput,
   SavingsCreateInput,
   SavingsUpdateInput,
   WithdrawalInput,
@@ -89,6 +101,12 @@ export const mutationKeys = {
   emiComplete: ['emis', 'complete'] as const,
   emiDelete: ['emis', 'delete'] as const,
   markPaymentPaid: ['payments', 'mark-paid'] as const,
+  // Personal loans
+  loanCreate: ['personal-loans', 'create'] as const,
+  loanUpdate: ['personal-loans', 'update'] as const,
+  loanDelete: ['personal-loans', 'delete'] as const,
+  loanAddRepayment: ['personal-loans', 'add-repayment'] as const,
+  loanRemoveRepayment: ['personal-loans', 'remove-repayment'] as const,
   // Profile
   profileUpdateCurrency: ['profile', 'update-currency'] as const,
   profileUpdateName: ['profile', 'update-name'] as const,
@@ -198,6 +216,33 @@ export function registerMutationDefaults(queryClient: QueryClient) {
     ...offlineFirst,
     mutationFn: (input: MarkPaymentPaidInput) =>
       markPaymentPaidFn({ data: input }),
+  })
+
+  // Personal loans
+  queryClient.setMutationDefaults(mutationKeys.loanCreate, {
+    ...offlineFirst,
+    mutationFn: (input: PersonalLoanCreateInput) =>
+      createPersonalLoanFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.loanUpdate, {
+    ...offlineFirst,
+    mutationFn: (input: PersonalLoanUpdateInput) =>
+      updatePersonalLoanFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.loanDelete, {
+    ...offlineFirst,
+    mutationFn: (input: PersonalLoanIdInput) =>
+      deletePersonalLoanFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.loanAddRepayment, {
+    ...offlineFirst,
+    mutationFn: (input: AddLoanRepaymentInput) =>
+      addLoanRepaymentFn({ data: input }),
+  })
+  queryClient.setMutationDefaults(mutationKeys.loanRemoveRepayment, {
+    ...offlineFirst,
+    mutationFn: (input: RemoveLoanRepaymentInput) =>
+      removeLoanRepaymentFn({ data: input }),
   })
 
   // Notifications

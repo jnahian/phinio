@@ -26,11 +26,14 @@ import { Route as AppEmisNewRouteImport } from './routes/app/emis/new'
 import { Route as AppEmisEmiIdRouteImport } from './routes/app/emis/$emiId'
 import { Route as ApiCronSendRemindersRouteImport } from './routes/api/cron/send-reminders'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppEmisPersonalIndexRouteImport } from './routes/app/emis/personal/index'
 import { Route as AppInvestmentsSavingsNewRouteImport } from './routes/app/investments/savings/new'
 import { Route as AppInvestmentsSavingsIdRouteImport } from './routes/app/investments/savings/$id'
 import { Route as AppInvestmentsDpsNewRouteImport } from './routes/app/investments/dps/new'
 import { Route as AppInvestmentsDpsIdRouteImport } from './routes/app/investments/dps/$id'
 import { Route as AppInvestmentsIdEditRouteImport } from './routes/app/investments/$id.edit'
+import { Route as AppEmisPersonalNewRouteImport } from './routes/app/emis/personal/new'
+import { Route as AppEmisPersonalLoanIdRouteImport } from './routes/app/emis/personal/$loanId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -117,6 +120,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppEmisPersonalIndexRoute = AppEmisPersonalIndexRouteImport.update({
+  id: '/emis/personal/',
+  path: '/emis/personal/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppInvestmentsSavingsNewRoute =
   AppInvestmentsSavingsNewRouteImport.update({
     id: '/investments/savings/new',
@@ -143,6 +151,16 @@ const AppInvestmentsIdEditRoute = AppInvestmentsIdEditRouteImport.update({
   path: '/investments/$id/edit',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppEmisPersonalNewRoute = AppEmisPersonalNewRouteImport.update({
+  id: '/emis/personal/new',
+  path: '/emis/personal/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEmisPersonalLoanIdRoute = AppEmisPersonalLoanIdRouteImport.update({
+  id: '/emis/personal/$loanId',
+  path: '/emis/personal/$loanId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,11 +180,14 @@ export interface FileRoutesByFullPath {
   '/app/activity/': typeof AppActivityIndexRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
+  '/app/emis/personal/$loanId': typeof AppEmisPersonalLoanIdRoute
+  '/app/emis/personal/new': typeof AppEmisPersonalNewRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
   '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
   '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
   '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
+  '/app/emis/personal/': typeof AppEmisPersonalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -185,11 +206,14 @@ export interface FileRoutesByTo {
   '/app/activity': typeof AppActivityIndexRoute
   '/app/emis': typeof AppEmisIndexRoute
   '/app/investments': typeof AppInvestmentsIndexRoute
+  '/app/emis/personal/$loanId': typeof AppEmisPersonalLoanIdRoute
+  '/app/emis/personal/new': typeof AppEmisPersonalNewRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
   '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
   '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
   '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
+  '/app/emis/personal': typeof AppEmisPersonalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -210,11 +234,14 @@ export interface FileRoutesById {
   '/app/activity/': typeof AppActivityIndexRoute
   '/app/emis/': typeof AppEmisIndexRoute
   '/app/investments/': typeof AppInvestmentsIndexRoute
+  '/app/emis/personal/$loanId': typeof AppEmisPersonalLoanIdRoute
+  '/app/emis/personal/new': typeof AppEmisPersonalNewRoute
   '/app/investments/$id/edit': typeof AppInvestmentsIdEditRoute
   '/app/investments/dps/$id': typeof AppInvestmentsDpsIdRoute
   '/app/investments/dps/new': typeof AppInvestmentsDpsNewRoute
   '/app/investments/savings/$id': typeof AppInvestmentsSavingsIdRoute
   '/app/investments/savings/new': typeof AppInvestmentsSavingsNewRoute
+  '/app/emis/personal/': typeof AppEmisPersonalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -236,11 +263,14 @@ export interface FileRouteTypes {
     | '/app/activity/'
     | '/app/emis/'
     | '/app/investments/'
+    | '/app/emis/personal/$loanId'
+    | '/app/emis/personal/new'
     | '/app/investments/$id/edit'
     | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
     | '/app/investments/savings/$id'
     | '/app/investments/savings/new'
+    | '/app/emis/personal/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -259,11 +289,14 @@ export interface FileRouteTypes {
     | '/app/activity'
     | '/app/emis'
     | '/app/investments'
+    | '/app/emis/personal/$loanId'
+    | '/app/emis/personal/new'
     | '/app/investments/$id/edit'
     | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
     | '/app/investments/savings/$id'
     | '/app/investments/savings/new'
+    | '/app/emis/personal'
   id:
     | '__root__'
     | '/'
@@ -283,11 +316,14 @@ export interface FileRouteTypes {
     | '/app/activity/'
     | '/app/emis/'
     | '/app/investments/'
+    | '/app/emis/personal/$loanId'
+    | '/app/emis/personal/new'
     | '/app/investments/$id/edit'
     | '/app/investments/dps/$id'
     | '/app/investments/dps/new'
     | '/app/investments/savings/$id'
     | '/app/investments/savings/new'
+    | '/app/emis/personal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -423,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/emis/personal/': {
+      id: '/app/emis/personal/'
+      path: '/emis/personal'
+      fullPath: '/app/emis/personal/'
+      preLoaderRoute: typeof AppEmisPersonalIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/investments/savings/new': {
       id: '/app/investments/savings/new'
       path: '/investments/savings/new'
@@ -458,6 +501,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvestmentsIdEditRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/emis/personal/new': {
+      id: '/app/emis/personal/new'
+      path: '/emis/personal/new'
+      fullPath: '/app/emis/personal/new'
+      preLoaderRoute: typeof AppEmisPersonalNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/emis/personal/$loanId': {
+      id: '/app/emis/personal/$loanId'
+      path: '/emis/personal/$loanId'
+      fullPath: '/app/emis/personal/$loanId'
+      preLoaderRoute: typeof AppEmisPersonalLoanIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
@@ -470,11 +527,14 @@ interface AppRouteRouteChildren {
   AppActivityIndexRoute: typeof AppActivityIndexRoute
   AppEmisIndexRoute: typeof AppEmisIndexRoute
   AppInvestmentsIndexRoute: typeof AppInvestmentsIndexRoute
+  AppEmisPersonalLoanIdRoute: typeof AppEmisPersonalLoanIdRoute
+  AppEmisPersonalNewRoute: typeof AppEmisPersonalNewRoute
   AppInvestmentsIdEditRoute: typeof AppInvestmentsIdEditRoute
   AppInvestmentsDpsIdRoute: typeof AppInvestmentsDpsIdRoute
   AppInvestmentsDpsNewRoute: typeof AppInvestmentsDpsNewRoute
   AppInvestmentsSavingsIdRoute: typeof AppInvestmentsSavingsIdRoute
   AppInvestmentsSavingsNewRoute: typeof AppInvestmentsSavingsNewRoute
+  AppEmisPersonalIndexRoute: typeof AppEmisPersonalIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
@@ -486,11 +546,14 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppActivityIndexRoute: AppActivityIndexRoute,
   AppEmisIndexRoute: AppEmisIndexRoute,
   AppInvestmentsIndexRoute: AppInvestmentsIndexRoute,
+  AppEmisPersonalLoanIdRoute: AppEmisPersonalLoanIdRoute,
+  AppEmisPersonalNewRoute: AppEmisPersonalNewRoute,
   AppInvestmentsIdEditRoute: AppInvestmentsIdEditRoute,
   AppInvestmentsDpsIdRoute: AppInvestmentsDpsIdRoute,
   AppInvestmentsDpsNewRoute: AppInvestmentsDpsNewRoute,
   AppInvestmentsSavingsIdRoute: AppInvestmentsSavingsIdRoute,
   AppInvestmentsSavingsNewRoute: AppInvestmentsSavingsNewRoute,
+  AppEmisPersonalIndexRoute: AppEmisPersonalIndexRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(

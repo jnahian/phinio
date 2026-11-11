@@ -41,14 +41,14 @@
   "tabs": {
     "home": "হোম",
     "investments": "বিনিয়োগ",
-    "emis": "ইএমআই",
+    "emis": "ঋণ",
     "activity": "কার্যকলাপ",
     "profile": "প্রোফাইল"
   },
   "pageTitles": {
     "dashboard": "ড্যাশবোর্ড",
     "investments": "বিনিয়োগ",
-    "emis": "ইএমআই",
+    "emis": "ঋণ",
     "activity": "কার্যকলাপ",
     "profile": "প্রোফাইল",
     "addInvestment": "বিনিয়োগ যোগ করুন",
@@ -58,14 +58,16 @@
     "newDps": "নতুন ডিপিএস",
     "newSavings": "নতুন সঞ্চয়",
     "editInvestment": "বিনিয়োগ সম্পাদনা",
-    "changelog": "চেঞ্জলগ"
+    "changelog": "চেঞ্জলগ",
+    "addPersonalLoan": "ব্যক্তিগত ঋণ যোগ করুন"
   },
   "fab": {
     "create": "তৈরি করুন",
     "investment": "বিনিয়োগ",
     "dps": "ডিপিএস স্কিম",
     "savings": "সঞ্চয় পট",
-    "emi": "ইএমআই"
+    "emi": "ইএমআই",
+    "personalLoan": "ব্যক্তিগত ঋণ"
   },
   "states": {
     "loading": "লোড হচ্ছে…",

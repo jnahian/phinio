@@ -41,14 +41,14 @@
   "tabs": {
     "home": "Home",
     "investments": "Invest",
-    "emis": "EMIs",
+    "emis": "Loans",
     "activity": "Activity",
     "profile": "Profile"
   },
   "pageTitles": {
     "dashboard": "Dashboard",
     "investments": "Investments",
-    "emis": "EMIs",
+    "emis": "Loans",
     "activity": "Activity",
     "profile": "Profile",
     "addInvestment": "Add Investment",
@@ -58,14 +58,16 @@
     "newDps": "New DPS",
     "newSavings": "New Savings",
     "editInvestment": "Edit Investment",
-    "changelog": "Changelog"
+    "changelog": "Changelog",
+    "addPersonalLoan": "Add Personal Loan"
   },
   "fab": {
     "create": "Create",
     "investment": "Investment",
     "dps": "DPS Scheme",
     "savings": "Savings Pot",
-    "emi": "EMI"
+    "emi": "EMI",
+    "personalLoan": "Personal Loan"
   },
   "states": {
     "loading": "Loading…",

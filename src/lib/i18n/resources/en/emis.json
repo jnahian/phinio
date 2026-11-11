@@ -116,5 +116,79 @@
     "updateFailed": "Couldn't update EMI",
     "deleteFailed": "Couldn't delete EMI",
     "markFailed": "Couldn't mark payment"
+  },
+  "segment": {
+    "emis": "EMIs",
+    "personal": "Personal"
+  },
+  "personal": {
+    "directions": {
+      "all": "All",
+      "borrowed": "Borrowed",
+      "lent": "Lent"
+    },
+    "list": {
+      "youOwe": "You owe",
+      "owedToYou": "Owed to you",
+      "active": "Active",
+      "settled": "Settled",
+      "empty": "No personal loans yet",
+      "emptyHint": "Track money you borrowed from or lent to people, and log repayments whenever they happen.",
+      "noSettled": "No settled loans",
+      "noSettledHint": "Loans move here once they're fully repaid.",
+      "left": "left",
+      "paidOf": "{{paid}} of {{total}}",
+      "loadFailed": "Couldn't load loans"
+    },
+    "form": {
+      "section": {
+        "details": "Loan details",
+        "amounts": "Amounts",
+        "notes": "Notes (optional)"
+      },
+      "counterpartyBorrowed": "Borrowed from",
+      "counterpartyLent": "Lent to",
+      "counterpartyPlaceholder": "e.g. Rafiq",
+      "principalLabel": "Loan amount",
+      "dateBorrowed": "Date borrowed",
+      "dateLent": "Date lent",
+      "totalLabel": "Total to repay (optional)",
+      "totalHint": "Leave blank if the same amount is paid back. Fill it in if more was agreed, e.g. borrow 50,000 and repay 55,000.",
+      "notesPlaceholder": "Purpose, terms, or any context",
+      "submit": "Add loan"
+    },
+    "detail": {
+      "borrowedFrom": "Borrowed from",
+      "lentTo": "Lent to",
+      "youOwe": "You owe",
+      "owedToYou": "Owed to you",
+      "settled": "Settled",
+      "repaid": "repaid",
+      "received": "received",
+      "principal": "Amount",
+      "agreedTotal": "Total to repay",
+      "date": "Date",
+      "logRepayment": "Log repayment",
+      "logReceived": "Log payment received",
+      "fullRemaining": "Full remaining",
+      "overpay": "More than the {{amount}} left",
+      "belowRepaid": "Can't be less than the {{amount}} already paid back",
+      "logSubmit": "Save payment",
+      "paymentNotesPlaceholder": "e.g. cash, bKash",
+      "payments": "Payments",
+      "noPayments": "No payments yet",
+      "edit": "Edit loan",
+      "delete": "Delete loan",
+      "deleteConfirmTitle": "Delete this loan?",
+      "deleteConfirmBody": "Delete the loan with \"{{name}}\" and all its payments? This can't be undone.",
+      "deleteConfirm": "Delete",
+      "deletePending": "Deleting…",
+      "removePayment": "Remove payment",
+      "removeTitle": "Remove this payment?",
+      "removeBody": "Its amount goes back onto the balance.",
+      "removeConfirm": "Remove",
+      "removePending": "Removing…",
+      "loadFailed": "Couldn't load loan"
+    }
   }
 }

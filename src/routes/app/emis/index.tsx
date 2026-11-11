@@ -8,6 +8,7 @@ import {
   CloudOff,
   CreditCard,
 } from 'lucide-react'
+import { LoansSegment } from '#/components/LoansSegment'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
@@ -86,6 +87,7 @@ function EmisListScreen() {
 
   return (
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
+      <LoansSegment active="emis" />
       <Card variant="low" className="mb-6">
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell

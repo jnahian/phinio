@@ -3,7 +3,7 @@
   "greetingFallback": "Welcome",
   "netWorth": {
     "label": "Net worth",
-    "hint": "Assets minus remaining EMI balance"
+    "hint": "Assets and money owed to you, minus loans and EMIs"
   },
   "empty": {
     "title": "Start tracking your finances",
