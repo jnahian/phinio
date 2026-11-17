@@ -27,6 +27,7 @@
     "db:cleanup:user": "dotenv -e .env.local -- tsx prisma/cleanup-user.ts"
   },
   "dependencies": {
+    "@number-flow/react": "^0.6.2",
     "@opentelemetry/api": "^1.9.1",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",

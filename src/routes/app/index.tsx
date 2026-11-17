@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { EmptyState } from '#/components/ui/EmptyState'
+import { RollingCurrency, RollingPercent } from '#/components/ui/RollingNumber'
 import { Skeleton } from '#/components/ui/Skeleton'
 import { cn } from '#/lib/cn'
 import { useFormatter } from '#/lib/i18n/useFormatter'
@@ -112,7 +113,11 @@ function HomeScreen() {
           <Skeleton className="mt-2 h-10 w-48 bg-white/10" />
         ) : (
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
-            {fmt.currency(data.netWorth, currency)}
+            <RollingCurrency
+              id="dashboard.netWorth"
+              amount={data.netWorth}
+              currency={currency}
+            />
           </p>
         )}
         <p className="body-sm mt-3 text-on-primary-container/75">
@@ -168,7 +173,11 @@ function HomeScreen() {
             ) : (
               <>
                 <p className="font-display text-xl font-bold text-on-surface">
-                  {fmt.currency(data.investmentTotals.current, currency)}
+                  <RollingCurrency
+                    id="dashboard.investedCurrent"
+                    amount={data.investmentTotals.current}
+                    currency={currency}
+                  />
                 </p>
                 <p
                   className={cn(
@@ -180,11 +189,15 @@ function HomeScreen() {
                         : 'text-on-surface-variant',
                   )}
                 >
-                  {Number(data.investmentTotals.invested) > 0
-                    ? fmt.percent(data.investmentTotals.gainLossPercent, {
-                        showSign: true,
-                      })
-                    : t('summary.noHoldings')}
+                  {Number(data.investmentTotals.invested) > 0 ? (
+                    <RollingPercent
+                      id="dashboard.gainLossPercent"
+                      value={data.investmentTotals.gainLossPercent}
+                      showSign
+                    />
+                  ) : (
+                    t('summary.noHoldings')
+                  )}
                 </p>
               </>
             )}
@@ -205,7 +218,11 @@ function HomeScreen() {
             ) : (
               <>
                 <p className="font-display text-xl font-bold text-on-surface">
-                  {fmt.currency(data.monthlyEmiOutflow, currency)}
+                  <RollingCurrency
+                    id="dashboard.monthlyEmi"
+                    amount={data.monthlyEmiOutflow}
+                    currency={currency}
+                  />
                 </p>
                 <p className="body-sm mt-0.5 text-on-surface-variant">
                   {Number(data.monthlyEmiOutflow) > 0
