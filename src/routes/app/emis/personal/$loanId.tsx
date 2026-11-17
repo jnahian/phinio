@@ -8,7 +8,7 @@ import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { ProgressBar } from '#/components/ui/ProgressBar'
 import { TextArea, TextField } from '#/components/ui/TextField'
-import { getCurrencySymbol } from '#/lib/currency'
+import { AmountField } from '#/components/ui/AmountField'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import {
@@ -57,7 +57,6 @@ function PersonalLoanDetailScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
   const fmt = useFormatter()
 
   const { data: loan, isLoading } = usePersonalLoanQuery(loanId)
@@ -317,14 +316,13 @@ function PersonalLoanDetailScreen() {
             </div>
             <form onSubmit={handleAddPayment} className="space-y-4" noValidate>
               <div className="grid grid-cols-2 gap-3">
-                <TextField
+                <AmountField
                   id="payAmount"
                   label={tCommon('labels.amount')}
                   placeholder="0.00"
-                  inputMode="decimal"
-                  prefix={symbol}
+                  currency={currency}
                   value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
+                  onValueChange={setPayAmount}
                   error={payErrors.amount}
                   autoFocus
                 />
@@ -440,13 +438,12 @@ function PersonalLoanDetailScreen() {
                 autoFocus
               />
               <div className="grid grid-cols-2 gap-3">
-                <TextField
+                <AmountField
                   id="edit-principal"
                   label={t('personal.form.principalLabel')}
-                  inputMode="decimal"
-                  prefix={symbol}
+                  currency={currency}
                   value={editPrincipal}
-                  onChange={(e) => setEditPrincipal(e.target.value)}
+                  onValueChange={setEditPrincipal}
                   error={editErrors.principal}
                 />
                 <TextField
@@ -458,14 +455,13 @@ function PersonalLoanDetailScreen() {
                   error={editErrors.startDate}
                 />
               </div>
-              <TextField
+              <AmountField
                 id="edit-total"
                 label={t('personal.form.totalLabel')}
                 placeholder="0.00"
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={editTotal}
-                onChange={(e) => setEditTotal(e.target.value)}
+                onValueChange={setEditTotal}
                 error={editErrors.totalRepayable}
               />
               <div>

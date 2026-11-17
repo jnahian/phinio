@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { TextArea, TextField } from '#/components/ui/TextField'
-import { getCurrencySymbol } from '#/lib/currency'
+import { AmountField } from '#/components/ui/AmountField'
 import { useCreateSavings } from '#/hooks/useInvestments'
 import { savingsCreateSchema } from '#/lib/validators'
 import type { SavingsCreateInput } from '#/lib/validators'
@@ -27,7 +27,6 @@ function AddSavingsScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
 
   const createSavings = useCreateSavings()
 
@@ -100,14 +99,13 @@ function AddSavingsScreen() {
             <p className="label-sm text-on-surface-variant">
               {t('savings.section.balance')}
             </p>
-            <TextField
+            <AmountField
               id="currentValue"
               label={t('savings.currentValue')}
               placeholder="0.00"
-              inputMode="decimal"
-              prefix={symbol}
+              currency={currency}
               value={currentValue}
-              onChange={(e) => setCurrentValue(e.target.value)}
+              onValueChange={setCurrentValue}
               error={fieldErrors.currentValue}
             />
             <p className="body-sm text-on-surface-variant/70">

@@ -17,9 +17,9 @@ import {
 } from 'lucide-react'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { AmountField } from '#/components/ui/AmountField'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
   useDeleteInvestment,
@@ -69,7 +69,6 @@ function EditInvestmentScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
 
   const { data: investment, isLoading } = useInvestmentQuery(id)
   const updateInvestment = useUpdateInvestment()
@@ -226,22 +225,20 @@ function EditInvestmentScreen() {
               error={fieldErrors.name}
             />
             <div className="grid grid-cols-2 gap-4">
-              <TextField
+              <AmountField
                 id="investedAmount"
                 label={t('form.investedLabel')}
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={investedAmount}
-                onChange={(e) => setInvestedAmount(e.target.value)}
+                onValueChange={setInvestedAmount}
                 error={fieldErrors.investedAmount}
               />
-              <TextField
+              <AmountField
                 id="currentValue"
                 label={t('form.currentValueLabel')}
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={currentValue}
-                onChange={(e) => setCurrentValue(e.target.value)}
+                onValueChange={setCurrentValue}
                 error={fieldErrors.currentValue}
               />
             </div>
@@ -314,14 +311,13 @@ function EditInvestmentScreen() {
             </div>
             {status === 'completed' && (
               <div className="grid grid-cols-2 gap-4 pt-2">
-                <TextField
+                <AmountField
                   id="exitValue"
                   label={t('form.exitValueLabel')}
-                  inputMode="decimal"
-                  prefix={symbol}
+                  currency={currency}
                   placeholder="0.00"
                   value={exitValue}
-                  onChange={(e) => setExitValue(e.target.value)}
+                  onValueChange={setExitValue}
                   error={fieldErrors.exitValue}
                 />
                 <TextField

@@ -3,9 +3,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Building2, CreditCard } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { AmountField } from '#/components/ui/AmountField'
 import { calculateEmi } from '#/lib/emi-calculator'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useCreateEmi } from '#/hooks/useEmis'
 import { emiCreateSchema } from '#/lib/validators'
@@ -32,7 +32,6 @@ function AddEmiScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
   const fmt = useFormatter()
   const { t } = useTranslation('emis')
   const { t: tCommon } = useTranslation('common')
@@ -152,14 +151,13 @@ function AddEmiScreen() {
             <p className="label-sm text-on-surface-variant">
               {t('form.section.terms')}
             </p>
-            <TextField
+            <AmountField
               id="principal"
               label={t('form.principalLabel')}
               placeholder="0.00"
-              inputMode="decimal"
-              prefix={symbol}
+              currency={currency}
               value={principal}
-              onChange={(e) => setPrincipal(e.target.value)}
+              onValueChange={setPrincipal}
               error={fieldErrors.principal}
             />
             <div className="grid grid-cols-2 gap-4">
@@ -192,14 +190,13 @@ function AddEmiScreen() {
               onChange={(e) => setStartDate(e.target.value)}
               error={fieldErrors.startDate}
             />
-            <TextField
+            <AmountField
               id="processingFee"
               label={t('form.feeLabel')}
               placeholder="0.00"
-              inputMode="decimal"
-              prefix={symbol}
+              currency={currency}
               value={processingFee}
-              onChange={(e) => setProcessingFee(e.target.value)}
+              onValueChange={setProcessingFee}
               error={fieldErrors.processingFee}
             />
           </section>

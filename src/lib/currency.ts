@@ -15,7 +15,7 @@ const CURRENCY_SYMBOL: Record<Currency, string> = {
 // browser; some ICU builds default `bn-BD` to Latin digits otherwise. English
 // mode keeps the per-currency English locale so USD shows "1,234.56" with US
 // grouping and BDT keeps the Indic grouping Bangladeshi users expect.
-function numberLocale(currency: Currency, locale: Locale): string {
+export function numberLocale(currency: Currency, locale: Locale): string {
   if (locale === 'bn') return 'bn-BD-u-nu-beng'
   return currency === 'USD' ? 'en-US' : 'en-BD'
 }
