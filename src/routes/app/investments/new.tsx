@@ -14,8 +14,8 @@ import {
   Sprout,
 } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { AmountField } from '#/components/ui/AmountField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useCreateInvestment } from '#/hooks/useInvestments'
 import { investmentCreateSchema } from '#/lib/validators'
 import type { InvestmentCreateInput, InvestmentType } from '#/lib/validators'
@@ -59,7 +59,6 @@ function AddInvestmentScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
 
   const createInvestment = useCreateInvestment()
 
@@ -133,26 +132,24 @@ function AddInvestmentScreen() {
               autoFocus
             />
             <div className="grid grid-cols-2 gap-4">
-              <TextField
+              <AmountField
                 id="investedAmount"
                 label={t('form.investedLabel')}
                 placeholder="0.00"
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={investedAmount}
-                onChange={(e) => handleInvestedAmountChange(e.target.value)}
+                onValueChange={handleInvestedAmountChange}
                 error={fieldErrors.investedAmount}
               />
-              <TextField
+              <AmountField
                 id="currentValue"
                 label={t('form.currentValueLabel')}
                 placeholder="0.00"
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={currentValue}
-                onChange={(e) => {
+                onValueChange={(value) => {
                   setCurrentValueTouched(true)
-                  setCurrentValue(e.target.value)
+                  setCurrentValue(value)
                 }}
                 error={fieldErrors.currentValue}
               />

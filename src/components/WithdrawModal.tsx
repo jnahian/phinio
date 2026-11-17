@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronDown, X } from 'lucide-react'
 import { Card } from '#/components/ui/Card'
 import { TextField } from '#/components/ui/TextField'
-import { getCurrencySymbol } from '#/lib/currency'
+import { AmountField } from '#/components/ui/AmountField'
 import type { Currency } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
@@ -38,7 +38,6 @@ export function WithdrawModal({
 }: WithdrawModalProps) {
   const { t } = useTranslation('withdraw')
   const { t: tCommon } = useTranslation('common')
-  const symbol = getCurrencySymbol(currency)
   const { data: items = [], isLoading } = useInvestmentsQuery({
     status: 'active',
     type: 'all',
@@ -116,7 +115,6 @@ export function WithdrawModal({
               <WithdrawFields
                 investmentId={selected.id}
                 currentValue={selected.currentValue}
-                symbol={symbol}
                 currency={currency}
                 onDone={() => {
                   onSuccess?.()
@@ -136,7 +134,6 @@ export function WithdrawModal({
                 <DpsCloseFields
                   investmentId={selected.id}
                   detail={detailQuery.data}
-                  symbol={symbol}
                   currency={currency}
                   onDone={() => {
                     onSuccess?.()
@@ -235,13 +232,11 @@ function InvestmentPicker({
 function WithdrawFields({
   investmentId,
   currentValue,
-  symbol,
   currency,
   onDone,
 }: {
   investmentId: string
   currentValue: string
-  symbol: string
   currency: Currency
   onDone: () => void
 }) {
@@ -288,14 +283,13 @@ function WithdrawFields({
         {t('available')} {fmt.currency(currentValue, currency)}
       </p>
       <div className="grid grid-cols-2 gap-3">
-        <TextField
+        <AmountField
           id="wAmount"
           label={t('amountLabel')}
           placeholder="0.00"
-          inputMode="decimal"
-          prefix={symbol}
+          currency={currency}
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onValueChange={setAmount}
           autoFocus
           error={error ?? undefined}
         />
@@ -337,7 +331,6 @@ function WithdrawFields({
 function DpsCloseFields({
   investmentId,
   detail,
-  symbol,
   currency,
   onDone,
 }: {
@@ -350,7 +343,6 @@ function DpsCloseFields({
       accruedValue: string | null
     }>
   }
-  symbol: string
   currency: Currency
   onDone: () => void
 }) {
@@ -413,14 +405,13 @@ function DpsCloseFields({
         })}
       </p>
       <div className="grid grid-cols-2 gap-3">
-        <TextField
+        <AmountField
           id="cReceived"
           label={t('amountReceivedLabel')}
           placeholder="0.00"
-          inputMode="decimal"
-          prefix={symbol}
+          currency={currency}
           value={received}
-          onChange={(e) => setReceived(e.target.value)}
+          onValueChange={setReceived}
           autoFocus
           error={error ?? undefined}
         />

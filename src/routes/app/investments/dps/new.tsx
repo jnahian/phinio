@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { AmountField } from '#/components/ui/AmountField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useCreateDps } from '#/hooks/useInvestments'
 import { dpsCreateSchema } from '#/lib/validators'
@@ -29,7 +29,6 @@ function AddDpsScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
   const fmt = useFormatter()
 
   const createDps = useCreateDps()
@@ -107,14 +106,13 @@ function AddDpsScreen() {
               autoFocus
             />
             <div className="grid grid-cols-2 gap-4">
-              <TextField
+              <AmountField
                 id="monthlyDeposit"
                 label={t('dps.monthlyLabel')}
                 placeholder="0.00"
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={monthlyDeposit}
-                onChange={(e) => setMonthlyDeposit(e.target.value)}
+                onValueChange={setMonthlyDeposit}
                 error={fieldErrors.monthlyDeposit}
               />
               <TextField

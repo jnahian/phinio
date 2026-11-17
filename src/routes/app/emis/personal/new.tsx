@@ -3,8 +3,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { AmountField } from '#/components/ui/AmountField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useCreatePersonalLoan } from '#/hooks/usePersonalLoans'
 import { personalLoanCreateSchema } from '#/lib/validators'
 import type { LoanDirection, PersonalLoanCreateInput } from '#/lib/validators'
@@ -28,7 +28,7 @@ function AddPersonalLoanScreen() {
   const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
-  const symbol = getCurrencySymbol(profile.preferredCurrency)
+  const currency = profile.preferredCurrency
 
   const createLoan = useCreatePersonalLoan()
 
@@ -129,24 +129,22 @@ function AddPersonalLoanScreen() {
             <p className="label-sm text-on-surface-variant">
               {t('personal.form.section.amounts')}
             </p>
-            <TextField
+            <AmountField
               id="principal"
               label={t('personal.form.principalLabel')}
               placeholder="0.00"
-              inputMode="decimal"
-              prefix={symbol}
+              currency={currency}
               value={principal}
-              onChange={(e) => setPrincipal(e.target.value)}
+              onValueChange={setPrincipal}
               error={fieldErrors.principal}
             />
-            <TextField
+            <AmountField
               id="totalRepayable"
               label={t('personal.form.totalLabel')}
               placeholder="0.00"
-              inputMode="decimal"
-              prefix={symbol}
+              currency={currency}
               value={totalRepayable}
-              onChange={(e) => setTotalRepayable(e.target.value)}
+              onValueChange={setTotalRepayable}
               error={fieldErrors.totalRepayable}
             />
             <p className="body-sm text-on-surface-variant/70">

@@ -9,8 +9,8 @@ import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { AmountField } from '#/components/ui/AmountField'
 import { cn } from '#/lib/cn'
-import { getCurrencySymbol } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { calculateReturnPercent } from '#/lib/calculations'
 import {
@@ -38,7 +38,6 @@ function SavingsDetailScreen() {
   const navigate = useNavigate()
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const symbol = getCurrencySymbol(currency)
   const fmt = useFormatter()
 
   const { data: inv, isLoading } = useInvestmentQuery(id)
@@ -287,14 +286,13 @@ function SavingsDetailScreen() {
             </div>
             <form onSubmit={handleAddDeposit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <TextField
+                <AmountField
                   id="depositAmount"
                   label={tCommon('labels.amount')}
                   placeholder="0.00"
-                  inputMode="decimal"
-                  prefix={symbol}
+                  currency={currency}
                   value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
+                  onValueChange={setDepositAmount}
                   autoFocus
                 />
                 <TextField
@@ -397,14 +395,13 @@ function SavingsDetailScreen() {
                 onChange={(e) => setEditName(e.target.value)}
                 autoFocus
               />
-              <TextField
+              <AmountField
                 id="edit-current-value"
                 label={t('savings.currentValue')}
                 placeholder="0.00"
-                inputMode="decimal"
-                prefix={symbol}
+                currency={currency}
                 value={editCurrentValue}
-                onChange={(e) => setEditCurrentValue(e.target.value)}
+                onValueChange={setEditCurrentValue}
               />
               <div>
                 <p className="label-sm mb-2 text-on-surface-variant">
