@@ -15,6 +15,7 @@ import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { ProgressBar } from '#/components/ui/ProgressBar'
 import { Skeleton } from '#/components/ui/Skeleton'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { cn } from '#/lib/cn'
 import type { Currency } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
@@ -98,13 +99,25 @@ function EmisListScreen() {
           />
           <SummaryCell
             label={t('list.monthly')}
-            value={fmt.currency((totals.monthly / 100).toFixed(2), currency)}
+            value={
+              <RollingCurrency
+                id="emis.summary.monthly"
+                amount={(totals.monthly / 100).toFixed(2)}
+                currency={currency}
+              />
+            }
           />
           <SummaryCell
             label={
               status === 'completed' ? t('list.paidOff') : t('list.remaining')
             }
-            value={fmt.currency((totals.remaining / 100).toFixed(2), currency)}
+            value={
+              <RollingCurrency
+                id="emis.summary.remaining"
+                amount={(totals.remaining / 100).toFixed(2)}
+                currency={currency}
+              />
+            }
           />
         </div>
       </Card>
@@ -194,7 +207,13 @@ function EmisListScreen() {
   )
 }
 
-function SummaryCell({ label, value }: { label: string; value: string }) {
+function SummaryCell({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
   return (
     <div>
       <p className="label-sm normal-case tracking-wide text-on-surface-variant">

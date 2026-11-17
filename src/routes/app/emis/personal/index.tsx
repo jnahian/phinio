@@ -15,6 +15,7 @@ import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { ProgressBar } from '#/components/ui/ProgressBar'
 import { Skeleton } from '#/components/ui/Skeleton'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { cn } from '#/lib/cn'
 import type { Currency } from '#/lib/currency'
 import { useFormatter } from '#/lib/i18n/useFormatter'
@@ -56,7 +57,6 @@ function PersonalLoansListScreen() {
   const { t: tCommon } = useTranslation('common')
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const fmt = useFormatter()
 
   const DIRECTION_PILLS: Array<FilterPill<DirectionFilter>> = [
     { value: 'all', label: t('personal.directions.all') },
@@ -96,14 +96,23 @@ function PersonalLoansListScreen() {
           <div className="grid grid-cols-2 gap-3">
             <SummaryCell
               label={t('personal.list.youOwe')}
-              value={fmt.currency((totals.owed / 100).toFixed(2), currency)}
+              value={
+                <RollingCurrency
+                  id="loans.summary.owed"
+                  amount={(totals.owed / 100).toFixed(2)}
+                  currency={currency}
+                />
+              }
             />
             <SummaryCell
               label={t('personal.list.owedToYou')}
-              value={fmt.currency(
-                (totals.owedToYou / 100).toFixed(2),
-                currency,
-              )}
+              value={
+                <RollingCurrency
+                  id="loans.summary.owedToYou"
+                  amount={(totals.owedToYou / 100).toFixed(2)}
+                  currency={currency}
+                />
+              }
             />
           </div>
         </Card>
@@ -195,7 +204,13 @@ function PersonalLoansListScreen() {
   )
 }
 
-function SummaryCell({ label, value }: { label: string; value: string }) {
+function SummaryCell({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
   return (
     <div>
       <p className="label-sm normal-case tracking-wide text-on-surface-variant">

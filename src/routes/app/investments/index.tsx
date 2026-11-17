@@ -8,6 +8,7 @@ import { EmptyState } from '#/components/ui/EmptyState'
 import { FilterPills } from '#/components/ui/FilterPills'
 import type { FilterPill } from '#/components/ui/FilterPills'
 import { Skeleton } from '#/components/ui/Skeleton'
+import { RollingCurrency, RollingPercent } from '#/components/ui/RollingNumber'
 import { cn } from '#/lib/cn'
 import { calculateReturnPercent } from '#/lib/calculations'
 import type { Currency } from '#/lib/currency'
@@ -53,7 +54,6 @@ function InvestmentsListScreen() {
   const { t: tCommon } = useTranslation('common')
   const { profile } = Route.useRouteContext()
   const currency = profile.preferredCurrency
-  const fmt = useFormatter()
 
   const TYPE_PILLS: Array<FilterPill<TypeFilter>> = useMemo(
     () =>
@@ -112,7 +112,13 @@ function InvestmentsListScreen() {
         <div className="grid grid-cols-3 gap-3">
           <SummaryCell
             label={t('list.totalInvested')}
-            value={fmt.currency(investedStr, currency)}
+            value={
+              <RollingCurrency
+                id="investments.summary.invested"
+                amount={investedStr}
+                currency={currency}
+              />
+            }
           />
           <SummaryCell
             label={
@@ -120,14 +126,26 @@ function InvestmentsListScreen() {
                 ? t('list.totalExited')
                 : t('list.totalCurrent')
             }
-            value={fmt.currency(currentStr, currency)}
+            value={
+              <RollingCurrency
+                id="investments.summary.current"
+                amount={currentStr}
+                currency={currency}
+              />
+            }
           />
           <SummaryCell
             label={t('list.return')}
             value={
-              totals.invested > 0
-                ? fmt.percent(totalReturn, { showSign: true })
-                : '—'
+              totals.invested > 0 ? (
+                <RollingPercent
+                  id="investments.summary.return"
+                  value={totalReturn}
+                  showSign
+                />
+              ) : (
+                '—'
+              )
             }
             valueClass={
               totalReturn > 0
@@ -255,7 +273,7 @@ function SummaryCell({
   valueClass,
 }: {
   label: string
-  value: string
+  value: React.ReactNode
   valueClass?: string
 }) {
   return (

@@ -10,6 +10,7 @@ import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { AmountField } from '#/components/ui/AmountField'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { cn } from '#/lib/cn'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { calculateReturnPercent } from '#/lib/calculations'
@@ -217,7 +218,11 @@ function SavingsDetailScreen() {
           />
           <p className="label-sm text-white/70">{t('savings.currentValue')}</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {fmt.currency(inv.currentValue, currency)}
+            <RollingCurrency
+              id={`savings.${inv.id}.currentValue`}
+              amount={inv.currentValue}
+              currency={currency}
+            />
           </p>
           {hasReturn && (
             <p
