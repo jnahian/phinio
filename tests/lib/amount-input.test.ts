@@ -55,7 +55,7 @@ describe('applyAmountEdit', () => {
   function edit(field: string, prevRaw: string, inputType = 'insertText') {
     const caret = field.indexOf('|')
     const r = applyAmountEdit(
-      field.replace('|', ''),
+      field.slice(0, caret) + field.slice(caret + 1),
       caret,
       prevRaw,
       inputType,
