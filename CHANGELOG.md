@@ -5,6 +5,75 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-11-18
+
+Phinio is web-only again. The iPhone app and the API built for it are gone,
+which is why this is a major version. Everything else is new: sign-in can now
+ask for an authenticator code, personal loans sit next to your EMIs, and
+amounts are easier to type and read.
+
+### Added
+
+- **Two-factor authentication** — turn it on from Profile, under Account, to
+  be asked for a 6-digit code from an authenticator app after your password.
+  On your phone, setup can open the authenticator app directly; there's also a
+  setup key to copy, and a QR code on larger screens. You get one-time backup
+  codes to copy or download for when your phone isn't handy, and you can trust
+  a device for 30 days so it stops asking there. Turning it on or off needs
+  your password.
+- **Personal loans** — track money you've borrowed from or lent to someone,
+  with no schedule or interest rate. Log repayments of any amount whenever
+  they happen, and the loan settles itself once nothing is left. If more is
+  owed back than the amount itself, set the total to repay. The EMIs tab is
+  now Loans, with an EMIs | Personal switch at the top, and your net worth
+  counts both what you owe and what you're owed.
+- **Amounts roll into place** — on the dashboard, in the summary at the top of
+  the investment, EMI and personal-loan lists, and in the headline amount on
+  each detail page, the digits roll in the first time a page opens. A value
+  that changes while you're watching, such as after switching tabs or pulling
+  to refresh, rolls from the old number to the new one. With reduced motion
+  turned on in your device settings, or in Bangla, numbers simply appear.
+- **Thousands separators as you type** — money fields group the digits while
+  you type or paste (1,234,567.50), the same way amounts are shown elsewhere.
+  Pasting an amount with a currency symbol, separators or Bengali digits just
+  works, and anything past two decimal places is dropped.
+- The version number at the bottom of Profile now opens that version's notes
+  in the changelog.
+
+### Changed
+
+- Upcoming payments on the dashboard now list everything due this calendar
+  month, plus anything still overdue, instead of the next five payments due
+  within 30 days.
+
+### Removed
+
+- **Phinio for iPhone** — the native app is discontinued. To keep Phinio on
+  your iPhone's home screen, open it in Safari and choose Share → Add to Home
+  Screen.
+- The REST API (`/api/v1`) and bearer-token sign-in, which only the iPhone app
+  used. Anything still calling them now gets "not found" or "unauthorized"
+  errors.
+- Push notifications through Apple's service for the iPhone app. Payment
+  reminders still arrive as web push notifications.
+
+### Fixed
+
+- On iPhone, tapping a field on the sign-in, sign-up, password reset or
+  two-factor screens no longer zooms the page in.
+- Emptying an EMI's notes and saving now clears them. Before, the old notes
+  stayed, even though your activity history said they had been removed.
+- On phone screens, large amounts in the summary at the top of the Investments
+  and EMI lists no longer run into each other. The main figure now gets a line
+  of its own, with the other two below it.
+
+### Security
+
+- Fixed a cross-site scripting vulnerability in the web framework the app is
+  built on (CVE-2026-102989).
+- Updated the sign-in library and other dependencies to versions with known
+  security issues fixed.
+
 ## [1.8.5] - 2026-08-25
 
 ### Fixed
