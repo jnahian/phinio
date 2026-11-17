@@ -89,7 +89,15 @@ export function TwoFactorModal({
         password,
       })
       if (err) return setError(errorMessage(err))
-      setStep({ name: 'verify', ...data })
+      // With no `method`, better-auth sets up TOTP, which always returns the
+      // URI and backup codes ('otp' only comes back when asked for).
+      if (data.method === 'totp') {
+        setStep({
+          name: 'verify',
+          totpURI: data.totpURI,
+          backupCodes: data.backupCodes,
+        })
+      }
     })
   }
 

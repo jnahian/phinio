@@ -12,16 +12,16 @@ datasource db {
 // ----------------------------------------------------------------------------
 
 model User {
-  id                String    @id
+  id                String      @id
   name              String
   email             String
-  emailVerified     Boolean   @default(false)
+  emailVerified     Boolean     @default(false)
   image             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  preferredCurrency String    @default("BDT")
-  preferredLanguage String    @default("en")
-  twoFactorEnabled  Boolean?  @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  preferredCurrency String      @default("BDT")
+  preferredLanguage String      @default("en")
+  twoFactorEnabled  Boolean?    @default(false)
   sessions          Session[]
   accounts          Account[]
   twoFactors        TwoFactor[]
@@ -83,12 +83,15 @@ model Verification {
 // BETTER_AUTH_SECRET. `verified` stays false until the first TOTP code is
 // confirmed, which is also when user.twoFactorEnabled flips to true.
 model TwoFactor {
-  id          String   @id
-  secret      String
-  backupCodes String
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verified    Boolean? @default(true)
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(true)
+  // better-auth 1.7+ locks 2FA after repeated wrong codes.
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
 
   @@index([secret])
   @@index([userId])
@@ -100,25 +103,25 @@ model TwoFactor {
 // ----------------------------------------------------------------------------
 
 model Profile {
-  id                 String              @id @default(uuid())
-  userId             String              @unique
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName           String
-  preferredCurrency  String              @default("BDT")
-  preferredLanguage  String              @default("en")
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  investments           Investment[]
-  investmentDeposits    InvestmentDeposit[]
-  investmentWithdrawals InvestmentWithdrawal[]
-  emis                  Emi[]
-  emiPayments           EmiPayment[]
+  id                     String                  @id @default(uuid())
+  userId                 String                  @unique
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName               String
+  preferredCurrency      String                  @default("BDT")
+  preferredLanguage      String                  @default("en")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  investments            Investment[]
+  investmentDeposits     InvestmentDeposit[]
+  investmentWithdrawals  InvestmentWithdrawal[]
+  emis                   Emi[]
+  emiPayments            EmiPayment[]
   personalLoans          PersonalLoan[]
   personalLoanRepayments PersonalLoanRepayment[]
-  notifications         Notification[]
-  activityLogs          ActivityLog[]
-  pushSubscriptions     PushSubscription[]
-  processedMutations    ProcessedMutation[]
+  notifications          Notification[]
+  activityLogs           ActivityLog[]
+  pushSubscriptions      PushSubscription[]
+  processedMutations     ProcessedMutation[]
 
   @@map("profiles")
 }
@@ -134,37 +137,37 @@ model Profile {
 // currentValue  for scheduled: synced = investedAmount (total deposited, no gain/loss until maturity)
 
 model Investment {
-  id               String              @id @default(uuid())
-  profileId        String
-  profile          Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  name             String
-  type             String              // stock | mutual_fund | fd | gold | crypto | sanchayapatra | real_estate | agro_farm | business | dps | savings | other
-  mode             String              @default("lump_sum") // lump_sum | scheduled | flexible
+  id        String  @id @default(uuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String
+  type      String // stock | mutual_fund | fd | gold | crypto | sanchayapatra | real_estate | agro_farm | business | dps | savings | other
+  mode      String  @default("lump_sum") // lump_sum | scheduled | flexible
 
   // lump_sum mode
-  investedAmount   Decimal             @db.Decimal(15, 2) @default(0)
-  currentValue     Decimal             @db.Decimal(15, 2) @default(0)
-  exitValue        Decimal?            @db.Decimal(15, 2)
-  dateOfInvestment DateTime?           @db.Date
-  estimatedClosureDate DateTime?       @db.Date
-  completedAt      DateTime?           @db.Date
+  investedAmount       Decimal   @default(0) @db.Decimal(15, 2)
+  currentValue         Decimal   @default(0) @db.Decimal(15, 2)
+  exitValue            Decimal?  @db.Decimal(15, 2)
+  dateOfInvestment     DateTime? @db.Date
+  estimatedClosureDate DateTime? @db.Date
+  completedAt          DateTime? @db.Date
 
   // scheduled (DPS) — fixed monthly, pre-generated schedule
-  monthlyDeposit   Decimal?            @db.Decimal(15, 2)
-  tenureMonths     Int?
-  interestRate     Decimal?            @db.Decimal(5, 2)
-  interestType     String?             // simple | compound
+  monthlyDeposit Decimal? @db.Decimal(15, 2)
+  tenureMonths   Int?
+  interestRate   Decimal? @db.Decimal(5, 2)
+  interestType   String? // simple | compound
 
   // scheduled + flexible shared
-  startDate        DateTime?           @db.Date
+  startDate DateTime? @db.Date
 
-  status           String              @default("active") // active | completed | matured | closed
-  notes            String?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  status    String   @default("active") // active | completed | matured | closed
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  deposits         InvestmentDeposit[]
-  withdrawals      InvestmentWithdrawal[]
+  deposits    InvestmentDeposit[]
+  withdrawals InvestmentWithdrawal[]
 
   @@index([profileId, status])
   @@index([profileId, mode])
@@ -172,21 +175,21 @@ model Investment {
 }
 
 model InvestmentDeposit {
-  id                String     @id @default(uuid())
-  investmentId      String
-  investment        Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
-  profileId         String
-  profile           Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id           String     @id @default(uuid())
+  investmentId String
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  profileId    String
+  profile      Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  amount            Decimal    @db.Decimal(15, 2)
-  dueDate           DateTime?  @db.Date           // scheduled: pre-generated due date
-  paidAt            DateTime?                     // when actually paid / deposited
-  accruedValue      Decimal?   @db.Decimal(15, 2) // scheduled: running balance with interest after this deposit
-  installmentNumber Int?                           // scheduled: sequence 1, 2, 3…
-  status            String     @default("upcoming") // upcoming | paid
+  amount            Decimal   @db.Decimal(15, 2)
+  dueDate           DateTime? @db.Date // scheduled: pre-generated due date
+  paidAt            DateTime? // when actually paid / deposited
+  accruedValue      Decimal?  @db.Decimal(15, 2) // scheduled: running balance with interest after this deposit
+  installmentNumber Int? // scheduled: sequence 1, 2, 3…
+  status            String    @default("upcoming") // upcoming | paid
   notes             String?
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([investmentId, installmentNumber])
   @@index([profileId, status, dueDate])
@@ -194,17 +197,17 @@ model InvestmentDeposit {
 }
 
 model InvestmentWithdrawal {
-  id             String     @id @default(uuid())
-  investmentId   String
-  investment     Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
-  profileId      String
-  profile        Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id           String     @id @default(uuid())
+  investmentId String
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  profileId    String
+  profile      Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  amount         Decimal    @db.Decimal(15, 2)
-  withdrawalDate DateTime   @db.Date
+  amount         Decimal  @db.Decimal(15, 2)
+  withdrawalDate DateTime @db.Date
   notes          String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([investmentId, withdrawalDate])
   @@index([profileId])
@@ -319,12 +322,12 @@ model ActivityLog {
   id          String   @id @default(uuid())
   profileId   String
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  action      String   // create | update | delete
-  entityType  String   // investment | investment_deposit | investment_withdrawal | emi | emi_payment | personal_loan | personal_loan_repayment | profile
+  action      String // create | update | delete
+  entityType  String // investment | investment_deposit | investment_withdrawal | emi | emi_payment | personal_loan | personal_loan_repayment | profile
   entityId    String?
   entityLabel String
   summary     String
-  changes     Json?    // [{ field, from, to }] for updates
+  changes     Json? // [{ field, from, to }] for updates
   createdAt   DateTime @default(now())
 
   @@index([profileId, createdAt])

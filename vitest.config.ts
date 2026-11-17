@@ -30,7 +30,13 @@ export default defineConfig({
           include: ['tests/integration/**/*.test.ts'],
           environment: 'node',
           pool: 'forks',
-          poolOptions: { forks: { singleFork: true } },
+          // Vitest 4+ spelling of the old forks.singleFork: every file runs
+          // in one process, one after another, against the shared test DB.
+          maxWorkers: 1,
+          isolate: false,
+          // Projects with different maxWorkers need their own group; this
+          // one runs after the unit tests.
+          sequence: { groupOrder: 1 },
           globalSetup: ['./tests/integration/helpers/globalSetup.ts'],
           testTimeout: 30_000,
           hookTimeout: 30_000,
