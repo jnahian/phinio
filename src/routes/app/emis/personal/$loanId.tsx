@@ -9,6 +9,7 @@ import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { ProgressBar } from '#/components/ui/ProgressBar'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { AmountField } from '#/components/ui/AmountField'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import {
@@ -244,7 +245,11 @@ function PersonalLoanDetailScreen() {
                 : t('personal.detail.owedToYou')}
           </p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {fmt.currency(loan.outstanding, currency)}
+            <RollingCurrency
+              id={`loan.${loan.id}.outstanding`}
+              amount={loan.outstanding}
+              currency={currency}
+            />
           </p>
           <div className="relative mt-4 space-y-2">
             <ProgressBar

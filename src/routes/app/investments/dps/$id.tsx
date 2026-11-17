@@ -15,6 +15,7 @@ import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { cn } from '#/lib/cn'
 import { useFormatter } from '#/lib/i18n/useFormatter'
 import {
@@ -228,7 +229,11 @@ function DpsDetailScreen() {
           />
           <p className="label-sm text-white/70">{t('dps.totalDeposited')}</p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-            {fmt.currency(inv.investedAmount, currency)}
+            <RollingCurrency
+              id={`dps.${inv.id}.deposited`}
+              amount={inv.investedAmount}
+              currency={currency}
+            />
           </p>
           <p className="body-sm mt-2 text-white/70">
             {t('dps.monthsPaid', {

@@ -18,6 +18,7 @@ import {
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
 import { AmountField } from '#/components/ui/AmountField'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { WithdrawModal } from '#/components/WithdrawModal'
 import { cn } from '#/lib/cn'
 import { useFormatter } from '#/lib/i18n/useFormatter'
@@ -184,7 +185,11 @@ function EditInvestmentScreen() {
               {t('form.currentValueLabel')}
             </p>
             <p className="font-display mt-2 text-4xl font-bold tracking-tight text-white">
-              {fmt.currency(investment.currentValue, currency)}
+              <RollingCurrency
+                id={`investment.${investment.id}.currentValue`}
+                amount={investment.currentValue}
+                currency={currency}
+              />
             </p>
             {hasReturn && (
               <p

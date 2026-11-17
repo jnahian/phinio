@@ -13,6 +13,7 @@ import type { ActionMenuItem } from '#/components/ui/ActionMenu'
 import { Card } from '#/components/ui/Card'
 import { ConfirmModal } from '#/components/ui/ConfirmModal'
 import { TextArea, TextField } from '#/components/ui/TextField'
+import { RollingCurrency } from '#/components/ui/RollingNumber'
 import { useSetTopBarTitle } from '#/lib/top-bar-context'
 import { cn } from '#/lib/cn'
 import { useFormatter } from '#/lib/i18n/useFormatter'
@@ -278,7 +279,11 @@ function EmiDetailScreen() {
             {t('detail.remainingBalance')}
           </p>
           <p className="font-display mt-2 text-4xl font-bold tracking-tight text-on-primary-container">
-            {fmt.currency(remainingBalance.toFixed(2), currency)}
+            <RollingCurrency
+              id={`emi.${emi.id}.remaining`}
+              amount={remainingBalance.toFixed(2)}
+              currency={currency}
+            />
           </p>
           <p className="body-sm mt-2 text-on-primary-container/75">
             {fmt.number(remainingMonths)} / {fmt.number(emi.tenureMonths)}{' '}
