@@ -90,13 +90,20 @@ function EmisListScreen() {
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
       <LoansSegment active="emis" />
       <Card variant="low" className="mb-6">
-        <div className="grid grid-cols-3 gap-3">
-          <SummaryCell
-            label={
-              status === 'completed' ? t('list.completed') : t('list.active')
-            }
-            value={fmt.number(emis.length)}
-          />
+        <SummaryCell
+          large
+          label={
+            status === 'completed' ? t('list.paidOff') : t('list.remaining')
+          }
+          value={
+            <RollingCurrency
+              id="emis.summary.remaining"
+              amount={(totals.remaining / 100).toFixed(2)}
+              currency={currency}
+            />
+          }
+        />
+        <div className="mt-4 grid grid-cols-2 gap-3">
           <SummaryCell
             label={t('list.monthly')}
             value={
@@ -109,15 +116,9 @@ function EmisListScreen() {
           />
           <SummaryCell
             label={
-              status === 'completed' ? t('list.paidOff') : t('list.remaining')
+              status === 'completed' ? t('list.completed') : t('list.active')
             }
-            value={
-              <RollingCurrency
-                id="emis.summary.remaining"
-                amount={(totals.remaining / 100).toFixed(2)}
-                currency={currency}
-              />
-            }
+            value={fmt.number(emis.length)}
           />
         </div>
       </Card>
@@ -210,16 +211,23 @@ function EmisListScreen() {
 function SummaryCell({
   label,
   value,
+  large,
 }: {
   label: string
   value: React.ReactNode
+  large?: boolean
 }) {
   return (
     <div>
       <p className="label-sm normal-case tracking-wide text-on-surface-variant">
         {label}
       </p>
-      <p className="font-display mt-1 text-base font-bold text-on-surface">
+      <p
+        className={cn(
+          'font-display mt-1 font-bold text-on-surface',
+          large ? 'text-2xl' : 'text-base',
+        )}
+      >
         {value}
       </p>
     </div>

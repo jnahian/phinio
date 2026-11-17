@@ -109,27 +109,28 @@ function InvestmentsListScreen() {
   return (
     <main className="noir-bg min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4">
       <Card variant="low" className="mb-6">
-        <div className="grid grid-cols-3 gap-3">
+        <SummaryCell
+          large
+          label={
+            status === 'completed'
+              ? t('list.totalExited')
+              : t('list.totalCurrent')
+          }
+          value={
+            <RollingCurrency
+              id="investments.summary.current"
+              amount={currentStr}
+              currency={currency}
+            />
+          }
+        />
+        <div className="mt-4 grid grid-cols-2 gap-3">
           <SummaryCell
             label={t('list.totalInvested')}
             value={
               <RollingCurrency
                 id="investments.summary.invested"
                 amount={investedStr}
-                currency={currency}
-              />
-            }
-          />
-          <SummaryCell
-            label={
-              status === 'completed'
-                ? t('list.totalExited')
-                : t('list.totalCurrent')
-            }
-            value={
-              <RollingCurrency
-                id="investments.summary.current"
-                amount={currentStr}
                 currency={currency}
               />
             }
@@ -271,10 +272,12 @@ function SummaryCell({
   label,
   value,
   valueClass,
+  large,
 }: {
   label: string
   value: React.ReactNode
   valueClass?: string
+  large?: boolean
 }) {
   return (
     <div>
@@ -283,7 +286,8 @@ function SummaryCell({
       </p>
       <p
         className={cn(
-          'font-display mt-1 text-base font-bold',
+          'font-display mt-1 font-bold',
+          large ? 'text-2xl' : 'text-base',
           valueClass ?? 'text-on-surface',
         )}
       >
